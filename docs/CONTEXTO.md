@@ -58,7 +58,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Barra superior reorganizada (Ferramentas à esquerda, PREFCG à direita) e remoção das linhas divisórias | `b7bf5db` |
 | 08/10/2026 | Três propostas de logo em PDF; Proposta 3 aplicada no site e no favicon | `b7bf5db`, `d06be0d` |
 | 08/10/2026 | Documentação de arquitetura, identidade e acessibilidade | `7674241` |
-| 08/10/2026 | Criação deste arquivo de contexto e da regra de commit a cada alteração | ver `git log` |
+| 08/10/2026 | Criação deste arquivo de contexto e da regra de commit a cada alteração | `10babf0` |
+| 08/10/2026 | PDF de apresentação da logo escolhida (9 páginas: conceito, versões, cores, construção, área de proteção, tamanhos mínimos, aplicações, usos incorretos, cores e tipografia) em `docs/logo-aqr/` | ver `git log` |
 
 ## Pendências
 
@@ -75,7 +76,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
-| Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/` |
+| Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
 | Marca PREFCG | `src/components/layout/BrandMark.tsx`, `src/assets/brand/` (+ README de procedência) |
 | Cores e tokens | `src/styles/tokens.css` → `src/styles/globals.css` |
 | Contratos da comparação | `src/features/comparison/model/types.ts` |

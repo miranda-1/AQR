@@ -14,6 +14,11 @@ Identidade do sistema AQR, Proposta 3 ("Lente Q"), escolhida pelo responsável d
 
 **Alinhamento:** o centro do anel da lente fica na linha média das letras A e R, e a haste desce livremente, como a cauda de um Q. O ajuste está em `LENS_OFFSET` e foi conferido por medição de pixels.
 
+**Apresentação completa** (versões, cores, construção, área de proteção, tamanhos mínimos, aplicações e usos incorretos): `docs/logo-aqr/AQR-logo-apresentacao.pdf`.
+
+- **Área de proteção:** X = metade da altura da letra A, em volta de toda a logo.
+- **Tamanhos mínimos:** completa com 120 px de largura (30 mm impressa); palavra com 40 px de largura, letras de 16 px (10 mm impressa); símbolo a partir de 16 px.
+
 **Pendências:** converter a palavra em curvas e refinar o desenho da versão final; submeter à Diretoria Executiva de Comunicação Social.
 
 A logo do AQR identifica o sistema e não substitui nem se combina com a marca PREFCG, que continua aplicada à parte, à direita da barra superior.

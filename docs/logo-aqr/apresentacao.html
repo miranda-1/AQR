@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>AQR — Apresentação da logo</title>
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @page { size: A4 landscape; margin: 0; }
+  :root { --blue: #283587; --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886; --sunken: #f4f5f9; --canvas: #e9ebf2; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 297mm; height: 209.6mm; padding: 14mm 16mm 11mm; display: flex; flex-direction: column; page-break-after: always; overflow: hidden; position: relative; }
+  .page:last-child { page-break-after: auto; }
+  .kicker { font-size: 9pt; font-weight: 700; color: var(--blue); margin-bottom: 2mm; }
+  h2 { font-size: 22pt; font-weight: 800; letter-spacing: -0.015em; }
+  .lead { font-size: 10.5pt; line-height: 1.55; color: var(--muted); max-width: 165mm; margin-top: 2.5mm; }
+  .body { flex: 1; min-height: 0; margin-top: 8mm; display: grid; gap: 5mm; }
+  .foot { display: flex; justify-content: space-between; align-items: center; font-size: 8pt; color: var(--subtle); margin-top: 6mm; }
+  .label { font-size: 8pt; color: var(--subtle); font-weight: 600; margin-top: 2.5mm; }
+  .card { border-radius: 4mm; display: flex; align-items: center; justify-content: center; position: relative; }
+  .white { background: #fff; box-shadow: 0 1px 2px rgba(27,32,64,.06), 0 3px 12px -3px rgba(27,32,64,.12); }
+  .sunken { background: var(--sunken); }
+  .blue { background: var(--blue); }
+  .black { background: #111; }
+  .cell { display: flex; flex-direction: column; min-height: 0; }
+  .cell > .card { flex: 1; }
+  .logo { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; }
+  .lockup { display: inline-flex; align-items: center; }
+  .desc { font-weight: 500; line-height: 1.25; }
+  p.note { font-size: 9pt; line-height: 1.5; color: var(--muted); }
+  /* capa */
+  .cover { background: var(--blue); color: #fff; justify-content: space-between; }
+  .cover .foot { color: rgba(255,255,255,.75); }
+  /* incorretos */
+  .x { position: absolute; top: 3mm; right: 3mm; width: 7mm; height: 7mm; border-radius: 50%; background: #a31f1a; display: flex; align-items: center; justify-content: center; z-index: 2; }
+  .ok { position: absolute; top: 3mm; right: 3mm; width: 7mm; height: 7mm; border-radius: 50%; background: #11663a; display: flex; align-items: center; justify-content: center; z-index: 2; }
+  .swatch { border-radius: 4mm; padding: 6mm; display: flex; flex-direction: column; justify-content: flex-end; height: 62mm; }
+  .swatch b { font-size: 13pt; display: block; margin-bottom: 2mm; }
+  .swatch span { font-size: 9pt; line-height: 1.6; display: block; }
+  .guide { position: absolute; border: 1.2px dashed #d1453d; pointer-events: none; }
+  .hline { position: absolute; left: 0; right: 0; border-top: 1px dashed; pointer-events: none; }
+  .tag { position: absolute; font-size: 7.5pt; font-weight: 700; color: #d1453d; background: #fff; padding: 0 1.5mm; }
+  .bar { height: 15mm; background: #fff; border-radius: 3mm; display: flex; align-items: center; gap: 12px; padding: 0 5mm; box-shadow: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10); }
+  .tools { display: flex; align-items: center; gap: 5px; font-size: 9pt; font-weight: 600; padding: 5px 9px; border-radius: 5px; background: var(--sunken); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/*
+ * Logo do AQR — Proposta 3 "Lente Q" (escolhida em 08/10/2026).
+ * A geometria do símbolo e as proporções da palavra são as mesmas de
+ * src/components/layout/AqrLogo.tsx: lente = 1,1 × tamanho da letra,
+ * deslocada 0,12 × tamanho para o anel ficar na linha média de A e R.
+ */
+const BLUE = '#283587', YELLOW = '#ffcc00', WHITE = '#ffffff', BLACK = '#111111'
+const tones = {
+  color:    { main: BLUE,  paper: WHITE, accent: YELLOW, line: BLUE,  faint: 'rgba(40,53,135,.35)', text: BLUE,  desc: '#4a5072', rule: '#dadde8' },
+  mono:     { main: BLUE,  paper: WHITE, accent: null,   line: BLUE,  faint: 'rgba(40,53,135,.35)', text: BLUE,  desc: BLUE,      rule: 'rgba(40,53,135,.3)' },
+  negative: { main: WHITE, paper: BLUE,  accent: YELLOW, line: WHITE, faint: 'rgba(255,255,255,.45)', text: WHITE, desc: 'rgba(255,255,255,.85)', rule: 'rgba(255,255,255,.4)' },
+  negmono:  { main: WHITE, paper: BLUE,  accent: null,   line: WHITE, faint: 'rgba(255,255,255,.45)', text: WHITE, desc: WHITE, rule: 'rgba(255,255,255,.4)' },
+  black:    { main: BLACK, paper: WHITE, accent: null,   line: BLACK, faint: 'rgba(17,17,17,.35)', text: BLACK, desc: BLACK, rule: 'rgba(17,17,17,.3)' },
+  blackneg: { main: WHITE, paper: BLACK, accent: null,   line: WHITE, faint: 'rgba(255,255,255,.45)', text: WHITE, desc: WHITE, rule: 'rgba(255,255,255,.4)' },
+}
+
+function lens(t, size, extra = '') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex-shrink:0;${extra}" aria-hidden="true">
+    <path d="M40.5 40.5 L55 55" stroke="${t.main}" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="27" cy="27" r="19" fill="${t.paper}" stroke="${t.main}" stroke-width="7"/>
+    ${t.accent ? `<rect x="14" y="19.5" width="26" height="8" rx="2" fill="${t.accent}"/>` : ''}
+    <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="${t.line}"/>
+    <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="${t.faint}"/>
+  </svg>`
+}
+
+// Palavra: A + lente + R (mesmas proporções do componente do sistema).
+function word(t, size, style = '') {
+  const l = size * 1.1
+  return `<span class="logo" style="font-size:${size}px;color:${t.text};${style}"><span>A</span>${lens(t, l, `margin-left:${size * 0.04}px;margin-right:${size * 0.02}px;transform:translateY(${size * 0.12}px)`)}<span>R</span></span>`
+}
+
+// Versão completa: palavra + filete + descrição.
+function full(t, size, style = '') {
+  return `<span class="lockup" style="gap:${size * 0.28}px;${style}">${word(t, size)}
+    <span class="desc" style="font-size:${size * 0.22}px;color:${t.desc};padding-left:${size * 0.25}px;border-left:${Math.max(1, size * 0.035)}px solid ${t.rule}">Análise e Qualificação<br>de Requerimentos</span></span>`
+}
+
+// Versão empilhada: palavra sobre a descrição.
+function stacked(t, size) {
+  return `<span style="display:inline-flex;flex-direction:column;align-items:center;gap:${size * 0.32}px">${word(t, size)}
+    <span class="desc" style="font-size:${size * 0.2}px;color:${t.desc};text-align:center">Análise e Qualificação de Requerimentos</span></span>`
+}
+
+const icon = (k) => k === 'x'
+  ? `<span class="x"><svg width="12" height="12" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5" fill="none"><path d="M6 6l12 12M18 6L6 18"/></svg></span>`
+  : `<span class="ok"><svg width="12" height="12" viewBox="0 0 24 24" stroke="#fff" stroke-width="3.5" fill="none"><path d="M5 12l5 5 9-10"/></svg></span>`
+
+let page = 0
+const foot = (dark) => `<div class="foot"><span>AQR — Análise e Qualificação de Requerimentos · Prefeitura Municipal de Campo Grande</span><span>${++page}</span></div>`
+const head = (kicker, title, lead) => `<div><div class="kicker">${kicker}</div><h2>${title}</h2>${lead ? `<p class="lead">${lead}</p>` : ''}</div>`
+
+const prefcg = '../../src/assets/brand/prefcg-azul.svg'
+let html = ''
+
+// 1. Capa
+html += `<section class="page cover">
+  <div style="font-size:9pt;font-weight:700;color:rgba(255,255,255,.75)">Apresentação da logo</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:9mm">
+    ${full(tones.negative, 120)}
+    <div style="width:26mm;height:2.4mm;border-radius:1mm;background:${YELLOW}"></div>
+  </div>
+  ${foot(true)}
+</section>`
+
+// 2. Conceito
+html += `<section class="page">
+  ${head('Conceito', 'A lente que lê o documento', 'O AQR existe para examinar documentos e apontar o que importa. A logo traduz isso em um único gesto: a lente de análise ocupa o lugar do Q e passa sobre uma linha de texto, destacada em amarelo — o trecho que o sistema encontrou.')}
+  <div class="body" style="grid-template-columns: 1.4fr 1fr">
+    <div class="card white">${word(tones.color, 150)}</div>
+    <div style="display:grid;grid-template-rows:repeat(3,1fr);gap:4mm">
+      ${[
+        ['A lente', 'Análise e qualificação: o olhar atento sobre cada requerimento.'],
+        ['O Q', 'A lente é também a letra Q, unindo símbolo e nome em uma só forma.'],
+        ['O destaque', 'A linha amarela é o trecho encontrado — a mesma marcação usada na interface.'],
+      ].map(([t, d]) => `<div class="card sunken" style="justify-content:flex-start;gap:5mm;padding:0 6mm">${lens(tones.color, 54)}<div><b style="font-size:11pt">${t}</b><p class="note" style="margin-top:1mm">${d}</p></div></div>`).join('')}
+    </div>
+  </div>
+  ${foot()}
+</section>`
+
+// 3. Versões
+html += `<section class="page">
+  ${head('Versões', 'Uma logo, quatro formatos', 'Use a versão completa sempre que houver espaço. As versões reduzidas existem para quando a descrição não couber ou ficar ilegível.')}
+  <div class="body" style="grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr">
+    <div class="cell" style="grid-row: span 2"><div class="card white">${full(tones.color, 92)}</div><div class="label">Completa (preferencial) — palavra e descrição</div></div>
+    <div class="cell"><div class="card white">${stacked(tones.color, 66)}</div><div class="label">Empilhada — espaços estreitos ou verticais</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5mm">
+      <div class="cell"><div class="card white">${word(tones.color, 54)}</div><div class="label">Palavra — barra do sistema</div></div>
+      <div class="cell"><div class="card white">${lens(tones.color, 76)}</div><div class="label">Símbolo — favicon e ícones</div></div>
+    </div>
+  </div>
+  ${foot()}
+</section>`
+
+// 4. Cores
+html += `<section class="page">
+  ${head('Variações de cor', 'Para cada fundo, uma versão', 'A versão colorida é a principal. As monocromáticas servem para impressão em uma cor, carimbos ou fundos onde o amarelo não tem leitura.')}
+  <div class="body" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr">
+    <div class="cell"><div class="card white">${full(tones.color, 54)}</div><div class="label">Colorida — principal, sobre branco</div></div>
+    <div class="cell"><div class="card blue">${full(tones.negative, 54)}</div><div class="label">Negativa — sobre o azul institucional</div></div>
+    <div class="cell"><div class="card white">${full(tones.mono, 54)}</div><div class="label">Monocromática azul</div></div>
+    <div class="cell"><div class="card blue">${full(tones.negmono, 54)}</div><div class="label">Monocromática branca</div></div>
+    <div class="cell"><div class="card white">${full(tones.black, 54)}</div><div class="label">Preto — impressão em preto e branco</div></div>
+    <div class="cell"><div class="card black">${full(tones.blackneg, 54)}</div><div class="label">Branca sobre fundo escuro</div></div>
+  </div>
+  ${foot()}
+</section>`
+
+// 5. Construção e área de proteção
+const S = 120 // tamanho das letras na demonstração
+html += `<section class="page">
+  ${head('Construção', 'Alinhamento e área de proteção', 'O centro do anel da lente fica na linha média das letras A e R; a haste desce como a cauda de um Q. Ao redor da logo, mantenha livre uma área mínima de X — metade da altura da letra A.')}
+  <div class="body" style="grid-template-columns: 1.2fr 1fr">
+    <div class="cell"><div class="card white" id="construcao">
+      <div style="position:relative;display:inline-block;margin-right:42mm" id="alvo">${word(tones.color, S)}</div>
+    </div><div class="label">Linhas de alinhamento: topo das letras, linha média (centro da lente) e base</div></div>
+    <div class="cell"><div class="card sunken" id="protecao">
+      <div style="position:relative;display:inline-block" id="alvo2">${full(tones.color, 52)}</div>
+    </div><div class="label">Área de proteção: nenhum elemento dentro do contorno tracejado</div></div>
+  </div>
+  ${foot()}
+</section>`
+
+// 6. Tamanhos mínimos
+html += `<section class="page">
+  ${head('Tamanhos mínimos', 'Legível do monitor à impressão', 'Abaixo destes tamanhos, use a versão seguinte, mais simples. Em 16 px, apenas o símbolo.')}
+  <div class="body" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: 80mm; align-content: center; align-items: stretch">
+    <div class="cell"><div class="card white" style="flex-direction:column;gap:8mm">${full(tones.color, 30)}${full(tones.color, 22)}</div><div class="label">Completa — mínimo de 120 px de largura (digital) ou 30 mm (impressa)</div></div>
+    <div class="cell"><div class="card white" style="flex-direction:column;gap:8mm">${word(tones.color, 22)}${word(tones.color, 16)}</div><div class="label">Palavra — mínimo de 40 px de largura (letras de 16 px) ou 10 mm (impressa)</div></div>
+    <div class="cell"><div class="card white"><div style="display:flex;gap:7mm;align-items:flex-end">
+      ${[48, 32, 24, 16].map((n) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2mm">${lens(tones.color, n)}<span style="font-size:7.5pt;color:#626886">${n} px</span></div>`).join('')}
+    </div></div><div class="label">Símbolo — de 16 px (favicon) em diante</div></div>
+  </div>
+  ${foot()}
+</section>`
+
+// 7. Aplicações
+html += `<section class="page">
+  ${head('Aplicações', 'A logo no sistema', 'A logo do AQR identifica o sistema. A marca da Prefeitura continua aplicada à parte, sem alteração, à direita da barra superior.')}
+  <div class="body" style="grid-template-columns: 1.4fr 1fr; grid-template-rows: auto 1fr">
+    <div class="cell" style="grid-column: span 2">
+      <div class="card sunken" style="padding:6mm;display:block">
+        <div class="bar">
+          <div class="tools"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${BLUE}" stroke-width="2.4"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Ferramentas ▾</div>
+          ${word(tones.color, 21)}<span style="font-size:9.5pt;color:#4a5072;margin-left:4px">Análise e Qualificação de Requerimentos</span>
+          <img src="${prefcg}" style="margin-left:auto;height:24px" alt="">
+        </div>
+      </div>
+      <div class="label">Barra superior do sistema</div>
+    </div>
+    <div class="cell"><div class="card sunken" style="flex-direction:column;align-items:stretch;justify-content:flex-start;padding:7mm;gap:5mm">
+      <div style="display:flex;gap:2mm">
+        <div style="display:flex;align-items:center;gap:7px;background:#fff;border-radius:7px 7px 0 0;padding:7px 14px;font-size:9pt">${lens(tones.color, 16)}Comparar documentos | AQR</div>
+        <div style="display:flex;align-items:center;gap:7px;background:#dfe2ec;border-radius:7px 7px 0 0;padding:7px 14px;font-size:9pt;color:#626886">Outra aba</div>
+      </div>
+      <div style="background:#fff;border-radius:3mm;padding:7mm;display:flex;align-items:center;gap:6mm">
+        <div style="width:22mm;height:22mm;border-radius:5mm;background:${BLUE};display:flex;align-items:center;justify-content:center">${lens(tones.negative, 54)}</div>
+        <div style="width:22mm;height:22mm;border-radius:5mm;background:#fff;box-shadow:0 1px 4px rgba(27,32,64,.18);display:flex;align-items:center;justify-content:center">${lens(tones.color, 54)}</div>
+        <p class="note">Favicon na aba do navegador e ícone de atalho, em fundo azul ou branco.</p>
+      </div>
+    </div><div class="label">Navegador e atalhos</div></div>
+    <div class="cell"><div class="card sunken" style="padding:7mm">
+      <div style="background:#fff;width:100%;height:100%;border-radius:2mm;padding:7mm 8mm;box-shadow:0 1px 3px rgba(27,32,64,.12)">
+        <div style="display:flex;align-items:center;justify-content:space-between">${full(tones.color, 26)}<img src="${prefcg}" style="height:18px" alt=""></div>
+        <div style="margin-top:7mm;height:2.5mm;width:55%;background:#dadde8;border-radius:1mm"></div>
+        <div style="margin-top:3mm;height:2mm;width:90%;background:#eceef4;border-radius:1mm"></div>
+        <div style="margin-top:2.5mm;height:2mm;width:84%;background:#eceef4;border-radius:1mm"></div>
+        <div style="margin-top:2.5mm;height:2mm;width:70%;background:${YELLOW};opacity:.55;border-radius:1mm"></div>
+        <div style="margin-top:2.5mm;height:2mm;width:88%;background:#eceef4;border-radius:1mm"></div>
+      </div>
+    </div><div class="label">Cabeçalho de relatório (aplicação futura)</div></div>
+  </div>
+  ${foot()}
+</section>`
+
+// 8. Usos incorretos
+const wrongs = [
+  ['Não distorcer', `<span style="display:inline-block;transform:scaleX(1.45)">${word(tones.color, 44)}</span>`],
+  ['Não alterar as cores', word({ ...tones.color, main: '#1f8a4c', text: '#1f8a4c', accent: '#f08a24', line: '#1f8a4c', faint: 'rgba(31,138,76,.35)' }, 44)],
+  ['Não girar', `<span style="display:inline-block;transform:rotate(-14deg)">${word(tones.color, 44)}</span>`],
+  ['Não trocar a lente por outra letra ou ícone', `<span class="logo" style="font-size:44px;color:${BLUE}">AQR</span>`],
+  ['Não aplicar sombras ou efeitos', `<span style="filter:drop-shadow(4px 5px 3px rgba(0,0,0,.45))">${word(tones.color, 44)}</span>`],
+  ['Não usar sobre fundos sem contraste', `<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;background:#8fa3d9;border-radius:4mm">${word(tones.color, 44)}</span>`],
+  ['Não alterar o espaçamento', `<span class="logo" style="font-size:44px;color:${BLUE};gap:26px"><span>A</span>${lens(tones.color, 48)}<span>R</span></span>`],
+  ['Não mudar a fonte', `<span class="logo" style="font-size:44px;color:${BLUE};font-family:Georgia,serif;font-weight:700;letter-spacing:0"><span>A</span>${lens(tones.color, 48, 'transform:translateY(5px)')}<span>R</span></span>`],
+]
+html += `<section class="page">
+  ${head('Usos incorretos', 'O que não fazer', 'A logo deve ser usada sempre a partir dos arquivos originais, sem alterações.')}
+  <div class="body" style="grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr">
+    ${wrongs.map(([t, l]) => `<div class="cell"><div class="card white" style="overflow:hidden">${icon('x')}${l}</div><div class="label">${t}</div></div>`).join('')}
+  </div>
+  ${foot()}
+</section>`
+
+// 9. Cores e tipografia
+html += `<section class="page">
+  ${head('Cores e tipografia', 'Elementos da identidade', 'As cores são as institucionais do Manual da Marca PREFCG. A palavra usa a mesma família tipográfica da interface do sistema.')}
+  <div class="body" style="grid-template-columns: 1fr 1fr 1fr 1.25fr; align-content: start">
+    <div class="swatch" style="background:${BLUE};color:#fff"><b>Azul institucional</b><span>HEX #283587</span><span>RGB 40 · 53 · 135</span><span>CMYK 100 · 90 · 5 · 0</span></div>
+    <div class="swatch" style="background:${YELLOW};color:#1b2040"><b>Amarelo institucional</b><span>HEX #FFCC00</span><span>RGB 255 · 204 · 0</span><span>CMYK 0 · 20 · 100 · 0</span></div>
+    <div class="swatch white" style="color:#1b2040"><b>Branco</b><span>HEX #FFFFFF</span><span>RGB 255 · 255 · 255</span><span>CMYK 0 · 0 · 0 · 0</span></div>
+    <div class="swatch sunken" style="justify-content:space-between">
+      <span style="font-size:58pt;font-weight:800;letter-spacing:-0.025em;color:${BLUE};line-height:1">Aa</span>
+      <div><b style="color:#1b2040">Plus Jakarta Sans</b><span style="color:#4a5072">ExtraBold (palavra) e Medium (descrição). Licença SIL Open Font License — uso livre, inclusive na web.</span></div>
+    </div>
+  </div>
+  <div style="margin-top:auto;padding:5mm 6mm;border-radius:4mm;background:#fdf0d9;font-size:9pt;line-height:1.5;color:#1b2040">
+    <b>Situação:</b> logo escolhida pelo responsável do projeto em 08/10/2026. Antes do uso oficial, a palavra deve ser convertida em curvas e a aplicação submetida à
+    Diretoria Executiva de Comunicação Social, conforme o Manual da Marca PREFCG (p. 31). A logo do AQR identifica o sistema e não substitui nem se combina com a marca da Prefeitura.
+  </div>
+  ${foot()}
+</section>`
+
+document.getElementById('root').innerHTML = html
+
+// Guias da página de construção, medidas a partir da tinta real das letras.
+requestAnimationFrame(() => {
+  const alvo = document.getElementById('alvo')
+  const letterBox = alvo.querySelector('.logo > span').getBoundingClientRect()
+  const ref = alvo.getBoundingClientRect()
+  const ctx = document.createElement('canvas').getContext('2d')
+  ctx.font = `800 ${S}px Jakarta`
+  const m = ctx.measureText('A')
+  // linha de base dentro da caixa (line-height 1): meio-entrelinha + ascendente da fonte
+  const baseline = letterBox.top - ref.top + (S - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2 + m.fontBoundingBoxAscent
+  const top = baseline - m.actualBoundingBoxAscent, mid = (top + baseline) / 2
+  const right = ref.width
+  for (const [y, c, t] of [[top, '#8d92ab', 'topo'], [mid, '#d1453d', 'linha média = centro da lente'], [baseline, '#8d92ab', 'base']]) {
+    alvo.insertAdjacentHTML('beforeend', `<div class="hline" style="top:${y}px;left:-24px;right:-24px;border-color:${c}"></div><span class="tag" style="top:${y - 6}px;left:${right + 30}px;white-space:nowrap;color:${c}">${t}</span>`)
+  }
+  // área de proteção: X = metade da altura da letra A
+  const alvo2 = document.getElementById('alvo2')
+  const X = 52 * 0.72 / 2
+  alvo2.insertAdjacentHTML('beforeend', `<div class="guide" style="inset:${-X}px"></div>
+    <span class="tag" style="top:${-X - 5}px;left:50%;transform:translateX(-50%);background:var(--sunken)">X</span>
+    <span class="tag" style="left:${-X - 4}px;top:50%;transform:translate(-100%,-50%);background:var(--sunken)">X</span>
+    <div style="position:absolute;left:${-X}px;top:${-X}px;width:${X}px;height:${X}px;background:rgba(209,69,61,.14)"></div>`)
+  document.body.dataset.ready = '1'
+})
+</script>
+</body>
+</html>
