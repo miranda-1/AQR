@@ -25,6 +25,14 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 **Próxima etapa, depois da aprovação visual:** mecanismo real de comparação de PDFs em TypeScript (Node.js), com testes, critérios de precisão e documentos sintéticos. Só depois disso, a triagem. Os contratos e o ponto de troca estão em `docs/arquitetura.md`.
 
+## Repositório
+
+- GitHub (**privado**): https://github.com/miranda-1/AQR, branch `master`.
+- O remoto usa HTTPS, com autenticação pelo GitHub CLI (`gh`, conta miranda-1). A chave SSH não está configurada neste computador. Para enviar:
+  ```bash
+  git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push
+  ```
+
 ## Como rodar
 
 ```bash
@@ -48,6 +56,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
 | 08/10/2026 | **Logo do AQR: Proposta 3, "Lente Q"**, com a lente centralizada entre o A e o R. Propostas em `docs/propostas-logo-aqr/`. |
 | 08/10/2026 | **Toda alteração termina num commit e na atualização deste arquivo.** |
+| 08/10/2026 | Projeto publicado no repositório privado `miranda-1/AQR` (GitHub). |
 
 ## Histórico
 
@@ -59,7 +68,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Três propostas de logo em PDF; Proposta 3 aplicada no site e no favicon | `b7bf5db`, `d06be0d` |
 | 08/10/2026 | Documentação de arquitetura, identidade e acessibilidade | `7674241` |
 | 08/10/2026 | Criação deste arquivo de contexto e da regra de commit a cada alteração | `10babf0` |
-| 08/10/2026 | PDF de apresentação da logo escolhida (9 páginas: conceito, versões, cores, construção, área de proteção, tamanhos mínimos, aplicações, usos incorretos, cores e tipografia) em `docs/logo-aqr/` | ver `git log` |
+| 08/10/2026 | PDF de apresentação da logo escolhida (9 páginas: conceito, versões, cores, construção, área de proteção, tamanhos mínimos, aplicações, usos incorretos, cores e tipografia) em `docs/logo-aqr/` | `d425de4` |
+| 08/10/2026 | Publicação no GitHub (`miranda-1/AQR`, privado) e registro do repositório neste arquivo | ver `git log` |
 
 ## Pendências
 
@@ -67,7 +77,6 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Arquivos oficiais:** se a Comunicação fornecer SVG ou AI da marca PREFCG digital azul, substituir o arquivo extraído (`src/assets/brand/`).
 - **Acessibilidade:** testar com leitores de tela reais (NVDA, JAWS, VoiceOver).
-- **Repositório:** sem servidor remoto. Os commits estão só na máquina local; perguntar antes de enviar para GitHub ou GitLab.
 - O texto "alterações apenas visuais não são avaliadas", no estado sem diferenças, antecipa um comportamento do mecanismo futuro e deve ser confirmado.
 
 ## Onde está cada coisa
