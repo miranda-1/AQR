@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "./tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Mapeia os tokens institucionais (tokens.css) para os nomes que o Tailwind
+ * e os componentes shadcn/ui esperam. Altere cores apenas em tokens.css.
+ */
+@theme inline {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-document: "Times New Roman", Times, "Liberation Serif", Georgia, serif;
+
+  --color-background: var(--surface-page);
+  --color-foreground: var(--text-default);
+  --color-card: var(--surface-raised);
+  --color-card-foreground: var(--text-default);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text-default);
+  --color-primary: var(--brand-blue);
+  --color-primary-foreground: var(--brand-white);
+  --color-secondary: var(--surface-sunken);
+  --color-secondary-foreground: var(--text-default);
+  --color-muted: var(--surface-sunken);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--brand-blue-50);
+  --color-accent-foreground: var(--brand-blue-800);
+  --color-destructive: var(--diff-deletion-strong);
+  --color-border: var(--line-default);
+  --color-input: var(--line-strong);
+  --color-ring: var(--focus-ring);
+
+  --color-brand: var(--brand-blue);
+  --color-brand-50: var(--brand-blue-50);
+  --color-brand-100: var(--brand-blue-100);
+  --color-brand-800: var(--brand-blue-800);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-ink: var(--text-default);
+  --color-subtle: var(--text-subtle);
+  --color-line: var(--line-default);
+  --color-line-strong: var(--line-strong);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-canvas: var(--surface-canvas);
+
+  --color-addition: var(--diff-addition-strong);
+  --color-addition-bg: var(--diff-addition-bg);
+  --color-addition-line: var(--diff-addition-line);
+  --color-deletion: var(--diff-deletion-strong);
+  --color-deletion-bg: var(--diff-deletion-bg);
+  --color-deletion-line: var(--diff-deletion-line);
+  --color-modification: var(--diff-modification-strong);
+  --color-modification-bg: var(--diff-modification-bg);
+  --color-modification-line: var(--diff-modification-line);
+
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+  --color-warning-bg: var(--status-warning-bg);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-feature-settings: "tnum" 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  /* Componentes shadcn usam ring; mantemos também o outline para garantir 3:1. */
+  [data-slot]:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Destaques de diferença no visualizador. Cor + tratamento do texto + rótulo. */
+@layer components {
+  .diff-mark {
+    border-radius: 2px;
+    padding: 0.05em 0.15em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    cursor: pointer;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+  }
+  .diff-mark--addition {
+    background: var(--diff-addition-bg);
+    text-decoration-line: underline;
+    text-decoration-color: var(--diff-addition-line);
+  }
+  .diff-mark--deletion {
+    background: var(--diff-deletion-bg);
+    text-decoration-line: line-through;
+    text-decoration-color: var(--diff-deletion-strong);
+  }
+  .diff-mark--modification {
+    background: var(--diff-modification-bg);
+    text-decoration-line: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: var(--diff-modification-line);
+  }
+  .diff-mark[aria-current='true'] {
+    outline: 2px solid var(--brand-blue);
+    outline-offset: 2px;
+  }
+  .diff-mark:focus-visible {
+    outline: 3px solid var(--brand-blue);
+    outline-offset: 2px;
+  }
+}
+
+/* Superfície elevada: separa blocos por sombra suave, sem linhas divisórias. */
+@utility shadow-surface {
+  box-shadow:
+    0 1px 2px rgba(27, 32, 64, 0.06),
+    0 2px 6px -2px rgba(27, 32, 64, 0.08);
+}

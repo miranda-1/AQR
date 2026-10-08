@@ -1,0 +1,61 @@
+/*
+ * Design tokens do AQR.
+ *
+ * Cores institucionais: Manual da Marca PREFCG, p. 3.
+ *   Azul     C100 M90 Y5 K0  · #283587
+ *   Amarelo  C0 M20 Y100 K0  · #FFCC00
+ *   Branco                    · #FFFFFF
+ *
+ * Os demais tons são de apoio à interface (neutros, estados, diferenças) e
+ * não fazem parte da marca. Contrastes (WCAG 2.x) medidos sobre branco, salvo indicação.
+ */
+:root {
+  /* Institucionais */
+  --brand-blue: #283587; /* 10.8:1 */
+  --brand-yellow: #ffcc00; /* decorativo apenas — 1.5:1, nunca para texto ou foco */
+  --brand-white: #ffffff;
+
+  /* Escala derivada do azul institucional (apoio) */
+  --brand-blue-50: #eef0f8;
+  --brand-blue-100: #dde1f1;
+  --brand-blue-800: #1d2766; /* hover/pressed */
+
+  /* Superfícies */
+  --surface-page: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f4f5f9;
+  --surface-canvas: #e9ebf2; /* fundo atrás das páginas no visualizador */
+
+  /* Texto (neutros com leve tom do azul institucional) */
+  --text-default: #1b2040; /* 15.8:1 */
+  --text-muted: #4a5072; /* 7.8:1 (7.2:1 sobre surface-sunken) */
+  --text-subtle: #626886; /* 5.5:1 (4.6:1 sobre surface-canvas) */
+
+  /* Linhas */
+  --line-default: #dadde8;
+  --line-strong: #8d92ab; /* 3.1:1 — bordas de controles (WCAG 1.4.11) */
+
+  /* Foco */
+  --focus-ring: #283587;
+
+  /* Diferenças — sempre acompanhadas de ícone + rótulo + tratamento de texto */
+  --diff-addition-strong: #11663a; /* 6.1:1 sobre diff-addition-bg */
+  --diff-addition-bg: #e2f3e8;
+  --diff-addition-line: #2e9a5a;
+
+  --diff-deletion-strong: #a31f1a; /* 6.4:1 sobre diff-deletion-bg */
+  --diff-deletion-bg: #fbe7e5;
+  --diff-deletion-line: #d1453d;
+
+  --diff-modification-strong: #864300; /* 6.6:1 sobre diff-modification-bg — âmbar, distinto do amarelo institucional */
+  --diff-modification-bg: #fdf0d9;
+  --diff-modification-line: #d48a1a;
+
+  /* Estados */
+  --status-success: #11663a;
+  --status-warning: #864300;
+  --status-warning-bg: #fdf0d9;
+
+  /* Layout */
+  --header-height: 3.5rem;
+}
