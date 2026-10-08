@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>AQR — Propostas de logo</title>
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @page { size: A4 landscape; margin: 0; }
+  :root {
+    --blue: #283587; --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --line: #dadde8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 297mm; height: 210mm; padding: 13mm 15mm; display: flex; flex-direction: column; page-break-after: always; overflow: hidden; }
+  .page:last-child { page-break-after: auto; }
+  h1 { font-size: 30pt; font-weight: 800; letter-spacing: -0.02em; color: var(--blue); }
+  h2 { font-size: 19pt; font-weight: 800; letter-spacing: -0.01em; }
+  h3 { font-size: 9pt; font-weight: 700; color: var(--muted); margin-bottom: 3mm; }
+  p { font-size: 10pt; line-height: 1.5; color: var(--muted); }
+  .num { color: var(--blue); }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm; }
+  .head p { max-width: 150mm; margin-top: 2mm; }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; font-size: 8pt; color: var(--subtle); }
+
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; grid-template-rows: minmax(0, 1fr); gap: 6mm; margin: 6mm 0 5mm; flex: 1; min-height: 0; }
+  .panel { background: var(--sunken); border-radius: 4mm; padding: 6mm; display: flex; flex-direction: column; }
+  .hero { background: #fff; box-shadow: 0 1px 2px rgba(27,32,64,.06), 0 2px 10px -2px rgba(27,32,64,.10); align-items: center; justify-content: center; }
+  .stack { display: flex; flex-direction: column; gap: 4.5mm; min-height: 0; }
+
+  .lockup { display: flex; align-items: center; gap: 14px; }
+  .wm { font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); }
+  .desc { font-weight: 500; color: var(--muted); line-height: 1.25; margin-top: 4px; }
+  .neg .wm, .neg .desc { color: #fff; }
+
+  .variants { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .tile { border-radius: 3mm; height: 25mm; display: flex; align-items: center; justify-content: center; background: #fff; }
+  .tile.blue { background: var(--blue); }
+  .cap { font-size: 7.5pt; color: var(--subtle); margin-top: 1.5mm; text-align: center; }
+
+  .sizes { display: flex; align-items: flex-end; gap: 7mm; background: var(--sunken); border-radius: 3mm; padding: 4mm 5mm; }
+  .sizes span { font-size: 7.5pt; color: var(--subtle); display: block; text-align: center; margin-top: 1.5mm; white-space: nowrap; }
+  .tab { display: flex; align-items: center; gap: 6px; white-space: nowrap; background: #fff; border-radius: 6px 6px 0 0; padding: 6px 12px; font-size: 8pt; color: var(--ink); margin-left: auto; }
+
+  .topbar { background: #fff; border-radius: 3mm; height: 15mm; display: flex; align-items: center; gap: 12px; padding: 0 5mm;
+    box-shadow: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10); }
+  .tools { display: flex; align-items: center; gap: 5px; font-size: 9pt; font-weight: 600; padding: 5px 9px; border-radius: 5px; background: var(--sunken); }
+  .topbar .prefcg { margin-left: auto; height: 22px; }
+
+  /* capa */
+  .cover { justify-content: center; }
+  .cover-row { display: flex; gap: 14mm; margin-top: 16mm; }
+  .cover-item { display: flex; flex-direction: column; align-items: center; gap: 3mm; font-size: 9pt; color: var(--muted); font-weight: 600; }
+  .accent { width: 22mm; height: 2.2mm; background: var(--yellow); border-radius: 1mm; margin: 6mm 0 5mm; }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0 2.5mm; margin-top: 6mm; font-size: 9.5pt; }
+  td, th { text-align: left; vertical-align: top; padding: 3.5mm 4mm; }
+  th { font-size: 8pt; color: var(--subtle); font-weight: 700; padding-bottom: 0; }
+  tbody tr td { background: var(--sunken); color: var(--muted); line-height: 1.45; }
+  tbody tr td:first-child { border-radius: 3mm 0 0 3mm; color: var(--ink); font-weight: 700; width: 46mm; }
+  tbody tr td:last-child { border-radius: 0 3mm 3mm 0; }
+  .steps { margin-top: 6mm; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; }
+  .step { background: var(--sunken); border-radius: 3mm; padding: 4mm; font-size: 9pt; color: var(--muted); line-height: 1.45; }
+  .step b { display: block; color: var(--blue); font-size: 14pt; margin-bottom: 1mm; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/*
+ * Três propostas de símbolo para o AQR. Cores: azul #283587 e amarelo #FFCC00 (Manual PREFCG, p. 3).
+ * Cada função recebe uma paleta, para gerar as versões colorida, monocromática e negativa.
+ */
+const C = { blue: '#283587', yellow: '#ffcc00', white: '#ffffff', faint: 'rgba(40,53,135,.35)' }
+const palettes = {
+  color: { main: C.blue, accent: C.yellow, paper: C.white, ground: C.white, faint: C.faint },
+  mono:  { main: C.blue, accent: C.blue,   paper: C.white, ground: C.white, faint: C.faint, mono: true },
+  neg:   { main: C.white, accent: C.yellow, paper: C.blue, ground: C.blue, faint: 'rgba(255,255,255,.45)' },
+}
+
+// Proposta 1 — "Duas versões": a folha original (contorno) e a atualizada (cheia), com a linha alterada em destaque.
+function sym1(p, size) {
+  const hl = p.mono ? `<rect x="29" y="35" width="23" height="6" rx="2" fill="${p.paper}"/>` : `<rect x="29" y="35" width="23" height="6" rx="2" fill="${p.accent}"/>`
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+    <rect x="6" y="4" width="34" height="44" rx="5" fill="none" stroke="${p.main}" stroke-width="4.5"/>
+    <rect x="22" y="16" width="36" height="44" rx="5" fill="${p.main}" stroke="${p.ground}" stroke-width="4"/>
+    <rect x="29" y="26" width="17" height="3.5" rx="1.75" fill="${p.paper}" opacity=".9"/>
+    ${hl}
+    <rect x="29" y="47" width="13" height="3.5" rx="1.75" fill="${p.paper}" opacity=".9"/>
+  </svg>`
+}
+
+// Proposta 2 — "Lado a lado": duas páginas abertas; a faixa amarela atravessa as duas, ligando o trecho que mudou.
+function sym2(p, size) {
+  const tile = p.ground === C.blue ? C.white : C.blue
+  const page = p.ground === C.blue ? C.blue : C.white
+  const line = p.ground === C.blue ? 'rgba(255,255,255,.5)' : C.faint
+  const bar = p.mono ? C.blue : C.yellow
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+    <rect width="64" height="64" rx="14" fill="${tile}"/>
+    <rect x="9" y="11" width="20" height="42" rx="3" fill="${page}"/>
+    <rect x="35" y="11" width="20" height="42" rx="3" fill="${page}"/>
+    <rect x="12.5" y="17" width="13" height="3" rx="1.5" fill="${line}"/>
+    <rect x="12.5" y="22.5" width="9" height="3" rx="1.5" fill="${line}"/>
+    <rect x="38.5" y="17" width="13" height="3" rx="1.5" fill="${line}"/>
+    <rect x="38.5" y="22.5" width="11" height="3" rx="1.5" fill="${line}"/>
+    <rect x="12.5" y="29.5" width="39" height="6.5" rx="2" fill="${bar}"/>
+    <rect x="12.5" y="40" width="13" height="3" rx="1.5" fill="${line}"/>
+    <rect x="12.5" y="45.5" width="10" height="3" rx="1.5" fill="${line}"/>
+    <rect x="38.5" y="40" width="9" height="3" rx="1.5" fill="${line}"/>
+    <rect x="38.5" y="45.5" width="13" height="3" rx="1.5" fill="${line}"/>
+  </svg>`
+}
+
+// Proposta 3 — "Lente Q": a lente de análise forma o Q de AQR e passa sobre uma linha destacada do texto.
+function sym3(p, size) {
+  const hl = p.mono ? '' : `<rect x="14" y="19.5" width="26" height="8" rx="2" fill="${p.accent}"/>`
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+    <path d="M40.5 40.5 L55 55" stroke="${p.main}" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="27" cy="27" r="19" fill="${p.paper}" stroke="${p.main}" stroke-width="7"/>
+    ${hl}
+    <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="${p.main === C.white ? C.white : C.blue}"/>
+    <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="${p.faint}"/>
+  </svg>`
+}
+
+const desc = 'Análise e Qualificação<br>de Requerimentos'
+
+function lockup(sym, p, s = 1, neg = false) {
+  return `<div class="lockup ${neg ? 'neg' : ''}" style="gap:${14 * s}px">${sym(p, 64 * s)}
+    <div><div class="wm" style="font-size:${46 * s}px">AQR</div><div class="desc" style="font-size:${12.5 * s}px">${desc}</div></div></div>`
+}
+
+// Proposta 3, versão principal: a lente substitui a letra Q dentro da palavra.
+function lockup3(p, s = 1, neg = false) {
+  const color = neg ? '#fff' : C.blue
+  return `<div class="lockup ${neg ? 'neg' : ''}" style="gap:${16 * s}px"><div style="display:flex;align-items:center;gap:${2 * s}px;line-height:1">
+      <span class="wm" style="font-size:${58 * s}px;color:${color}">A</span>
+      <span style="display:inline-block;line-height:0;margin:0 ${1 * s}px 0 ${2 * s}px;transform:translateY(${0.12 * 58 * s}px)">${sym3(p, 64 * s)}</span>
+      <span class="wm" style="font-size:${58 * s}px;color:${color}">R</span></div>
+    <div class="desc" style="font-size:${12.5 * s}px;padding-left:${14 * s}px;border-left:${2 * s}px solid ${neg ? 'rgba(255,255,255,.5)' : '#dadde8'}">${desc}</div></div>`
+}
+
+const proposals = [
+  {
+    n: 1, name: 'Duas versões', sym: sym1,
+    idea: 'A folha em contorno é o documento original; a folha cheia, à frente, é a versão atualizada. A linha amarela é o trecho que mudou — exatamente o que o AQR aponta.',
+    main: (s, neg) => lockup(sym1, neg ? palettes.neg : palettes.color, s, neg),
+    mainMono: (s) => lockup(sym1, palettes.mono, s),
+  },
+  {
+    n: 2, name: 'Lado a lado', sym: sym2,
+    idea: 'Duas páginas abertas, como no visualizador do sistema. A faixa amarela atravessa as duas e liga o trecho correspondente em cada versão. O quadro azul garante leitura em tamanhos pequenos.',
+    main: (s, neg) => lockup(sym2, neg ? palettes.neg : palettes.color, s, neg),
+    mainMono: (s) => lockup(sym2, palettes.mono, s),
+  },
+  {
+    n: 3, name: 'Lente Q', sym: sym3,
+    idea: 'A lente de análise forma o Q de AQR e passa sobre uma linha de texto destacada. A versão principal integra a lente à palavra; o símbolo sozinho serve para favicon e espaços reduzidos.',
+    main: (s, neg) => lockup3(neg ? palettes.neg : palettes.color, s, neg),
+    mainMono: (s) => lockup3(palettes.mono, s),
+  },
+]
+
+const prefcg = '../../src/assets/brand/prefcg-azul.svg'
+const footer = (n) => `<div class="foot"><span>AQR — propostas de logo · documento de trabalho para avaliação</span><span>${n}</span></div>`
+
+let html = `<section class="page cover">
+  <h1>AQR — Propostas de logo</h1>
+  <div class="accent"></div>
+  <p style="font-size:12pt;max-width:190mm">Três propostas de identidade para o sistema Análise e Qualificação de Requerimentos, da SEMADES.
+  As propostas usam somente as cores institucionais do Manual da Marca PREFCG e não alteram, substituem ou imitam a marca da Prefeitura,
+  que continua aplicada à parte na barra superior do sistema.</p>
+  <div class="cover-row">${proposals.map((p) => `<div class="cover-item">${p.sym(palettes.color, 120)}Proposta ${p.n} — ${p.name}</div>`).join('')}</div>
+  ${footer('1')}
+</section>`
+
+proposals.forEach((p, i) => {
+  html += `<section class="page">
+    <div class="head"><div><h2><span class="num">Proposta ${p.n}</span> — ${p.name}</h2><p>${p.idea}</p></div></div>
+    <div class="grid">
+      <div class="stack">
+        <div class="panel hero" style="flex:1">${p.main(1.35)}</div>
+        <div>
+          <h3>Na barra superior do sistema</h3>
+          <div class="topbar">
+            <div class="tools"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${C.blue}" stroke-width="2.4"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Ferramentas ▾</div>
+            <div class="lockup" style="gap:7px">${p.sym(palettes.color, 26)}<span class="wm" style="font-size:17px">AQR</span></div>
+            <img class="prefcg" src="${prefcg}" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="stack">
+        <div>
+          <h3>Variações</h3>
+          <div class="variants">
+            <div><div class="tile">${p.sym(palettes.color, 64)}</div><div class="cap">Símbolo</div></div>
+            <div><div class="tile">${p.sym(palettes.mono, 64)}</div><div class="cap">Monocromática</div></div>
+            <div><div class="tile blue">${p.sym(palettes.neg, 64)}</div><div class="cap">Negativa</div></div>
+          </div>
+        </div>
+        <div class="panel" style="padding:4mm;gap:3mm">
+          <div class="tile" style="height:19mm">${p.mainMono(0.58)}</div>
+          <div class="tile blue" style="height:19mm">${p.main(0.58, true)}</div>
+        </div>
+        <div>
+          <h3>Tamanhos reduzidos (favicon)</h3>
+          <div class="sizes">
+            <div>${p.sym(palettes.color, 48)}<span>48 px</span></div>
+            <div>${p.sym(palettes.color, 32)}<span>32 px</span></div>
+            <div>${p.sym(palettes.color, 16)}<span>16 px</span></div>
+            <div class="tab">${p.sym(palettes.color, 16)}Comparar… | AQR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${footer(String(i + 2))}
+  </section>`
+})
+
+html += `<section class="page">
+  <h2>Comparação e próximos passos</h2>
+  <table>
+    <thead><tr><th>Proposta</th><th>Ponto forte</th><th>Atenção</th></tr></thead>
+    <tbody>
+      <tr><td>1 — Duas versões</td><td>Comunica diretamente a comparação entre original e atualizado. Desenho simples, fácil de reproduzir.</td><td>Em 16 px as linhas internas se fundem; o favicon pode precisar de uma versão simplificada.</td></tr>
+      <tr><td>2 — Lado a lado</td><td>Melhor leitura em tamanhos pequenos, pelo quadro azul. Reflete o próprio visualizador do sistema.</td><td>É o mais “ícone de aplicativo”; com o quadro azul, convive com mais peso visual ao lado da marca PREFCG.</td></tr>
+      <tr><td>3 — Lente Q</td><td>A mais distintiva: a lente faz parte do nome e lembra análise e qualificação, não só comparação.</td><td>A versão integrada à palavra exige ajuste fino de desenho antes da finalização; em 16 px, usar apenas o símbolo.</td></tr>
+    </tbody>
+  </table>
+  <div class="steps">
+    <div class="step"><b>1</b>Escolher uma proposta (ou combinar elementos).</div>
+    <div class="step"><b>2</b>Refinar o desenho e converter o texto em curvas, para não depender da fonte.</div>
+    <div class="step"><b>3</b>Submeter à Diretoria Executiva de Comunicação Social, conforme o Manual (p. 31).</div>
+    <div class="step"><b>4</b>Aplicar no sistema: barra superior, favicon e título das páginas.</div>
+  </div>
+  <p style="margin-top:7mm;font-size:9pt">Tipografia da palavra AQR: Plus Jakarta Sans ExtraBold (licença SIL OFL), a mesma da interface. As cores seguem o Manual da Marca PREFCG: azul #283587 e amarelo #FFCC00.
+  Estas propostas são do sistema AQR e não substituem nem se combinam com a marca da Prefeitura ou da SEMADES.</p>
+  ${footer('5')}
+</section>`
+
+document.getElementById('root').innerHTML = html
+</script>
+</body>
+</html>
