@@ -15,6 +15,7 @@ const environmentSchema = z.object({
   COMPARISON_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(120_000),
   COMPARISON_RESULT_TTL_MS: z.coerce.number().int().min(10_000).max(86_400_000).default(30 * 60_000),
   COMPARISON_WORKER_MEMORY_MB: z.coerce.number().int().min(128).max(4096).default(768),
+  DATABASE_PATH: z.string().min(1).default('data/aqr.sqlite'),
 })
 
 export interface ComparisonSettings {
@@ -38,6 +39,8 @@ export interface ServerConfig {
   port: number
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent'
   comparison: ComparisonSettings
+  /** Arquivo do banco SQLite (contas e auditoria). `:memory:` nos testes. */
+  databasePath: string
 }
 
 export class ConfigError extends Error {
@@ -65,5 +68,6 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       workerMemoryMb: data.COMPARISON_WORKER_MEMORY_MB,
       maxFileSizeBytes: defaultComparisonLimits.maxFileSizeBytes,
     },
+    databasePath: data.DATABASE_PATH,
   }
 }

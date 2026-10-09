@@ -13,6 +13,7 @@
     "build": "tsc -b && vite build && npm run build:server",
     "build:server": "tsc -p tsconfig.server.build.json",
     "start:server": "node dist-server/server/main.js",
+    "db:migrar": "tsx server/db/cli-migrar.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",

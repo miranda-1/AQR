@@ -3,7 +3,13 @@ import { ConfigError, loadConfig } from './config.ts'
 describe('loadConfig', () => {
   it('usa padrões conservadores: só a máquina local, porta 3000', () => {
     const config = loadConfig({})
-    expect(config).toMatchObject({ environment: 'development', host: '127.0.0.1', port: 3000, logLevel: 'info' })
+    expect(config).toMatchObject({
+      environment: 'development',
+      host: '127.0.0.1',
+      port: 3000,
+      logLevel: 'info',
+      databasePath: 'data/aqr.sqlite',
+    })
     expect(config.comparison).toEqual({
       workers: 2,
       queueLimit: 8,
