@@ -50,6 +50,68 @@ function alignByLines(original: TokenizedDocument, updated: TokenizedDocument, l
   }))
 }
 
+function startsLine(document: TokenizedDocument, index: number): boolean {
+  const token = document.tokens[index]
+  const previous = document.tokens[index - 1]
+  return token !== undefined && (previous === undefined || previous.lineIndex !== token.lineIndex)
+}
+
+/**
+ * Uma adição ou exclusão pura entre palavras repetidas tem várias posições equivalentes
+ * ("Art. 6º … vez." ou "6º … vez. Art."). Desliza o trecho, só por palavras iguais e sem
+ * encostar nos vizinhos, até começar numa linha, que é como uma pessoa leria a mudança.
+ */
+function slideToLineStart(hunks: readonly Hunk[], original: TokenizedDocument, updated: TokenizedDocument): Hunk[] {
+  const slid: Hunk[] = []
+  hunks.forEach((hunk, index) => slid.push(slide(hunk, slid[index - 1], hunks[index + 1], original, updated)))
+  return slid
+}
+
+function slide(
+  hunk: Hunk,
+  previous: Hunk | undefined,
+  next: Hunk | undefined,
+  original: TokenizedDocument,
+  updated: TokenizedDocument,
+): Hunk {
+  const isAddition = hunk.original.start === hunk.original.end
+  const isDeletion = hunk.updated.start === hunk.updated.end
+  if (isAddition === isDeletion) return hunk
+  // "side" é o intervalo com palavras; "other", a posição vazia no outro documento.
+  const [side, other, document, otherDocument] = isAddition
+    ? ([hunk.updated, hunk.original, updated, original] as const)
+    : ([hunk.original, hunk.updated, original, updated] as const)
+  const pick = (neighbor: Hunk) => (isAddition ? [neighbor.updated, neighbor.original] : [neighbor.original, neighbor.updated])
+  const [previousSide, previousOther] = previous ? pick(previous) : []
+  const [nextSide, nextOther] = next ? pick(next) : []
+  const sideFloor = previousSide?.end ?? 0
+  const otherFloor = previousOther?.end ?? 0
+  const sideCeiling = nextSide?.start ?? document.tokens.length
+  const otherCeiling = nextOther?.start ?? otherDocument.tokens.length
+  const key = (position: number) => document.tokens[position]?.key
+
+  let left = 0
+  while (
+    side.start - left - 1 >= sideFloor &&
+    other.start - left - 1 >= otherFloor &&
+    key(side.start - left - 1) === key(side.end - left - 1)
+  ) {
+    left += 1
+  }
+  for (let shift = -left; ; shift += 1) {
+    if (startsLine(document, side.start + shift)) {
+      const moved = { start: side.start + shift, end: side.end + shift }
+      const movedOther = { start: other.start + shift, end: other.end + shift }
+      return isAddition ? { original: movedOther, updated: moved } : { original: moved, updated: movedOther }
+    }
+    const canMoveRight =
+      side.end + shift + 1 <= sideCeiling &&
+      other.start + shift + 1 <= otherCeiling &&
+      key(side.start + shift) === key(side.end + shift)
+    if (!canMoveRight) return hunk
+  }
+}
+
 /**
  * Compara os dois documentos palavra a palavra (jsdiff, algoritmo de Myers), atravessando linhas
  * e páginas, de modo que o mesmo texto em outra diagramação não gera diferença. Se os documentos
@@ -63,7 +125,10 @@ export function alignDocuments(original: TokenizedDocument, updated: TokenizedDo
       updated.tokens.map((token) => token.key),
       { maxEditLength: limits.maxEditLength, timeout: limits.diffTimeoutMs },
     )
-    if (changes) return { hunks: mergeCloseHunks(hunksFromChanges(changes)), level: 'palavras' }
+    if (changes) {
+      const hunks = slideToLineStart(hunksFromChanges(changes), original, updated)
+      return { hunks: mergeCloseHunks(hunks), level: 'palavras' }
+    }
   }
   const byLines = alignByLines(original, updated, limits)
   if (byLines) return { hunks: byLines, level: 'linhas' }

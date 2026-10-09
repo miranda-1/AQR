@@ -57,6 +57,13 @@ describe('alignDocuments', () => {
     expect(hunks).toEqual([{ original: 'Parágrafo que será removido.', updated: '' }])
   })
 
+  it('alinha linhas inteiras removidas ou inseridas entre palavras repetidas pelo início da linha', () => {
+    const original = doc(['Art. 5º O parecer será publicado.', 'Art. 6º O interessado poderá recorrer.', 'Art. 7º Casos omissos.'])
+    const updated = doc(['Art. 5º O parecer será publicado.', 'Art. 7º Casos omissos.'])
+    expect(describeHunks(original, updated)).toEqual([{ original: 'Art. 6º O interessado poderá recorrer.', updated: '' }])
+    expect(describeHunks(updated, original)).toEqual([{ original: '', updated: 'Art. 6º O interessado poderá recorrer.' }])
+  })
+
   it('aponta uma modificação', () => {
     const hunks = describeHunks(doc(['O prazo é de dez dias corridos.']), doc(['O prazo é de vinte dias corridos.']))
     expect(hunks).toEqual([{ original: 'dez', updated: 'vinte' }])

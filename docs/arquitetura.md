@@ -90,6 +90,16 @@ server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs 
   (variáveis validadas com Zod; valor inválido impede a inicialização) e `GET /api/health`.
   O servidor usa `module: NodeNext` com imports `.ts` reescritos para `.js` no build (`tsconfig.server.build.json` → `dist-server/`);
   no desenvolvimento roda com `tsx watch`. Os testes do Vitest ficam em dois projetos: `frontend` (jsdom) e `servidor` (Node).
+- Núcleo da comparação (ainda sem rotas): `compareDocuments` (`server/comparison/compare-documents.ts`) recebe os bytes
+  dos dois PDFs e devolve o `ComparisonResult` do contrato, relatando as etapas.
+
+```
+bytes ─ assertPdfBytes ─ extractDocument (pdf.js: palavras + caixas; erros → ComparisonFailure)
+      ─ tokenize (normalização, pontuação, hifenização) ─ alignDocuments (jsdiff palavras → linhas → erro)
+      ─ toDifference (tipo, textos, região, âncora, contexto) ─ ComparisonResult
+```
+
+  Critérios de precisão e limitações: `docs/criterios-comparacao.md`.
 - A API administrativa fica desligada por padrão e o servidor recusa o modo de desenvolvimento em produção.
   A autenticação real entrará trocando o `AuthProvider`, sem mexer em rotas, regras ou auditoria.
 

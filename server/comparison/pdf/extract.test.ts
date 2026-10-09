@@ -1,25 +1,9 @@
-import type { NormalizedRect } from '../../../shared/contracts/comparison.ts'
 import { defined } from '../../test/defined.ts'
+import { failureOf } from '../../test/failure.ts'
+import { intersectionOverUnion } from '../../test/geometry.ts'
 import { makeImageOnlyPdf, makePasswordProtectedPdf, makePdf } from '../../test/make-pdf.ts'
-import { ComparisonFailure } from '../failure.ts'
 import { defaultComparisonLimits, type ComparisonLimits } from '../limits.ts'
 import { extractDocument } from './extract.ts'
-
-function intersectionOverUnion(a: NormalizedRect, b: NormalizedRect): number {
-  const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)
-  const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)
-  const intersection = Math.max(0, width) * Math.max(0, height)
-  return intersection / (a.width * a.height + b.width * b.height - intersection)
-}
-
-async function failureOf(promise: Promise<unknown>): Promise<ComparisonFailure> {
-  const error = await promise.then(
-    () => undefined,
-    (reason: unknown) => reason,
-  )
-  if (!(error instanceof ComparisonFailure)) throw new Error(`Esperava ComparisonFailure, veio ${String(error)}`)
-  return error
-}
 
 describe('extractDocument', () => {
   it('extrai as palavras na ordem, com página e posição', async () => {
