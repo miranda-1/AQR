@@ -27,7 +27,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
 - São demonstrativos: o resultado, as etapas de processamento, os estados de erro (pelo menu "Simular estado" ou por `?cenario=`) e a exportação, que aparece como "indisponível".
 
-**Etapa 2, backend (autorizada em 09/10/2026, em andamento):** plano aprovado em `docs/plano-backend.md`, executado em commits pequenos, na ordem da seção 9. Entrega 1: comparação real de PDFs com servidor Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado. Entrega 2: administração de contas (listagem, busca, criação, edição, ativação/desativação, papéis e auditoria básica). **A autenticação real do login continua fora do escopo**: o login visual e a sessão fictícia permanecem. Próximo commit do plano: 2 (tipos de dados em `shared/contracts/`). Só depois das duas entregas, a triagem.
+**Etapa 2, backend (autorizada em 09/10/2026, em andamento):** plano aprovado em `docs/plano-backend.md`, executado em commits pequenos, na ordem da seção 9. Entrega 1: comparação real de PDFs com servidor Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado. Entrega 2: administração de contas (listagem, busca, criação, edição, ativação/desativação, papéis e auditoria básica). **A autenticação real do login continua fora do escopo**: o login visual e a sessão fictícia permanecem. Próximo commit do plano: 3 (servidor Fastify com `/api/health`). Só depois das duas entregas, a triagem.
 
 ## Repositório
 
@@ -119,7 +119,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Envio ao GitHub (`miranda-1/AQR`) de todo o trabalho até `fb6833c`, com o responsável como autor | — |
 | 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | `efaf768` |
 | 09/10/2026 | Folhas do login no site: "Original" e "Atualizado" com destaques, mais próximas do cartão (60 px para cada lado; 22 px no celular) | `3ad2090` |
-| 09/10/2026 | Plano do backend (comparação real e administração de contas) registrado em `docs/plano-backend.md`, com decisões provisórias D1–D4 e defaults técnicos; resumo em `docs/arquitetura.md` (commit 1 do plano) | ver `git log` |
+| 09/10/2026 | Plano do backend (comparação real e administração de contas) registrado em `docs/plano-backend.md`, com decisões provisórias D1–D4 e defaults técnicos; resumo em `docs/arquitetura.md` (commit 1 do plano) | `ed02c8b` |
+| 09/10/2026 | Tipos de dados da comparação movidos para `shared/contracts/comparison.ts` (reexportados por `types.ts`; contrato `ComparisonService` intacto) e campo opcional `anchors` em `Difference` (commit 2 do plano) | ver `git log` |
 
 ## Pendências
 
@@ -149,7 +150,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Rodapé (SEMADES, slogan, PREFCG) | `src/components/layout/AppFooter.tsx`, `src/assets/brand/semades-azul.svg`, `slogan-azul.svg` |
 | Cores e tokens | `src/styles/tokens.css` → `src/styles/globals.css` |
 | Plano do backend | `docs/plano-backend.md` (decisões, endpoints, migrações, commits) |
-| Contratos da comparação | `src/features/comparison/model/types.ts` |
+| Contratos da comparação | `src/features/comparison/model/types.ts` (serviço); tipos de dados em `shared/contracts/comparison.ts` |
 | Dados fictícios | `src/features/comparison/mocks/demo-comparison.ts` |
 | Serviço simulado (ponto de troca pelo backend) | `src/features/comparison/services/mock-comparison-service.ts` e `src/pages/ComparisonWorkspacePage.tsx` |
 | Tela de envio | `src/pages/ComparisonSetupPage.tsx`, `src/features/comparison/components/FileSlot.tsx` |

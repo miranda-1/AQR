@@ -60,11 +60,11 @@ Resultado (/comparacao/resultado)
 
 ## Contratos para o backend
 
-Estão em `src/features/comparison/model/types.ts`:
+Estão em `src/features/comparison/model/types.ts`, que reexporta os tipos de dados de `shared/contracts/comparison.ts` (os mesmos usados pelo servidor):
 
 - `ComparisonService.compare(input, { signal, onProgress })` → `Promise<ComparisonOutcome>`.
 - `ComparisonOutcome` = `{ status: 'completed', result }` ou `{ status: 'failed', error }`.
-- `ComparisonResult`: documentos, resumo e lista de `Difference`. Cada diferença tem tipo, contexto, texto e localização (`pageNumber` e `region` normalizada de 0 a 1) em cada documento.
+- `ComparisonResult`: documentos, resumo e lista de `Difference`. Cada diferença tem tipo, contexto, texto e localização (`pageNumber` e `region` normalizada de 0 a 1) em cada documento e, opcionalmente, `anchors`: a posição no documento em que o trecho não existe.
 - `ComparisonStage`: `validating | extracting | comparing | organizing`, para relatar o progresso.
 
 Para ligar o backend:
