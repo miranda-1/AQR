@@ -86,6 +86,10 @@ server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs 
 
 - `ComparisonService` continua sendo o contrato do frontend; `types.ts` reexporta os tipos de `shared/contracts/`.
 - No desenvolvimento, o Vite encaminha `/api` para o servidor local (`127.0.0.1:3000`), na mesma origem.
+- Já existe: `server/app.ts` (`buildApp`, testado com `app.inject()` sem abrir porta), `server/config.ts`
+  (variáveis validadas com Zod; valor inválido impede a inicialização) e `GET /api/health`.
+  O servidor usa `module: NodeNext` com imports `.ts` reescritos para `.js` no build (`tsconfig.server.build.json` → `dist-server/`);
+  no desenvolvimento roda com `tsx watch`. Os testes do Vitest ficam em dois projetos: `frontend` (jsdom) e `servidor` (Node).
 - A API administrativa fica desligada por padrão e o servidor recusa o modo de desenvolvimento em produção.
   A autenticação real entrará trocando o `AuthProvider`, sem mexer em rotas, regras ou auditoria.
 
@@ -94,6 +98,8 @@ server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs 
 | Decisão | Motivo |
 |---|---|
 | Vite + React Router, sem Next.js | Aplicação interna sem necessidade de SSR |
+| Fastify 5 no servidor | Limites de upload em streaming, validação e `inject()` para testar rotas sem rede |
+| `tsx` no desenvolvimento do servidor | Roda TypeScript direto com recarga, sem exigir Node mais novo que o `engines` atual |
 | Rotas com `React.lazy` | O carregamento inicial fica com cerca de 140 KB em gzip, e o workspace carrega sob demanda |
 | `zod/mini` | Validação com Zod e tree-shaking, para um uso pequeno (metadados do arquivo) |
 | Estado com `useReducer` e Context, sem biblioteca de estado | O escopo atual não justifica Redux, Zustand ou React Query |

@@ -9,10 +9,31 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  server: {
+    // No desenvolvimento, a API (npm run dev:server) fica na mesma origem do site.
+    proxy: { '/api': 'http://127.0.0.1:3000' },
+  },
   test: {
-    environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
-    css: false,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'frontend',
+          environment: 'jsdom',
+          include: ['src/**/*.test.{ts,tsx}'],
+          setupFiles: ['./src/test/setup.ts'],
+          css: false,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'servidor',
+          environment: 'node',
+          include: ['server/**/*.test.ts', 'shared/**/*.test.ts'],
+        },
+      },
+    ],
   },
 })

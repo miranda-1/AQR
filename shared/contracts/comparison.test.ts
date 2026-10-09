@@ -1,4 +1,4 @@
-import { summarize, type Difference } from './comparison'
+import { summarize, type Difference } from './comparison.ts'
 
 describe('summarize', () => {
   it('conta as diferenças por tipo', () => {

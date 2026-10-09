@@ -5,7 +5,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage'] },
+  { ignores: ['dist', 'dist-server', 'coverage'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.strict, jsxA11y.flatConfigs.recommended],
@@ -18,6 +18,11 @@ export default tseslint.config(
       // Regiões roláveis precisam ser focáveis para quem usa teclado (axe: scrollable-region-focusable).
       'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['tabpanel', 'region'], tags: [] }],
     },
+  },
+  {
+    // Servidor e tipos compartilhados rodam no Node, não no navegador.
+    files: ['server/**/*.ts', 'shared/**/*.ts'],
+    languageOptions: { globals: globals.node },
   },
   {
     files: ['src/components/ui/**/*.tsx'],

@@ -27,7 +27,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
 - São demonstrativos: o resultado, as etapas de processamento, os estados de erro (pelo menu "Simular estado" ou por `?cenario=`) e a exportação, que aparece como "indisponível".
 
-**Etapa 2, backend (autorizada em 09/10/2026, em andamento):** plano aprovado em `docs/plano-backend.md`, executado em commits pequenos, na ordem da seção 9. Entrega 1: comparação real de PDFs com servidor Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado. Entrega 2: administração de contas (listagem, busca, criação, edição, ativação/desativação, papéis e auditoria básica). **A autenticação real do login continua fora do escopo**: o login visual e a sessão fictícia permanecem. Próximo commit do plano: 3 (servidor Fastify com `/api/health`). Só depois das duas entregas, a triagem.
+**Etapa 2, backend (autorizada em 09/10/2026, em andamento):** plano aprovado em `docs/plano-backend.md`, executado em commits pequenos, na ordem da seção 9. Entrega 1: comparação real de PDFs com servidor Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado. Entrega 2: administração de contas (listagem, busca, criação, edição, ativação/desativação, papéis e auditoria básica). **A autenticação real do login continua fora do escopo**: o login visual e a sessão fictícia permanecem. Já existe o esqueleto do servidor (`server/`, Fastify, só `GET /api/health`), ainda sem comparação. Próximo commit do plano: 4 (PDFs sintéticos para testes e extração de texto com posição). Só depois das duas entregas, a triagem.
 
 ## Repositório
 
@@ -42,7 +42,10 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 ```bash
 npm install
 npm run dev     # http://localhost:5173 — abre na página inicial (seletor de ferramentas)
+npm run dev:server   # em outro terminal: API em http://127.0.0.1:3000 (o Vite encaminha /api para ela)
 ```
+
+Variáveis do servidor (opcionais): `HOST` (padrão `127.0.0.1`), `PORT` (`3000`), `NODE_ENV`, `LOG_LEVEL`.
 
 Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`.
 
@@ -120,7 +123,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | `efaf768` |
 | 09/10/2026 | Folhas do login no site: "Original" e "Atualizado" com destaques, mais próximas do cartão (60 px para cada lado; 22 px no celular) | `3ad2090` |
 | 09/10/2026 | Plano do backend (comparação real e administração de contas) registrado em `docs/plano-backend.md`, com decisões provisórias D1–D4 e defaults técnicos; resumo em `docs/arquitetura.md` (commit 1 do plano) | `ed02c8b` |
-| 09/10/2026 | Tipos de dados da comparação movidos para `shared/contracts/comparison.ts` (reexportados por `types.ts`; contrato `ComparisonService` intacto) e campo opcional `anchors` em `Difference` (commit 2 do plano) | ver `git log` |
+| 09/10/2026 | Tipos de dados da comparação movidos para `shared/contracts/comparison.ts` (reexportados por `types.ts`; contrato `ComparisonService` intacto) e campo opcional `anchors` em `Difference` (commit 2 do plano) | `5c783b2` |
+| 09/10/2026 | Servidor Fastify em `server/` com `GET /api/health`, configuração validada por variáveis de ambiente (padrão `127.0.0.1:3000`), `npm run dev:server` (tsx), `build:server` (→ `dist-server/`, incluído no `npm run build`), proxy `/api` no Vite e testes divididos em dois projetos do Vitest (`frontend` em jsdom, `servidor` em Node) (commit 3 do plano) | ver `git log` |
 
 ## Pendências
 
@@ -150,6 +154,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Rodapé (SEMADES, slogan, PREFCG) | `src/components/layout/AppFooter.tsx`, `src/assets/brand/semades-azul.svg`, `slogan-azul.svg` |
 | Cores e tokens | `src/styles/tokens.css` → `src/styles/globals.css` |
 | Plano do backend | `docs/plano-backend.md` (decisões, endpoints, migrações, commits) |
+| Servidor | `server/main.ts` (inicia), `server/app.ts` (`buildApp`, rotas; testes com `inject`), `server/config.ts` (variáveis de ambiente); `tsconfig.server.json` e `tsconfig.server.build.json` |
 | Contratos da comparação | `src/features/comparison/model/types.ts` (serviço); tipos de dados em `shared/contracts/comparison.ts` |
 | Dados fictícios | `src/features/comparison/mocks/demo-comparison.ts` |
 | Serviço simulado (ponto de troca pelo backend) | `src/features/comparison/services/mock-comparison-service.ts` e `src/pages/ComparisonWorkspacePage.tsx` |
