@@ -101,10 +101,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | `e9281f8` |
 | 09/10/2026 | Item "Sair" no menu Ferramentas, para voltar ao login sem fechar a aba | `98bd213` |
 | 09/10/2026 | Três animações de saída (logo volta ao centro, anéis fecham, varredura de saída) em `docs/propostas-login/sair-animacoes.html` | `8c8811f` |
-| 09/10/2026 | Anéis do login parados e centralizados (sem girar nem "respirar"), o que acaba com o salto ao entrar; "Sair" no site com a animação "logo volta ao centro" | ver `git log` |
+| 09/10/2026 | Anéis do login parados e centralizados (sem girar nem "respirar"), o que acaba com o salto ao entrar; "Sair" no site com a animação "logo volta ao centro" | `24a5474` |
+| 09/10/2026 | Três propostas de barra superior (abas, painel de ferramentas, ícones compactos), mais a atual, em `docs/propostas-topbar/topbar.html` | ver `git log` |
 
 ## Pendências
 
+- **Barra superior:** o responsável pediu para ajustar. Escolher entre as propostas de `docs/propostas-topbar/topbar.html` (`#v1` abas, `#v2` painel de ferramentas, `#v3` ícones compactos); a escolhida substitui a decisão registrada sobre a barra.
 - **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -119,6 +121,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
+| Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) |
 | Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |

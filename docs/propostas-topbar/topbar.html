@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: propostas de barra superior</title>
+<!--
+  Pedido do responsável (09/10/2026): três variações da barra superior com maneiras diferentes de ver as ferramentas.
+  #v0 atual (referência), #v1 abas, #v2 painel de ferramentas, #v3 ícones compactos.
+  Em todas: AQR à esquerda, PREFCG à direita, sem menu lateral, sem linhas divisórias (sombra separa a barra).
+  Arquivo estático: abra no navegador a partir do repositório.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --line-strong: #8d92ab;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+    --shadow-pop: 0 2px 4px rgba(27,32,64,.06), 0 16px 36px -10px rgba(27,32,64,.28);
+    --shadow-bar: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg.i { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .switcher { position: fixed; z-index: 90; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(27,32,64,.92); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+
+  .variant { display: none; }
+  .variant.is-active { display: block; }
+
+  /* ---------- Barra (comum) ---------- */
+  .bar { position: sticky; top: 0; z-index: 40; background: #fff; box-shadow: var(--shadow-bar); }
+  .bar-in { max-width: 1920px; margin: 0 auto; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 20px; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 4px; border-radius: 4px; }
+  .brand small { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .prefcg { height: 30px; width: auto; display: block; }
+  .right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .ghost { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 6px; font-size: 15px; font-weight: 600; }
+  .ghost:hover, .ghost[aria-expanded='true'] { background: var(--sunken); }
+  .badge { font-size: 11px; font-weight: 700; line-height: 1; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line-strong); background: var(--sunken); color: var(--muted); white-space: nowrap; }
+  .pop { position: absolute; z-index: 50; background: #fff; border-radius: 10px; box-shadow: var(--shadow-pop); padding: 6px; animation: drop .18s ease-out; }
+  .pop[hidden] { display: none; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 6px; font-size: 15px; text-align: left; text-decoration: none; color: var(--ink); }
+  .item:hover { background: var(--sunken); }
+  .item.is-active { background: var(--blue-50); color: var(--blue); font-weight: 700; position: relative; }
+  .item.is-active::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px; background: var(--blue); }
+  .item .i { color: var(--muted); } .item.is-active .i { color: var(--blue); }
+  .item.is-exit { margin-top: 4px; color: var(--muted); }
+
+  /* ---------- V1: abas ---------- */
+  .tabs { display: flex; align-items: center; gap: 4px; margin-left: 12px; height: 100%; }
+  .tab { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--muted); }
+  .tab:hover { background: var(--sunken); color: var(--ink); }
+  .tab[aria-current='page'] { color: var(--blue); background: var(--blue-50); }
+  /* Indicador da aba ativa: marca curta embaixo, não linha divisória. */
+  .tab[aria-current='page']::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: -8px; height: 3px; border-radius: 3px 3px 0 0; background: var(--blue); }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; }
+  .account { position: relative; }
+  .account .pop { right: 0; top: 48px; width: 240px; }
+  .who { padding: 10px 12px 8px; font-size: 13px; color: var(--muted); }
+  .who strong { display: block; font-size: 15px; color: var(--ink); }
+
+  /* ---------- V2: painel de ferramentas ---------- */
+  .panel { left: 0; right: 0; top: 56px; position: absolute; border-radius: 0 0 14px 14px; padding: 22px 24px 24px; animation: panel .22s ease-out; }
+  @keyframes panel { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  .panel-in { max-width: 1100px; margin: 0 auto; }
+  .panel h2 { font-size: 13px; font-weight: 700; letter-spacing: .02em; color: var(--muted); }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 12px; }
+  .tool { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 12px; background: var(--sunken); text-decoration: none; color: var(--ink); transition: background .15s, box-shadow .15s; }
+  .tool:hover { background: #fff; box-shadow: var(--shadow-pop); }
+  .tool.is-active { background: var(--blue-50); }
+  .tool .ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: #fff; color: var(--blue); flex-shrink: 0; }
+  .tool.is-active .ico { background: var(--blue); color: #fff; }
+  .tool .ico .i { width: 22px; height: 22px; }
+  .tool strong { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 16px; }
+  .tool p { margin-top: 4px; font-size: 14px; color: var(--muted); line-height: 1.45; }
+  .tool.is-exit { background: transparent; }
+  .tool.is-exit .ico { background: var(--sunken); color: var(--muted); }
+  .veil { position: fixed; inset: 56px 0 0; z-index: 30; background: rgba(27,32,64,.18); animation: fade .2s ease-out; }
+  .veil[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0; } }
+
+  /* ---------- V3: ícones compactos ---------- */
+  .dock { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: var(--sunken); }
+  .dock-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; transition: background .15s, color .15s; }
+  .dock-btn:hover { color: var(--ink); background: #fff; }
+  .dock-btn[aria-current='page'] { background: var(--blue); color: #fff; padding: 0 16px 0 12px; }
+  .dock-btn .label { display: none; }
+  .dock-btn[aria-current='page'] .label { display: inline; }
+  .dock-btn .dot { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--sunken); }
+  .tip { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 6px 10px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .12s; }
+  .dock-btn:hover .tip, .dock-btn:focus-visible .tip { opacity: 1; }
+  .dock-btn[aria-current='page'] .tip { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .chip:hover, .chip[aria-expanded='true'] { background: var(--sunken); }
+  .chip .avatar { width: 32px; height: 32px; font-size: 13px; }
+
+  /* ---------- Conteúdo de exemplo ---------- */
+  main { max-width: 1100px; margin: 0 auto; padding: 48px 24px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ''; width: 24px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  main h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+  .ph { margin-top: 16px; height: 108px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); }
+  .ph:first-of-type { margin-top: 32px; }
+  .ph.big { min-height: 380px; margin-top: 0; }
+
+  @media (max-width: 900px) {
+    .brand small, .tab .label, .chip .name { display: none; }
+    .tabs { margin-left: 0; } .tab { padding: 0 10px; }
+    .cards { grid-template-columns: 1fr; }
+    .dock { position: static; transform: none; margin-left: auto; }
+    .right { margin-left: 8px; gap: 8px; }
+    .prefcg { height: 24px; }
+    main { grid-template-columns: 1fr; }
+  }
+  /* Celular: só ícones nas abas e no grupo de ícones, sem selo e com menos espaço. */
+  @media (max-width: 600px) {
+    .bar-in { padding: 0 10px; gap: 6px; }
+    .tab .badge, .dock-btn[aria-current='page'] .label, .chip svg.i { display: none; }
+    .tab { padding: 0 9px; } .tab[aria-current='page']::after { left: 9px; right: 9px; }
+    .dock-btn, .dock-btn[aria-current='page'] { padding: 0 10px; }
+    .chip { padding: 0 2px; } .prefcg { height: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<nav class="switcher" aria-label="Variações da barra superior">
+  <a href="#v0">Atual</a>
+  <a href="#v1">1 · Abas</a>
+  <a href="#v2">2 · Painel de ferramentas</a>
+  <a href="#v3">3 · Ícones compactos</a>
+</nav>
+
+<!-- ATUAL -->
+<section class="variant" id="v0" aria-label="Barra atual">
+  <header class="bar"><div class="bar-in">
+    <div class="account" style="position:relative">
+      <button class="ghost" aria-expanded="false" data-toggle="m0"><span data-icon="grid" style="color:var(--blue)"></span>Ferramentas<span data-icon="chev"></span></button>
+      <div class="pop" id="m0" hidden style="left:0;top:48px;width:300px">
+        <a class="item is-active" href="#v0"><span data-icon="files"></span>Comparação de PDFs</a>
+        <a class="item" href="#v0"><span data-icon="search"></span>Triagem documental <span class="badge">Em desenvolvimento</span></a>
+        <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+      </div>
+    </div>
+    <a class="brand" href="#v0"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+    <div class="right"><img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande"></div>
+  </div></header>
+  <div data-content></div>
+</section>
+
+<!-- V1: ABAS -->
+<section class="variant" id="v1" aria-label="Variação 1: abas">
+  <header class="bar"><div class="bar-in">
+    <a class="brand" href="#v1"><span class="aqr" data-aqr="22"></span></a>
+    <nav class="tabs" aria-label="Ferramentas" data-tabs>
+      <button class="tab" aria-current="page"><span data-icon="home"></span><span class="label">Início</span></button>
+      <button class="tab"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+      <button class="tab"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="badge">Em breve</span></button>
+    </nav>
+    <div class="right">
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+      <div class="account">
+        <button class="avatar" aria-label="Conta: servidor" aria-expanded="false" data-toggle="m1">S</button>
+        <div class="pop" id="m1" hidden>
+          <div class="who"><strong>servidor</strong>SEMADES</div>
+          <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+        </div>
+      </div>
+    </div>
+  </div></header>
+  <div data-content></div>
+</section>
+
+<!-- V2: PAINEL DE FERRAMENTAS -->
+<section class="variant" id="v2" aria-label="Variação 2: painel de ferramentas">
+  <header class="bar"><div class="bar-in" style="position:static">
+    <button class="ghost" aria-expanded="false" data-toggle="m2" data-veil="veil2"><span data-icon="grid" style="color:var(--blue)"></span>Ferramentas<span data-icon="chev"></span></button>
+    <a class="brand" href="#v2"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+    <div class="right"><img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande"></div>
+  </div>
+  <div class="pop panel" id="m2" hidden><div class="panel-in">
+    <h2>Ferramentas do AQR</h2>
+    <div class="cards">
+      <a class="tool is-active" href="#v2"><span class="ico"><span data-icon="files"></span></span><span><strong>Comparar PDFs</strong><p>Compare duas versões de um documento e veja o que foi adicionado, removido ou alterado.</p></span></a>
+      <a class="tool" href="#v2"><span class="ico"><span data-icon="search"></span></span><span><strong>Triagem documental <span class="badge">Em desenvolvimento</span></strong><p>Identifique cada documento do processo e confira os itens obrigatórios.</p></span></a>
+      <a class="tool" href="#v2"><span class="ico"><span data-icon="home"></span></span><span><strong>Início</strong><p>Volte à página inicial com todas as ferramentas.</p></span></a>
+    </div>
+    <div style="margin-top:14px;display:flex;justify-content:flex-end"><button class="ghost" style="color:var(--muted)"><span data-icon="out"></span>Sair</button></div>
+  </div></div>
+  </header>
+  <div class="veil" id="veil2" hidden></div>
+  <div data-content></div>
+</section>
+
+<!-- V3: ÍCONES COMPACTOS -->
+<section class="variant" id="v3" aria-label="Variação 3: ícones compactos">
+  <header class="bar"><div class="bar-in" style="position:relative">
+    <a class="brand" href="#v3"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+    <nav class="dock" aria-label="Ferramentas" data-tabs>
+      <button class="dock-btn" aria-label="Início"><span data-icon="home"></span><span class="label">Início</span><span class="tip">Início</span></button>
+      <button class="dock-btn" aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span><span class="tip">Comparar PDFs</span></button>
+      <button class="dock-btn" aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem</span><span class="dot"></span><span class="tip">Triagem documental · em desenvolvimento</span></button>
+    </nav>
+    <div class="right">
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+      <div class="account">
+        <button class="chip" aria-expanded="false" data-toggle="m3"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+        <div class="pop" id="m3" hidden>
+          <div class="who"><strong>servidor</strong>SEMADES</div>
+          <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+        </div>
+      </div>
+    </div>
+  </div></header>
+  <div data-content></div>
+</section>
+
+<script>
+  // Ícones (mesmo desenho do lucide usado no app).
+  const icons = {
+    home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    files: '<path d="M15 2H9a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8"/>',
+    search: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="m13.3 16.3 1.7 1.7"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
+    out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+  }
+  document.querySelectorAll('[data-icon]').forEach((el) => {
+    el.outerHTML = `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${icons[el.dataset.icon]}</svg>`
+  })
+
+  // Logo do AQR (Proposta 3, "Lente Q").
+  document.querySelectorAll('[data-aqr]').forEach((el) => {
+    const size = Number(el.dataset.aqr), s = size * 1.1
+    el.style.fontSize = size + 'px'; el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'AQR')
+    el.innerHTML = `<span aria-hidden="true">A</span><svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * .02}px 0 ${size * .04}px;transform:translateY(${size * .12}px)">
+      <path d="M40.5 40.5 L55 55" stroke="var(--blue)" stroke-width="9" stroke-linecap="round"/><circle cx="27" cy="27" r="19" fill="#fff" stroke="var(--blue)" stroke-width="7"/>
+      <rect x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/><rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="var(--blue)"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="rgba(40,53,135,.35)"/></svg><span aria-hidden="true">R</span>`
+  })
+
+  // Conteúdo de exemplo abaixo de cada barra.
+  document.querySelectorAll('[data-content]').forEach((el) => {
+    el.outerHTML = `<main><div><p class="eyebrow">Ferramentas AQR</p><h1 data-title>Como podemos ajudar?</h1><div class="ph"></div><div class="ph"></div></div><div class="ph big"></div></main>`
+  })
+
+  // Menus e painel: abrir/fechar, Esc e clique fora.
+  function closeAll(except) {
+    document.querySelectorAll('[data-toggle]').forEach((b) => {
+      if (b === except) return
+      b.setAttribute('aria-expanded', 'false')
+      document.getElementById(b.dataset.toggle).hidden = true
+      if (b.dataset.veil) document.getElementById(b.dataset.veil).hidden = true
+    })
+  }
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const pop = document.getElementById(b.dataset.toggle), open = pop.hidden
+    closeAll(b)
+    pop.hidden = !open; b.setAttribute('aria-expanded', String(open))
+    if (b.dataset.veil) document.getElementById(b.dataset.veil).hidden = !open
+  }))
+  document.addEventListener('click', (e) => { if (!e.target.closest('.pop')) closeAll() })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll() })
+
+  // Abas e ícones: trocar a ferramenta ativa muda o título de exemplo.
+  const titles = { 'Início': 'Como podemos ajudar?', 'Comparar PDFs': 'Comparar documentos', 'Triagem documental': 'Triagem documental', 'Triagem documental, em desenvolvimento': 'Triagem documental' }
+  document.querySelectorAll('[data-tabs]').forEach((nav) => nav.querySelectorAll('button').forEach((btn) => btn.addEventListener('click', () => {
+    nav.querySelectorAll('button').forEach((b) => b.removeAttribute('aria-current'))
+    btn.setAttribute('aria-current', 'page')
+    const name = btn.getAttribute('aria-label') ?? btn.querySelector('.label').textContent
+    nav.closest('section').querySelector('[data-title]').textContent = titles[name] ?? name
+  })))
+
+  function show() {
+    const id = /^#v[0-3]$/.test(location.hash) ? location.hash.slice(1) : 'v1'
+    closeAll()
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('is-active', v.id === id))
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
