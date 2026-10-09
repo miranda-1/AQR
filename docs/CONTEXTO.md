@@ -98,10 +98,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Escolhida a "varredura". Cinco transições da logo para o site (cabeçalho, lente, varredura de volta, anéis, persianas) em `docs/propostas-login/login-transicoes.html` | `fb18c8f` |
 | 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | `9f68b6c` |
 | 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | `e9281f8` |
-| 09/10/2026 | Item "Sair" no menu Ferramentas, para voltar ao login sem fechar a aba | ver `git log` |
+| 09/10/2026 | Item "Sair" no menu Ferramentas, para voltar ao login sem fechar a aba | `98bd213` |
+| 09/10/2026 | Três animações de saída (logo volta ao centro, anéis fecham, varredura de saída) em `docs/propostas-login/sair-animacoes.html` | ver `git log` |
 
 ## Pendências
 
+- **Sair:** escolher a animação de saída em `sair-animacoes.html` (`#s1` logo volta ao centro, `#s2` anéis fecham, `#s3` varredura de saída) e implementar no site.
 - **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -116,7 +118,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
-| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) e `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) |
+| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
