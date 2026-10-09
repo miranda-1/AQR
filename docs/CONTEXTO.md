@@ -15,7 +15,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 **Etapa 1, protótipo de frontend:** concluída e em revisão visual pelo responsável.
 
-- Não há backend, processamento real de PDF, IA, banco de dados, autenticação real nem deploy. **Não implementar** essas partes sem pedido explícito.
+- Ainda não há backend, processamento real de PDF, banco de dados, autenticação real nem deploy. O backend e o banco estão autorizados e seguem `docs/plano-backend.md`; IA, autenticação real e deploy continuam dependendo de pedido explícito.
 - **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
@@ -27,7 +27,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
 - São demonstrativos: o resultado, as etapas de processamento, os estados de erro (pelo menu "Simular estado" ou por `?cenario=`) e a exportação, que aparece como "indisponível".
 
-**Próxima etapa, depois da aprovação visual:** mecanismo real de comparação de PDFs em TypeScript (Node.js), com testes, critérios de precisão e documentos sintéticos. Só depois disso, a triagem. Os contratos e o ponto de troca estão em `docs/arquitetura.md`.
+**Etapa 2, backend (autorizada em 09/10/2026, em andamento):** plano aprovado em `docs/plano-backend.md`, executado em commits pequenos, na ordem da seção 9. Entrega 1: comparação real de PDFs com servidor Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado. Entrega 2: administração de contas (listagem, busca, criação, edição, ativação/desativação, papéis e auditoria básica). **A autenticação real do login continua fora do escopo**: o login visual e a sessão fictícia permanecem. Próximo commit do plano: 2 (tipos de dados em `shared/contracts/`). Só depois das duas entregas, a triagem.
 
 ## Repositório
 
@@ -71,6 +71,9 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Barra superior em duas faixas.** Em cima, branca: logo e nome do AQR à esquerda; PREFCG e botão de conta (nome digitado no login, com "Sair") à direita. Embaixo, a **sub-barra "sublinhado"** em azul bem claro: Início, Comparar PDFs e Triagem documental ("Em breve"), com um traço azul que desliza até a ferramenta ativa. Separação por tom, sem linha divisória. |
 | 09/10/2026 | **Folhas atrás do cartão de login: "Original" e "Atualizado"**, os dois documentos que o AQR compara, com trechos destacados (cores e marcações do visualizador). Abertas de perto: 60 px para cada lado (22 px no celular). |
 | 09/10/2026 | **Transição entre páginas: "deslizar".** A página nova entra no sentido do traço da sub-barra (para a direita, entra pela direita), em cerca de 0,4 s; a barra fica parada. Sem suporte do navegador ou com movimento reduzido, a troca é direta. |
+| 09/10/2026 | **Backend autorizado em duas entregas, nesta ordem:** (1) comparação real de PDFs em Node.js/TypeScript, preservando `ComparisonService` e o frontend aprovado; (2) administração de contas. **Sem autenticação real do login nesta etapa.** A API administrativa deve ficar pronta para a autenticação real e nunca exposta sem proteção em produção (modo de desenvolvimento bloqueado em produção). Plano aprovado: `docs/plano-backend.md`. |
+| 09/10/2026 | **Provisórias até o commit 10 do plano** (defaults, a confirmar): D1 papéis `administrador` e `analista`, contas só desativadas, nunca excluídas; D2 conta identificada por login institucional imutável (`^[a-z0-9._-]{3,32}$`), nome obrigatório, e-mail opcional, sem senha guardada; D3 só o texto é comparado (formatação e imagens não geram diferença; PDF digitalizado dá "sem texto", sem OCR); D4 telas de administração nos padrões aprovados, acessadas pelo botão de conta, com capturas para aprovação. |
+| 09/10/2026 | **Técnicas (tomadas pelo plano):** servidor em `server/` no mesmo `package.json`; tipos compartilhados em `shared/contracts/`, reexportados por `types.ts`; Fastify 5; `pdfjs-dist` no servidor e no navegador (`isEvalSupported: false`); diferenças com `diff` (jsdiff); PDFs de teste com `pdf-lib`; SQLite via `node:sqlite`; nenhum PDF gravado em disco e resultado em memória por 30 min; progresso por polling; proxy `/api` no Vite; servidor só em `127.0.0.1` por padrão; campo opcional `anchors` em `Difference`; serviço real ou demonstrativo por `VITE_COMPARISON_SERVICE`. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
 | 08/10/2026 | **Logo do AQR: Proposta 3, "Lente Q"**, com a lente centralizada entre o A e o R. Propostas em `docs/propostas-logo-aqr/`. |
@@ -115,10 +118,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Transição "deslizar" entre páginas no site (View Transitions API): só o conteúdo desliza, no sentido do traço da sub-barra | `fb6833c` |
 | 09/10/2026 | Envio ao GitHub (`miranda-1/AQR`) de todo o trabalho até `fb6833c`, com o responsável como autor | — |
 | 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | `efaf768` |
-| 09/10/2026 | Folhas do login no site: "Original" e "Atualizado" com destaques, mais próximas do cartão (60 px para cada lado; 22 px no celular) | ver `git log` |
+| 09/10/2026 | Folhas do login no site: "Original" e "Atualizado" com destaques, mais próximas do cartão (60 px para cada lado; 22 px no celular) | `3ad2090` |
+| 09/10/2026 | Plano do backend (comparação real e administração de contas) registrado em `docs/plano-backend.md`, com decisões provisórias D1–D4 e defaults técnicos; resumo em `docs/arquitetura.md` (commit 1 do plano) | ver `git log` |
 
 ## Pendências
 
+- **Backend:** executar os commits 2 a 20 de `docs/plano-backend.md`, em ordem. **Confirmar D1–D4 com o responsável** no commit 10, antes da entrega 2.
 - **Login:** a autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -143,6 +148,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Marca PREFCG | `src/components/layout/BrandMark.tsx`, `src/assets/brand/` (+ README de procedência) |
 | Rodapé (SEMADES, slogan, PREFCG) | `src/components/layout/AppFooter.tsx`, `src/assets/brand/semades-azul.svg`, `slogan-azul.svg` |
 | Cores e tokens | `src/styles/tokens.css` → `src/styles/globals.css` |
+| Plano do backend | `docs/plano-backend.md` (decisões, endpoints, migrações, commits) |
 | Contratos da comparação | `src/features/comparison/model/types.ts` |
 | Dados fictícios | `src/features/comparison/mocks/demo-comparison.ts` |
 | Serviço simulado (ponto de troca pelo backend) | `src/features/comparison/services/mock-comparison-service.ts` e `src/pages/ComparisonWorkspacePage.tsx` |

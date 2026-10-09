@@ -74,6 +74,21 @@ Para ligar o backend:
 3. Substituir o visualizador simulado (`viewer/SimulatedPageView`) por páginas reais do PDF (por exemplo, renderizadas com pdf.js), com destaques posicionados por `Difference.*.location.region`. `DocumentPane`, a lista, a navegação e a rolagem sincronizada continuam iguais.
 4. Remover o seletor "Simular estado" e os avisos de protótipo (`appConfig.isPrototype = false`).
 
+## Próxima etapa: backend (em andamento)
+
+O plano completo está em `docs/plano-backend.md`. Resumo da estrutura que será criada:
+
+```
+shared/contracts/   tipos de dados usados pelo frontend e pelo servidor (comparação, administração, erros da API)
+server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs em tarefas assíncronas e, depois,
+                    administração de contas com SQLite (node:sqlite), migrações e auditoria
+```
+
+- `ComparisonService` continua sendo o contrato do frontend; `types.ts` reexporta os tipos de `shared/contracts/`.
+- No desenvolvimento, o Vite encaminha `/api` para o servidor local (`127.0.0.1:3000`), na mesma origem.
+- A API administrativa fica desligada por padrão e o servidor recusa o modo de desenvolvimento em produção.
+  A autenticação real entrará trocando o `AuthProvider`, sem mexer em rotas, regras ou auditoria.
+
 ## Decisões
 
 | Decisão | Motivo |
