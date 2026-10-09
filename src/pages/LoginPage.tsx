@@ -4,6 +4,7 @@ import { AqrLogo } from '@/components/layout/AqrLogo'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { appConfig } from '@/config/app'
 import { useAuthSession } from '@/features/auth/auth-session'
+import { ComparedSheet } from '@/features/auth/components/ComparedSheet'
 import { DottedRings, ringRadii } from '@/features/auth/components/DottedRings'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { drawDots, sampleLogo, scatterFromRings } from '@/features/auth/entry/dot-logo'
@@ -125,8 +126,8 @@ export function LoginPage() {
 
       <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-12">
         <div className={cn('login-stack', entering && 'is-leaving')}>
-          <div aria-hidden className="login-sheet is-back" />
-          <div aria-hidden className="login-sheet is-front" />
+          <ComparedSheet version="updated" className="is-back" />
+          <ComparedSheet version="original" className="is-front" />
           <div className="login-card px-[22px] pt-8 pb-7 sm:px-10 sm:pt-10 sm:pb-9">
             <div className="login-enter">
               <BrandMark height={34} className="mx-auto h-[34px] w-auto" />

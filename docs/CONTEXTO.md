@@ -19,7 +19,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 - **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
-  - login "Noite" (anéis pontilhados parados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (botão de conta) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
+  - login "Noite" (anéis pontilhados parados, cartão com as folhas "Original" e "Atualizado" em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (botão de conta) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
   - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
   - transição "deslizar" entre páginas (View Transitions API, nos navegadores com suporte);
   - navegação pela sub-barra de ferramentas (Início, Comparar PDFs, Triagem documental) e botão de conta com "Sair";
@@ -69,6 +69,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Anéis do login parados e centralizados.** Só o brilho se move sobre eles, e ao digitar os pontos clareiam (sem mudar de tamanho). **Sair = "logo volta ao centro"**: a logo sai do cabeçalho para o centro, o fundo do login volta, e ela se desfaz em pontinhos que voltam aos anéis. |
 | 08/10/2026 | ~~Barra superior: menu "Ferramentas" à esquerda, logo AQR ao lado e PREFCG à direita.~~ **Substituída em 09/10/2026** (abaixo). Continua valendo: sem "SEMADES" e sem "Protótipo" na barra; sem menu lateral. |
 | 09/10/2026 | **Barra superior em duas faixas.** Em cima, branca: logo e nome do AQR à esquerda; PREFCG e botão de conta (nome digitado no login, com "Sair") à direita. Embaixo, a **sub-barra "sublinhado"** em azul bem claro: Início, Comparar PDFs e Triagem documental ("Em breve"), com um traço azul que desliza até a ferramenta ativa. Separação por tom, sem linha divisória. |
+| 09/10/2026 | **Folhas atrás do cartão de login: "Original" e "Atualizado"**, os dois documentos que o AQR compara, com trechos destacados (cores e marcações do visualizador). Abertas de perto: 60 px para cada lado (22 px no celular). |
 | 09/10/2026 | **Transição entre páginas: "deslizar".** A página nova entra no sentido do traço da sub-barra (para a direita, entra pela direita), em cerca de 0,4 s; a barra fica parada. Sem suporte do navegador ou com movimento reduzido, a troca é direta. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -113,11 +114,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Três propostas de transição entre páginas (deslizar, em cascata, varredura) em `docs/propostas-transicoes/transicoes.html` | `9980b19` |
 | 09/10/2026 | Transição "deslizar" entre páginas no site (View Transitions API): só o conteúdo desliza, no sentido do traço da sub-barra | `fb6833c` |
 | 09/10/2026 | Envio ao GitHub (`miranda-1/AQR`) de todo o trabalho até `fb6833c`, com o responsável como autor | — |
-| 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | ver `git log` |
+| 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | `efaf768` |
+| 09/10/2026 | Folhas do login no site: "Original" e "Atualizado" com destaques, mais próximas do cartão (60 px para cada lado; 22 px no celular) | ver `git log` |
 
 ## Pendências
 
-- **Folhas do cartão de login:** escolher entre os modelos de `docs/propostas-login/folhas-login.html` (`#f0` atual, `#f1` amarelo e azul, `#f2` PDFs, `#f3` original e atualizado) e aplicar no site.
 - **Login:** a autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.

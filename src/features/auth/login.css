@@ -81,20 +81,69 @@
   transform: translateY(-8px) scale(0.97);
   pointer-events: none;
 }
+/*
+ * Folhas atrás do cartão: os dois documentos que o AQR compara ("Original" à esquerda, "Atualizado" à
+ * direita), com trechos destacados. --fan-x define quanto elas abrem para os lados.
+ */
+.login-stack {
+  --fan-x: 60px;
+}
 .login-sheet {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   border-radius: 16px;
   background: var(--brand-white);
-  box-shadow: 0 8px 24px -10px rgb(5 10 40 / 0.45);
+  box-shadow: 0 10px 28px -10px rgb(5 10 40 / 0.5);
   transform-origin: 50% 100%;
 }
 .login-sheet.is-back {
-  background: var(--brand-blue-50);
-  animation: login-fan-back 1.1s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both, login-sway-back 9s 1.5s ease-in-out infinite;
+  --fan: rotate(6deg) translate(var(--fan-x), 14px);
+  --sway: rotate(4.8deg) translate(calc(var(--fan-x) - 5px), 12px);
+  animation: login-fan 1.1s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both, login-sway 9s 1.5s ease-in-out infinite;
 }
 .login-sheet.is-front {
-  animation: login-fan-front 1.1s 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both, login-sway-front 9s 1.4s ease-in-out infinite;
+  --fan: rotate(-7deg) translate(calc(-1 * var(--fan-x)), 12px);
+  --sway: rotate(-5.8deg) translate(calc(-1 * var(--fan-x) + 5px), 10px);
+  animation: login-fan 1.1s 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both, login-sway 9s 1.4s ease-in-out infinite;
+}
+@media (max-width: 640px) {
+  .login-stack {
+    --fan-x: 22px;
+  }
+}
+
+/* Conteúdo das folhas: linhas de texto e destaques de diferença (mesmas cores e marcações do visualizador). */
+.login-doc-line {
+  position: relative;
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text-subtle) 25%, transparent);
+}
+.login-doc-line.is-title {
+  height: 10px;
+  margin-bottom: 8px;
+  background: color-mix(in srgb, var(--text-default) 70%, transparent);
+}
+.login-doc-line[data-kind]::after {
+  content: '';
+  position: absolute;
+  inset: -4px -5px;
+  z-index: -1;
+  border-radius: 3px;
+}
+.login-doc-line[data-kind='addition']::after {
+  background: var(--diff-addition-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-addition-line);
+}
+.login-doc-line[data-kind='deletion']::after {
+  background: var(--diff-deletion-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-deletion-line);
+}
+.login-doc-line[data-kind='modification']::after {
+  background: var(--diff-modification-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-modification-line);
 }
 .login-card {
   position: relative;
@@ -110,21 +159,13 @@
 .login-enter > *:nth-child(4) { animation-delay: 0.2s; }
 .login-enter > *:nth-child(5) { animation-delay: 0.26s; }
 
-@keyframes login-fan-front {
+@keyframes login-fan {
   from { transform: none; }
-  to { transform: rotate(-6deg) translate(-18px, 6px); }
+  to { transform: var(--fan); }
 }
-@keyframes login-fan-back {
-  from { transform: none; }
-  to { transform: rotate(5deg) translate(18px, 8px); }
-}
-@keyframes login-sway-front {
-  0%, 100% { transform: rotate(-6deg) translate(-18px, 6px); }
-  50% { transform: rotate(-4.5deg) translate(-14px, 4px); }
-}
-@keyframes login-sway-back {
-  0%, 100% { transform: rotate(5deg) translate(18px, 8px); }
-  50% { transform: rotate(3.5deg) translate(14px, 6px); }
+@keyframes login-sway {
+  0%, 100% { transform: var(--fan); }
+  50% { transform: var(--sway); }
 }
 @keyframes login-rise {
   from { opacity: 0; transform: translateY(10px); }
