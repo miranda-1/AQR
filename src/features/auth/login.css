@@ -59,7 +59,8 @@
   mask-image: conic-gradient(from var(--login-sweep), transparent 0 290deg, rgb(0 0 0 / 0.4) 330deg, #000 360deg);
   animation: login-breathe 9s ease-in-out infinite, login-sweep 7s linear infinite;
 }
-.login-rings.is-pulsing .login-rings-base {
+/* O pulso vai no conjunto, sem substituir o "respirar" das camadas: assim base e brilho seguem alinhados. */
+.login-rings.is-pulsing {
   animation: login-pulse 0.5s ease-out;
 }
 

@@ -96,7 +96,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Escolhida a "Noite". Três animações de entrada (pontilhado continua, logo em pontinhos, anel vira lente) em `docs/propostas-login/login-noite-entradas.html` | `1a81b9b` |
 | 09/10/2026 | Escolhida a entrada "logo em pontinhos". Três versões dela (pontos que viram logo, varredura, em sequência) em `docs/propostas-login/login-pontinhos.html`; os traços internos da lente deixam de aparecer soltos antes da logo | `7e74869` |
 | 09/10/2026 | Escolhida a "varredura". Cinco transições da logo para o site (cabeçalho, lente, varredura de volta, anéis, persianas) em `docs/propostas-login/login-transicoes.html` | `fb18c8f` |
-| 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | ver `git log` |
+| 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | `9f68b6c` |
+| 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | ver `git log` |
 
 ## Pendências
 
