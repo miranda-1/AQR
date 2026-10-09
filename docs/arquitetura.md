@@ -21,6 +21,7 @@ src/
       hooks/              execução da comparação, navegação, rolagem sincronizada
       components/         telas e painéis da comparação
       viewer/             visualizador de páginas (hoje, páginas simuladas em HTML)
+    home/                 página inicial: dados das ferramentas, opções, demonstração e ilustrações animadas
     triage/               reservado (em desenvolvimento)
   hooks/ lib/ config/     utilitários e configuração (limite de 50 MB, rotas)
   styles/                 tokens.css (design tokens) e globals.css (tema Tailwind)
@@ -31,7 +32,7 @@ src/
 ## Fluxo da comparação
 
 ```
-Início (/) → redireciona para /comparacao
+Início (/) → HomePage: seletor de ferramentas (Comparar PDFs → /comparacao, Triagem → /triagem)
 Seleção (/comparacao)
   └─ useFileSlot ─ validatePdfFile (local: extensão, tipo, tamanho, assinatura %PDF-)
        └─ ComparisonSession (memória)
@@ -72,4 +73,6 @@ Para ligar o backend:
 | Fonte hospedada no projeto (`@fontsource`) | Sem CDN externo, nenhuma requisição a terceiros |
 | TypeScript 6.0 (não 7.0) | O `typescript-eslint` ainda não suporta TypeScript 7 |
 | ESLint 9 (não 10) | O `eslint-plugin-jsx-a11y` ainda não declara suporte ao ESLint 10 |
+| Ilustrações da home em SVG + CSS (`@keyframes`), sem biblioteca de animação | Só `transform` e `opacity` (sem mudança de layout). Pausadas fora da tela (IntersectionObserver) e quando inativas. Com `prefers-reduced-motion`, ficam no quadro estático |
+| Painel de demonstração da home com `tabIndex={-1}` | Clicável com o mouse, mas sem parada extra de tabulação: as opções já levam ao mesmo destino |
 | Destaques inline como `span role="button"` | Assim o destaque quebra linha junto com o texto, o que `<button>` não faz |

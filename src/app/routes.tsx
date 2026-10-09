@@ -1,8 +1,9 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import { Navigate, type RouteObject } from 'react-router'
+import type { RouteObject } from 'react-router'
 import { AppShell, type RouteHandle } from '@/components/layout/AppShell'
 import { routes } from '@/config/routes'
 import { ComparisonSetupPage } from '@/pages/ComparisonSetupPage'
+import { HomePage } from '@/pages/HomePage'
 
 /** Carrega a página sob demanda, mantendo o carregamento inicial leve. */
 function lazyPage(load: () => Promise<{ default: ComponentType }>) {
@@ -20,8 +21,7 @@ export const appRoutes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
-      // A comparação é a tela inicial; "/" redireciona para manter um único endereço canônico.
-      { path: routes.home, element: <Navigate to={routes.comparison} replace /> },
+      { path: routes.home, element: <HomePage /> },
       { path: routes.comparison, element: <ComparisonSetupPage /> },
       {
         path: routes.comparisonWorkspace,

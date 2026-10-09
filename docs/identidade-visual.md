@@ -39,3 +39,4 @@ Este documento registra como o Manual da Marca PREFCG foi aplicado ao AQR e as s
 | 7 | Logo e favicon do AQR | Logo "Lente Q" (Proposta 3) na barra superior; o símbolo da lente é o favicon. Ver `src/assets/aqr/README.md` | Identidade própria de sistema ao lado da marca PREFCG |
 | 8 | Fontes oficiais | Substituídas na interface | Confirmar se há licença web da Qanelas, o que permitiria usá-la nos títulos |
 | 9 | Arquivos oficiais | A extração foi feita a partir dos PDFs | O manual (p. 31) informa que as pastas recebem `.AI`, `.PDF` e `.PNG`. Se houver SVG ou AI oficial da versão digital azul, ele deve substituir o arquivo extraído |
+| 10 | Ilustrações da página inicial | Desenhos próprios em SVG (documentos, feixe de comparação, lupa, indicadores), só com as cores dos tokens. O amarelo `#FFCC00` aparece apenas como detalhe decorativo (traço acima de "Ferramentas AQR" e ponto central do feixe) | Elementos gráficos de interface não previstos no manual |

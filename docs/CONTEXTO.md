@@ -18,6 +18,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 - Não há backend, processamento real de PDF, IA, banco de dados, autenticação nem deploy. **Não implementar** essas partes sem pedido explícito.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
+  - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
   - navegação pelo menu "Ferramentas";
   - seleção e validação local dos PDFs (extensão, tipo, limite de 50 MB, assinatura `%PDF-`);
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
@@ -37,7 +38,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ```bash
 npm install
-npm run dev     # http://localhost:5173 — abre direto em "Comparar documentos"
+npm run dev     # http://localhost:5173 — abre na página inicial (seletor de ferramentas)
 ```
 
 Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run build`.
@@ -50,7 +51,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Cor da marca unificada em **#283587**, o valor do manual. O arquivo 2026 tinha azuis divergentes. |
 | 08/10/2026 | Limite de **50 MB** por PDF. |
 | 08/10/2026 | Fonte da interface livre: escolhida **Plus Jakarta Sans** (OFL). As fontes da marca não têm licença web confirmada. |
-| 08/10/2026 | **Sem página inicial institucional.** `/` redireciona para `/comparacao`. Nada de hero, seções promocionais ou linguagem de marketing. |
+| 08/10/2026 | ~~Sem página inicial: `/` redireciona para `/comparacao`.~~ **Substituída** pela decisão seguinte, a pedido do responsável. Continua valendo: nada de hero, seções promocionais ou linguagem de marketing. |
+| 08/10/2026 | **Página inicial em `/`, como seletor de ferramentas:** "Como podemos ajudar?", com duas opções (Comparar PDFs e Triagem documental) à esquerda e uma demonstração animada à direita, que muda com hover/foco. O clique leva à ferramenta. Logo AQR do cabeçalho aponta para `/`. |
 | 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -69,11 +71,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Documentação de arquitetura, identidade e acessibilidade | `7674241` |
 | 08/10/2026 | Criação deste arquivo de contexto e da regra de commit a cada alteração | `10babf0` |
 | 08/10/2026 | PDF de apresentação da logo escolhida (9 páginas: conceito, versões, cores, construção, área de proteção, tamanhos mínimos, aplicações, usos incorretos, cores e tipografia) em `docs/logo-aqr/` | `d425de4` |
-| 08/10/2026 | Publicação no GitHub (`miranda-1/AQR`, privado) e registro do repositório neste arquivo | ver `git log` |
+| 08/10/2026 | Publicação no GitHub (`miranda-1/AQR`, privado) e registro do repositório neste arquivo | `2d85821` |
+| 08/10/2026 | Página inicial em `/` (seletor de ferramentas com demonstração animada), substituindo o redirecionamento para `/comparacao` | ver `git log` |
 
 ## Pendências
 
-- **Validação institucional:** 9 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
+- **Validação institucional:** 10 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Arquivos oficiais:** se a Comunicação fornecer SVG ou AI da marca PREFCG digital azul, substituir o arquivo extraído (`src/assets/brand/`).
 - **Acessibilidade:** testar com leitores de tela reais (NVDA, JAWS, VoiceOver).
@@ -84,6 +87,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
+| Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
 | Marca PREFCG | `src/components/layout/BrandMark.tsx`, `src/assets/brand/` (+ README de procedência) |

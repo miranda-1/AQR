@@ -10,7 +10,7 @@ Requer Node.js 20.19 ou superior.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173 (abre direto em "Comparar documentos")
+npm run dev        # http://localhost:5173 (abre na página inicial, com o seletor de ferramentas)
 ```
 
 | Script | O que faz |

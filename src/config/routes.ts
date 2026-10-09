@@ -1,5 +1,5 @@
 export const routes = {
-  /** Início: redireciona para a comparação de PDFs. */
+  /** Início: seletor das ferramentas do AQR. */
   home: '/',
   comparison: '/comparacao',
   comparisonWorkspace: '/comparacao/resultado',

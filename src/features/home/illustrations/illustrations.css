@@ -1,0 +1,362 @@
+/*
+ * Ilustrações animadas da página inicial.
+ *
+ * Cada elemento já está, sem animação, na posição de um quadro estático completo.
+ * Ele é o que aparece com prefers-reduced-motion. As animações partem desse quadro e voltam a ele.
+ * Só usam opacity e transform, que não alteram o layout.
+ * Cores: apenas tokens (tokens.css). O amarelo institucional é só decorativo.
+ */
+
+.illus {
+  --illus-enter: 56px;
+  --illus-spread: 18px;
+  --illus-zoom: 1.12;
+  display: block;
+  overflow: visible;
+}
+
+.illus * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Fora da tela ou com a outra ferramenta ativa: animação pausada. */
+.illus[data-animate='off'] * {
+  animation-play-state: paused !important;
+}
+
+.illus-paper {
+  fill: var(--brand-white);
+  stroke: var(--line-default);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 4px rgba(27, 32, 64, 0.1));
+}
+
+.illus-text {
+  fill: var(--text-subtle);
+  opacity: 0.3;
+}
+
+.illus-title {
+  fill: var(--text-default);
+  opacity: 0.75;
+}
+
+/* ---------- Comparar PDFs: dois documentos que se aproximam e são percorridos por um feixe ---------- */
+
+.illus-compare-left {
+  animation: illus-doc-from-left 10s ease-in-out infinite;
+}
+
+.illus-compare-right {
+  animation: illus-doc-from-right 10s ease-in-out infinite;
+}
+
+.illus-compare-beam {
+  animation: illus-beam 10s linear infinite;
+}
+
+.illus-reveal-1,
+.illus-reveal-2 {
+  transform-origin: left center;
+}
+
+.illus-reveal-1 {
+  animation: illus-reveal-1 10s ease-out infinite;
+}
+
+.illus-reveal-2 {
+  animation: illus-reveal-2 10s ease-out infinite;
+}
+
+@keyframes illus-doc-from-left {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--illus-enter)));
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(calc(-1 * var(--illus-spread)));
+  }
+  24%,
+  90% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  97%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+@keyframes illus-doc-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--illus-enter));
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(var(--illus-spread));
+  }
+  24%,
+  90% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  97%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+/* O feixe desce de y=76 a y=172 (a posição de repouso é y=110). */
+@keyframes illus-beam {
+  0%,
+  25% {
+    opacity: 0;
+    transform: translateY(-34px);
+  }
+  28% {
+    opacity: 1;
+    transform: translateY(-34px);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(62px);
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: translateY(62px);
+  }
+}
+
+/* Os destaques surgem quando o feixe passa pela linha correspondente. */
+@keyframes illus-reveal-1 {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+  45%,
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes illus-reveal-2 {
+  0%,
+  58% {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+  63%,
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Triagem documental: lupa que percorre os campos e indicadores de classificação ---------- */
+
+.illus-lens-path {
+  animation: illus-lens-path 11s ease-in-out infinite;
+}
+
+.illus-lens-zoom {
+  /* Escala a partir do centro da lente (view-box), não do grupo com a haste. */
+  transform-box: view-box;
+  transform-origin: 155px 107px;
+  animation: illus-lens-zoom 2.75s ease-in-out infinite alternate;
+}
+
+.illus-field-a {
+  opacity: 0;
+  animation: illus-field-a 11s ease-in-out infinite;
+}
+
+.illus-field-b {
+  animation: illus-field-b 11s ease-in-out infinite;
+}
+
+.illus-field-c {
+  opacity: 0;
+  animation: illus-field-c 11s ease-in-out infinite;
+}
+
+.illus-chip {
+  transform-origin: left center;
+}
+
+.illus-chip-1 {
+  animation: illus-chip-1 11s ease-out infinite;
+}
+
+.illus-chip-2 {
+  animation: illus-chip-2 11s ease-out infinite;
+}
+
+.illus-chip-3 {
+  animation: illus-chip-3 11s ease-out infinite;
+}
+
+/* Campos: A (deslocamento 23, -38), B (repouso) e C (-15, 38). */
+@keyframes illus-lens-path {
+  0% {
+    opacity: 0;
+    transform: translate(23px, -38px);
+  }
+  5%,
+  18% {
+    opacity: 1;
+    transform: translate(23px, -38px);
+  }
+  28%,
+  42% {
+    transform: translate(0, 0);
+  }
+  52%,
+  66% {
+    transform: translate(-15px, 38px);
+  }
+  78%,
+  88% {
+    opacity: 1;
+    transform: translate(8px, -6px);
+  }
+  95%,
+  100% {
+    opacity: 0;
+    transform: translate(8px, -6px);
+  }
+}
+
+@keyframes illus-lens-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(var(--illus-zoom));
+  }
+}
+
+@keyframes illus-field-a {
+  0%,
+  6% {
+    opacity: 0;
+  }
+  10%,
+  20% {
+    opacity: 1;
+  }
+  26%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes illus-field-b {
+  0%,
+  28% {
+    opacity: 0;
+  }
+  32%,
+  44% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes illus-field-c {
+  0%,
+  52% {
+    opacity: 0;
+  }
+  56%,
+  68% {
+    opacity: 1;
+  }
+  74%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes illus-chip-1 {
+  0%,
+  19% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  24%,
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes illus-chip-2 {
+  0%,
+  43% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  48%,
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes illus-chip-3 {
+  0%,
+  67% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  72%,
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* Telas pequenas: menos amplitude e menos detalhes. */
+@media (max-width: 767px) {
+  .illus {
+    --illus-enter: 20px;
+    --illus-spread: 6px;
+    --illus-zoom: 1.06;
+  }
+  .illus-detail {
+    display: none;
+  }
+}
+
+/* Movimento reduzido: quadro estático, sem movimento contínuo. */
+@media (prefers-reduced-motion: reduce) {
+  .illus * {
+    animation: none !important;
+  }
+}

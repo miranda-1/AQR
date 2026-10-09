@@ -23,6 +23,7 @@ async function violations(container: Element) {
 
 describe('acessibilidade (axe)', () => {
   it.each([
+    ['página inicial', '/', 'Como podemos ajudar?'],
     ['seleção de arquivos', '/comparacao', 'Comparar documentos'],
     ['triagem', '/triagem', 'Triagem documental'],
   ])('%s não tem violações', async (_, path, heading) => {

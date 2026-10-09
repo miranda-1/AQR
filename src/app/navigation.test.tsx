@@ -9,17 +9,17 @@ async function openToolsMenu(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('Rota inicial', () => {
-  it('redireciona "/" para a comparação de documentos', async () => {
+  it('mostra a página inicial em "/"', async () => {
     const { router } = renderApp('/')
-    expect(await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/comparacao')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
   })
 
-  it('apresenta a marca institucional e o nome do sistema', async () => {
-    renderApp('/')
+  it('apresenta a marca institucional e o nome do sistema, com link para o início', async () => {
+    renderApp('/comparacao')
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
     expect(screen.getByRole('img', { name: 'Prefeitura de Campo Grande' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toHaveAttribute('href', '/')
   })
 })
 
