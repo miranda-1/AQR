@@ -13,9 +13,9 @@ Este documento registra como o Manual da Marca PREFCG foi aplicado ao AQR e as s
 
 ## Decisões aplicadas
 
-1. **Marca:** apenas PREFCG, na versão monocromática azul sobre branco, em versão digital (sem "Siga @prefcg"). Procedência em `src/assets/brand/README.md`.
+1. **Marca:** PREFCG na versão monocromática azul sobre branco, em versão digital (sem "Siga @prefcg"), no cabeçalho e no rodapé. Procedência em `src/assets/brand/README.md`.
 2. **Cor da marca:** `#283587`, conforme o manual. O arquivo 2026 traz azuis ligeiramente diferentes entre si.
-3. **SEMADES:** aparece apenas como texto no rodapé (sigla e nome completo), não como marca gráfica.
+3. **Rodapé:** SEMADES, slogan e PREFCG, na versão azul do kit 2026 (página "Para redes sociais"), na ordem do kit e sobre branco. O nome completo da secretaria fica no texto alternativo.
 4. **Paleta da interface:**
    - Azul `#283587` como cor principal.
    - Amarelo `#FFCC00`: usado apenas como destaque dentro do símbolo do AQR. Ele nunca deve ser usado em texto ou foco, porque sobre branco o contraste é de 1,5:1.
@@ -34,9 +34,10 @@ Este documento registra como o Manual da Marca PREFCG foi aplicado ao AQR e as s
 | 2 | Tamanho mínimo digital | Marca com 30 px de altura (24 px no celular) | O manual define mínimos apenas em centímetros, para impresso |
 | 3 | Posição da marca | PREFCG alinhada à direita da barra superior. À esquerda ficam o menu "Ferramentas" e "AQR" em texto | O manual não prevê marca junto a nome de sistema nem a posição em interfaces |
 | 4 | Ajuste de cor | Preenchimentos do SVG unificados em `#283587` | Divergência entre o arquivo 2026 e o manual |
-| 5 | Marca SEMADES omitida | Sigla e nome apenas em texto | Confirmar se a Comunicação aceita a ausência da marca da secretaria em sistemas |
+| 5 | Marca SEMADES sem descrição | No rodapé, a versão sem "Secretaria Municipal de…" | Confirmar se a versão curta é adequada ao contexto institucional |
 | 6 | Barra superior de sistema interno | Barra branca de 56 px, separada do conteúdo por sombra suave (sem linhas divisórias) | Composição da marca com elementos de navegação não prevista no manual |
 | 7 | Logo e favicon do AQR | Logo "Lente Q" (Proposta 3) na barra superior; o símbolo da lente é o favicon. Ver `src/assets/aqr/README.md` | Identidade própria de sistema ao lado da marca PREFCG |
 | 8 | Fontes oficiais | Substituídas na interface | Confirmar se há licença web da Qanelas, o que permitiria usá-la nos títulos |
 | 9 | Arquivos oficiais | A extração foi feita a partir dos PDFs | O manual (p. 31) informa que as pastas recebem `.AI`, `.PDF` e `.PNG`. Se houver SVG ou AI oficial da versão digital azul, ele deve substituir o arquivo extraído |
 | 10 | Ilustrações da página inicial | Desenhos próprios em SVG (documentos, feixe de comparação, lupa, indicadores), só com as cores dos tokens. O amarelo `#FFCC00` aparece apenas como detalhe decorativo (traço acima de "Ferramentas AQR" e ponto central do feixe) | Elementos gráficos de interface não previstos no manual |
+| 11 | Slogan em sistema interno | Slogan da gestão no rodapé, em tamanho reduzido (22 a 30 px de altura) | Peça de campanha aplicada numa ferramenta de trabalho, em tamanho em que o texto interno fica pequeno |

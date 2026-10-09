@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { defined } from '@/test/files'
 import { renderApp } from '@/test/render'
 
 async function openToolsMenu(user: ReturnType<typeof userEvent.setup>) {
@@ -18,8 +19,20 @@ describe('Rota inicial', () => {
   it('apresenta a marca institucional e o nome do sistema, com link para o início', async () => {
     renderApp('/comparacao')
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
-    expect(screen.getByRole('img', { name: 'Prefeitura de Campo Grande' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toHaveAttribute('href', '/')
+    const header = defined(screen.getByRole('button', { name: 'Ferramentas' }).closest('header'), 'cabeçalho')
+    expect(within(header).getByRole('img', { name: 'Prefeitura de Campo Grande' })).toBeInTheDocument()
+    expect(within(header).getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toHaveAttribute('href', '/')
+  })
+
+  it('mostra no rodapé as marcas SEMADES, o slogan e a PREFCG, nessa ordem', async () => {
+    renderApp('/')
+    await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })
+    const marks = within(screen.getByRole('list', { name: 'Marcas institucionais' })).getAllByRole('img')
+    expect(marks.map((mark) => mark.getAttribute('alt'))).toEqual([
+      expect.stringMatching(/^SEMADES — Secretaria Municipal de Meio Ambiente/),
+      'É fazendo o certo que a gente traz resultado',
+      'Prefeitura de Campo Grande',
+    ])
   })
 })
 

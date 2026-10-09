@@ -31,8 +31,21 @@ O SVG renderizado a 288 dpi foi comparado pixel a pixel com a mesma região do P
 - Não recolorir por CSS, não aplicar filtros, sombras ou opacidade.
 - Manter área livre mínima de 2X ao redor (X = metade da altura da letra "P" do PREFCG, conforme o manual).
 
+## `semades-azul.svg` e `slogan-azul.svg` (rodapé)
+
+Marca SEMADES (sem a descrição) e slogan "É fazendo o certo que a gente traz resultado", na versão monocromática azul. Saem da mesma página e da mesma linha da `prefcg-azul.svg`, e por isso as três formam o conjunto do rodapé, na ordem do kit.
+
+| Arquivo | Região extraída (pt) | Caminhos | Proporção | Cor na origem |
+|---|---|---|---|---|
+| `semades-azul.svg` | x 40–300, y 290–345 | 7 | 6,7535 : 1 | `#214388` |
+| `slogan-azul.svg` | x 318–494, y 280–358 | 39 | 2,6224 : 1 | `#27438B` |
+
+A origem é a mesma (`SEMADES - MARCA e SLOGAN 2026.pdf`, página 2), e o script é o mesmo, com a cor `#283587`. Como na PREFCG, a única alteração é a unificação do azul.
+
+- **Uso:** só no rodapé (`AppFooter`), sobre fundo branco. O slogan é vazado: o interior das letras mostra o fundo.
+- **Versões coloridas:** foram testadas e descartadas pelo responsável em 08/10/2026, em favor da versão azul e branca.
+
 ### Arquivos não utilizados
 
-- **Marca SEMADES** (2025 e 2026): por decisão do projeto, a interface usa apenas a marca PREFCG. A sigla SEMADES aparece como texto.
-- **Slogan "É fazendo o certo que a gente traz resultado"**: é peça de campanha e não se aplica a uma ferramenta de trabalho.
+- **SEMADES com descrição** (2025 e 2026): o nome completo da secretaria fica no texto alternativo da marca.
 - **`Brasão Prefeitura Campo Grande.pdf`**: é a identidade anterior, em azul-marinho `#0D143D`, fora da paleta vigente. O brasão não pode ser isolado da marca PREFCG sem remover elementos.

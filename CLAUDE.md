@@ -16,7 +16,7 @@ Repositório remoto: `miranda-1/AQR` (GitHub, privado). Comando de envio em `doc
 `npm run dev` · `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`. Rode os quatro últimos antes de concluir qualquer mudança.
 
 ## Regras do projeto
-- **Marca:** usar apenas `src/assets/brand/prefcg-azul.svg`, via `<BrandMark />`. Nunca redesenhar, recolorir, distorcer ou reconstruir a marca ou o brasão. Ver `src/assets/brand/README.md`.
+- **Marca:** PREFCG via `<BrandMark />` (`prefcg-azul.svg`). No rodapé (`AppFooter`) entram também SEMADES e o slogan, na versão azul (`semades-azul.svg`, `slogan-azul.svg`). Nunca redesenhar, recolorir, distorcer ou reconstruir as marcas ou o brasão. Ver `src/assets/brand/README.md`.
 - **Layout:** blocos são separados por fundo tonal, sombra (`shadow-surface`) e espaçamento — não usar linhas divisórias (`border-b/t`, `divide-*`).
 - **Logo do AQR:** usar `<AqrLogo />` / `<AqrLensSymbol />` (`src/components/layout/AqrLogo.tsx`); não redesenhar. Ver `src/assets/aqr/README.md`.
 - **Cores:** só por tokens (`src/styles/tokens.css` → `globals.css`). O amarelo `#FFCC00` é decorativo: nunca usar em texto ou foco.

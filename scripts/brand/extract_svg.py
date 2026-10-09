@@ -11,6 +11,10 @@ Requer PyMuPDF (pip install pymupdf). Uso:
 Exemplo usado no AQR (marca PREFCG azul, kit SEMADES 2026, página "Para redes sociais"):
   python scripts/brand/extract_svg.py "SEMADES - MARCA e SLOGAN 2026.pdf" 1 495 280 800 360 \
     src/assets/brand/prefcg-azul.svg "#283587"
+
+Rodapé (mesma página e linha, versão azul):
+  ... 1 40 290 300 345 src/assets/brand/semades-azul.svg "#283587"
+  ... 1 318 280 494 358 src/assets/brand/slogan-azul.svg "#283587"
 """
 import sys
 
