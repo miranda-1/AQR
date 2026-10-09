@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: anéis pontilhados, variações</title>
+<!--
+  Decisão do responsável (09/10/2026): o login usa "anéis pontilhados". Esta página traz três variações
+  dela (#v1 noite, #v2 claro, #v3 lente) e a original (#v0) para comparar.
+  Arquivo estático: abra no navegador a partir do repositório. Nada aqui autentica de verdade.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072;
+    --sunken: #f4f5f9; --line-strong: #8d92ab;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  .switcher { position: fixed; z-index: 60; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(10,14,40,.85); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+
+  /* ---------- Palco ---------- */
+  .stage { position: relative; z-index: 2; min-height: 100vh; overflow: hidden; background: var(--blue); }
+  .stage.curtain { transform: translateY(-100%); transition: transform .8s cubic-bezier(.7,0,.2,1); }
+  body[data-v='v1'] .stage { background: radial-gradient(circle at 50% 46%, #33419a 0, var(--blue) 30%, var(--blue-800) 68%, #151b4d 100%); }
+  body[data-v='v2'] .stage { background: radial-gradient(circle at 50% 46%, #fff 0, var(--sunken) 55%, #e9ebf2 100%); }
+  body[data-v='v3'] .stage { background: linear-gradient(115deg, var(--blue-800) 0, var(--blue) 55%, #2f3d96 100%); }
+
+  .scene { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 48px 16px 96px; }
+  body[data-v='v3'] .scene { justify-content: flex-start; padding-left: max(9vw, 80px); }
+
+  /* Anéis: camada centralizada em (--cx, --cy) */
+  .rings { position: absolute; left: var(--cx, 50%); top: var(--cy, 50%); width: 1400px; height: 1400px; margin: -700px 0 0 -700px; pointer-events: none;
+    transition: transform 1.2s cubic-bezier(.6,0,.3,1), opacity 1s ease, left 1s cubic-bezier(.6,0,.2,1), top 1s cubic-bezier(.6,0,.2,1); }
+  .rings svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: breathe 9s ease-in-out infinite; }
+  .rings circle, .rings line { fill: none; stroke-linecap: round; transform-box: view-box; transform-origin: 700px 700px; }
+  .rings circle.cw { animation: spin var(--d) linear infinite; }
+  .rings circle.ccw { animation: spin var(--d) linear infinite reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes breathe { 0%, 100% { transform: scale(.97); } 50% { transform: scale(1.03); } }
+  .rings.pulse svg.base { animation: pulse .5s ease-out; }
+  @keyframes pulse { 0% { transform: scale(1); } 35% { transform: scale(1.035); } 100% { transform: scale(1); } }
+
+  /* V1: brilho que percorre os anéis (radar) */
+  /* O brilho gira pela máscara (ângulo animado), sem girar o desenho, para os pontos ficarem alinhados aos da base. */
+  @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  .rings .glow { -webkit-mask-image: conic-gradient(from var(--a), transparent 0 290deg, rgba(0,0,0,.4) 330deg, #000 360deg);
+    mask-image: conic-gradient(from var(--a), transparent 0 290deg, rgba(0,0,0,.4) 330deg, #000 360deg);
+    animation: breathe 9s ease-in-out infinite, sweep 7s linear infinite; }
+  @keyframes sweep { to { --a: 360deg; } }
+  .rings.collapse { transform: scale(.06); opacity: 0; }
+  /* Depois de virar a logo, os anéis voltam a se abrir ao redor dela, mais discretos. */
+  .rings.echo { transform: scale(1); opacity: .55; transition: transform 1.6s cubic-bezier(.2,.7,.2,1), opacity 1.2s ease; }
+
+  /* V3: a lente grande à direita */
+  body[data-v='v3'] .rings { --cx: 70%; --cy: 46%; }
+  .rings.to-center { left: 50%; top: 50%; transform: scale(.12); opacity: 0; }
+
+  /* ---------- Cartão 2B ---------- */
+  .stack { position: relative; width: 100%; max-width: 440px; transition: opacity .45s ease, transform .45s ease; }
+  .stack.leaving { opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; }
+  .sheet { position: absolute; inset: 0; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px -10px rgba(5,10,40,.45); transform-origin: 50% 100%; }
+  .sheet.s1 { animation: fan1 1.1s .25s cubic-bezier(.2,.7,.2,1) both, sway1 9s 1.4s ease-in-out infinite; }
+  .sheet.s2 { animation: fan2 1.1s .35s cubic-bezier(.2,.7,.2,1) both, sway2 9s 1.5s ease-in-out infinite; background: var(--blue-50); }
+  body[data-v='v2'] .sheet.s2 { background: var(--blue); }
+  body[data-v='v2'] .sheet { box-shadow: 0 8px 24px -10px rgba(27,32,64,.25); }
+  @keyframes fan1 { from { transform: none; } to { transform: rotate(-6deg) translate(-18px, 6px); } }
+  @keyframes fan2 { from { transform: none; } to { transform: rotate(5deg) translate(18px, 8px); } }
+  @keyframes sway1 { 0%, 100% { transform: rotate(-6deg) translate(-18px, 6px); } 50% { transform: rotate(-4.5deg) translate(-14px, 4px); } }
+  @keyframes sway2 { 0%, 100% { transform: rotate(5deg) translate(18px, 8px); } 50% { transform: rotate(3.5deg) translate(14px, 6px); } }
+  .card { position: relative; background: #fff; border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(5,10,40,.55); padding: 40px 40px 34px; }
+  body[data-v='v2'] .card { box-shadow: 0 2px 4px rgba(27,32,64,.06), 0 24px 48px -16px rgba(27,32,64,.28); }
+
+  .prefcg { display: block; height: 34px; width: auto; margin: 0 auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .system { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 20px; text-align: center; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); text-align: center; }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field { position: relative; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,53,135,.22); }
+  .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .reveal:hover { background: var(--blue-50); }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s; }
+  .submit:hover { background: var(--blue-800); }
+  .submit:active { transform: translateY(1px); }
+  .submit svg { transition: transform .2s; }
+  .submit:hover svg { transform: translateX(3px); }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: center; }
+  .enter > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  .enter > *:nth-child(2) { animation-delay: .08s; } .enter > *:nth-child(3) { animation-delay: .14s; }
+  .enter > *:nth-child(4) { animation-delay: .2s; } .enter > *:nth-child(5) { animation-delay: .26s; } .enter > *:nth-child(6) { animation-delay: .32s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .draw .ring { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw 1s .5s ease-out forwards; }
+  .draw .handle { stroke-dasharray: 22; stroke-dashoffset: 22; animation: draw .4s 1.3s ease-out forwards; }
+  .draw .bar { transform-box: fill-box; transform-origin: left; transform: scaleX(0); animation: grow .5s 1.5s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+
+  /* ---------- Entrada ---------- */
+  /* V2: o azul se espalha em círculo a partir do botão "Entrar". */
+  .flood { position: absolute; inset: 0; z-index: 2; background: var(--blue); clip-path: circle(0 at var(--fx, 50%) var(--fy, 50%)); pointer-events: none; }
+  .flood.is-on { clip-path: circle(150% at var(--fx, 50%) var(--fy, 50%)); transition: clip-path 1s cubic-bezier(.6,0,.3,1); }
+  .flood .rings { opacity: 0; transition: opacity .8s .6s ease; }
+  .flood.is-on .rings { opacity: 1; }
+
+  .splash { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    pointer-events: none; opacity: 0; transition: opacity .35s ease; }
+  .splash.is-on { opacity: 1; }
+  .splash .aqr { position: relative; z-index: 2; font-size: 80px; color: #fff; }
+  .splash .letter { display: inline-block; opacity: 0; }
+  .splash.is-on .letter.a { animation: from-left .6s .35s cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash.is-on .letter.r { animation: from-right .6s .35s cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash .name { position: relative; z-index: 2; font-size: 16px; color: rgba(255,255,255,.85); opacity: 0; }
+  .splash.is-on .name { animation: rise .6s 1.6s ease-out forwards; }
+  @keyframes from-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes from-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+
+  .site { position: fixed; inset: 0; z-index: 1; background: var(--sunken); overflow: auto; visibility: hidden; }
+  .site.is-on { visibility: visible; }
+  .site header { height: 56px; background: #fff; display: flex; align-items: center; gap: 16px; padding: 0 20px; box-shadow: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10); }
+  .site header .tools { font-size: 15px; font-weight: 600; }
+  .site header .prefcg { margin: 0 0 0 auto; height: 30px; }
+  .site main { max-width: 1100px; margin: 0 auto; padding: 56px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .site.is-on main > * { animation: rise .7s .45s cubic-bezier(.2,.7,.2,1) both; }
+  .site.is-on main > *:nth-child(2) { animation-delay: .55s; }
+  .site .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .site .eyebrow::before { content: ''; width: 24px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  .site h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+  .site .opt { margin-top: 16px; height: 108px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); }
+  .site .opt:first-of-type { margin-top: 32px; }
+  .site .panel { border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); min-height: 380px; }
+  .again { position: fixed; z-index: 61; right: 16px; top: 68px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--blue); cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .card { padding: 30px 22px 26px; }
+    body[data-v='v3'] .scene { justify-content: center; padding-left: 16px; }
+    body[data-v='v3'] .rings { --cx: 50%; --cy: 50%; opacity: .55; }
+    .site main { grid-template-columns: 1fr; }
+    .site .panel { min-height: 220px; }
+    .splash .aqr { font-size: 58px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .sheet.s1 { transform: rotate(-6deg) translate(-18px, 6px); }
+    .sheet.s2 { transform: rotate(5deg) translate(18px, 8px); }
+    .draw .ring, .draw .handle { stroke-dashoffset: 0; }
+    .draw .bar { transform: none; }
+    .splash .letter, .splash .name { opacity: 1; }
+    .stage.curtain { transform: none; opacity: 0; }
+  }
+</style>
+</head>
+<body data-v="v1">
+
+<nav class="switcher" aria-label="Variações dos anéis pontilhados">
+  <a href="#v0">Original</a>
+  <a href="#v1">Noite</a>
+  <a href="#v2">Claro</a>
+  <a href="#v3">Lente</a>
+</nav>
+
+<div class="stage" data-stage>
+  <div class="rings" aria-hidden="true" data-rings></div>
+  <div class="scene">
+    <div class="stack" data-stack>
+      <div class="sheet s2" aria-hidden="true"></div>
+      <div class="sheet s1" aria-hidden="true"></div>
+      <div class="card"><div class="enter" data-form></div></div>
+    </div>
+  </div>
+  <div class="flood" aria-hidden="true" data-flood><div class="rings" data-flood-rings></div></div>
+  <div class="splash" data-splash role="status" aria-live="polite">
+    <span class="aqr" role="img" aria-label="AQR" data-splash-logo></span>
+    <span class="name">Análise e Qualificação de Requerimentos</span>
+  </div>
+</div>
+
+<div class="site" data-site aria-label="Prévia do site após entrar">
+  <header>
+    <span class="tools">Ferramentas</span>
+    <span class="aqr" role="img" aria-label="AQR" style="font-size:22px" data-site-logo></span>
+    <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+  </header>
+  <main>
+    <div><p class="eyebrow">Ferramentas AQR</p><h2>Como podemos ajudar?</h2><div class="opt"></div><div class="opt"></div></div>
+    <div class="panel"></div>
+  </main>
+</div>
+<button class="again" type="button" data-again hidden>Voltar ao login</button>
+
+<script>
+  // ---------- Anéis pontilhados ----------
+  const RINGS = [[170, 4, 14], [250, 3, 18], [330, 5, 22], [420, 3, 16], [520, 4, 26], [630, 3, 20]]
+  const white = (a) => `rgba(255,255,255,${a})`, blue = (a) => `rgba(40,53,135,${a})`
+
+  /** Desenha os anéis; color(i) define a cor de cada anel; extra é SVG adicional (ex.: cabo da lente). */
+  function ringsSVG(rings, color, cls = 'base', extra = '') {
+    return `<svg class="${cls}" viewBox="0 0 1400 1400">${rings.map(([r, dot, gap], i) =>
+      `<circle class="${i % 2 ? 'ccw' : 'cw'}" cx="700" cy="700" r="${r}" stroke="${color(i)}" stroke-width="${dot}" stroke-dasharray="0 ${gap}" style="--d:${60 + i * 18}s"/>`).join('')}${extra}</svg>`
+  }
+
+  const variants = {
+    // Original: a escolhida em login-ondas.html#w4.
+    v0: () => ringsSVG(RINGS, (i) => (i === 2 ? 'rgba(255,204,0,.35)' : white([.22, .16, .14, .12, .10, .08][i]))),
+    // Noite: azul mais profundo e um brilho que percorre os anéis.
+    v1: () => ringsSVG(RINGS, (i) => (i === 2 ? 'rgba(255,204,0,.38)' : white([.20, .15, .13, .11, .09, .07][i])))
+      + ringsSVG(RINGS, (i) => (i === 2 ? 'rgba(255,204,0,.95)' : white(.75)), 'glow'),
+    // Claro: fundo claro, anéis azuis e um amarelo.
+    v2: () => ringsSVG(RINGS, (i) => (i === 2 ? 'rgba(255,204,0,.95)' : blue([.34, .26, .2, .16, .12, .09][i]))),
+    // Lente: anéis menores formando a lupa do AQR, com cabo e faixas pontilhadas.
+    v3: () => {
+      const lensRings = [[130, 5, 14], [190, 4, 16], [250, 6, 18], [300, 3, 14]]
+      const extra = `
+        <line x1="${700 + 230}" y1="${700 + 230}" x2="${700 + 430}" y2="${700 + 430}" stroke="${white(.5)}" stroke-width="16" stroke-dasharray="0 26"/>
+        <line x1="${700 - 110}" y1="${700 - 30}" x2="${700 + 110}" y2="${700 - 30}" stroke="rgba(255,204,0,.95)" stroke-width="12" stroke-dasharray="0 20"/>
+        <line x1="${700 - 80}" y1="${700 + 40}" x2="${700 + 30}" y2="${700 + 40}" stroke="${white(.45)}" stroke-width="10" stroke-dasharray="0 20"/>`
+      return ringsSVG(lensRings, (i) => (i === 2 ? white(.7) : white([.35, .25, 0, .14][i])), 'base', extra)
+    },
+  }
+
+  // ---------- Logo e formulário ----------
+  const tones = {
+    color: { main: 'var(--blue)', paper: '#fff', bar: 'var(--blue)', faint: 'rgba(40,53,135,.35)' },
+    negative: { main: '#fff', paper: 'transparent', bar: '#fff', faint: 'rgba(255,255,255,.45)' },
+  }
+  function lens(size, draw, tone = 'color') {
+    const t = tones[tone], s = size * 1.1
+    return `<svg class="${draw ? 'draw' : ''}" viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * 0.02}px 0 ${size * 0.04}px;transform:translateY(${size * 0.12}px)">
+      <path class="handle" d="M40.5 40.5 L55 55" stroke="${t.main}" stroke-width="9" stroke-linecap="round"/>
+      <circle class="ring" cx="27" cy="27" r="19" fill="${t.paper}" stroke="${t.main}" stroke-width="7"/>
+      <rect class="bar" x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/>
+      <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="${t.bar}"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="${t.faint}"/></svg>`
+  }
+  const logo = (size, draw, tone) => `<span class="letter a" aria-hidden="true">A</span>${lens(size, draw, tone)}<span class="letter r" aria-hidden="true">R</span>`
+
+  const ringsEl = document.querySelector('[data-rings]')
+  const arrow = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  const wrap = document.querySelector('[data-form]')
+  function renderForm() {
+    wrap.innerHTML = `
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande" height="34">
+      <div class="system"><span class="aqr" role="img" aria-label="AQR" style="font-size:24px">${logo(24, true)}</span>
+        <small>Análise e Qualificação<br>de Requerimentos</small></div>
+      <div class="accent" aria-hidden="true"></div>
+      <div><h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p></div>
+      <form data-login>
+        <div><label for="u">Usuário</label><input id="u" autocomplete="username"></div>
+        <div><label for="p">Senha</label><div class="field"><input id="p" type="password" autocomplete="current-password" style="padding-right:84px">
+          <button type="button" class="reveal" aria-pressed="false">Mostrar</button></div></div>
+        <button class="submit" type="submit">Entrar ${arrow}</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>`
+    wrap.querySelector('.reveal').addEventListener('click', (e) => {
+      const b = e.currentTarget, i = b.previousElementSibling, show = i.type === 'password'
+      i.type = show ? 'text' : 'password'; b.textContent = show ? 'Ocultar' : 'Mostrar'; b.setAttribute('aria-pressed', String(show))
+    })
+    // Noite: cada tecla faz os anéis pulsarem de leve.
+    wrap.querySelectorAll('input').forEach((input) => input.addEventListener('input', () => {
+      if (current !== 'v1') return
+      ringsEl.classList.remove('pulse'); void ringsEl.offsetWidth; ringsEl.classList.add('pulse')
+    }))
+    wrap.querySelector('[data-login]').addEventListener('submit', (e) => { e.preventDefault(); enterSite(e.submitter) })
+  }
+  document.querySelector('[data-site-logo]').innerHTML = logo(22, false).replaceAll('class="letter', 'class="')
+
+  // ---------- Entrada ----------
+  const stage = document.querySelector('[data-stage]')
+  const stack = document.querySelector('[data-stack]')
+  const flood = document.querySelector('[data-flood]')
+  const splash = document.querySelector('[data-splash]')
+  const site = document.querySelector('[data-site]')
+  const again = document.querySelector('[data-again]')
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  let timers = [], current = 'v1'
+
+  function enterSite(button) {
+    stack.classList.add('leaving')
+    splash.querySelector('[data-splash-logo]').innerHTML = logo(80, true, 'negative')
+    let logoAt = 300
+    if (current === 'v1') {                                            // anéis se contraem até a logo e voltam a se abrir
+      ringsEl.classList.add('collapse')
+      timers.push(setTimeout(() => { ringsEl.classList.remove('collapse'); ringsEl.classList.add('echo') }, reduced ? 0 : 1500))
+    }
+    if (current === 'v3') ringsEl.classList.add('to-center')           // a lupa grande desliza e vira a logo
+    if (current === 'v2') {                                            // azul se espalha a partir do botão
+      const r = button?.getBoundingClientRect(), s = stage.getBoundingClientRect()
+      if (r) { flood.style.setProperty('--fx', `${r.left + r.width / 2 - s.left}px`); flood.style.setProperty('--fy', `${r.top + r.height / 2 - s.top}px`) }
+      flood.classList.add('is-on'); logoAt = 700
+    }
+    timers.push(setTimeout(() => splash.classList.add('is-on'), reduced ? 0 : logoAt))
+    timers.push(setTimeout(() => { site.classList.add('is-on'); stage.classList.add('curtain'); again.hidden = false }, reduced ? 900 : logoAt + 2700))
+  }
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = []
+    site.classList.remove('is-on'); splash.classList.remove('is-on'); stage.classList.remove('curtain'); flood.classList.remove('is-on'); again.hidden = true
+    ringsEl.classList.remove('collapse', 'echo', 'to-center', 'pulse')
+    stack.classList.remove('leaving')
+    stack.querySelectorAll('.sheet').forEach((s) => { s.style.animation = 'none'; void s.offsetWidth; s.style.animation = '' })
+    renderForm()
+  }
+  again.addEventListener('click', reset)
+
+  function show() {
+    current = /^#v[0-3]$/.test(location.hash) ? location.hash.slice(1) : 'v1'
+    document.body.dataset.v = current
+    ringsEl.innerHTML = variants[current]()
+    document.querySelector('[data-flood-rings]').innerHTML = variants.v0()
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + current)))
+    reset()
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
