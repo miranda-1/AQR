@@ -2,7 +2,7 @@ import { buildApp } from './app.ts'
 import { loadConfig } from './config.ts'
 
 const config = loadConfig(process.env)
-const app = buildApp(config)
+const app = await buildApp(config)
 
 async function shutdown() {
   await app.close()

@@ -100,6 +100,16 @@ bytes ─ assertPdfBytes ─ extractDocument (pdf.js: palavras + caixas; erros �
 ```
 
   Critérios de precisão e limitações: `docs/criterios-comparacao.md`.
+- API de comparação (`server/comparison/routes.ts`):
+
+```
+POST /api/comparisons (multipart: original, updated) ─ tipo, %PDF-, 50 MB, nome higienizado ─ 202 { id, status: queued }
+  └─ ComparisonWorkerPool: fila (503 se cheia) → thread nova (memória e tempo limitados) → compareDocuments
+       └─ ComparisonJobStore (memória): queued → processing(stage) → completed | failed; descartado 30 min depois
+GET /api/comparisons/:id → ComparisonJob        DELETE /api/comparisons/:id → cancela e descarta (204)
+```
+
+  Erros sempre no formato `ApiErrorBody` (`shared/contracts/api-error.ts`), com mensagem em português e sem detalhes internos.
 - A API administrativa fica desligada por padrão e o servidor recusa o modo de desenvolvimento em produção.
   A autenticação real entrará trocando o `AuthProvider`, sem mexer em rotas, regras ou auditoria.
 

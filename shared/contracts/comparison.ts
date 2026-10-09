@@ -92,6 +92,16 @@ export type ComparisonOutcome =
   | { status: 'completed'; result: ComparisonResult }
   | { status: 'failed'; error: ComparisonError }
 
+/**
+ * Tarefa de comparação na API (`POST /api/comparisons`, `GET /api/comparisons/:id`).
+ * O servidor guarda só o resultado, em memória, por tempo limitado; os PDFs nunca são gravados.
+ */
+export type ComparisonJob =
+  | { id: string; status: 'queued' }
+  | { id: string; status: 'processing'; stage: ComparisonStage }
+  | { id: string; status: 'completed'; result: ComparisonResult }
+  | { id: string; status: 'failed'; error: ComparisonError }
+
 export function summarize(differences: readonly Difference[]): ComparisonSummary {
   const summary: ComparisonSummary = { total: differences.length, additions: 0, deletions: 0, modifications: 0 }
   for (const difference of differences) {
