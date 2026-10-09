@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: fundos do login 2B e entrada animada</title>
+<!--
+  Base escolhida pelo responsável em 09/10/2026: variação 2B ("Folhas em leque").
+  Cinco fundos possíveis (#f1 a #f5). Em todos, "Entrar" mostra a logo do AQR se desenhando e depois abre o site
+  (aqui, uma prévia simplificada da página inicial). Arquivo estático: abra no navegador a partir do repositório.
+  Nada aqui autentica de verdade.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --canvas: #e9ebf2; --line-strong: #8d92ab;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+    --shadow-card: 0 2px 4px rgba(27,32,64,.06), 0 18px 40px -12px rgba(27,32,64,.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  /* Seletor (não faz parte do design) */
+  .switcher { position: fixed; z-index: 60; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(27,32,64,.92); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+
+  /* ---------- Cena do login ---------- */
+  .scene { position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 48px 16px 96px; }
+  .bg { position: absolute; inset: 0; pointer-events: none; }
+  .bg > div { position: absolute; inset: 0; display: none; }
+  body[data-bg='f1'] .bg .f1, body[data-bg='f2'] .bg .f2, body[data-bg='f3'] .bg .f3,
+  body[data-bg='f4'] .bg .f4, body[data-bg='f5'] .bg .f5 { display: block; }
+
+  .stack { position: relative; z-index: 2; width: 100%; max-width: 440px; transition: opacity .45s ease, transform .45s ease; }
+  .stack.leaving { opacity: 0; transform: translateY(-8px) scale(.97); }
+  .sheet { position: absolute; inset: 0; background: #fff; border-radius: 16px; box-shadow: var(--shadow-surface); transform-origin: 50% 100%; }
+  .sheet.s1 { animation: fan1 1.1s .25s cubic-bezier(.2,.7,.2,1) both, sway1 9s 1.4s ease-in-out infinite; }
+  .sheet.s2 { animation: fan2 1.1s .35s cubic-bezier(.2,.7,.2,1) both, sway2 9s 1.5s ease-in-out infinite; background: var(--blue-50); }
+  @keyframes fan1 { from { transform: none; } to { transform: rotate(-6deg) translate(-18px, 6px); } }
+  @keyframes fan2 { from { transform: none; } to { transform: rotate(5deg) translate(18px, 8px); } }
+  @keyframes sway1 { 0%, 100% { transform: rotate(-6deg) translate(-18px, 6px); } 50% { transform: rotate(-4.5deg) translate(-14px, 4px); } }
+  @keyframes sway2 { 0%, 100% { transform: rotate(5deg) translate(18px, 8px); } 50% { transform: rotate(3.5deg) translate(14px, 6px); } }
+
+  .card { position: relative; background: #fff; border-radius: 16px; box-shadow: var(--shadow-card); padding: 40px 40px 34px; }
+  .prefcg { display: block; height: 34px; width: auto; margin: 0 auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .system { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 20px; text-align: center; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); text-align: center; }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field { position: relative; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,53,135,.22); }
+  .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .reveal:hover { background: var(--blue-50); }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s; }
+  .submit:hover { background: var(--blue-800); }
+  .submit:active { transform: translateY(1px); }
+  .submit svg { transition: transform .2s; }
+  .submit:hover svg { transform: translateX(3px); }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: center; }
+  .enter > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  .enter > *:nth-child(2) { animation-delay: .08s; } .enter > *:nth-child(3) { animation-delay: .14s; }
+  .enter > *:nth-child(4) { animation-delay: .2s; } .enter > *:nth-child(5) { animation-delay: .26s; } .enter > *:nth-child(6) { animation-delay: .32s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* Lente que se desenha (logo do cartão e logo da entrada) */
+  .draw .ring { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw 1s .5s ease-out forwards; }
+  .draw .handle { stroke-dasharray: 22; stroke-dashoffset: 22; animation: draw .4s 1.3s ease-out forwards; }
+  .draw .bar { transform-box: fill-box; transform-origin: left; transform: scaleX(0); animation: grow .5s 1.5s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+
+  /* ---------- Fundos ---------- */
+  /* F1: pontilhado (original da 2B) */
+  .f1 { background-image: radial-gradient(rgba(40,53,135,.10) 1.2px, transparent 1.2px); background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 70%); mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 70%); }
+
+  /* F2: pauta de documento, com uma faixa de leitura que desce devagar */
+  .f2 { background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(40,53,135,.07) 31px 32px); }
+  .f2::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 64px; background: linear-gradient(to bottom, transparent, rgba(255,204,0,.14), transparent);
+    animation: f2-read 14s linear infinite; }
+  .f2::after { content: ''; position: absolute; top: 0; bottom: 0; left: 12%; width: 1px; background: rgba(209,69,61,.14); }
+  @keyframes f2-read { from { transform: translateY(-80px); } to { transform: translateY(100vh); } }
+
+  /* F3: faixa azul institucional no topo; o cartão fica metade sobre ela */
+  .f3 { background: linear-gradient(to bottom, var(--blue) 0 46%, transparent 46%); }
+  .f3 .f3-lines { position: absolute; left: 0; right: 0; top: 0; height: 46%; overflow: hidden; }
+  .f3 .f3-lines span { position: absolute; height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); animation: f3-slide 18s linear infinite; }
+  .f3 .f3-lines span.y { background: rgba(255,204,0,.35); height: 4px; }
+  @keyframes f3-slide { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+
+  /* F4: mosaico de folhas muito claras que deslizam em diagonal */
+  .f4 { overflow: hidden; }
+  .f4 .tiles { position: absolute; inset: -200px; display: grid; grid-template-columns: repeat(auto-fill, 110px); gap: 34px; transform: rotate(-12deg);
+    animation: f4-drift 40s linear infinite; }
+  .f4 .tiles i { display: block; height: 140px; border-radius: 8px; background: #fff; box-shadow: var(--shadow-surface); opacity: .7;
+    background-image: linear-gradient(rgba(98,104,134,.16) 0 0), linear-gradient(rgba(98,104,134,.12) 0 0), linear-gradient(rgba(98,104,134,.12) 0 0), linear-gradient(rgba(98,104,134,.12) 0 0);
+    background-size: 55% 5px, 78% 4px, 70% 4px, 60% 4px; background-position: 12px 18px, 12px 36px, 12px 48px, 12px 60px; background-repeat: no-repeat; }
+  .f4::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, var(--sunken) 0 28%, rgba(244,245,249,.4) 60%, transparent 85%); }
+  @keyframes f4-drift { from { transform: rotate(-12deg) translate(0, 0); } to { transform: rotate(-12deg) translate(-144px, -174px); } }
+
+  /* F5: lentes espalhadas; uma de cada vez acende em amarelo */
+  .f5 .lens-dot { position: absolute; width: 46px; height: 46px; opacity: .16; animation: f5-glint 12s ease-in-out infinite; }
+  @keyframes f5-glint { 0%, 6%, 24%, 100% { opacity: .16; transform: scale(1); } 12%, 18% { opacity: .7; transform: scale(1.08); } }
+
+  /* ---------- Entrada animada (depois de "Entrar") ---------- */
+  .splash { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: var(--sunken); opacity: 0; visibility: hidden; transition: opacity .4s ease, visibility 0s .4s; }
+  .splash.is-on { opacity: 1; visibility: visible; transition: opacity .4s ease; }
+  .splash .aqr { font-size: 76px; }
+  .splash .letter { display: inline-block; opacity: 0; }
+  .splash.is-on .letter.a { animation: from-left .6s .35s cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash.is-on .letter.r { animation: from-right .6s .35s cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash .name { font-size: 16px; color: var(--muted); opacity: 0; }
+  .splash.is-on .name { animation: rise .6s 1.6s ease-out forwards; }
+  @keyframes from-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes from-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+
+  /* Prévia do site (simplificada) */
+  .site { position: fixed; inset: 0; z-index: 30; background: var(--sunken); opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s .5s; overflow: auto; }
+  .site.is-on { opacity: 1; visibility: visible; transition: opacity .5s ease; }
+  .site header { height: 56px; background: #fff; display: flex; align-items: center; gap: 16px; padding: 0 20px; box-shadow: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10); }
+  .site header .tools { font-size: 15px; font-weight: 600; }
+  .site header .prefcg { margin: 0 0 0 auto; height: 30px; }
+  .site main { max-width: 1100px; margin: 0 auto; padding: 56px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .site.is-on main > * { animation: rise .7s .15s cubic-bezier(.2,.7,.2,1) both; }
+  .site.is-on main > *:nth-child(2) { animation-delay: .25s; }
+  .site .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .site .eyebrow::before { content: ''; width: 24px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  .site h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+  .site .opt { margin-top: 16px; height: 108px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); }
+  .site .opt:first-of-type { margin-top: 32px; box-shadow: 0 2px 4px rgba(27,32,64,.06), 0 10px 24px -8px rgba(27,32,64,.18); }
+  .site .panel { border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); min-height: 380px; }
+  .again { position: fixed; z-index: 61; right: 16px; top: 68px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--blue); cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .card { padding: 30px 22px 26px; }
+    .site main { grid-template-columns: 1fr; }
+    .site .panel { min-height: 220px; }
+    .splash .aqr { font-size: 56px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .sheet.s1 { transform: rotate(-6deg) translate(-18px, 6px); }
+    .sheet.s2 { transform: rotate(5deg) translate(18px, 8px); }
+    .draw .ring, .draw .handle { stroke-dashoffset: 0; }
+    .draw .bar { transform: none; }
+    .splash .letter, .splash .name { opacity: 1; }
+    .f5 .lens-dot { opacity: .16; }
+  }
+</style>
+</head>
+<body data-bg="f1">
+
+<nav class="switcher" aria-label="Fundos">
+  <a href="#f1">Pontilhado</a>
+  <a href="#f2">Pauta de documento</a>
+  <a href="#f3">Faixa azul</a>
+  <a href="#f4">Mosaico de folhas</a>
+  <a href="#f5">Lentes</a>
+</nav>
+
+<div class="scene">
+  <div class="bg" aria-hidden="true">
+    <div class="f1"></div>
+    <div class="f2"></div>
+    <div class="f3"><div class="f3-lines" data-f3></div></div>
+    <div class="f4"><div class="tiles" data-tiles></div></div>
+    <div class="f5" data-f5></div>
+  </div>
+  <div class="stack" data-stack>
+    <div class="sheet s2" aria-hidden="true"></div>
+    <div class="sheet s1" aria-hidden="true"></div>
+    <div class="card"><div class="enter" data-form></div></div>
+  </div>
+</div>
+
+<div class="splash" data-splash role="status" aria-live="polite">
+  <span class="aqr" role="img" aria-label="AQR" data-splash-logo></span>
+  <span class="name">Análise e Qualificação de Requerimentos</span>
+</div>
+
+<div class="site" data-site aria-label="Prévia do site após entrar">
+  <header>
+    <span class="tools">Ferramentas</span>
+    <span class="aqr" role="img" aria-label="AQR" style="font-size:22px" data-site-logo></span>
+    <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+  </header>
+  <main>
+    <div><p class="eyebrow">Ferramentas AQR</p><h2>Como podemos ajudar?</h2><div class="opt"></div><div class="opt"></div></div>
+    <div class="panel"></div>
+  </main>
+</div>
+<button class="again" type="button" data-again hidden>Voltar ao login</button>
+
+<script>
+  // Lente do AQR (Proposta 3, "Lente Q"), mesma geometria de src/components/layout/AqrLogo.tsx.
+  function lens(size, draw, opts = {}) {
+    const s = size * 1.1
+    const style = opts.plain ? '' : `style="flex-shrink:0;margin:0 ${size * 0.02}px 0 ${size * 0.04}px;transform:translateY(${size * 0.12}px)"`
+    return `<svg class="${draw ? 'draw' : ''}" viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" ${style}>
+      <path class="handle" d="M40.5 40.5 L55 55" stroke="var(--blue)" stroke-width="9" stroke-linecap="round"/>
+      <circle class="ring" cx="27" cy="27" r="19" fill="#fff" stroke="var(--blue)" stroke-width="7"/>
+      <rect class="bar" x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/>
+      <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="var(--blue)"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="rgba(40,53,135,.35)"/></svg>`
+  }
+  const logo = (size, draw) => `<span class="letter a" aria-hidden="true">A</span>${lens(size, draw)}<span class="letter r" aria-hidden="true">R</span>`
+
+  // Fundo F3: traços claros deslizando na faixa azul.
+  const f3 = document.querySelector('[data-f3]')
+  ;[[12, 180, 0, false], [28, 260, 6, false], [44, 120, 3, true], [62, 220, 11, false], [80, 160, 8, false], [90, 90, 14, true]].forEach(([y, w, d, yellow]) => {
+    const s = document.createElement('span')
+    if (yellow) s.className = 'y'
+    s.style.cssText = `top:${y}%;width:${w}px;animation-delay:-${d}s`
+    f3.appendChild(s)
+  })
+
+  // Fundo F4: folhas em mosaico.
+  document.querySelector('[data-tiles]').innerHTML = '<i></i>'.repeat(220)
+
+  // Fundo F5: lentes espalhadas, acendendo uma de cada vez.
+  const f5 = document.querySelector('[data-f5]')
+  ;[[8, 14], [22, 70], [14, 44], [84, 12], [90, 48], [78, 78], [36, 88], [62, 8], [4, 86], [94, 88]].forEach(([x, y], i) => {
+    const d = document.createElement('div')
+    d.className = 'lens-dot'
+    d.style.cssText = `left:${x}%;top:${y}%`
+    d.innerHTML = lens(42, false, { plain: true })
+    d.style.animationDelay = `-${(i * 12) / 10}s`
+    f5.appendChild(d)
+  })
+
+  // Formulário.
+  const arrow = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  const wrap = document.querySelector('[data-form]')
+  function renderForm() {
+    wrap.innerHTML = `
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande" height="34">
+      <div class="system"><span class="aqr" role="img" aria-label="AQR" style="font-size:24px">${logo(24, true)}</span>
+        <small>Análise e Qualificação<br>de Requerimentos</small></div>
+      <div class="accent" aria-hidden="true"></div>
+      <div><h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p></div>
+      <form data-login>
+        <div><label for="u">Usuário</label><input id="u" autocomplete="username"></div>
+        <div><label for="p">Senha</label><div class="field"><input id="p" type="password" autocomplete="current-password" style="padding-right:84px">
+          <button type="button" class="reveal" aria-pressed="false">Mostrar</button></div></div>
+        <button class="submit" type="submit">Entrar ${arrow}</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>`
+    wrap.querySelector('.reveal').addEventListener('click', (e) => {
+      const b = e.currentTarget, i = b.previousElementSibling, show = i.type === 'password'
+      i.type = show ? 'text' : 'password'; b.textContent = show ? 'Ocultar' : 'Mostrar'; b.setAttribute('aria-pressed', String(show))
+    })
+    wrap.querySelector('[data-login]').addEventListener('submit', (e) => { e.preventDefault(); enterSite() })
+  }
+  renderForm()
+  document.querySelector('[data-site-logo]').innerHTML = logo(22, false).replaceAll('class="letter', 'class="')
+
+  // Entrada: o cartão sai, a logo se desenha grande no centro e o site abre.
+  const stack = document.querySelector('[data-stack]')
+  const splash = document.querySelector('[data-splash]')
+  const site = document.querySelector('[data-site]')
+  const again = document.querySelector('[data-again]')
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  let timers = []
+  function enterSite() {
+    stack.classList.add('leaving')
+    splash.querySelector('[data-splash-logo]').innerHTML = logo(76, true)
+    timers.push(setTimeout(() => splash.classList.add('is-on'), reduced ? 0 : 350))
+    timers.push(setTimeout(() => { site.classList.add('is-on'); splash.classList.remove('is-on'); again.hidden = false }, reduced ? 700 : 2900))
+  }
+  again.addEventListener('click', () => {
+    timers.forEach(clearTimeout); timers = []
+    site.classList.remove('is-on'); splash.classList.remove('is-on'); again.hidden = true
+    stack.classList.remove('leaving')
+    // Recria as folhas e o formulário para repetir as animações de entrada.
+    stack.querySelectorAll('.sheet').forEach((s) => { s.style.animation = 'none'; void s.offsetWidth; s.style.animation = '' })
+    renderForm()
+  })
+
+  // Troca de fundo pela âncora.
+  function show() {
+    const id = /^#f[1-5]$/.test(location.hash) ? location.hash.slice(1) : 'f1'
+    document.body.dataset.bg = id
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
