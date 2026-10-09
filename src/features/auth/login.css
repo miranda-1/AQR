@@ -36,48 +36,37 @@
 .login-rings.is-dimmed {
   opacity: 0.25;
 }
+/* Os anéis ficam parados e centralizados (decisão do responsável): só a luz se move sobre eles. */
 .login-rings svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  animation: login-breathe 9s ease-in-out infinite;
 }
 .login-rings circle {
   fill: none;
   stroke-linecap: round;
-  transform-box: view-box;
-  transform-origin: 700px 700px;
-  animation: login-spin var(--d) linear infinite;
 }
-.login-rings circle.is-reverse {
-  animation-direction: reverse;
-}
-/* O brilho percorre os anéis girando a máscara (não o desenho), para os pontos ficarem alinhados. */
+/* O brilho percorre os anéis girando a máscara, não o desenho; entra suave ao aparecer. */
 .login-rings .login-rings-glow {
   -webkit-mask-image: conic-gradient(from var(--login-sweep), transparent 0 290deg, rgb(0 0 0 / 0.4) 330deg, #000 360deg);
   mask-image: conic-gradient(from var(--login-sweep), transparent 0 290deg, rgb(0 0 0 / 0.4) 330deg, #000 360deg);
-  animation: login-breathe 9s ease-in-out infinite, login-sweep 7s linear infinite;
+  animation: login-sweep 7s linear infinite, login-fade-in 1.2s ease both;
 }
-/* O pulso vai no conjunto, sem substituir o "respirar" das camadas: assim base e brilho seguem alinhados. */
-.login-rings.is-pulsing {
-  animation: login-pulse 0.5s ease-out;
+/* Ao digitar, os pontos clareiam por um instante, sem mudar de tamanho ou de lugar. */
+.login-rings.is-pulsing .login-rings-base {
+  animation: login-flash 0.45s ease-out;
 }
 
-@keyframes login-spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes login-breathe {
-  0%, 100% { transform: scale(0.97); }
-  50% { transform: scale(1.03); }
-}
 @keyframes login-sweep {
   to { --login-sweep: 360deg; }
 }
-@keyframes login-pulse {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.035); }
-  100% { transform: scale(1); }
+@keyframes login-fade-in {
+  from { opacity: 0; }
+}
+@keyframes login-flash {
+  0%, 100% { filter: none; }
+  30% { filter: brightness(1.8); }
 }
 
 /* ---------- Cartão com folhas em leque ---------- */

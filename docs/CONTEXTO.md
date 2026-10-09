@@ -19,7 +19,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 - **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
-  - login "Noite" (anéis pontilhados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início);
+  - login "Noite" (anéis pontilhados parados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (menu Ferramentas) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
   - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
   - navegação pelo menu "Ferramentas";
   - seleção e validação local dos PDFs (extensão, tipo, limite de 50 MB, assinatura `%PDF-`);
@@ -65,6 +65,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Entrada: "logo em pontinhos"** (pontos saem dos anéis e formam o AQR). Os traços internos da lente nunca aparecem antes da logo: entram como pontos e, na logo desenhada, crescem logo depois da faixa amarela. |
 | 09/10/2026 | **Versão da entrada: "varredura"**: os pontos formam o AQR e uma linha amarela passa trocando os pontos pela logo sólida. Falta escolher a transição da logo para o site. |
 | 09/10/2026 | **Transição: a logo voa até o cabeçalho** (branco → azul) enquanto o fundo some. **Login oficial no site** com essa sequência completa. Depois de entrar, volta para a página pedida; sem página pedida, vai para o início. |
+| 09/10/2026 | **Anéis do login parados e centralizados.** Só o brilho se move sobre eles, e ao digitar os pontos clareiam (sem mudar de tamanho). **Sair = "logo volta ao centro"**: a logo sai do cabeçalho para o centro, o fundo do login volta, e ela se desfaz em pontinhos que voltam aos anéis. |
 | 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -99,11 +100,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | `9f68b6c` |
 | 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | `e9281f8` |
 | 09/10/2026 | Item "Sair" no menu Ferramentas, para voltar ao login sem fechar a aba | `98bd213` |
-| 09/10/2026 | Três animações de saída (logo volta ao centro, anéis fecham, varredura de saída) em `docs/propostas-login/sair-animacoes.html` | ver `git log` |
+| 09/10/2026 | Três animações de saída (logo volta ao centro, anéis fecham, varredura de saída) em `docs/propostas-login/sair-animacoes.html` | `8c8811f` |
+| 09/10/2026 | Anéis do login parados e centralizados (sem girar nem "respirar"), o que acaba com o salto ao entrar; "Sair" no site com a animação "logo volta ao centro" | ver `git log` |
 
 ## Pendências
 
-- **Sair:** escolher a animação de saída em `sair-animacoes.html` (`#s1` logo volta ao centro, `#s2` anéis fecham, `#s3` varredura de saída) e implementar no site.
 - **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.

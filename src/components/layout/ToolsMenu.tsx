@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { useAuthSession } from '@/features/auth/auth-session'
+import { useEntryHandoff } from '@/features/auth/entry/entry-handoff'
 import { cn } from '@/lib/utils'
 import { isToolActive, toolItems } from './navigation'
 
@@ -13,7 +13,7 @@ import { isToolActive, toolItems } from './navigation'
  */
 export function ToolsMenu({ className }: { className?: string }) {
   const { pathname } = useLocation()
-  const { signOut } = useAuthSession()
+  const { exit } = useEntryHandoff()
 
   return (
     <DropdownMenu modal={false}>
@@ -52,9 +52,9 @@ export function ToolsMenu({ className }: { className?: string }) {
             </DropdownMenuItem>
           )
         })}
-        {/* Encerra a sessão; RequireAuth leva ao login (separado por espaço, sem linha divisória). */}
+        {/* Sai com a animação "logo volta ao centro" e encerra a sessão (separado por espaço, sem linha divisória). */}
         <DropdownMenuItem
-          onSelect={signOut}
+          onSelect={exit}
           className="mt-1 min-h-11 cursor-pointer gap-2.5 px-3 py-2 text-[0.9375rem] text-muted-foreground focus:bg-secondary focus:text-ink"
         >
           <LogOut aria-hidden className="size-[1.125rem]" />

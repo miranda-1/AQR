@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
 /** Anéis pontilhados do login "Noite": [raio, espessura do ponto, espaço entre pontos], num viewBox de 1400. */
@@ -26,7 +26,6 @@ function Rings({ className, glow }: { className: string; glow: boolean }) {
         return (
           <circle
             key={radius}
-            className={index % 2 ? 'is-reverse' : undefined}
             cx="700"
             cy="700"
             r={radius}
@@ -34,7 +33,6 @@ function Rings({ className, glow }: { className: string; glow: boolean }) {
             strokeOpacity={glow ? (yellow ? 0.95 : 0.75) : yellow ? 0.38 : BASE_OPACITY[index]}
             strokeWidth={dot}
             strokeDasharray={`0 ${gap}`}
-            style={{ '--d': `${60 + index * 18}s` } as CSSProperties}
           />
         )
       })}
@@ -45,12 +43,14 @@ function Rings({ className, glow }: { className: string; glow: boolean }) {
 interface DottedRingsProps {
   /** Recuo durante a entrada, para os pontos e a logo ganharem destaque. */
   dimmed?: boolean
+  /** Brilho que percorre os anéis; desligado nas camadas de passagem, para não haver salto de posição. */
+  glow?: boolean
   /** Muda a cada tecla digitada; cada mudança faz os anéis pulsarem de leve. */
   pulseKey?: number
 }
 
-/** Anéis pontilhados girando em sentidos alternados, com um brilho que os percorre. Decorativo. */
-export function DottedRings({ dimmed = false, pulseKey = 0 }: DottedRingsProps) {
+/** Anéis pontilhados parados e centralizados, com um brilho que os percorre. Decorativo. */
+export function DottedRings({ dimmed = false, glow = true, pulseKey = 0 }: DottedRingsProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function DottedRings({ dimmed = false, pulseKey = 0 }: DottedRingsProps) 
   return (
     <div ref={ref} aria-hidden className={cn('login-rings', dimmed && 'is-dimmed')}>
       <Rings className="login-rings-base" glow={false} />
-      <Rings className="login-rings-glow" glow />
+      {glow && <Rings className="login-rings-glow" glow />}
     </div>
   )
 }
