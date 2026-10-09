@@ -99,6 +99,8 @@ server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs 
 |---|---|
 | Vite + React Router, sem Next.js | Aplicação interna sem necessidade de SSR |
 | Fastify 5 no servidor | Limites de upload em streaming, validação e `inject()` para testar rotas sem rede |
+| `pdfjs-dist` (build legado) no servidor | Mesma biblioteca que o visualizador usará no navegador: posições compatíveis. Aberto em modo restrito (sem fontes do sistema, sem rede, `stopAtErrors`) |
+| `pdf-lib` só nos testes | Gera PDFs sintéticos de verdade, com a posição de cada palavra como gabarito |
 | `tsx` no desenvolvimento do servidor | Roda TypeScript direto com recarga, sem exigir Node mais novo que o `engines` atual |
 | Rotas com `React.lazy` | O carregamento inicial fica com cerca de 140 KB em gzip, e o workspace carrega sob demanda |
 | `zod/mini` | Validação com Zod e tree-shaking, para um uso pequeno (metadados do arquivo) |
