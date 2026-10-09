@@ -1,14 +1,15 @@
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from '../app.ts'
 import { loadConfig, type ComparisonSettings, type ServerConfig } from '../config.ts'
+import type { Database } from '../db/database.ts'
 
 /** Servidor de teste (sem porta, sem log), com ajustes opcionais na configuração. */
 export async function buildTestApp(
-  overrides: { comparison?: Partial<ComparisonSettings>; env?: Record<string, string> } = {},
+  overrides: { comparison?: Partial<ComparisonSettings>; env?: Record<string, string>; db?: Database } = {},
 ): Promise<FastifyInstance> {
-  const base = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', ...overrides.env })
+  const base = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', DATABASE_PATH: ':memory:', ...overrides.env })
   const config: ServerConfig = { ...base, comparison: { ...base.comparison, ...overrides.comparison } }
-  return buildApp(config)
+  return buildApp(config, { db: overrides.db })
 }
 
 export interface UploadFile {

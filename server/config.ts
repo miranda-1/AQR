@@ -16,7 +16,10 @@ const environmentSchema = z.object({
   COMPARISON_RESULT_TTL_MS: z.coerce.number().int().min(10_000).max(86_400_000).default(30 * 60_000),
   COMPARISON_WORKER_MEMORY_MB: z.coerce.number().int().min(128).max(4096).default(768),
   DATABASE_PATH: z.string().min(1).default('data/aqr.sqlite'),
+  ADMIN_API_MODE: z.enum(['disabled', 'dev']).default('disabled'),
 })
+
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
 
 export interface ComparisonSettings {
   /** Comparações processadas ao mesmo tempo (uma thread isolada cada). */
@@ -41,6 +44,11 @@ export interface ServerConfig {
   comparison: ComparisonSettings
   /** Arquivo do banco SQLite (contas e auditoria). `:memory:` nos testes. */
   databasePath: string
+  /**
+   * Administração de contas. "disabled" (padrão): desligada. "dev": ligada sem autenticação real,
+   * identificando a pessoa por `X-AQR-Dev-Actor`; só fora de produção e só na máquina local.
+   */
+  adminMode: 'disabled' | 'dev'
 }
 
 export class ConfigError extends Error {
@@ -55,6 +63,16 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     throw new ConfigError(`Configuração do servidor inválida (${problems}). Corrija as variáveis de ambiente e inicie de novo.`)
   }
   const data = parsed.data
+  if (data.ADMIN_API_MODE === 'dev' && data.NODE_ENV === 'production') {
+    throw new ConfigError(
+      'ADMIN_API_MODE=dev não é permitido em produção: esse modo não tem autenticação real. Use ADMIN_API_MODE=disabled até a autenticação real existir.',
+    )
+  }
+  if (data.ADMIN_API_MODE === 'dev' && !LOOPBACK_HOSTS.has(data.HOST)) {
+    throw new ConfigError(
+      `ADMIN_API_MODE=dev só funciona com HOST=127.0.0.1 (agora: ${data.HOST}). Sem autenticação real, a administração não pode ficar exposta na rede.`,
+    )
+  }
   return {
     environment: data.NODE_ENV,
     host: data.HOST,
@@ -69,5 +87,6 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       maxFileSizeBytes: defaultComparisonLimits.maxFileSizeBytes,
     },
     databasePath: data.DATABASE_PATH,
+    adminMode: data.ADMIN_API_MODE,
   }
 }

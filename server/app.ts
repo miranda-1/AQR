@@ -1,5 +1,9 @@
 import multipart from '@fastify/multipart'
 import Fastify, { type FastifyInstance } from 'fastify'
+import { registerAdminRoutes } from './admin/routes.ts'
+import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
+import { openDatabase, type Database } from './db/database.ts'
+import { migrate } from './db/migrate.ts'
 import { ComparisonJobStore } from './comparison/job-store.ts'
 import { defaultComparisonLimits } from './comparison/limits.ts'
 import { registerComparisonRoutes } from './comparison/routes.ts'
@@ -10,10 +14,15 @@ import { registerErrorHandling } from './http/errors.ts'
 /** JSON da API é pequeno; os PDFs chegam por multipart, com limites próprios. */
 const JSON_BODY_LIMIT = 64 * 1024
 
+export interface AppDependencies {
+  /** Banco já aberto (testes). Sem ele, a administração abre `config.databasePath`. */
+  db?: Database
+}
+
 /**
  * Monta o servidor sem abrir porta, para os testes usarem `app.inject()`.
  */
-export async function buildApp(config: ServerConfig): Promise<FastifyInstance> {
+export async function buildApp(config: ServerConfig, deps: AppDependencies = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
     bodyLimit: JSON_BODY_LIMIT,
@@ -50,6 +59,17 @@ export async function buildApp(config: ServerConfig): Promise<FastifyInstance> {
     maxFileSizeBytes: config.comparison.maxFileSizeBytes,
     resultTtlMs: config.comparison.resultTtlMs,
   })
+
+  // Administração: o banco só é aberto quando ela está ligada.
+  if (config.adminMode === 'dev') {
+    const db = deps.db ?? openDatabase(config.databasePath)
+    migrate(db)
+    if (!deps.db) app.addHook('onClose', async () => db.close())
+    app.log.warn('Administração em modo de desenvolvimento: sem autenticação real, só para este computador.')
+    registerAdminRoutes(app, { mode: 'dev', auth: createDevAuthProvider(db) })
+  } else {
+    registerAdminRoutes(app, { mode: 'disabled' })
+  }
 
   return app
 }

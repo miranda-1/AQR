@@ -33,6 +33,18 @@ describe('loadConfig', () => {
     expect(config.comparison).toMatchObject({ workers: 4, queueLimit: 0 })
   })
 
+  it('deixa a administração desligada por padrão', () => {
+    expect(loadConfig({}).adminMode).toBe('disabled')
+    expect(loadConfig({ ADMIN_API_MODE: 'dev' }).adminMode).toBe('dev')
+  })
+
+  it('recusa iniciar com a administração de desenvolvimento em produção ou exposta na rede', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', ADMIN_API_MODE: 'dev' })).toThrow(/não é permitido em produção/)
+    expect(() => loadConfig({ ADMIN_API_MODE: 'dev', HOST: '0.0.0.0' })).toThrow(/só funciona com HOST=127.0.0.1/)
+    expect(() => loadConfig({ ADMIN_API_MODE: 'producao' })).toThrow(ConfigError)
+    expect(loadConfig({ NODE_ENV: 'production' }).adminMode).toBe('disabled')
+  })
+
   it('recusa valores inválidos com uma mensagem que diz o que corrigir', () => {
     expect(() => loadConfig({ PORT: 'abc' })).toThrow(ConfigError)
     expect(() => loadConfig({ PORT: '70000' })).toThrow(/PORT/)
