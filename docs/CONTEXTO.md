@@ -74,10 +74,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | PDF de apresentação da logo escolhida (9 páginas: conceito, versões, cores, construção, área de proteção, tamanhos mínimos, aplicações, usos incorretos, cores e tipografia) em `docs/logo-aqr/` | `d425de4` |
 | 08/10/2026 | Publicação no GitHub (`miranda-1/AQR`, privado) e registro do repositório neste arquivo | `2d85821` |
 | 08/10/2026 | Página inicial em `/` (seletor de ferramentas com demonstração animada), substituindo o redirecionamento para `/comparacao` | `cdada4e` |
-| 08/10/2026 | Rodapé refeito com as marcas SEMADES, slogan e PREFCG (versão azul), no lugar do texto | ver `git log` |
+| 08/10/2026 | Rodapé refeito com as marcas SEMADES, slogan e PREFCG (versão azul), no lugar do texto | `bec11fc` |
+| 09/10/2026 | Três propostas de tela de login animada, com PREFCG, em `docs/propostas-login/` (HTML navegável + capturas), aguardando escolha | ver `git log` |
 
 ## Pendências
 
+- **Tela de login:** o responsável vai escolher entre as três propostas de `docs/propostas-login/propostas.html` (1, painel com lente; 2, cartão central; 3, comparação viva). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 11 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.
@@ -90,6 +92,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
+| Propostas de login | `docs/propostas-login/` (abrir `propostas.html` no navegador; `#opcao-1` a `#opcao-3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |

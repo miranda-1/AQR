@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: propostas de tela de login</title>
+<!--
+  Propostas visuais da tela de login. Arquivo estático: abra no navegador a partir do repositório
+  (os caminhos da marca e da fonte são relativos). Nada aqui autentica de verdade.
+  Opção pela URL: #opcao-1, #opcao-2 ou #opcao-3.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --white: #ffffff;
+    --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --canvas: #e9ebf2; --line: #dadde8; --line-strong: #8d92ab;
+    --add-bg: #e2f3e8; --add-line: #2e9a5a; --del-bg: #fbe7e5; --del-line: #d1453d; --mod-bg: #fdf0d9; --mod-line: #d48a1a;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+    --shadow-card: 0 2px 4px rgba(27,32,64,.06), 0 18px 40px -12px rgba(27,32,64,.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  /* ---------- Seletor de propostas (não faz parte do design) ---------- */
+  .switcher { position: fixed; z-index: 50; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(27,32,64,.92); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+  .option { display: none; min-height: 100vh; }
+  .option.is-active { display: block; }
+
+  /* ---------- Formulário (comum às três) ---------- */
+  .form-wrap { width: 100%; max-width: 380px; }
+  .prefcg { display: block; height: 34px; width: auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .aqr svg { flex-shrink: 0; }
+  .aqr.neg { color: #fff; }
+  .system { display: flex; align-items: center; gap: 10px; margin-top: 28px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 22px; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field { position: relative; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,53,135,.22); }
+  .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .reveal:hover { background: var(--blue-50); }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s; }
+  .submit:hover { background: var(--blue-800); }
+  .submit:active { transform: translateY(1px); }
+  .submit svg { transition: transform .2s; }
+  .submit:hover svg { transform: translateX(3px); }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); }
+  .proto { margin-top: 22px; font-size: 12.5px; color: var(--subtle); display: flex; gap: 6px; align-items: flex-start; }
+  .proto i { flex-shrink: 0; width: 6px; height: 6px; margin-top: 6px; border-radius: 50%; background: var(--mod-line); }
+
+  /* Entrada do formulário (as três opções) */
+  .enter > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  .enter > *:nth-child(2) { animation-delay: .06s; } .enter > *:nth-child(3) { animation-delay: .12s; }
+  .enter > *:nth-child(4) { animation-delay: .18s; } .enter > *:nth-child(5) { animation-delay: .24s; }
+  .enter > *:nth-child(6) { animation-delay: .30s; } .enter > *:nth-child(7) { animation-delay: .36s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Documento estilizado (usado nas animações) ---------- */
+  .doc { position: absolute; background: #fff; border-radius: 10px; padding: 22px 20px; box-shadow: 0 10px 30px -10px rgba(10,16,60,.45); }
+  .doc .tag { width: 56px; height: 12px; border-radius: 4px; background: var(--canvas); }
+  .doc .title { width: 64%; height: 9px; border-radius: 5px; background: rgba(27,32,64,.7); margin: 14px 0 18px; }
+  .doc .ln { height: 7px; border-radius: 4px; background: rgba(98,104,134,.28); margin-bottom: 11px; position: relative; }
+
+  /* ================= OPÇÃO 1 — Painel com lente ================= */
+  .o1 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 100vh; }
+  .o1-brand { position: relative; overflow: hidden; background: var(--blue); color: #fff; padding: 40px 48px; display: flex; flex-direction: column; justify-content: space-between; }
+  .o1-brand p { max-width: 380px; font-size: 18px; line-height: 1.5; color: rgba(255,255,255,.86); }
+  .o1-brand strong { display: block; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; color: #fff; margin-bottom: 10px; font-weight: 800; }
+  .o1-stage { position: relative; height: 340px; }
+  .o1-stage .doc.back { width: 250px; height: 310px; left: calc(50% - 160px); top: 20px; transform: rotate(-7deg); opacity: .35; }
+  .o1-stage .doc.front { width: 270px; height: 320px; left: calc(50% - 115px); top: 6px; }
+  .o1-hl { position: absolute; inset: -4px -6px; border-radius: 4px; background: var(--yellow); opacity: 0; transform: scaleX(.2); transform-origin: left; }
+  .o1-hl.h1 { animation: o1-hl1 9s ease-in-out infinite; }
+  .o1-hl.h2 { animation: o1-hl2 9s ease-in-out infinite; }
+  .o1-hl.h3 { animation: o1-hl3 9s ease-in-out infinite; }
+  .o1-lens { position: absolute; width: 112px; height: 112px; left: calc(50% - 60px); top: 70px; animation: o1-lens 9s cubic-bezier(.45,0,.25,1) infinite; filter: drop-shadow(0 8px 14px rgba(10,16,60,.35)); }
+  @keyframes o1-lens {
+    0%, 6% { transform: translate(-40px, -10px) scale(1); }
+    18%, 26% { transform: translate(10px, 2px) scale(1.08); }
+    40%, 48% { transform: translate(-30px, 66px) scale(1.08); }
+    62%, 70% { transform: translate(30px, 130px) scale(1.08); }
+    86%, 100% { transform: translate(-40px, -10px) scale(1); }
+  }
+  @keyframes o1-hl1 { 0%, 14% { opacity: 0; transform: scaleX(.2); } 20%, 84% { opacity: .9; transform: scaleX(1); } 92%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes o1-hl2 { 0%, 36% { opacity: 0; transform: scaleX(.2); } 42%, 84% { opacity: .9; transform: scaleX(1); } 92%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes o1-hl3 { 0%, 58% { opacity: 0; transform: scaleX(.2); } 64%, 84% { opacity: .9; transform: scaleX(1); } 92%, 100% { opacity: 0; transform: scaleX(1); } }
+  .o1-form { background: #fff; display: flex; align-items: center; justify-content: center; padding: 48px 32px; }
+
+  /* ================= OPÇÃO 2 — Cartão central ================= */
+  .o2 { position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 48px 16px 96px; background: var(--sunken); }
+  .o2-bg { position: absolute; inset: 0; pointer-events: none; }
+  .o2-bg .doc { padding: 16px 14px; box-shadow: var(--shadow-surface); opacity: 0; animation: o2-float 16s ease-in-out infinite; }
+  .o2-bg .doc .ln { height: 5px; margin-bottom: 8px; }
+  .o2-bg .doc .title { height: 6px; margin: 10px 0 12px; }
+  @keyframes o2-float {
+    0% { opacity: 0; transform: translateY(40px) rotate(var(--r)); }
+    15%, 75% { opacity: .9; }
+    100% { opacity: 0; transform: translateY(-60px) rotate(var(--r)); }
+  }
+  .o2-ring { position: absolute; width: 760px; height: 760px; border-radius: 50%; border: 56px solid var(--blue-50); left: 50%; top: 50%; transform: translate(-50%, -50%);
+    animation: o2-breathe 10s ease-in-out infinite; }
+  @keyframes o2-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(.96); } 50% { transform: translate(-50%, -50%) scale(1.03); } }
+  .o2-card { position: relative; background: #fff; border-radius: 16px; box-shadow: var(--shadow-card); padding: 40px 40px 32px; width: 100%; max-width: 460px; animation: o2-card .8s cubic-bezier(.2,.7,.2,1) both; }
+  .o2-card .prefcg { margin: 0 auto; }
+  .o2-card .system { justify-content: center; text-align: left; }
+  .o2-card h1, .o2-card .lead { text-align: center; }
+  .o2-accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  @keyframes o2-card { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  /* ================= OPÇÃO 3 — Comparação viva ================= */
+  .o3 { position: relative; min-height: 100vh; overflow: hidden; background: var(--blue); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; }
+  .o3-stage { position: relative; height: 100%; min-height: 560px; }
+  .o3-stage .doc { width: 230px; height: 300px; top: calc(50% - 150px); }
+  .o3-stage .doc.left { left: calc(50% - 250px); animation: o3-left 10s ease-in-out infinite; }
+  .o3-stage .doc.right { left: calc(50% + 20px); animation: o3-right 10s ease-in-out infinite; }
+  .o3-stage .doc.right .tag { background: var(--blue); }
+  .o3-mark { position: absolute; inset: -4px -6px; border-radius: 3px; opacity: 0; transform: scaleX(.2); transform-origin: left; }
+  .o3-mark.del { background: var(--del-bg); box-shadow: inset 0 -2px 0 var(--del-line); }
+  .o3-mark.add { background: var(--add-bg); box-shadow: inset 0 -2px 0 var(--add-line); }
+  .o3-mark.mod { background: var(--mod-bg); box-shadow: inset 0 -2px 0 var(--mod-line); }
+  .o3-mark.r1 { animation: o3-r1 10s ease-out infinite; } .o3-mark.r2 { animation: o3-r2 10s ease-out infinite; }
+  .o3-beam { position: absolute; left: calc(50% - 280px); width: 560px; height: 2px; top: calc(50% - 120px); background: var(--yellow); border-radius: 2px;
+    box-shadow: 0 0 0 6px rgba(255,204,0,.12); opacity: 0; animation: o3-beam 10s linear infinite; }
+  .o3-beam::after { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; border: 3px solid var(--yellow); }
+  @keyframes o3-left { 0% { opacity: 0; transform: translateX(-80px); } 12% { opacity: 1; transform: translateX(-24px); } 24%, 88% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
+  @keyframes o3-right { 0% { opacity: 0; transform: translateX(80px); } 12% { opacity: 1; transform: translateX(24px); } 24%, 88% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
+  @keyframes o3-beam { 0%, 26% { opacity: 0; transform: translateY(0); } 29% { opacity: 1; } 72% { opacity: 1; transform: translateY(250px); } 77%, 100% { opacity: 0; transform: translateY(250px); } }
+  @keyframes o3-r1 { 0%, 38% { opacity: 0; transform: scaleX(.2); } 43%, 100% { opacity: 1; transform: scaleX(1); } }
+  @keyframes o3-r2 { 0%, 55% { opacity: 0; transform: scaleX(.2); } 60%, 100% { opacity: 1; transform: scaleX(1); } }
+  .o3-brand { position: absolute; left: 48px; top: 40px; }
+  .o3-caption { position: absolute; left: 48px; bottom: 40px; color: rgba(255,255,255,.86); font-size: 16px; max-width: 360px; }
+  .o3-form { padding: 32px; display: flex; justify-content: center; }
+  .o3-card { background: #fff; border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(5,10,40,.55); padding: 40px; width: 100%; max-width: 440px; animation: o2-card .8s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* ---------- Telas pequenas ---------- */
+  @media (max-width: 900px) {
+    .o1, .o3 { grid-template-columns: 1fr; }
+    .o1 { grid-template-rows: auto 1fr; }
+    .switcher a span { display: none; }
+    .o1-brand { padding: 24px 20px; min-height: 0; }
+    .o1-stage, .o1-brand p { display: none; }
+    .o1-form { padding: 32px 20px 96px; }
+    .o3-stage { display: none; }
+    .o3 { padding: 24px 0 96px; }
+    .o3-form { padding: 16px; }
+    .o3-card, .o2-card { padding: 28px 22px; }
+    .o2-bg .doc { display: none; }
+    .o2-ring { width: 520px; height: 520px; border-width: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .o1-hl, .o3-mark { opacity: .9; transform: none; }
+    .o3-beam { opacity: 1; transform: translateY(110px); }
+    .o2-bg .doc { opacity: .9; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="switcher" aria-label="Propostas">
+  <a href="#opcao-1">Opção 1<span> · Painel com lente</span></a>
+  <a href="#opcao-2">Opção 2<span> · Cartão central</span></a>
+  <a href="#opcao-3">Opção 3<span> · Comparação viva</span></a>
+</nav>
+
+<!-- OPÇÃO 1 -->
+<section class="option" id="opcao-1" aria-label="Opção 1: painel com lente">
+  <div class="o1">
+    <div class="o1-brand">
+      <span class="aqr neg" data-aqr="34" data-tone="negative"></span>
+      <div class="o1-stage" aria-hidden="true">
+        <div class="doc back"></div>
+        <div class="doc front" data-lines="92,80,96,70,88,60,94,76,84,52" data-hl="1,4,7"></div>
+        <svg class="o1-lens" viewBox="0 0 64 64"><path d="M40.5 40.5 L55 55" stroke="#fff" stroke-width="7" stroke-linecap="round"/><circle cx="27" cy="27" r="19" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="5"/></svg>
+      </div>
+      <p><strong>Análise e Qualificação de Requerimentos</strong>Compare versões de documentos e organize processos com mais segurança.</p>
+    </div>
+    <div class="o1-form"><div class="form-wrap enter" data-form></div></div>
+  </div>
+</section>
+
+<!-- OPÇÃO 2 -->
+<section class="option" id="opcao-2" aria-label="Opção 2: cartão central">
+  <div class="o2">
+    <div class="o2-bg" aria-hidden="true">
+      <div class="o2-ring"></div>
+    </div>
+    <div class="o2-card"><div class="enter" data-form data-centered></div></div>
+  </div>
+</section>
+
+<!-- OPÇÃO 3 -->
+<section class="option" id="opcao-3" aria-label="Opção 3: comparação viva">
+  <div class="o3">
+    <div class="o3-stage" aria-hidden="true">
+      <span class="aqr neg o3-brand" data-aqr="30" data-tone="negative"></span>
+      <div class="doc left" data-lines="90,82,96,70,88,80,92,64,86" data-marks="2:del:r1,5:mod:r2"></div>
+      <div class="doc right" data-lines="90,82,84,70,88,74,92,64,86" data-marks="2:add:r1,5:mod:r2"></div>
+      <div class="o3-beam"></div>
+      <p class="o3-caption">Versões comparadas lado a lado: o que foi adicionado, excluído ou modificado.</p>
+    </div>
+    <div class="o3-form"><div class="o3-card"><div class="enter" data-form></div></div></div>
+  </div>
+</section>
+
+<script>
+  // Logo do AQR (Proposta 3, "Lente Q"), mesma geometria de src/components/layout/AqrLogo.tsx.
+  function lens(tone, size) {
+    const t = tone === 'negative'
+      ? { main: '#fff', paper: 'var(--blue)', faint: 'rgba(255,255,255,.45)', bar: '#fff' }
+      : { main: 'var(--blue)', paper: '#fff', faint: 'rgba(40,53,135,.35)', bar: 'var(--blue)' }
+    const s = size * 1.1
+    return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="margin:0 ${size * 0.02}px 0 ${size * 0.04}px;transform:translateY(${size * 0.12}px)">
+      <path d="M40.5 40.5 L55 55" stroke="${t.main}" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="27" cy="27" r="19" fill="${t.paper}" stroke="${t.main}" stroke-width="7"/>
+      <rect x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/>
+      <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="${t.bar}"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="${t.faint}"/></svg>`
+  }
+  document.querySelectorAll('[data-aqr]').forEach((el) => {
+    const size = Number(el.dataset.aqr)
+    el.style.fontSize = size + 'px'
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'AQR')
+    el.innerHTML = `<span aria-hidden="true">A</span>${lens(el.dataset.tone, size)}<span aria-hidden="true">R</span>`
+  })
+
+  // Documentos estilizados: linhas, destaques (opção 1) e marcas de diferença (opção 3).
+  document.querySelectorAll('.doc').forEach((doc) => {
+    const widths = (doc.dataset.lines || '90,80,94,70,86,60').split(',')
+    const hl = (doc.dataset.hl || '').split(',').filter(Boolean).map(Number)
+    const marks = Object.fromEntries((doc.dataset.marks || '').split(',').filter(Boolean).map((m) => { const [i, k, r] = m.split(':'); return [Number(i), `${k} ${r}`] }))
+    doc.innerHTML = '<div class="tag"></div><div class="title"></div>' + widths.map((w, i) => {
+      const inner = hl.includes(i) ? `<span class="o1-hl h${hl.indexOf(i) + 1}"></span>` : marks[i] ? `<span class="o3-mark ${marks[i]}"></span>` : ''
+      return `<div class="ln" style="width:${w}%">${inner}</div>`
+    }).join('')
+  })
+
+  // Documentos flutuando ao fundo (opção 2).
+  const bg = document.querySelector('.o2-bg')
+  const spots = [[6, 14, -6, 0], [16, 62, 4, 4], [80, 10, 5, 8], [86, 58, -4, 2], [70, 80, 3, 11], [24, 86, -3, 6]]
+  spots.forEach(([x, y, r, delay]) => {
+    const d = document.createElement('div')
+    d.className = 'doc'
+    d.style.cssText = `left:${x}%;top:${y}%;width:120px;height:150px;--r:${r}deg;animation-delay:-${delay}s`
+    d.innerHTML = '<div class="tag" style="width:32px;height:8px"></div><div class="title"></div>' + [90, 74, 96, 60, 84].map((w) => `<div class="ln" style="width:${w}%"></div>`).join('')
+    bg.appendChild(d)
+  })
+
+  // Formulário comum.
+  const eye = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  document.querySelectorAll('[data-form]').forEach((wrap, n) => {
+    const centered = wrap.hasAttribute('data-centered')
+    wrap.innerHTML = `
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande" height="34">
+      <div class="system" ${centered ? '' : ''}><span class="aqr" data-aqr-inline></span><small>Análise e Qualificação<br>de Requerimentos</small></div>
+      ${centered ? '<div class="o2-accent" aria-hidden="true"></div>' : ''}
+      <div><h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p></div>
+      <form onsubmit="event.preventDefault()">
+        <div><label for="u${n}">Usuário</label><input id="u${n}" autocomplete="username"></div>
+        <div><label for="p${n}">Senha</label><div class="field"><input id="p${n}" type="password" autocomplete="current-password" style="padding-right:84px">
+          <button type="button" class="reveal" aria-pressed="false" onclick="const i=this.previousElementSibling;const s=i.type==='password';i.type=s?'text':'password';this.textContent=s?'Ocultar':'Mostrar';this.setAttribute('aria-pressed',s)">Mostrar</button></div></div>
+        <button class="submit" type="submit">Entrar ${eye}</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>
+      <p class="proto"><i></i>Protótipo: o acesso ainda não é verificado.</p>`
+    const logo = wrap.querySelector('[data-aqr-inline]')
+    logo.style.fontSize = '24px'; logo.setAttribute('role', 'img'); logo.setAttribute('aria-label', 'AQR')
+    logo.innerHTML = `<span aria-hidden="true">A</span>${lens('color', 24)}<span aria-hidden="true">R</span>`
+    if (centered) wrap.querySelector('.prefcg').style.margin = '0 auto'
+  })
+
+  // Troca de opção pela âncora.
+  function show() {
+    const id = /^#opcao-[123]$/.test(location.hash) ? location.hash.slice(1) : 'opcao-1'
+    document.querySelectorAll('.option').forEach((o) => o.classList.toggle('is-active', o.id === id))
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
