@@ -4,7 +4,8 @@
  * Não representam nenhum processo administrativo real e não resultam de
  * processamento de arquivos. Servem apenas para demonstrar a interface.
  */
-import { summarize, type ComparisonResult, type Difference } from '../model/types'
+import { summarize, type ComparisonResult, type Difference, type DocumentRole } from '../model/types'
+import type { DocumentSource } from '../viewer/document-source'
 import type { SimulatedDocument } from '../viewer/simulated-document'
 
 const header = (title: string) => [
@@ -330,3 +331,9 @@ export const demoDocuments = {
   original: demoOriginalDocument,
   updated: demoUpdatedDocument,
 } as const
+
+/** Os documentos fictícios como fonte do visualizador. */
+export const demoDocumentSources: Record<DocumentRole, DocumentSource> = {
+  original: { kind: 'simulated', document: demoOriginalDocument },
+  updated: { kind: 'simulated', document: demoUpdatedDocument },
+}

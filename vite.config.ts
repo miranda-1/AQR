@@ -24,6 +24,8 @@ export default defineConfig({
           include: ['src/**/*.test.{ts,tsx}'],
           setupFiles: ['./src/test/setup.ts'],
           css: false,
+          // As telas são testadas com o serviço demonstrativo; o real tem testes próprios.
+          env: { VITE_COMPARISON_SERVICE: 'demo' },
         },
       },
       {

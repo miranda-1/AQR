@@ -1,7 +1,7 @@
 import { useCallback, useState, type Ref, type UIEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { DocumentRole, DocumentSummary } from '../model/types'
-import type { SimulatedDocument } from './simulated-document'
+import type { DocumentSource } from './document-source'
 import { SimulatedPageView } from './SimulatedPageView'
 
 export const roleLabels: Record<DocumentRole, string> = {
@@ -11,7 +11,7 @@ export const roleLabels: Record<DocumentRole, string> = {
 
 interface DocumentPaneProps {
   summary: DocumentSummary
-  document: SimulatedDocument
+  source: DocumentSource
   activeId: string | null
   numbers: ReadonlyMap<string, number>
   visibleIds: ReadonlySet<string>
@@ -34,7 +34,7 @@ function currentPageOf(container: HTMLElement): number {
 
 export function DocumentPane({
   summary,
-  document,
+  source,
   activeId,
   numbers,
   visibleIds,
@@ -85,18 +85,24 @@ export function DocumentPane({
         className="relative min-h-0 flex-1 overflow-auto bg-surface-sunken [container-type:inline-size]"
       >
         <div className="flex flex-col items-center gap-4 px-4 py-4">
-          {document.pages.map((page) => (
-            <SimulatedPageView
-              key={page.pageNumber}
-              page={page}
-              pageCount={summary.pageCount}
-              role={summary.role}
-              activeId={activeId}
-              numbers={numbers}
-              visibleIds={visibleIds}
-              onSelect={onSelect}
-            />
-          ))}
+          {source.kind === 'simulated' ? (
+            source.document.pages.map((page) => (
+              <SimulatedPageView
+                key={page.pageNumber}
+                page={page}
+                pageCount={summary.pageCount}
+                role={summary.role}
+                activeId={activeId}
+                numbers={numbers}
+                visibleIds={visibleIds}
+                onSelect={onSelect}
+              />
+            ))
+          ) : (
+            <p className="max-w-md py-10 text-center text-[0.9375rem] text-muted-foreground">
+              As páginas de {source.file.name} aparecerão aqui. Use a lista para ver o texto de cada diferença.
+            </p>
+          )}
         </div>
       </div>
     </section>

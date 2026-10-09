@@ -17,7 +17,14 @@ function PanelFrame({ children, labelledBy }: { children: ReactNode; labelledBy:
   )
 }
 
-export function ProcessingPanel({ state }: { state: Extract<ComparisonRunState, { phase: 'preparing' | 'processing' }> }) {
+export function ProcessingPanel({
+  state,
+  isDemonstration,
+}: {
+  state: Extract<ComparisonRunState, { phase: 'preparing' | 'processing' }>
+  /** No modo demonstrativo nada é lido nem enviado; o texto avisa isso. */
+  isDemonstration: boolean
+}) {
   const currentIndex = state.phase === 'processing' ? stageOrder.indexOf(state.stage) : -1
   const title = state.phase === 'preparing' ? 'Preparando a comparação' : 'Comparando os documentos'
 
@@ -30,7 +37,9 @@ export function ProcessingPanel({ state }: { state: Extract<ComparisonRunState, 
         </h2>
       </div>
       <p className="mt-2 text-[0.9375rem] text-muted-foreground">
-        Simulação de interface: nenhum arquivo está sendo lido ou enviado.
+        {isDemonstration
+          ? 'Simulação de interface: nenhum arquivo está sendo lido ou enviado.'
+          : 'Os arquivos são enviados ao servidor do AQR só para esta comparação e não ficam guardados.'}
       </p>
       <ol className="mt-6 space-y-3" aria-label="Etapas">
         {stageOrder.map((stage, index) => {

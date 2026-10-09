@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
-import { demoComparisonResult, demoDocuments } from '@/features/comparison/mocks/demo-comparison'
+import { demoComparisonResult, demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
 import { renderApp } from './render'
 
 /**
@@ -55,7 +55,7 @@ describe('acessibilidade (axe)', () => {
   it('workspace de comparação não tem violações', async () => {
     const { container } = render(
       <TooltipProvider>
-        <ComparisonWorkspace result={demoComparisonResult} documents={demoDocuments} />
+        <ComparisonWorkspace result={demoComparisonResult} documents={demoDocumentSources} />
       </TooltipProvider>,
     )
     expect(await violations(container)).toEqual([])
@@ -64,7 +64,7 @@ describe('acessibilidade (axe)', () => {
   it('estados de processamento, erro e sem diferenças não têm violações', async () => {
     const { container } = render(
       <MemoryRouter>
-        <ProcessingPanel state={{ phase: 'processing', stage: 'comparing' }} />
+        <ProcessingPanel state={{ phase: 'processing', stage: 'comparing' }} isDemonstration={false} />
         <ErrorPanel error={{ code: 'INCOMPATIBLE_DOCUMENT', document: 'updated' }} onRetry={() => {}} />
         <NoDifferencesPanel />
       </MemoryRouter>,

@@ -4,14 +4,14 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { defined } from '@/test/files'
-import { demoComparisonResult, demoDocuments } from '../mocks/demo-comparison'
+import { demoComparisonResult, demoDocumentSources } from '../mocks/demo-comparison'
 import { ComparisonWorkspace } from './ComparisonWorkspace'
 import { ErrorPanel } from './StatePanels'
 
 function renderWorkspace() {
   return render(
     <TooltipProvider>
-      <ComparisonWorkspace result={demoComparisonResult} documents={demoDocuments} />
+      <ComparisonWorkspace result={demoComparisonResult} documents={demoDocumentSources} />
     </TooltipProvider>,
   )
 }

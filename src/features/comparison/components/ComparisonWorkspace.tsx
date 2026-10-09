@@ -9,14 +9,14 @@ import { useSyncedScroll } from '../hooks/use-synced-scroll'
 import { differenceKindMeta, differenceKinds } from '../model/difference-kinds'
 import type { ComparisonResult, DocumentRole } from '../model/types'
 import { DocumentPane } from '../viewer/DocumentPane'
-import type { SimulatedDocument } from '../viewer/simulated-document'
+import type { DocumentSource } from '../viewer/document-source'
 import { DifferenceList } from './DifferenceList'
 import { SummaryFilter } from './SummaryFilter'
 import { DifferenceStepper, SyncScrollToggle, ViewModeSwitch, ZoomControls, type ViewMode } from './ViewerControls'
 
 interface ComparisonWorkspaceProps {
   result: ComparisonResult
-  documents: Record<DocumentRole, SimulatedDocument>
+  documents: Record<DocumentRole, DocumentSource>
 }
 
 /** Rola um painel até o trecho da diferença, deixando-o no terço superior. */
@@ -193,7 +193,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
             {showOriginal && (
               <DocumentPane
                 summary={result.documents.original}
-                document={documents.original}
+                source={documents.original}
                 scrollRef={originalRef}
                 onScroll={synced.onFirstScroll}
                 {...paneProps}
@@ -202,7 +202,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
             {showUpdated && (
               <DocumentPane
                 summary={result.documents.updated}
-                document={documents.updated}
+                source={documents.updated}
                 scrollRef={updatedRef}
                 onScroll={synced.onSecondScroll}
                 {...paneProps}
