@@ -104,11 +104,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Anéis do login parados e centralizados (sem girar nem "respirar"), o que acaba com o salto ao entrar; "Sair" no site com a animação "logo volta ao centro" | `24a5474` |
 | 09/10/2026 | Três propostas de barra superior (abas, painel de ferramentas, ícones compactos), mais a atual, em `docs/propostas-topbar/topbar.html` | `23d3bf3` |
 | 09/10/2026 | Escolhidos os "ícones compactos". Três versões (indicador deslizante, com rótulos, flutuante) em `docs/propostas-topbar/icones-compactos.html` | `a74d0f8` |
-| 09/10/2026 | Versão D: rótulos + indicador deslizante numa sub-barra abaixo da barra principal | ver `git log` |
+| 09/10/2026 | Versão D: rótulos + indicador deslizante numa sub-barra abaixo da barra principal | `def5b06` |
+| 09/10/2026 | Escolhida a sub-barra. Três sub-barras diferentes (sublinhado, azul institucional, com contexto) em `docs/propostas-topbar/sub-barras.html` | ver `git log` |
 
 ## Pendências
 
-- **Barra superior:** base escolhida, "ícones compactos". Falta escolher a versão em `docs/propostas-topbar/icones-compactos.html` (`#va` indicador deslizante, `#vb` com rótulos, `#vc` flutuante, `#vd` sub-barra); a escolhida substitui a decisão registrada sobre a barra.
+- **Barra superior:** escolhida a barra em duas faixas (ferramentas numa sub-barra). Falta escolher a sub-barra em `docs/propostas-topbar/sub-barras.html` (`#vd` a escolhida, `#e1` sublinhado, `#e2` azul institucional, `#e3` com contexto); a escolhida substitui a decisão registrada sobre a barra.
 - **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -123,7 +124,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
-| Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) |
+| Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) e `sub-barras.html` (`#vd`, `#e1` a `#e3`) |
 | Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |

@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: sub-barras</title>
+<!--
+  Decisão do responsável (09/10/2026): barra em duas faixas, com as ferramentas numa sub-barra.
+  #vd sub-barra escolhida (referência), #e1 sublinhado, #e2 azul institucional, #e3 com contexto.
+  Em todas: AQR à esquerda, PREFCG à direita, sem menu lateral, sem linhas divisórias (sombra separa a barra).
+  Arquivo estático: abra no navegador a partir do repositório.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --line-strong: #8d92ab;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+    --shadow-pop: 0 2px 4px rgba(27,32,64,.06), 0 16px 36px -10px rgba(27,32,64,.28);
+    --shadow-bar: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  svg.i { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .switcher { position: fixed; z-index: 90; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(27,32,64,.92); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+
+  .variant { display: none; }
+  .variant.is-active { display: block; }
+
+  /* ---------- Barra (comum) ---------- */
+  .bar { position: sticky; top: 0; z-index: 40; background: #fff; box-shadow: var(--shadow-bar); }
+  .bar-in { max-width: 1920px; margin: 0 auto; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 20px; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 4px; border-radius: 4px; }
+  .brand small { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .prefcg { height: 30px; width: auto; display: block; }
+  .right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .ghost { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 6px; font-size: 15px; font-weight: 600; }
+  .ghost:hover, .ghost[aria-expanded='true'] { background: var(--sunken); }
+  .badge { font-size: 11px; font-weight: 700; line-height: 1; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line-strong); background: var(--sunken); color: var(--muted); white-space: nowrap; }
+  .pop { position: absolute; z-index: 50; background: #fff; border-radius: 10px; box-shadow: var(--shadow-pop); padding: 6px; animation: drop .18s ease-out; }
+  .pop[hidden] { display: none; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 6px; font-size: 15px; text-align: left; text-decoration: none; color: var(--ink); }
+  .item:hover { background: var(--sunken); }
+  .item.is-active { background: var(--blue-50); color: var(--blue); font-weight: 700; position: relative; }
+  .item.is-active::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px; background: var(--blue); }
+  .item .i { color: var(--muted); } .item.is-active .i { color: var(--blue); }
+  .item.is-exit { margin-top: 4px; color: var(--muted); }
+
+  /* ---------- V1: abas ---------- */
+  .tabs { display: flex; align-items: center; gap: 4px; margin-left: 12px; height: 100%; }
+  .tab { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--muted); }
+  .tab:hover { background: var(--sunken); color: var(--ink); }
+  .tab[aria-current='page'] { color: var(--blue); background: var(--blue-50); }
+  /* Indicador da aba ativa: marca curta embaixo, não linha divisória. */
+  .tab[aria-current='page']::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: -8px; height: 3px; border-radius: 3px 3px 0 0; background: var(--blue); }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; }
+  .account { position: relative; }
+  .account .pop { right: 0; top: 48px; width: 240px; }
+  .who { padding: 10px 12px 8px; font-size: 13px; color: var(--muted); }
+  .who strong { display: block; font-size: 15px; color: var(--ink); }
+
+  /* ---------- V2: painel de ferramentas ---------- */
+  .panel { left: 0; right: 0; top: 56px; position: absolute; border-radius: 0 0 14px 14px; padding: 22px 24px 24px; animation: panel .22s ease-out; }
+  @keyframes panel { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  .panel-in { max-width: 1100px; margin: 0 auto; }
+  .panel h2 { font-size: 13px; font-weight: 700; letter-spacing: .02em; color: var(--muted); }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 12px; }
+  .tool { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 12px; background: var(--sunken); text-decoration: none; color: var(--ink); transition: background .15s, box-shadow .15s; }
+  .tool:hover { background: #fff; box-shadow: var(--shadow-pop); }
+  .tool.is-active { background: var(--blue-50); }
+  .tool .ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 10px; background: #fff; color: var(--blue); flex-shrink: 0; }
+  .tool.is-active .ico { background: var(--blue); color: #fff; }
+  .tool .ico .i { width: 22px; height: 22px; }
+  .tool strong { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 16px; }
+  .tool p { margin-top: 4px; font-size: 14px; color: var(--muted); line-height: 1.45; }
+  .tool.is-exit { background: transparent; }
+  .tool.is-exit .ico { background: var(--sunken); color: var(--muted); }
+  .veil { position: fixed; inset: 56px 0 0; z-index: 30; background: rgba(27,32,64,.18); animation: fade .2s ease-out; }
+  .veil[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0; } }
+
+  /* ---------- V3: ícones compactos ---------- */
+  .dock { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: var(--sunken); }
+  .dock-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; transition: background .15s, color .15s; }
+  .dock-btn:hover { color: var(--ink); background: #fff; }
+  .dock-btn[aria-current='page'] { background: var(--blue); color: #fff; padding: 0 16px 0 12px; }
+  .dock-btn .label { display: none; }
+  .dock-btn[aria-current='page'] .label { display: inline; }
+  .dock-btn .dot { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--sunken); }
+  .tip { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 6px 10px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .12s; }
+  .dock-btn:hover .tip, .dock-btn:focus-visible .tip { opacity: 1; }
+  .dock-btn[aria-current='page'] .tip { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .chip:hover, .chip[aria-expanded='true'] { background: var(--sunken); }
+  .chip .avatar { width: 32px; height: 32px; font-size: 13px; }
+
+  /* ---------- A: indicador deslizante ---------- */
+  .dock.slide { gap: 2px; }
+  .indicator { position: absolute; top: 4px; bottom: 4px; left: 4px; width: 40px; border-radius: 999px; background: var(--blue);
+    box-shadow: 0 4px 10px -4px rgba(40,53,135,.6); transition: transform .35s cubic-bezier(.3,.7,.2,1), width .35s cubic-bezier(.3,.7,.2,1); }
+  .sbtn { position: relative; z-index: 1; display: inline-flex; align-items: center; height: 40px; padding: 0 11px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; transition: color .25s; }
+  .sbtn:hover { color: var(--ink); }
+  .sbtn[aria-current='page'] { color: #fff; }
+  .sbtn .label { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width .35s cubic-bezier(.3,.7,.2,1), opacity .25s, margin .35s; }
+  .sbtn[aria-current='page'] .label { max-width: 180px; opacity: 1; margin-left: 8px; }
+  .sbtn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--sunken); }
+
+  /* ---------- B: com rótulos ---------- */
+  .seg { display: flex; align-items: center; gap: 2px; margin-left: 14px; padding: 4px; border-radius: 12px; background: var(--sunken); }
+  .seg-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 9px; color: var(--muted); font-size: 14px; font-weight: 600; transition: background .15s, color .15s, box-shadow .15s; }
+  .seg-btn:hover { color: var(--ink); }
+  .seg-btn[aria-current='page'] { background: #fff; color: var(--blue); font-weight: 700; box-shadow: 0 1px 2px rgba(27,32,64,.08), 0 2px 8px -2px rgba(27,32,64,.14); }
+  .seg-btn .tag { font-size: 10.5px; font-weight: 700; padding: 3px 6px; border-radius: 4px; background: #fff; color: var(--muted); }
+  .seg-btn[aria-current='page'] .tag { background: var(--blue-50); }
+
+  /* ---------- C: flutuante ---------- */
+  .fdock { position: absolute; left: 50%; top: 30px; transform: translateX(-50%); display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: #fff;
+    box-shadow: 0 2px 4px rgba(27,32,64,.06), 0 12px 28px -10px rgba(27,32,64,.30); }
+  .fbtn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%; color: var(--muted); transition: background .15s, color .15s, transform .15s; }
+  .fbtn .i { width: 21px; height: 21px; }
+  .fbtn:hover { background: var(--sunken); color: var(--ink); transform: translateY(-1px); }
+  .fbtn[aria-current='page'] { background: var(--blue-50); color: var(--blue); }
+  .fbtn[aria-current='page']::after { content: ''; position: absolute; bottom: 5px; left: 50%; width: 14px; height: 3px; margin-left: -7px; border-radius: 2px; background: var(--yellow); }
+  .fbtn .dot { position: absolute; top: 9px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px #fff; }
+  .ftip { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 6px 10px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .12s; }
+  .fbtn:hover .ftip, .fbtn:focus-visible .ftip { opacity: 1; }
+  .float-variant main { padding-top: 72px; }
+
+  /* ---------- D: sub-barra ---------- */
+  /* Duas faixas separadas por tom (branco e azul bem claro), sem linha divisória; a sombra fica embaixo do conjunto. */
+  .two-rows .subbar { background: var(--blue-50); }
+  .subnav { position: relative; max-width: 1920px; margin: 0 auto; display: flex; align-items: center; gap: 4px; height: 52px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+  .subnav::-webkit-scrollbar { display: none; }
+  .indicator.sub { top: 8px; bottom: 8px; left: 0; border-radius: 10px; background: #fff;
+    box-shadow: 0 1px 2px rgba(27,32,64,.08), 0 4px 12px -4px rgba(27,32,64,.18); }
+  .sub-btn { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 10px; flex-shrink: 0;
+    color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; transition: color .25s; }
+  .sub-btn:hover { color: var(--ink); }
+  .sub-btn[aria-current='page'] { color: var(--blue); font-weight: 700; }
+  .sub-btn .tag { font-size: 10.5px; font-weight: 700; padding: 3px 6px; border-radius: 4px; background: #fff; color: var(--muted); }
+  .sub-btn[aria-current='page'] .tag { background: var(--blue-50); }
+
+  /* ---------- 1: sublinhado ---------- */
+  .indicator.sub.line { top: auto; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--blue); box-shadow: none; }
+  .is-line .sub-btn { height: 52px; border-radius: 0; }
+  .is-line .sub-btn:hover { color: var(--ink); }
+
+  /* ---------- 2: azul institucional ---------- */
+  .is-blue .subbar { background: var(--blue); }
+  .is-blue .sub-btn { color: rgba(255,255,255,.78); }
+  .is-blue .sub-btn:hover { color: #fff; }
+  .is-blue .sub-btn[aria-current='page'] { color: var(--blue); }
+  .is-blue .sub-btn .tag { background: rgba(255,255,255,.14); color: #fff; }
+  .is-blue .sub-btn[aria-current='page'] .tag { background: var(--blue-50); color: var(--blue); }
+  .is-blue .indicator.sub { box-shadow: 0 4px 12px -4px rgba(5,10,40,.45); }
+
+  /* ---------- 3: com contexto ---------- */
+  .is-context .subbar { background: var(--sunken); display: flex; align-items: center; max-width: 100%; }
+  .is-context .subnav { flex: 1; margin: 0; }
+  .ctx { display: flex; align-items: center; gap: 10px; padding: 0 20px; white-space: nowrap; animation: drop .2s ease-out; }
+  .ctx .hint { font-size: 14px; color: var(--muted); }
+  .ctx .primary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 8px; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; }
+  .ctx .primary:hover { background: var(--blue-800); }
+  .ctx .link { font-size: 14px; font-weight: 600; color: var(--blue); }
+
+  /* ---------- Conteúdo de exemplo ---------- */
+  main { max-width: 1100px; margin: 0 auto; padding: 48px 24px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ''; width: 24px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  main h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+  .ph { margin-top: 16px; height: 108px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); }
+  .ph:first-of-type { margin-top: 32px; }
+  .ph.big { min-height: 380px; margin-top: 0; }
+
+  @media (max-width: 900px) {
+    .brand small, .tab .label, .chip .name { display: none; }
+    .tabs { margin-left: 0; } .tab { padding: 0 10px; }
+    .cards { grid-template-columns: 1fr; }
+    .dock { position: static; transform: none; margin-left: auto; }
+    .right { margin-left: 8px; gap: 8px; }
+    .prefcg { height: 24px; }
+    main { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    .seg { margin-left: 6px; } .seg-btn .label, .seg-btn .tag { display: none; }
+    .fdock { left: auto; right: auto; position: absolute; left: 50%; }
+    .float-variant .brand small { display: none; }
+    .float-variant .right, .two-rows .right { margin-left: auto; }
+  }
+  /* Celular: só ícones nas abas e no grupo de ícones, sem selo e com menos espaço. */
+  @media (max-width: 600px) {
+    .sbtn[aria-current='page'] .label { max-width: 0; opacity: 0; margin-left: 0; }
+    .fbtn { width: 40px; height: 40px; }
+    .fdock { top: 46px; }
+    .bar-in { padding: 0 10px; gap: 6px; }
+    .tab .badge, .dock-btn[aria-current='page'] .label, .chip svg.i { display: none; }
+    .tab { padding: 0 9px; } .tab[aria-current='page']::after { left: 9px; right: 9px; }
+    .dock-btn, .dock-btn[aria-current='page'] { padding: 0 10px; }
+    .chip { padding: 0 2px; } .prefcg { height: 22px; }
+  }
+  @media (max-width: 760px) { .ctx .hint, .ctx .link, .ctx .primary .txt { display: none; } .ctx { padding: 0 10px; } .ctx .primary { padding: 0 10px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<nav class="switcher" aria-label="Variações da barra superior">
+  <a href="#vd">Escolhida</a>
+  <a href="#e1">1 · Sublinhado</a>
+  <a href="#e2">2 · Azul institucional</a>
+  <a href="#e3">3 · Com contexto</a>
+</nav>
+
+<!-- D: SUB-BARRA (rótulos + indicador deslizante) -->
+<section class="variant" id="vd" aria-label="Versão D: sub-barra">
+  <header class="bar two-rows">
+    <div class="bar-in">
+      <a class="brand" href="#vd"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+      <div class="right">
+        <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+        <div class="account">
+          <button class="chip" aria-expanded="false" data-toggle="md"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+          <div class="pop" id="md" hidden>
+            <div class="who"><strong>servidor</strong>SEMADES</div>
+            <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="subbar">
+      <nav class="subnav" aria-label="Ferramentas" data-tabs data-slide>
+        <span class="indicator sub" aria-hidden="true"></span>
+        <button class="sub-btn" aria-label="Início"><span data-icon="home"></span><span class="label">Início</span></button>
+        <button class="sub-btn" aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+        <button class="sub-btn" aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="tag">Em breve</span></button>
+      </nav>
+    </div>
+  </header>
+  <div data-content></div>
+</section>
+
+<!-- Sub-barra 1: sublinhado -->
+<section class="variant" id="e1" aria-label="Sub-barra 1: sublinhado">
+  <header class="bar two-rows is-line">
+    <div class="bar-in">
+      <a class="brand" href="#e1"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+      <div class="right">
+        <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+        <div class="account">
+          <button class="chip" aria-expanded="false" data-toggle="me1"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+          <div class="pop" id="me1" hidden>
+            <div class="who"><strong>servidor</strong>SEMADES</div>
+            <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="subbar">
+      <nav class="subnav " aria-label="Ferramentas" data-tabs data-slide>
+        <span class="indicator sub line" aria-hidden="true"></span>
+        <button class="sub-btn " aria-label="Início"><span data-icon="home"></span><span class="label">Início</span></button>
+        <button class="sub-btn " aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+        <button class="sub-btn " aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="tag">Em breve</span></button>
+      </nav>
+    </div>
+  </header>
+  <div data-content></div>
+</section>
+
+<!-- Sub-barra 2: azul institucional -->
+<section class="variant" id="e2" aria-label="Sub-barra 2: azul institucional">
+  <header class="bar two-rows is-blue">
+    <div class="bar-in">
+      <a class="brand" href="#e2"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+      <div class="right">
+        <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+        <div class="account">
+          <button class="chip" aria-expanded="false" data-toggle="me2"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+          <div class="pop" id="me2" hidden>
+            <div class="who"><strong>servidor</strong>SEMADES</div>
+            <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="subbar">
+      <nav class="subnav " aria-label="Ferramentas" data-tabs data-slide>
+        <span class="indicator sub " aria-hidden="true"></span>
+        <button class="sub-btn " aria-label="Início"><span data-icon="home"></span><span class="label">Início</span></button>
+        <button class="sub-btn " aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+        <button class="sub-btn " aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="tag">Em breve</span></button>
+      </nav>
+    </div>
+  </header>
+  <div data-content></div>
+</section>
+
+<!-- Sub-barra 3: com contexto -->
+<section class="variant" id="e3" aria-label="Sub-barra 3: com contexto">
+  <header class="bar two-rows is-context">
+    <div class="bar-in">
+      <a class="brand" href="#e3"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+      <div class="right">
+        <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+        <div class="account">
+          <button class="chip" aria-expanded="false" data-toggle="me3"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+          <div class="pop" id="me3" hidden>
+            <div class="who"><strong>servidor</strong>SEMADES</div>
+            <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="subbar">
+      <nav class="subnav " aria-label="Ferramentas" data-tabs data-slide>
+        <span class="indicator sub " aria-hidden="true"></span>
+        <button class="sub-btn " aria-label="Início"><span data-icon="home"></span><span class="label">Início</span></button>
+        <button class="sub-btn " aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+        <button class="sub-btn " aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="tag">Em breve</span></button>
+      </nav>
+      <div class="ctx" data-ctx aria-live="polite"></div>
+    </div>
+  </header>
+  <div data-content></div>
+</section>
+
+<script>
+  // Ícones (mesmo desenho do lucide usado no app).
+  const icons = {
+    home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    files: '<path d="M15 2H9a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8"/>',
+    search: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="m13.3 16.3 1.7 1.7"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
+    out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+  }
+  document.querySelectorAll('[data-icon]').forEach((el) => {
+    el.outerHTML = `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${icons[el.dataset.icon]}</svg>`
+  })
+
+  // Logo do AQR (Proposta 3, "Lente Q").
+  document.querySelectorAll('[data-aqr]').forEach((el) => {
+    const size = Number(el.dataset.aqr), s = size * 1.1
+    el.style.fontSize = size + 'px'; el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'AQR')
+    el.innerHTML = `<span aria-hidden="true">A</span><svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * .02}px 0 ${size * .04}px;transform:translateY(${size * .12}px)">
+      <path d="M40.5 40.5 L55 55" stroke="var(--blue)" stroke-width="9" stroke-linecap="round"/><circle cx="27" cy="27" r="19" fill="#fff" stroke="var(--blue)" stroke-width="7"/>
+      <rect x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/><rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="var(--blue)"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="rgba(40,53,135,.35)"/></svg><span aria-hidden="true">R</span>`
+  })
+
+  // Conteúdo de exemplo abaixo de cada barra.
+  document.querySelectorAll('[data-content]').forEach((el) => {
+    el.outerHTML = `<main><div><p class="eyebrow">Ferramentas AQR</p><h1 data-title>Como podemos ajudar?</h1><div class="ph"></div><div class="ph"></div></div><div class="ph big"></div></main>`
+  })
+
+  // Menus e painel: abrir/fechar, Esc e clique fora.
+  function closeAll(except) {
+    document.querySelectorAll('[data-toggle]').forEach((b) => {
+      if (b === except) return
+      b.setAttribute('aria-expanded', 'false')
+      document.getElementById(b.dataset.toggle).hidden = true
+      if (b.dataset.veil) document.getElementById(b.dataset.veil).hidden = true
+    })
+  }
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const pop = document.getElementById(b.dataset.toggle), open = pop.hidden
+    closeAll(b)
+    pop.hidden = !open; b.setAttribute('aria-expanded', String(open))
+    if (b.dataset.veil) document.getElementById(b.dataset.veil).hidden = !open
+  }))
+  document.addEventListener('click', (e) => { if (!e.target.closest('.pop')) closeAll() })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll() })
+
+  // Abas e ícones: trocar a ferramenta ativa muda o título de exemplo.
+  const titles = { 'Início': 'Como podemos ajudar?', 'Comparar PDFs': 'Comparar documentos', 'Triagem documental': 'Triagem documental', 'Triagem documental, em desenvolvimento': 'Triagem documental' }
+  document.querySelectorAll('[data-tabs]').forEach((nav) => nav.querySelectorAll('button').forEach((btn) => btn.addEventListener('click', () => {
+    nav.querySelectorAll('button').forEach((b) => b.removeAttribute('aria-current'))
+    btn.setAttribute('aria-current', 'page')
+    const name = btn.getAttribute('aria-label') ?? btn.querySelector('.label').textContent
+    nav.closest('section').querySelector('[data-title]').textContent = titles[name] ?? name
+  })))
+
+  function placeIndicator(nav) {
+    const active = nav.querySelector('[aria-current="page"]'), ind = nav.querySelector('.indicator')
+    if (!active || !ind) return
+    // Espera a largura final do botão (o rótulo abre com transição) e acompanha enquanto ela muda.
+    const start = performance.now()
+    const follow = () => {
+      ind.style.width = active.offsetWidth + 'px'
+      ind.style.transform = `translateX(${active.offsetLeft - (ind.classList.contains('sub') ? 0 : 4)}px)`
+      if (performance.now() - start < 400) requestAnimationFrame(follow)
+    }
+    requestAnimationFrame(follow)
+  }
+  document.querySelectorAll('[data-slide]').forEach((nav) => {
+    nav.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => placeIndicator(nav)))
+  })
+  addEventListener('resize', () => document.querySelectorAll('[data-slide]').forEach(placeIndicator))
+
+  const plus = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+  const contexts = {
+    'Início': '<span class="hint">Escolha uma ferramenta para começar.</span>',
+    'Comparar PDFs': `<span class="hint">2 documentos selecionados</span><button class="primary" aria-label="Nova comparação">${plus}<span class="txt">Nova comparação</span></button>`,
+    'Triagem documental, em desenvolvimento': '<span class="hint">Esta ferramenta ainda não está disponível.</span><a class="link" href="#e3">Saiba mais</a>',
+  }
+  function updateContext(nav) {
+    const box = nav.closest('.subbar')?.querySelector('[data-ctx]'), active = nav.querySelector('[aria-current="page"]')
+    if (!box || !active) return
+    box.innerHTML = contexts[active.getAttribute('aria-label')] ?? ''
+    box.style.animation = 'none'; void box.offsetWidth; box.style.animation = ''
+  }
+  document.querySelectorAll('[data-tabs]').forEach((nav) => {
+    nav.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => updateContext(nav)))
+    updateContext(nav)
+  })
+
+  function show() {
+    const id = /^#(vd|e[1-3])$/.test(location.hash) ? location.hash.slice(1) : 'e1'
+    closeAll()
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('is-active', v.id === id))
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+    document.querySelectorAll('[data-slide]').forEach(placeIndicator)
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
