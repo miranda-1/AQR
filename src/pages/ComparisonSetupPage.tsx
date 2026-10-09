@@ -31,10 +31,15 @@ function HowItWorks() {
           Aceita arquivos PDF de até {formatFileSize(comparisonConfig.maxFileSizeBytes)}, com texto selecionável.
           Documentos digitalizados como imagem ainda não são suportados.
         </li>
-        {appConfig.isPrototype && (
+        {appConfig.isPrototype ? (
           <li>
             Nesta versão de protótipo, os arquivos são verificados apenas no navegador e não são enviados. O resultado
             exibido usa documentos fictícios.
+          </li>
+        ) : (
+          <li>
+            Os arquivos são enviados ao servidor do AQR só para a comparação e não ficam guardados. O resultado fica
+            disponível por 30 minutos.
           </li>
         )}
       </ul>

@@ -36,6 +36,15 @@ export default defineConfig({
           include: ['server/**/*.test.ts', 'shared/**/*.test.ts'],
         },
       },
+      {
+        // Ponta a ponta: serviços do frontend contra o servidor real, numa porta de verdade.
+        extends: true,
+        test: {
+          name: 'integracao',
+          environment: 'node',
+          include: ['tests/integration/**/*.test.ts'],
+        },
+      },
     ],
   },
 })

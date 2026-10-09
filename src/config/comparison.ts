@@ -3,9 +3,9 @@ const MEGABYTE = 1024 * 1024
 /** "api": compara de verdade, no servidor do AQR. "demo": resultado fictício, para revisar a interface. */
 export type ComparisonServiceMode = 'api' | 'demo'
 
-/** Lê `VITE_COMPARISON_SERVICE`. Sem valor reconhecido, fica no modo demonstrativo. */
+/** Lê `VITE_COMPARISON_SERVICE`. O padrão é a comparação real; "demo" liga o protótipo. */
 export function readServiceMode(value: string | undefined): ComparisonServiceMode {
-  return value === 'api' ? 'api' : 'demo'
+  return value === 'demo' ? 'demo' : 'api'
 }
 
 export const comparisonConfig = {

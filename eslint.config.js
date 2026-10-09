@@ -21,7 +21,7 @@ export default tseslint.config(
   },
   {
     // Servidor e tipos compartilhados rodam no Node, não no navegador.
-    files: ['server/**/*.ts', 'shared/**/*.ts'],
+    files: ['server/**/*.ts', 'shared/**/*.ts', 'tests/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {

@@ -1,8 +1,8 @@
-# Arquitetura do frontend
+# Arquitetura
 
 ## Visão geral
 
-Aplicação React de página única (SPA), construída com Vite e TypeScript em modo strict. Não tem backend nesta etapa: a comparação de PDFs é **simulada** por um serviço demonstrativo, isolado atrás de um contrato TypeScript.
+Aplicação React de página única (SPA), construída com Vite e TypeScript em modo strict, e um servidor Node.js/TypeScript (Fastify, em `server/`) que compara os PDFs. Os dois falam pelo contrato `ComparisonService` e pelos tipos de `shared/contracts/`. O modo demonstrativo (`VITE_COMPARISON_SERVICE=demo`) continua disponível para revisar a interface sem servidor.
 
 ```
 src/
@@ -15,12 +15,12 @@ src/
   features/
     comparison/
       model/              contratos (types.ts), máquina de estados, validação de arquivos
-      services/           serviço demonstrativo (ponto de troca pelo backend)
-      mocks/              dados fictícios, isolados
+      services/           serviço real (HTTP) e demonstrativo, os dois implementam ComparisonService
+      mocks/              dados fictícios, isolados (só no modo demonstrativo)
       session/            arquivos escolhidos, mantidos apenas em memória
       hooks/              execução da comparação, navegação, rolagem sincronizada
       components/         telas e painéis da comparação
-      viewer/             visualizador de páginas (hoje, páginas simuladas em HTML)
+      viewer/             visualizador: páginas reais do PDF (pdf/, pdf.js) ou simuladas em HTML (demo)
     home/                 página inicial: dados das ferramentas, opções, demonstração e ilustrações animadas
     triage/               reservado (em desenvolvimento)
   hooks/ lib/ config/     utilitários e configuração (limite de 50 MB, rotas)
@@ -67,16 +67,16 @@ Estão em `src/features/comparison/model/types.ts`, que reexporta os tipos de da
 - `ComparisonResult`: documentos, resumo e lista de `Difference`. Cada diferença tem tipo, contexto, texto e localização (`pageNumber` e `region` normalizada de 0 a 1) em cada documento e, opcionalmente, `anchors`: a posição no documento em que o trecho não existe.
 - `ComparisonStage`: `validating | extracting | comparing | organizing`, para relatar o progresso.
 
-Para ligar o backend:
+Implementações (escolhidas em `pages/ComparisonWorkspacePage.tsx`, o único ponto de troca, por `comparisonConfig.serviceMode`):
 
-1. Criar `services/http-comparison-service.ts`, que implementa `ComparisonService`. Ele envia os arquivos, acompanha o progresso (polling, SSE ou WebSocket) e mapeia a resposta para `ComparisonResult`.
-2. Trocar `createMockComparisonService` em `pages/ComparisonWorkspacePage.tsx`. É o único ponto de troca.
-3. Substituir o visualizador simulado (`viewer/SimulatedPageView`) por páginas reais do PDF (por exemplo, renderizadas com pdf.js), com destaques posicionados por `Difference.*.location.region`. `DocumentPane`, a lista, a navegação e a rolagem sincronizada continuam iguais.
-4. Remover o seletor "Simular estado" e os avisos de protótipo (`appConfig.isPrototype = false`).
+1. `services/http-comparison-service.ts` (padrão): envia os arquivos à API, acompanha a tarefa por consultas a cada 0,7 s, valida cada resposta (`model/api-schema.ts`) e cancela no servidor ao sair da tela.
+2. `services/mock-comparison-service.ts` (`VITE_COMPARISON_SERVICE=demo`): resultado fictício, com "Simular estado" e os avisos de protótipo (`appConfig.isPrototype`).
 
-## Próxima etapa: backend (em andamento)
+O visualizador recebe um `DocumentSource` por documento: o PDF escolhido (páginas reais pelo pdf.js, destaques por `Difference.*.location.region` e `anchors`) ou o documento fictício. `DocumentPane`, a lista, a navegação e a rolagem sincronizada são os mesmos nos dois casos.
 
-O plano completo está em `docs/plano-backend.md`. Resumo da estrutura que será criada:
+## Backend
+
+O plano completo está em `docs/plano-backend.md`. Estrutura:
 
 ```
 shared/contracts/   tipos de dados usados pelo frontend e pelo servidor (comparação, administração, erros da API)
