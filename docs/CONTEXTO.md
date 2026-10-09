@@ -59,6 +59,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | ~~Login com fundo pontilhado.~~ Substituída: **o login também tem fundo azul `#283587`**, com **ondas** animadas. A entrada acontece no mesmo azul: o cartão some, a logo em negativo se desenha com uma rajada de anéis saindo da lente, e o azul sobe como cortina revelando o site. O cartão é branco, então a PREFCG continua sobre branco. |
 | 09/10/2026 | **Favorita até agora: "anéis pontilhados"** (`login-ondas.html#w4`, captura `favorita-aneis-pontilhados.png`). **Guardar**; não descartar. Em análise, como alternativa: cubos que sobem e descem como ondas (`login-cubos.html`). |
 | 09/10/2026 | **Login fechado em "anéis pontilhados"** (cubos descartados). Últimas variações a escolher: original, noite, claro ou lente (`login-aneis-variacoes.html`). |
+| 09/10/2026 | **Login: variação "Noite"**: azul profundo, brilho que percorre os anéis, pulso ao digitar, cartão 2B com PREFCG. Falta escolher a animação de entrada. |
 | 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -86,11 +87,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Login com fundo pontilhado; entrada em tela azul com logo em negativo e três animações de fundo (ondas, linhas, pontos), saída em cortina, em `docs/propostas-login/login-2b-entrada-azul.html` | `c2d0d6e` |
 | 09/10/2026 | Escolhida a animação "ondas". Login também em fundo azul, com quatro variações a partir das ondas (anéis, mar, dois focos, anéis pontilhados), em `docs/propostas-login/login-ondas.html` | `103228f` |
 | 09/10/2026 | "Anéis pontilhados" guardada como favorita. Cinco versões com cubos em onda (canvas isométrico) em `docs/propostas-login/login-cubos.html` | `1227661` |
-| 09/10/2026 | Fechado em anéis pontilhados. Três variações dela (noite, claro, lente) em `docs/propostas-login/login-aneis-variacoes.html` | ver `git log` |
+| 09/10/2026 | Fechado em anéis pontilhados. Três variações dela (noite, claro, lente) em `docs/propostas-login/login-aneis-variacoes.html` | `70b2350` |
+| 09/10/2026 | Escolhida a "Noite". Três animações de entrada (pontilhado continua, logo em pontinhos, anel vira lente) em `docs/propostas-login/login-noite-entradas.html` | ver `git log` |
 
 ## Pendências
 
-- **Tela de login:** escolher a variação final dos anéis pontilhados em `login-aneis-variacoes.html` (`#v0` original, `#v1` noite, `#v2` claro, `#v3` lente). Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
+- **Tela de login:** escolher a animação de entrada da "Noite" em `login-noite-entradas.html` (`#a1` pontilhado continua, `#a2` logo em pontinhos, `#a3` anel vira lente). Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 11 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.
@@ -103,7 +105,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
-| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) e `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) |
+| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) e `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
