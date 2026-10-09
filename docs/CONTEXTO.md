@@ -111,10 +111,13 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Escolhida a sub-barra. Três sub-barras diferentes (sublinhado, azul institucional, com contexto) em `docs/propostas-topbar/sub-barras.html` | `e9a232a` |
 | 09/10/2026 | Barra nova no site: duas faixas, sub-barra "sublinhado" com traço deslizante, botão de conta com o nome digitado no login e "Sair"; o menu "Ferramentas" foi removido | `010bfcc` |
 | 09/10/2026 | Três propostas de transição entre páginas (deslizar, em cascata, varredura) em `docs/propostas-transicoes/transicoes.html` | `9980b19` |
-| 09/10/2026 | Transição "deslizar" entre páginas no site (View Transitions API): só o conteúdo desliza, no sentido do traço da sub-barra | ver `git log` |
+| 09/10/2026 | Transição "deslizar" entre páginas no site (View Transitions API): só o conteúdo desliza, no sentido do traço da sub-barra | `fb6833c` |
+| 09/10/2026 | Envio ao GitHub (`miranda-1/AQR`) de todo o trabalho até `fb6833c`, com o responsável como autor | — |
+| 09/10/2026 | Três modelos para as folhas atrás do cartão de login (amarelo e azul, PDFs, original e atualizado) em `docs/propostas-login/folhas-login.html` | ver `git log` |
 
 ## Pendências
 
+- **Folhas do cartão de login:** escolher entre os modelos de `docs/propostas-login/folhas-login.html` (`#f0` atual, `#f1` amarelo e azul, `#f2` PDFs, `#f3` original e atualizado) e aplicar no site.
 - **Login:** a autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -132,7 +135,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
 | Propostas de transição de página | `docs/propostas-transicoes/transicoes.html` (`#t1` a `#t3`) |
 | Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) e `sub-barras.html` (`#vd`, `#e1` a `#e3`) |
-| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
+| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`), `folhas-login.html` (folhas do cartão, `#f0` a `#f3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e sub-barra | `src/components/layout/AppHeader.tsx`, `ToolsNav.tsx` (sub-barra), `AccountMenu.tsx` (conta e "Sair"), `navigation.ts` (lista de ferramentas) |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |

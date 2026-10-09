@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: folhas do cartão de login</title>
+<!--
+  Pedido do responsável (09/10/2026): o cartão de login tem três retângulos (o do formulário e dois atrás).
+  Modelos para os dois de trás: #f0 atual, #f1 amarelo e azul, #f2 PDFs, #f3 original e atualizado.
+  Fundo "Noite" com os anéis parados, como no site. Arquivo estático: abra no navegador a partir do repositório.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @property --sweep { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-800: #1d2766; --yellow: #ffcc00;
+    --ink: #1b2040; --muted: #4a5072; --subtle: #626886; --line-strong: #8d92ab;
+    --add-bg: #e2f3e8; --add-line: #2e9a5a; --del-bg: #fbe7e5; --del-line: #d1453d; --mod-bg: #fdf0d9; --mod-line: #d48a1a;
+    --night-center: #33419a; --night-edge: #151b4d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  .switcher { position: fixed; z-index: 90; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(10,14,40,.85); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+
+  /* ---------- Fundo "Noite" com anéis parados (igual ao site) ---------- */
+  .night { position: fixed; inset: 0; overflow: hidden;
+    background: radial-gradient(circle at 50% 46%, var(--night-center) 0, var(--blue) 30%, var(--blue-800) 68%, var(--night-edge) 100%); }
+  .rings { position: absolute; left: 50%; top: 50%; width: 1400px; height: 1400px; margin: -700px 0 0 -700px; }
+  .rings svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .rings circle { fill: none; stroke-linecap: round; }
+  .rings .glow { -webkit-mask-image: conic-gradient(from var(--sweep), transparent 0 290deg, rgb(0 0 0 / .4) 330deg, #000 360deg);
+    mask-image: conic-gradient(from var(--sweep), transparent 0 290deg, rgb(0 0 0 / .4) 330deg, #000 360deg); animation: sweep 7s linear infinite; }
+  @keyframes sweep { to { --sweep: 360deg; } }
+
+  /* ---------- Cartão e folhas ---------- */
+  main { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 48px 16px 96px; overflow-x: clip; }
+  .stack { position: relative; width: 100%; max-width: 440px; }
+  .sheet { position: absolute; inset: 0; border-radius: 16px; transform-origin: 50% 100%; overflow: hidden; }
+  .card { position: relative; background: #fff; border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(5,10,40,.55); padding: 40px 40px 34px; }
+  .fan-front { animation: fanF 1.1s .25s cubic-bezier(.2,.7,.2,1) both; }
+  .fan-back { animation: fanB 1.1s .35s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes fanF { from { transform: none; } to { transform: var(--front); } }
+  @keyframes fanB { from { transform: none; } to { transform: var(--back); } }
+
+  /* Atual */
+  [data-model='f0'] .sheet { box-shadow: 0 8px 24px -10px rgba(5,10,40,.45); }
+  [data-model='f0'] .sheet.front { background: #fff; --front: rotate(-6deg) translate(-18px, 6px); }
+  [data-model='f0'] .sheet.back { background: var(--blue-50); --back: rotate(5deg) translate(18px, 8px); }
+
+  /* 1: amarelo e azul */
+  [data-model='f1'] .sheet { box-shadow: 0 10px 28px -10px rgba(5,10,40,.5); }
+  [data-model='f1'] .sheet.front { background: var(--yellow); --front: rotate(-7deg) translate(-26px, 8px); }
+  [data-model='f1'] .sheet.back { background: var(--blue); --back: rotate(6deg) translate(26px, 10px); }
+  [data-model='f1'] .sheet.back .stripe { position: absolute; inset: 0 0 auto 0; height: 100%; background: linear-gradient(160deg, var(--blue) 0 55%, var(--blue-800) 55% 100%); }
+
+  /* 2 e 3: documentos que aparecem além do cartão */
+  [data-model='f2'] .sheet, [data-model='f3'] .sheet { background: #fff; box-shadow: 0 10px 28px -10px rgba(5,10,40,.5); padding: 26px 22px; }
+  [data-model='f2'] .sheet.front, [data-model='f3'] .sheet.front { --front: rotate(-8deg) translate(-96px, 14px); }
+  [data-model='f2'] .sheet.back, [data-model='f3'] .sheet.back { --back: rotate(7deg) translate(96px, 18px); }
+  .doc-lines { display: flex; flex-direction: column; gap: 11px; }
+  .doc-lines i { display: block; height: 7px; border-radius: 4px; background: rgba(98,104,134,.25); position: relative; }
+  .doc-lines i.title { height: 10px; width: 55% !important; background: rgba(27,32,64,.7); margin-bottom: 8px; }
+  .front .doc-lines { align-items: flex-start; } .back .doc-lines { align-items: flex-end; }
+
+  /* PDF: canto dobrado e etiqueta */
+  .fold { position: absolute; top: 0; width: 46px; height: 46px; background: linear-gradient(225deg, transparent 50%, #dfe2ec 50%); }
+  .front .fold { left: 0; transform: scaleX(-1); } .back .fold { right: 0; }
+  .pdf { position: absolute; bottom: 22px; padding: 6px 10px; border-radius: 6px; background: var(--blue); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em; }
+  .front .pdf { left: 22px; } .back .pdf { right: 22px; }
+  .pdf.alt { background: var(--yellow); color: var(--ink); }
+
+  /* Original e atualizado */
+  .doc-tag { display: inline-block; margin-bottom: 14px; padding: 5px 9px; border-radius: 5px; font-size: 12px; font-weight: 800; }
+  .front .doc-tag { background: #e9ebf2; color: var(--ink); } .back .doc-tag { background: var(--blue); color: #fff; }
+  .back .doc-head { text-align: right; }
+  .mark::after { content: ''; position: absolute; inset: -4px -5px; border-radius: 3px; }
+  .mark.del::after { background: var(--del-bg); box-shadow: inset 0 -2px 0 var(--del-line); z-index: -1; }
+  .mark.add::after { background: var(--add-bg); box-shadow: inset 0 -2px 0 var(--add-line); z-index: -1; }
+  .mark.mod::after { background: var(--mod-bg); box-shadow: inset 0 -2px 0 var(--mod-line); z-index: -1; }
+  .doc-lines i.mark { isolation: isolate; }
+
+  /* Formulário (estático) */
+  .prefcg { display: block; height: 34px; margin: 0 auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); }
+  .system { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 20px; text-align: center; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); text-align: center; }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); padding: 0 14px; font: inherit; font-size: 15px; }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; margin-top: 4px; cursor: pointer; }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: center; }
+
+  @media (max-width: 760px) {
+    .card { padding: 30px 22px 26px; }
+    [data-model='f2'] .sheet.front, [data-model='f3'] .sheet.front { --front: rotate(-6deg) translate(-30px, 10px); }
+    [data-model='f2'] .sheet.back, [data-model='f3'] .sheet.back { --back: rotate(5deg) translate(30px, 12px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .fan-front { transform: var(--front); } .fan-back { transform: var(--back); }
+  }
+</style>
+</head>
+<body data-model="f1">
+
+<nav class="switcher" aria-label="Modelos das folhas">
+  <a href="#f0">Atual</a>
+  <a href="#f1">1 · Amarelo e azul</a>
+  <a href="#f2">2 · PDFs</a>
+  <a href="#f3">3 · Original e atualizado</a>
+</nav>
+
+<div class="night" aria-hidden="true"><div class="rings" data-rings></div></div>
+
+<main>
+  <div class="stack" data-stack>
+    <div class="sheet back fan-back" aria-hidden="true" data-back></div>
+    <div class="sheet front fan-front" aria-hidden="true" data-front></div>
+    <div class="card">
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+      <div class="system"><span class="aqr" data-aqr="24"></span><small>Análise e Qualificação<br>de Requerimentos</small></div>
+      <div class="accent" aria-hidden="true"></div>
+      <h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p>
+      <form onsubmit="event.preventDefault()">
+        <div><label for="u">Usuário</label><input id="u" autocomplete="username"></div>
+        <div><label for="p">Senha</label><input id="p" type="password" autocomplete="current-password"></div>
+        <button class="submit" type="submit">Entrar →</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Anéis parados (iguais ao site).
+  const RINGS = [[170, 4, 14], [250, 3, 18], [330, 5, 22], [420, 3, 16], [520, 4, 26], [630, 3, 20]]
+  const base = [.2, .15, .13, .11, .09, .07]
+  const ringSvg = (glow) => `<svg class="${glow ? 'glow' : ''}" viewBox="0 0 1400 1400">${RINGS.map(([r, d, g], i) =>
+    `<circle cx="700" cy="700" r="${r}" stroke="${i === 2 ? '#ffcc00' : '#fff'}" stroke-opacity="${glow ? (i === 2 ? .95 : .75) : i === 2 ? .38 : base[i]}" stroke-width="${d}" stroke-dasharray="0 ${g}"/>`).join('')}</svg>`
+  document.querySelector('[data-rings]').innerHTML = ringSvg(false) + ringSvg(true)
+
+  // Logo do AQR.
+  document.querySelectorAll('[data-aqr]').forEach((el) => {
+    const size = Number(el.dataset.aqr), s = size * 1.1
+    el.style.fontSize = size + 'px'; el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'AQR')
+    el.innerHTML = `<span aria-hidden="true">A</span><svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * .02}px 0 ${size * .04}px;transform:translateY(${size * .12}px)">
+      <path d="M40.5 40.5 L55 55" stroke="var(--blue)" stroke-width="9" stroke-linecap="round"/><circle cx="27" cy="27" r="19" fill="#fff" stroke="var(--blue)" stroke-width="7"/>
+      <rect x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/><rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="var(--blue)"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="rgba(40,53,135,.35)"/></svg><span aria-hidden="true">R</span>`
+  })
+
+  const lines = (widths, marks = {}) => `<div class="doc-lines">${widths.map((w, i) => `<i class="${i === 0 ? 'title' : ''} ${marks[i] ? 'mark ' + marks[i] : ''}" style="width:${w}%"></i>`).join('')}</div>`
+  const W = [60, 92, 84, 96, 70, 88, 80, 94, 64, 90, 78, 86, 58, 92, 74, 88, 66, 90, 80]
+  const models = {
+    f0: { front: '', back: '' },
+    f1: { front: '', back: '<span class="stripe"></span>' },
+    f2: {
+      front: `<span class="fold"></span>${lines(W)}<span class="pdf">PDF</span>`,
+      back: `<span class="fold"></span>${lines(W.slice().reverse())}<span class="pdf alt">PDF</span>`,
+    },
+    f3: {
+      front: `<div class="doc-head"><span class="doc-tag">Original</span></div>${lines(W, { 3: 'del', 7: 'mod', 12: 'del' })}`,
+      back: `<div class="doc-head"><span class="doc-tag">Atualizado</span></div>${lines(W, { 4: 'add', 7: 'mod', 10: 'add' })}`,
+    },
+  }
+  const front = document.querySelector('[data-front]'), back = document.querySelector('[data-back]')
+  function show() {
+    const id = /^#f[0-3]$/.test(location.hash) ? location.hash.slice(1) : 'f1'
+    document.body.dataset.model = id
+    front.innerHTML = models[id].front; back.innerHTML = models[id].back
+    // Reinicia a abertura em leque ao trocar de modelo.
+    for (const s of [front, back]) { s.style.animation = 'none'; void s.offsetWidth; s.style.animation = '' }
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
