@@ -18,6 +18,7 @@ export function AppHeader() {
       <div className="mx-auto flex h-[var(--header-height)] max-w-[1920px] items-center gap-3 px-3 sm:gap-4 lg:px-5">
         <Link
           to={routes.home}
+          viewTransition
           className="flex min-w-0 items-center gap-3 rounded-sm px-1 py-1"
           aria-label={`${appConfig.name}, ${appConfig.fullName} — início`}
         >

@@ -48,6 +48,7 @@ export function ToolsNav() {
           <Link
             key={item.to}
             to={item.to}
+            viewTransition
             aria-current={active ? 'page' : undefined}
             className={cn(
               'inline-flex shrink-0 items-center gap-2 px-3 text-sm font-semibold whitespace-nowrap text-muted-foreground transition-colors hover:text-ink focus-visible:outline-offset-[-3px]',

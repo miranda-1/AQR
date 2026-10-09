@@ -25,6 +25,7 @@ export function ToolOption({ tool, active, onActivate }: ToolOptionProps) {
   return (
     <Link
       to={tool.to}
+      viewTransition
       onMouseEnter={onActivate}
       onFocus={onActivate}
       aria-labelledby={inDevelopment ? `${titleId} ${statusId}` : titleId}

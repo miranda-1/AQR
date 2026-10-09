@@ -27,6 +27,7 @@ export function ToolShowcase({ tools, active, runs }: ToolShowcaseProps) {
     <Link
       ref={ref}
       to={active.to}
+      viewTransition
       tabIndex={-1}
       className="group grid h-full rounded-xl bg-white p-6 shadow-surface transition-shadow duration-200 hover:shadow-raised sm:p-8 lg:p-10"
     >

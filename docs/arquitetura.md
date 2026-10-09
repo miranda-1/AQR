@@ -89,5 +89,6 @@ Para ligar o backend:
 | Ilustrações da home em SVG + CSS (`@keyframes`), sem biblioteca de animação | Só `transform` e `opacity` (sem mudança de layout). Pausadas fora da tela (IntersectionObserver) e quando inativas. Com `prefers-reduced-motion`, ficam no quadro estático |
 | Login só visual, com sessão em `sessionStorage` | A etapa é de frontend; `AuthSessionProvider` concentra o ponto de troca para a autenticação real |
 | Entrada do login em canvas + Web Animations API | Centenas de pontos animados sem biblioteca nova; a passagem para o cabeçalho sobrevive à troca de rota por ficar acima do roteador |
+| Transição entre páginas com View Transitions API | Sem biblioteca: o React Router chama `document.startViewTransition` nos links com `viewTransition`, e só o `main` (`view-transition-name: page`) anima. Navegadores sem suporte trocam a página direto |
 | Painel de demonstração da home com `tabIndex={-1}` | Clicável com o mouse, mas sem parada extra de tabulação: as opções já levam ao mesmo destino |
 | Destaques inline como `span role="button"` | Assim o destaque quebra linha junto com o texto, o que `<button>` não faz |

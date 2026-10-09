@@ -110,7 +110,7 @@ export function ErrorPanel({ error, onRetry }: { error: ComparisonError; onRetry
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild>
-          <Link to={routes.comparison}>
+          <Link to={routes.comparison} viewTransition>
             <FileWarning aria-hidden />
             Escolher outros arquivos
           </Link>
@@ -144,7 +144,7 @@ export function NoDifferencesPanel() {
       </div>
       <div className="mt-6">
         <Button asChild variant="outline">
-          <Link to={routes.comparison}>Comparar outros documentos</Link>
+          <Link to={routes.comparison} viewTransition>Comparar outros documentos</Link>
         </Button>
       </div>
     </PanelFrame>

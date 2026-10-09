@@ -49,7 +49,7 @@ export function ComparisonWorkspacePage() {
         onScenarioChange={(next) => setSearchParams({ [SCENARIO_PARAM]: next }, { replace: true })}
         onNewComparison={() => {
           reset()
-          navigate(routes.comparison)
+          navigate(routes.comparison, { viewTransition: true })
         }}
       />
       {(state.phase === 'preparing' || state.phase === 'processing') && <ProcessingPanel state={state} />}

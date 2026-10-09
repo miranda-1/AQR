@@ -28,7 +28,7 @@ export function TriagePage() {
       </div>
 
       <Button asChild className="mt-8">
-        <Link to={routes.comparison}>Ir para a comparação de PDFs</Link>
+        <Link to={routes.comparison} viewTransition>Ir para a comparação de PDFs</Link>
       </Button>
     </div>
   )

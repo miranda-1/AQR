@@ -21,6 +21,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 - Funcionam de verdade:
   - login "Noite" (anéis pontilhados parados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (botão de conta) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
   - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
+  - transição "deslizar" entre páginas (View Transitions API, nos navegadores com suporte);
   - navegação pela sub-barra de ferramentas (Início, Comparar PDFs, Triagem documental) e botão de conta com "Sair";
   - seleção e validação local dos PDFs (extensão, tipo, limite de 50 MB, assinatura `%PDF-`);
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
@@ -68,6 +69,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Anéis do login parados e centralizados.** Só o brilho se move sobre eles, e ao digitar os pontos clareiam (sem mudar de tamanho). **Sair = "logo volta ao centro"**: a logo sai do cabeçalho para o centro, o fundo do login volta, e ela se desfaz em pontinhos que voltam aos anéis. |
 | 08/10/2026 | ~~Barra superior: menu "Ferramentas" à esquerda, logo AQR ao lado e PREFCG à direita.~~ **Substituída em 09/10/2026** (abaixo). Continua valendo: sem "SEMADES" e sem "Protótipo" na barra; sem menu lateral. |
 | 09/10/2026 | **Barra superior em duas faixas.** Em cima, branca: logo e nome do AQR à esquerda; PREFCG e botão de conta (nome digitado no login, com "Sair") à direita. Embaixo, a **sub-barra "sublinhado"** em azul bem claro: Início, Comparar PDFs e Triagem documental ("Em breve"), com um traço azul que desliza até a ferramenta ativa. Separação por tom, sem linha divisória. |
+| 09/10/2026 | **Transição entre páginas: "deslizar".** A página nova entra no sentido do traço da sub-barra (para a direita, entra pela direita), em cerca de 0,4 s; a barra fica parada. Sem suporte do navegador ou com movimento reduzido, a troca é direta. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
 | 08/10/2026 | **Logo do AQR: Proposta 3, "Lente Q"**, com a lente centralizada entre o A e o R. Propostas em `docs/propostas-logo-aqr/`. |
@@ -108,11 +110,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Versão D: rótulos + indicador deslizante numa sub-barra abaixo da barra principal | `def5b06` |
 | 09/10/2026 | Escolhida a sub-barra. Três sub-barras diferentes (sublinhado, azul institucional, com contexto) em `docs/propostas-topbar/sub-barras.html` | `e9a232a` |
 | 09/10/2026 | Barra nova no site: duas faixas, sub-barra "sublinhado" com traço deslizante, botão de conta com o nome digitado no login e "Sair"; o menu "Ferramentas" foi removido | `010bfcc` |
-| 09/10/2026 | Três propostas de transição entre páginas (deslizar, em cascata, varredura) em `docs/propostas-transicoes/transicoes.html` | ver `git log` |
+| 09/10/2026 | Três propostas de transição entre páginas (deslizar, em cascata, varredura) em `docs/propostas-transicoes/transicoes.html` | `9980b19` |
+| 09/10/2026 | Transição "deslizar" entre páginas no site (View Transitions API): só o conteúdo desliza, no sentido do traço da sub-barra | ver `git log` |
 
 ## Pendências
 
-- **Transições de página:** escolher entre as propostas de `docs/propostas-transicoes/transicoes.html` (`#t1` deslizar, `#t2` em cascata, `#t3` varredura) e implementar no site.
 - **Login:** a autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
@@ -126,6 +128,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
+| Transição entre páginas | `src/app/page-transition.ts` (sentido), `AppShell.tsx` (`view-transition-name: page`), CSS no fim de `src/styles/globals.css`; links e `navigate` usam `viewTransition` |
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
 | Propostas de transição de página | `docs/propostas-transicoes/transicoes.html` (`#t1` a `#t3`) |
 | Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) e `sub-barras.html` (`#vd`, `#e1` a `#e3`) |

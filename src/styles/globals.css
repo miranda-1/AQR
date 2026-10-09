@@ -151,3 +151,47 @@
     0 2px 4px rgba(27, 32, 64, 0.06),
     0 10px 24px -8px rgba(27, 32, 64, 0.18);
 }
+
+/*
+ * Transição entre páginas: "deslizar" (decisão do responsável, 09/10/2026).
+ * Usa a View Transitions API (links com viewTransition). Só a área de conteúdo (view-transition-name: page)
+ * desliza, no sentido do traço da sub-barra; a barra fica parada. Sem suporte no navegador, a troca é direta.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(page) {
+  animation-duration: 0.34s;
+}
+::view-transition-old(page) {
+  animation: page-out 0.18s ease-in both;
+}
+::view-transition-new(page) {
+  animation: page-in 0.32s 0.14s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+:root[data-page-direction='back']::view-transition-old(page) {
+  animation-name: page-out-back;
+}
+:root[data-page-direction='back']::view-transition-new(page) {
+  animation-name: page-in-back;
+}
+@keyframes page-out {
+  to { opacity: 0; transform: translateX(-48px); }
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateX(48px); }
+}
+@keyframes page-out-back {
+  to { opacity: 0; transform: translateX(48px); }
+}
+@keyframes page-in-back {
+  from { opacity: 0; transform: translateX(-48px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

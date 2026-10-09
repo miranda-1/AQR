@@ -70,7 +70,7 @@ export function ComparisonSetupPage() {
         aria-label="Selecionar documentos para comparação"
         onSubmit={(event) => {
           event.preventDefault()
-          if (ready) navigate(routes.comparisonWorkspace)
+          if (ready) navigate(routes.comparisonWorkspace, { viewTransition: true })
         }}
       >
         <div className="grid gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
