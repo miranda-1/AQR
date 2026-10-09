@@ -6,7 +6,8 @@
 <title>AQR: barra com ícones compactos</title>
 <!--
   Decisão do responsável (09/10/2026): barra com "ícones compactos". Três versões dela:
-  #v3 original, #va indicador deslizante, #vb com rótulos, #vc flutuante.
+  #v3 original, #va indicador deslizante, #vb com rótulos, #vc flutuante,
+  #vd sub-barra (rótulos + indicador deslizante numa segunda faixa abaixo da barra).
   Em todas: AQR à esquerda, PREFCG à direita, sem menu lateral, sem linhas divisórias (sombra separa a barra).
   Arquivo estático: abra no navegador a partir do repositório.
 -->
@@ -139,6 +140,20 @@
   .fbtn:hover .ftip, .fbtn:focus-visible .ftip { opacity: 1; }
   .float-variant main { padding-top: 72px; }
 
+  /* ---------- D: sub-barra ---------- */
+  /* Duas faixas separadas por tom (branco e azul bem claro), sem linha divisória; a sombra fica embaixo do conjunto. */
+  .two-rows .subbar { background: var(--blue-50); }
+  .subnav { position: relative; max-width: 1920px; margin: 0 auto; display: flex; align-items: center; gap: 4px; height: 52px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+  .subnav::-webkit-scrollbar { display: none; }
+  .indicator.sub { top: 8px; bottom: 8px; left: 0; border-radius: 10px; background: #fff;
+    box-shadow: 0 1px 2px rgba(27,32,64,.08), 0 4px 12px -4px rgba(27,32,64,.18); }
+  .sub-btn { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 10px; flex-shrink: 0;
+    color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; transition: color .25s; }
+  .sub-btn:hover { color: var(--ink); }
+  .sub-btn[aria-current='page'] { color: var(--blue); font-weight: 700; }
+  .sub-btn .tag { font-size: 10.5px; font-weight: 700; padding: 3px 6px; border-radius: 4px; background: #fff; color: var(--muted); }
+  .sub-btn[aria-current='page'] .tag { background: var(--blue-50); }
+
   /* ---------- Conteúdo de exemplo ---------- */
   main { max-width: 1100px; margin: 0 auto; padding: 48px 24px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
   .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
@@ -161,7 +176,7 @@
     .seg { margin-left: 6px; } .seg-btn .label, .seg-btn .tag { display: none; }
     .fdock { left: auto; right: auto; position: absolute; left: 50%; }
     .float-variant .brand small { display: none; }
-    .float-variant .right { margin-left: auto; }
+    .float-variant .right, .two-rows .right { margin-left: auto; }
   }
   /* Celular: só ícones nas abas e no grupo de ícones, sem selo e com menos espaço. */
   @media (max-width: 600px) {
@@ -184,6 +199,7 @@
   <a href="#va">A · Indicador deslizante</a>
   <a href="#vb">B · Com rótulos</a>
   <a href="#vc">C · Flutuante</a>
+  <a href="#vd">D · Sub-barra</a>
 </nav>
 
 <!-- V3: ÍCONES COMPACTOS -->
@@ -280,6 +296,34 @@
   <div data-content></div>
 </section>
 
+<!-- D: SUB-BARRA (rótulos + indicador deslizante) -->
+<section class="variant" id="vd" aria-label="Versão D: sub-barra">
+  <header class="bar two-rows">
+    <div class="bar-in">
+      <a class="brand" href="#vd"><span class="aqr" data-aqr="22"></span><small>Análise e Qualificação de Requerimentos</small></a>
+      <div class="right">
+        <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+        <div class="account">
+          <button class="chip" aria-expanded="false" data-toggle="md"><span class="avatar">S</span><span class="name">servidor</span><span data-icon="chev"></span></button>
+          <div class="pop" id="md" hidden>
+            <div class="who"><strong>servidor</strong>SEMADES</div>
+            <button class="item is-exit"><span data-icon="out"></span>Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="subbar">
+      <nav class="subnav" aria-label="Ferramentas" data-tabs data-slide>
+        <span class="indicator sub" aria-hidden="true"></span>
+        <button class="sub-btn" aria-label="Início"><span data-icon="home"></span><span class="label">Início</span></button>
+        <button class="sub-btn" aria-current="page" aria-label="Comparar PDFs"><span data-icon="files"></span><span class="label">Comparar PDFs</span></button>
+        <button class="sub-btn" aria-label="Triagem documental, em desenvolvimento"><span data-icon="search"></span><span class="label">Triagem documental</span><span class="tag">Em breve</span></button>
+      </nav>
+    </div>
+  </header>
+  <div data-content></div>
+</section>
+
 <script>
   // Ícones (mesmo desenho do lucide usado no app).
   const icons = {
@@ -344,7 +388,7 @@
     const start = performance.now()
     const follow = () => {
       ind.style.width = active.offsetWidth + 'px'
-      ind.style.transform = `translateX(${active.offsetLeft - 4}px)`
+      ind.style.transform = `translateX(${active.offsetLeft - (ind.classList.contains('sub') ? 0 : 4)}px)`
       if (performance.now() - start < 400) requestAnimationFrame(follow)
     }
     requestAnimationFrame(follow)
@@ -355,7 +399,7 @@
   addEventListener('resize', () => document.querySelectorAll('[data-slide]').forEach(placeIndicator))
 
   function show() {
-    const id = /^#v[3abc]$/.test(location.hash) ? location.hash.slice(1) : 'va'
+    const id = /^#v[3a-d]$/.test(location.hash) ? location.hash.slice(1) : 'va'
     closeAll()
     document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('is-active', v.id === id))
     document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
