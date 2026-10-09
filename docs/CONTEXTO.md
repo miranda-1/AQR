@@ -56,6 +56,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | **Rodapé com marcas, sem texto:** SEMADES, slogan "É fazendo o certo que a gente traz resultado" e PREFCG, na **versão azul e branca** do kit 2026, numa faixa branca e baixa. As versões coloridas foram testadas e recusadas ("ficou muito feio"). O aviso de protótipo saiu do rodapé, mas continua na tela de comparação e no resultado. |
 | 09/10/2026 | **Login: base na opção 2 (cartão central).** Cartão branco no centro, sobre fundo claro, com a PREFCG no topo. **Sem aviso de protótipo** na tela de login. **Variação escolhida: 2B (folhas em leque).** |
 | 09/10/2026 | **Entrada animada no login:** ao entrar, o cartão sai, a logo do AQR se desenha grande no centro (lente, haste e faixa amarela; A e R entram pelos lados) e então o site abre. |
+| 09/10/2026 | **Login com fundo pontilhado.** A entrada animada fica numa **tela própria, com fundo azul `#283587`** e logo em negativo, com animação no fundo azul. Na saída, o azul sobe como cortina e revela o site. |
 | 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -79,11 +80,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 08/10/2026 | Rodapé refeito com as marcas SEMADES, slogan e PREFCG (versão azul), no lugar do texto | `bec11fc` |
 | 09/10/2026 | Três propostas de tela de login animada, com PREFCG, em `docs/propostas-login/` (HTML navegável + capturas) | `e8896c3` |
 | 09/10/2026 | Responsável escolheu a opção 2 (cartão central). Três variações dela, sem aviso de protótipo, em `docs/propostas-login/variacoes-opcao-2.html` | `390f805` |
-| 09/10/2026 | Escolhida a 2B. Cinco fundos possíveis e a entrada animada (logo se desenhando antes de abrir o site) em `docs/propostas-login/variacoes-2b.html` | ver `git log` |
+| 09/10/2026 | Escolhida a 2B. Cinco fundos possíveis e a entrada animada (logo se desenhando antes de abrir o site) em `docs/propostas-login/variacoes-2b.html` | `15f4092` |
+| 09/10/2026 | Login com fundo pontilhado; entrada em tela azul com logo em negativo e três animações de fundo (ondas, linhas, pontos), saída em cortina, em `docs/propostas-login/login-2b-entrada-azul.html` | ver `git log` |
 
 ## Pendências
 
-- **Tela de login:** falta escolher o fundo da 2B em `docs/propostas-login/variacoes-2b.html` (pontilhado, pauta de documento, faixa azul, mosaico de folhas ou lentes). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
+- **Tela de login:** falta escolher a animação do fundo azul da entrada em `docs/propostas-login/login-2b-entrada-azul.html` (ondas, linhas ou pontos). Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 11 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.
@@ -96,7 +98,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
-| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) e `variacoes-2b.html` (fundos `#f1` a `#f5`, com a entrada animada) |
+| Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) e `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
