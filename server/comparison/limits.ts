@@ -10,6 +10,12 @@ export interface ComparisonLimits {
   maxTextCharacters: number
   /** Tempo máximo para abrir e extrair o texto de um documento. */
   extractionTimeoutMs: number
+  /** Palavras dos dois documentos somadas; acima disto a comparação é feita por linhas. */
+  maxDiffTokens: number
+  /** Edições (palavras ou linhas) que o algoritmo aceita procurar antes de desistir daquele nível. */
+  maxEditLength: number
+  /** Tempo máximo de cada tentativa de comparação (por palavras e por linhas). */
+  diffTimeoutMs: number
 }
 
 export const defaultComparisonLimits: ComparisonLimits = {
@@ -18,4 +24,7 @@ export const defaultComparisonLimits: ComparisonLimits = {
   minTextCharacters: 20,
   maxTextCharacters: 5_000_000,
   extractionTimeoutMs: 60_000,
+  maxDiffTokens: 300_000,
+  maxEditLength: 50_000,
+  diffTimeoutMs: 20_000,
 }

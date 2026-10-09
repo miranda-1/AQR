@@ -11,6 +11,7 @@ export type FailureReason =
   | 'texto-demais'
   | 'sem-texto'
   | 'tempo-esgotado'
+  | 'comparacao-excedeu-limites'
   | 'falha-inesperada'
 
 const codeByReason: Record<FailureReason, ComparisonErrorCode> = {
@@ -23,6 +24,7 @@ const codeByReason: Record<FailureReason, ComparisonErrorCode> = {
   'texto-demais': 'INCOMPATIBLE_DOCUMENT',
   'sem-texto': 'NO_EXTRACTABLE_TEXT',
   'tempo-esgotado': 'PROCESSING_FAILED',
+  'comparacao-excedeu-limites': 'PROCESSING_FAILED',
   'falha-inesperada': 'PROCESSING_FAILED',
 }
 
