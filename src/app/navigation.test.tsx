@@ -42,7 +42,8 @@ describe('Menu "Ferramentas"', () => {
     renderApp('/comparacao')
     const menu = await openToolsMenu(user)
     const items = within(menu).getAllByRole('menuitem')
-    expect(items).toHaveLength(2)
+    expect(items).toHaveLength(3)
+    expect(items[2]).toHaveTextContent('Sair')
     expect(within(menu).getByRole('menuitem', { name: /Comparação de PDFs/ })).toHaveAttribute('aria-current', 'page')
     const triage = within(menu).getByRole('menuitem', { name: /Triagem documental/ })
     expect(triage).toHaveTextContent('Em desenvolvimento')
@@ -94,6 +95,17 @@ describe('Menu "Ferramentas"', () => {
     expect(within(menu).getAllByRole('menuitem')[0]).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(router.state.location.pathname).toBe('/comparacao')
+  })
+})
+
+describe('Sair', () => {
+  it('encerra a sessão e volta para o login', async () => {
+    const user = userEvent.setup()
+    const { router } = renderApp('/comparacao')
+    const menu = await openToolsMenu(user)
+    await user.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Entrar' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/entrar')
   })
 })
 

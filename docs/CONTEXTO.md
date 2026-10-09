@@ -97,11 +97,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Escolhida a entrada "logo em pontinhos". Três versões dela (pontos que viram logo, varredura, em sequência) em `docs/propostas-login/login-pontinhos.html`; os traços internos da lente deixam de aparecer soltos antes da logo | `7e74869` |
 | 09/10/2026 | Escolhida a "varredura". Cinco transições da logo para o site (cabeçalho, lente, varredura de volta, anéis, persianas) em `docs/propostas-login/login-transicoes.html` | `fb18c8f` |
 | 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | `9f68b6c` |
-| 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | ver `git log` |
+| 09/10/2026 | Correção: ao digitar no login, os anéis pontilhados saíam do lugar (o pulso desalinhava a camada de pontos e a do brilho). O pulso passou para o conjunto | `e9281f8` |
+| 09/10/2026 | Item "Sair" no menu Ferramentas, para voltar ao login sem fechar a aba | ver `git log` |
 
 ## Pendências
 
-- **Login:** não há botão "Sair" (a sessão termina ao fechar a aba). Decidir se entra e onde, já que a barra superior tem layout fixado. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
+- **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.

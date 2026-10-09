@@ -1,8 +1,9 @@
-import { Check, ChevronDown, LayoutGrid } from 'lucide-react'
+import { Check, ChevronDown, LayoutGrid, LogOut } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useAuthSession } from '@/features/auth/auth-session'
 import { cn } from '@/lib/utils'
 import { isToolActive, toolItems } from './navigation'
 
@@ -12,6 +13,7 @@ import { isToolActive, toolItems } from './navigation'
  */
 export function ToolsMenu({ className }: { className?: string }) {
   const { pathname } = useLocation()
+  const { signOut } = useAuthSession()
 
   return (
     <DropdownMenu modal={false}>
@@ -50,6 +52,14 @@ export function ToolsMenu({ className }: { className?: string }) {
             </DropdownMenuItem>
           )
         })}
+        {/* Encerra a sessão; RequireAuth leva ao login (separado por espaço, sem linha divisória). */}
+        <DropdownMenuItem
+          onSelect={signOut}
+          className="mt-1 min-h-11 cursor-pointer gap-2.5 px-3 py-2 text-[0.9375rem] text-muted-foreground focus:bg-secondary focus:text-ink"
+        >
+          <LogOut aria-hidden className="size-[1.125rem]" />
+          Sair
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
