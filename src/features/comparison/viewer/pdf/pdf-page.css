@@ -1,0 +1,117 @@
+/*
+ * Página real do PDF: canvas, camada de texto do pdf.js e destaques das diferenças.
+ *
+ * As regras de .pdf-text-layer reproduzem o essencial de .textLayer do pdf.js
+ * (pdfjs-dist/web/pdf_viewer.css, licença Apache-2.0), sem o restante do visualizador.
+ */
+
+.pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 1;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.pdf-text-layer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+
+.pdf-text-layer > :not(.markedContent),
+.pdf-text-layer .markedContent span:not(.markedContent) {
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.pdf-text-layer .markedContent {
+  display: contents;
+}
+
+.pdf-text-layer ::selection {
+  background: color-mix(in srgb, var(--brand-blue) 25%, transparent);
+  color: transparent;
+}
+
+.pdf-text-layer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  user-select: none;
+}
+
+/*
+ * Destaque sobre a página: o fundo tinge o texto do PDF (multiply), sem escondê-lo.
+ * Cor nunca é o único indicador: cada destaque tem ícone, número, rótulo para leitores
+ * de tela e um traço próprio (contínuo, riscado ou tracejado).
+ */
+.pdf-diff-box {
+  position: absolute;
+  z-index: 2;
+  border-radius: 2px;
+  cursor: pointer;
+  mix-blend-mode: multiply;
+}
+
+.pdf-diff-box--addition {
+  background: var(--diff-addition-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-addition-line);
+}
+
+.pdf-diff-box--deletion {
+  background: var(--diff-deletion-bg);
+  background-image: linear-gradient(transparent calc(50% - 1px), var(--diff-deletion-strong) calc(50% - 1px), var(--diff-deletion-strong) calc(50% + 1px), transparent calc(50% + 1px));
+}
+
+.pdf-diff-box--modification {
+  background: var(--diff-modification-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-modification-line);
+  outline: 1px dashed var(--diff-modification-line);
+}
+
+.pdf-diff-box[aria-current='true'],
+.pdf-diff-anchor[aria-current='true'] {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+  mix-blend-mode: normal;
+}
+
+.pdf-diff-box:focus-visible,
+.pdf-diff-anchor:focus-visible {
+  outline: 3px solid var(--brand-blue);
+  outline-offset: 2px;
+  mix-blend-mode: normal;
+}
+
+/* Número da diferença, preso ao canto do destaque. */
+.pdf-diff-chip {
+  position: absolute;
+  bottom: 100%;
+  left: -1px;
+  mix-blend-mode: normal;
+  pointer-events: none;
+}
+
+/* Marcador de onde estaria um trecho que só existe no outro documento. */
+.pdf-diff-anchor {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-2px, -10%);
+  cursor: pointer;
+}

@@ -113,7 +113,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
     onNext: navigation.next,
   }
 
-  const paneProps = { activeId, numbers, visibleIds, onSelect: navigation.select }
+  const paneProps = { activeId, numbers, visibleIds, differences: result.differences, onSelect: navigation.select }
   const showOriginal = viewMode !== 'updated'
   const showUpdated = viewMode !== 'original'
 

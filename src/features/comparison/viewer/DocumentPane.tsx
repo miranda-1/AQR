@@ -1,7 +1,8 @@
 import { useCallback, useState, type Ref, type UIEvent } from 'react'
 import { cn } from '@/lib/utils'
-import type { DocumentRole, DocumentSummary } from '../model/types'
+import type { Difference, DocumentRole, DocumentSummary } from '../model/types'
 import type { DocumentSource } from './document-source'
+import { PdfPages } from './pdf/PdfPages'
 import { SimulatedPageView } from './SimulatedPageView'
 
 export const roleLabels: Record<DocumentRole, string> = {
@@ -12,6 +13,8 @@ export const roleLabels: Record<DocumentRole, string> = {
 interface DocumentPaneProps {
   summary: DocumentSummary
   source: DocumentSource
+  /** Todas as diferenças do resultado (as páginas reais desenham os destaques a partir delas). */
+  differences: readonly Difference[]
   activeId: string | null
   numbers: ReadonlyMap<string, number>
   visibleIds: ReadonlySet<string>
@@ -35,6 +38,7 @@ function currentPageOf(container: HTMLElement): number {
 export function DocumentPane({
   summary,
   source,
+  differences,
   activeId,
   numbers,
   visibleIds,
@@ -99,9 +103,15 @@ export function DocumentPane({
               />
             ))
           ) : (
-            <p className="max-w-md py-10 text-center text-[0.9375rem] text-muted-foreground">
-              As páginas de {source.file.name} aparecerão aqui. Use a lista para ver o texto de cada diferença.
-            </p>
+            <PdfPages
+              file={source.file}
+              role={summary.role}
+              differences={differences}
+              numbers={numbers}
+              visibleIds={visibleIds}
+              activeId={activeId}
+              onSelect={onSelect}
+            />
           )}
         </div>
       </div>
