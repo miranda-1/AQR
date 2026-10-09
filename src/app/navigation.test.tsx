@@ -4,8 +4,12 @@ import { describe, expect, it } from 'vitest'
 import { defined } from '@/test/files'
 import { renderApp } from '@/test/render'
 
-async function openToolsMenu(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: 'Ferramentas' }))
+function toolsNav() {
+  return screen.getByRole('navigation', { name: 'Ferramentas' })
+}
+
+async function openAccountMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Conta de servidor' }))
   return screen.findByRole('menu')
 }
 
@@ -19,7 +23,7 @@ describe('Rota inicial', () => {
   it('apresenta a marca institucional e o nome do sistema, com link para o início', async () => {
     renderApp('/comparacao')
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
-    const header = defined(screen.getByRole('button', { name: 'Ferramentas' }).closest('header'), 'cabeçalho')
+    const header = defined(toolsNav().closest('header'), 'cabeçalho')
     expect(within(header).getByRole('img', { name: 'Prefeitura de Campo Grande' })).toBeInTheDocument()
     expect(within(header).getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toHaveAttribute('href', '/')
   })
@@ -36,73 +40,73 @@ describe('Rota inicial', () => {
   })
 })
 
-describe('Menu "Ferramentas"', () => {
-  it('lista as ferramentas e destaca a ativa', async () => {
-    const user = userEvent.setup()
+describe('Sub-barra de ferramentas', () => {
+  it('lista as ferramentas e marca a da página atual', async () => {
     renderApp('/comparacao')
-    const menu = await openToolsMenu(user)
-    const items = within(menu).getAllByRole('menuitem')
-    expect(items).toHaveLength(3)
-    expect(items[2]).toHaveTextContent('Sair')
-    expect(within(menu).getByRole('menuitem', { name: /Comparação de PDFs/ })).toHaveAttribute('aria-current', 'page')
-    const triage = within(menu).getByRole('menuitem', { name: /Triagem documental/ })
-    expect(triage).toHaveTextContent('Em desenvolvimento')
-    expect(triage).not.toHaveAttribute('aria-current')
+    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
+    const links = within(toolsNav()).getAllByRole('link')
+    expect(links.map((link) => link.textContent)).toEqual(['Início', 'Comparar PDFs', 'Triagem documentalEm breve'])
+    expect(within(toolsNav()).getByRole('link', { name: 'Comparar PDFs' })).toHaveAttribute('aria-current', 'page')
+    expect(within(toolsNav()).getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('o início fica ativo só na página inicial', async () => {
+    renderApp('/')
+    await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })
+    expect(within(toolsNav()).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('mantém a comparação ativa na tela de resultado', async () => {
-    const user = userEvent.setup()
     renderApp('/comparacao/resultado')
-    const menu = await openToolsMenu(user)
-    expect(within(menu).getByRole('menuitem', { name: /Comparação de PDFs/ })).toHaveAttribute('aria-current', 'page')
+    expect(await within(toolsNav()).findByRole('link', { name: 'Comparar PDFs' })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('fecha com Esc e devolve o foco ao botão', async () => {
-    const user = userEvent.setup()
-    renderApp('/comparacao')
-    await openToolsMenu(user)
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Ferramentas' })).toHaveFocus()
-  })
-
-  it('fecha ao clicar fora sem bloquear a página', async () => {
-    const user = userEvent.setup()
-    renderApp('/comparacao')
-    await openToolsMenu(user)
-    await user.click(screen.getByRole('heading', { level: 1, name: 'Comparar documentos' }))
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-  })
-
-  it('navega ao escolher uma opção e fecha o menu', async () => {
+  it('navega ao escolher uma ferramenta', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/comparacao')
-    const menu = await openToolsMenu(user)
-    await user.click(within(menu).getByRole('menuitem', { name: /Triagem documental/ }))
+    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
+    await user.click(within(toolsNav()).getByRole('link', { name: /Triagem documental/ }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Triagem documental' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/triagem')
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(screen.getByText('Esta funcionalidade ainda não está disponível.')).toBeInTheDocument()
+    expect(within(toolsNav()).getByRole('link', { name: /Triagem documental/ })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('pode ser aberto e percorrido pelo teclado', async () => {
+  it('pode ser usada pelo teclado', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/triagem')
     await screen.findByRole('heading', { level: 1, name: 'Triagem documental' })
-    screen.getByRole('button', { name: 'Ferramentas' }).focus()
-    await user.keyboard('{Enter}')
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getAllByRole('menuitem')[0]).toHaveFocus()
+    within(toolsNav()).getByRole('link', { name: 'Comparar PDFs' }).focus()
     await user.keyboard('{Enter}')
     expect(router.state.location.pathname).toBe('/comparacao')
   })
 })
 
-describe('Sair', () => {
-  it('encerra a sessão e volta para o login', async () => {
+describe('Conta', () => {
+  it('mostra o nome do usuário e o "Sair"', async () => {
+    const user = userEvent.setup()
+    renderApp('/comparacao')
+    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
+    const menu = await openAccountMenu(user)
+    expect(menu).toHaveTextContent('servidor')
+    expect(menu).toHaveTextContent('SEMADES')
+    expect(within(menu).getByRole('menuitem', { name: 'Sair' })).toBeInTheDocument()
+  })
+
+  it('fecha com Esc e devolve o foco ao botão', async () => {
+    const user = userEvent.setup()
+    renderApp('/comparacao')
+    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
+    await openAccountMenu(user)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Conta de servidor' })).toHaveFocus()
+  })
+
+  it('"Sair" encerra a sessão e volta para o login', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/comparacao')
-    const menu = await openToolsMenu(user)
+    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
+    const menu = await openAccountMenu(user)
     await user.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Entrar' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/entrar')

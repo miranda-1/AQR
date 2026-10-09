@@ -8,23 +8,25 @@ const STORAGE_KEY = 'aqr.sessao'
 
 interface AuthSessionValue {
   isAuthenticated: boolean
-  signIn: () => void
+  /** Nome digitado no login, exibido no botão de conta. */
+  userName: string | null
+  signIn: (userName: string) => void
   signOut: () => void
 }
 
 const AuthSessionContext = createContext<AuthSessionValue | null>(null)
 
-function readStoredSession(): boolean {
+function readStoredSession(): string | null {
   try {
-    return sessionStorage.getItem(STORAGE_KEY) === 'ativa'
+    return sessionStorage.getItem(STORAGE_KEY) || null
   } catch {
-    return false
+    return null
   }
 }
 
-function writeStoredSession(active: boolean) {
+function writeStoredSession(userName: string | null) {
   try {
-    if (active) sessionStorage.setItem(STORAGE_KEY, 'ativa')
+    if (userName) sessionStorage.setItem(STORAGE_KEY, userName)
     else sessionStorage.removeItem(STORAGE_KEY)
   } catch {
     // Sem acesso ao armazenamento (ex.: navegação privada): a sessão vale só enquanto a página estiver aberta.
@@ -33,24 +35,34 @@ function writeStoredSession(active: boolean) {
 
 interface AuthSessionProviderProps {
   children: ReactNode
-  /** Estado inicial explícito (testes); por padrão, lê a sessão da aba. */
+  /** Estado inicial explícito (testes): com sessão, o usuário é "servidor". Por padrão, lê a sessão da aba. */
   initialAuthenticated?: boolean
 }
 
-export function AuthSessionProvider({ children, initialAuthenticated }: AuthSessionProviderProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => initialAuthenticated ?? readStoredSession())
+/** Nome usado quando a sessão é criada sem login (testes). */
+const DEFAULT_TEST_USER = 'servidor'
 
-  const signIn = useCallback(() => {
-    writeStoredSession(true)
-    setIsAuthenticated(true)
+export function AuthSessionProvider({ children, initialAuthenticated }: AuthSessionProviderProps) {
+  const [userName, setUserName] = useState<string | null>(() => {
+    if (initialAuthenticated === undefined) return readStoredSession()
+    return initialAuthenticated ? DEFAULT_TEST_USER : null
+  })
+
+  const signIn = useCallback((name: string) => {
+    const clean = name.trim()
+    writeStoredSession(clean)
+    setUserName(clean)
   }, [])
 
   const signOut = useCallback(() => {
-    writeStoredSession(false)
-    setIsAuthenticated(false)
+    writeStoredSession(null)
+    setUserName(null)
   }, [])
 
-  const value = useMemo(() => ({ isAuthenticated, signIn, signOut }), [isAuthenticated, signIn, signOut])
+  const value = useMemo(
+    () => ({ isAuthenticated: userName !== null, userName, signIn, signOut }),
+    [userName, signIn, signOut],
+  )
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>
 }
 

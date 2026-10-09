@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface LoginFormProps {
-  /** Chamado com os campos preenchidos. Nesta etapa não há verificação de credenciais. */
-  onSubmit: () => void
+  /** Chamado com os campos preenchidos (recebe o usuário). Nesta etapa não há verificação de credenciais. */
+  onSubmit: (userName: string) => void
   /** Chamado a cada tecla, para os anéis do fundo pulsarem. */
   onType?: () => void
   disabled?: boolean
@@ -36,7 +36,7 @@ export function LoginForm({ onSubmit, onType, disabled = false }: LoginFormProps
     setErrors(next)
     if (next.username) return usernameRef.current?.focus()
     if (next.password) return passwordRef.current?.focus()
-    onSubmit()
+    onSubmit(usernameRef.current?.value ?? '')
   }
 
   function clearError(field: Field) {

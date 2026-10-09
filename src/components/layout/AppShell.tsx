@@ -29,7 +29,7 @@ export function AppShell() {
         id="conteudo"
         // Recebe foco programático do link "Pular para o conteúdo"; o contorno aqui seria ruído.
         tabIndex={-1}
-        className={cn('outline-none', fullHeight ? 'flex h-[calc(100dvh-var(--header-height))] min-h-0 flex-col' : 'flex-1')}
+        className={cn('outline-none', fullHeight ? 'flex h-[calc(100dvh-var(--header-height)-var(--subbar-height))] min-h-0 flex-col' : 'flex-1')}
       >
         <Outlet />
       </main>

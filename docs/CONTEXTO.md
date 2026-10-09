@@ -19,9 +19,9 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 - **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
-  - login "Noite" (anéis pontilhados parados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (menu Ferramentas) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
+  - login "Noite" (anéis pontilhados parados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (botão de conta) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos;
   - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
-  - navegação pelo menu "Ferramentas";
+  - navegação pela sub-barra de ferramentas (Início, Comparar PDFs, Triagem documental) e botão de conta com "Sair";
   - seleção e validação local dos PDFs (extensão, tipo, limite de 50 MB, assinatura `%PDF-`);
   - filtros, lista de diferenças, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
 - São demonstrativos: o resultado, as etapas de processamento, os estados de erro (pelo menu "Simular estado" ou por `?cenario=`) e a exportação, que aparece como "indisponível".
@@ -66,7 +66,8 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Versão da entrada: "varredura"**: os pontos formam o AQR e uma linha amarela passa trocando os pontos pela logo sólida. Falta escolher a transição da logo para o site. |
 | 09/10/2026 | **Transição: a logo voa até o cabeçalho** (branco → azul) enquanto o fundo some. **Login oficial no site** com essa sequência completa. Depois de entrar, volta para a página pedida; sem página pedida, vai para o início. |
 | 09/10/2026 | **Anéis do login parados e centralizados.** Só o brilho se move sobre eles, e ao digitar os pontos clareiam (sem mudar de tamanho). **Sair = "logo volta ao centro"**: a logo sai do cabeçalho para o centro, o fundo do login volta, e ela se desfaz em pontinhos que voltam aos anéis. |
-| 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
+| 08/10/2026 | ~~Barra superior: menu "Ferramentas" à esquerda, logo AQR ao lado e PREFCG à direita.~~ **Substituída em 09/10/2026** (abaixo). Continua valendo: sem "SEMADES" e sem "Protótipo" na barra; sem menu lateral. |
+| 09/10/2026 | **Barra superior em duas faixas.** Em cima, branca: logo e nome do AQR à esquerda; PREFCG e botão de conta (nome digitado no login, com "Sair") à direita. Embaixo, a **sub-barra "sublinhado"** em azul bem claro: Início, Comparar PDFs e Triagem documental ("Em breve"), com um traço azul que desliza até a ferramenta ativa. Separação por tom, sem linha divisória. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
 | 08/10/2026 | **Logo do AQR: Proposta 3, "Lente Q"**, com a lente centralizada entre o A e o R. Propostas em `docs/propostas-logo-aqr/`. |
@@ -105,12 +106,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Três propostas de barra superior (abas, painel de ferramentas, ícones compactos), mais a atual, em `docs/propostas-topbar/topbar.html` | `23d3bf3` |
 | 09/10/2026 | Escolhidos os "ícones compactos". Três versões (indicador deslizante, com rótulos, flutuante) em `docs/propostas-topbar/icones-compactos.html` | `a74d0f8` |
 | 09/10/2026 | Versão D: rótulos + indicador deslizante numa sub-barra abaixo da barra principal | `def5b06` |
-| 09/10/2026 | Escolhida a sub-barra. Três sub-barras diferentes (sublinhado, azul institucional, com contexto) em `docs/propostas-topbar/sub-barras.html` | ver `git log` |
+| 09/10/2026 | Escolhida a sub-barra. Três sub-barras diferentes (sublinhado, azul institucional, com contexto) em `docs/propostas-topbar/sub-barras.html` | `e9a232a` |
+| 09/10/2026 | Barra nova no site: duas faixas, sub-barra "sublinhado" com traço deslizante, botão de conta com o nome digitado no login e "Sair"; o menu "Ferramentas" foi removido | ver `git log` |
 
 ## Pendências
 
-- **Barra superior:** escolhida a barra em duas faixas (ferramentas numa sub-barra). Falta escolher a sub-barra em `docs/propostas-topbar/sub-barras.html` (`#vd` a escolhida, `#e1` sublinhado, `#e2` azul institucional, `#e3` com contexto); a escolhida substitui a decisão registrada sobre a barra.
-- **Login:** "Sair" foi posto no fim do menu Ferramentas, sem mudar a barra superior. Confirmar com o responsável se o lugar está bom. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
+- **Login:** a autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
 - **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.
@@ -127,7 +128,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) e `sub-barras.html` (`#vd`, `#e1` a `#e3`) |
 | Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) e `sair-animacoes.html` (saída, `#s1` a `#s3`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
-| Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |
+| Barra superior e sub-barra | `src/components/layout/AppHeader.tsx`, `ToolsNav.tsx` (sub-barra), `AccountMenu.tsx` (conta e "Sair"), `navigation.ts` (lista de ferramentas) |
 | Logo AQR | `src/components/layout/AqrLogo.tsx`, `src/assets/aqr/`; apresentação em `docs/logo-aqr/` (HTML de origem + PDF) |
 | Marca PREFCG | `src/components/layout/BrandMark.tsx`, `src/assets/brand/` (+ README de procedência) |
 | Rodapé (SEMADES, slogan, PREFCG) | `src/components/layout/AppFooter.tsx`, `src/assets/brand/semades-azul.svg`, `slogan-azul.svg` |

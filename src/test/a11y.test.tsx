@@ -42,12 +42,12 @@ describe('acessibilidade (axe)', () => {
     expect(await violations(container)).toEqual([])
   })
 
-  it('menu "Ferramentas" aberto e "Como funciona" expandido não têm violações', async () => {
+  it('menu da conta aberto e "Como funciona" expandido não têm violações', async () => {
     const user = userEvent.setup()
     renderApp('/comparacao')
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
     await user.click(screen.getByText('Como funciona'))
-    await user.click(screen.getByRole('button', { name: 'Ferramentas' }))
+    await user.click(screen.getByRole('button', { name: 'Conta de servidor' }))
     await screen.findByRole('menu')
     expect(await violations(document.body)).toEqual([])
   })

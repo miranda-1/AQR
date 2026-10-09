@@ -43,23 +43,23 @@ export function LoginPage() {
   const destination = destinationAfterLogin(location.state)
 
   const goToSite = useCallback(
-    (withHandoff: boolean) => {
+    (userName: string, withHandoff: boolean) => {
       const logo = logoRef.current?.firstElementChild
       if (withHandoff && logo) handoff.start({ from: logo.getBoundingClientRect(), size: logoSize })
-      signIn()
+      signIn(userName)
       navigate(destination, { replace: true })
     },
     [destination, handoff, logoSize, navigate, signIn],
   )
 
-  const playEntry = useCallback(async () => {
+  const playEntry = useCallback(async (userName: string) => {
     const canvas = canvasRef.current
     const logoWrap = logoRef.current
     const logo = logoWrap?.firstElementChild
     const sweep = sweepRef.current
     const ctx = canvas?.getContext('2d')
     // Sem animação (movimento reduzido ou navegador sem canvas): entra direto.
-    if (reducedMotion || !canvas || !ctx || !logoWrap || !(logo instanceof HTMLElement) || !sweep) return goToSite(false)
+    if (reducedMotion || !canvas || !ctx || !logoWrap || !(logo instanceof HTMLElement) || !sweep) return goToSite(userName, false)
 
     const controller = new AbortController()
     abortRef.current = controller
@@ -105,9 +105,9 @@ export function LoginPage() {
       await sleep(1400, signal)
 
       // 3) A logo voa para o cabeçalho do site (EntryHandoff).
-      goToSite(true)
+      goToSite(userName, true)
     } catch (error) {
-      if (!isAbortError(error)) goToSite(false)
+      if (!isAbortError(error)) goToSite(userName, false)
     }
   }, [goToSite, reducedMotion])
 

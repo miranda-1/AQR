@@ -59,10 +59,12 @@ describe('Login', () => {
   it('sem página pedida, entra no início', async () => {
     const user = userEvent.setup()
     await renderLogin('/entrar')
-    await user.type(screen.getByLabelText('Usuário'), 'servidor')
+    await user.type(screen.getByLabelText('Usuário'), 'maria.souza')
     await user.type(screen.getByLabelText('Senha'), 'qualquer')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })).toBeInTheDocument()
+    // O nome digitado aparece no botão de conta.
+    expect(screen.getByRole('button', { name: 'Conta de maria.souza' })).toBeInTheDocument()
   })
 
   it('com sessão, o endereço do login leva ao início', async () => {

@@ -35,7 +35,7 @@ Este documento registra como o Manual da Marca PREFCG foi aplicado ao AQR e as s
 | 3 | Posição da marca | PREFCG alinhada à direita da barra superior. À esquerda ficam o menu "Ferramentas" e "AQR" em texto | O manual não prevê marca junto a nome de sistema nem a posição em interfaces |
 | 4 | Ajuste de cor | Preenchimentos do SVG unificados em `#283587` | Divergência entre o arquivo 2026 e o manual |
 | 5 | Marca SEMADES sem descrição | No rodapé, a versão sem "Secretaria Municipal de…" | Confirmar se a versão curta é adequada ao contexto institucional |
-| 6 | Barra superior de sistema interno | Barra branca de 56 px, separada do conteúdo por sombra suave (sem linhas divisórias) | Composição da marca com elementos de navegação não prevista no manual |
+| 6 | Barra superior de sistema interno | Duas faixas: barra branca de 56 px (AQR à esquerda; PREFCG e conta à direita) e sub-barra azul bem clara de 48 px com as ferramentas. Separadas do conteúdo por sombra suave, sem linhas divisórias | Composição da marca com elementos de navegação não prevista no manual |
 | 7 | Logo e favicon do AQR | Logo "Lente Q" (Proposta 3) na barra superior; o símbolo da lente é o favicon. Ver `src/assets/aqr/README.md` | Identidade própria de sistema ao lado da marca PREFCG |
 | 8 | Fontes oficiais | Substituídas na interface | Confirmar se há licença web da Qanelas, o que permitiria usá-la nos títulos |
 | 9 | Arquivos oficiais | A extração foi feita a partir dos PDFs | O manual (p. 31) informa que as pastas recebem `.AI`, `.PDF` e `.PNG`. Se houver SVG ou AI oficial da versão digital azul, ele deve substituir o arquivo extraído |
