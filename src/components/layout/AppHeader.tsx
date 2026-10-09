@@ -21,7 +21,10 @@ export function AppHeader() {
           className="flex min-w-0 items-center gap-3 rounded-sm px-1 py-1"
           aria-label={`${appConfig.name}, ${appConfig.fullName} — início`}
         >
-          <AqrLogo size={22} />
+          {/* data-entry-target: destino da logo que voa até o cabeçalho depois do login. */}
+          <span data-entry-target className="inline-flex">
+            <AqrLogo size={22} />
+          </span>
           <span className="hidden truncate text-sm text-muted-foreground lg:inline">{appConfig.fullName}</span>
         </Link>
 

@@ -15,9 +15,11 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 **Etapa 1, protótipo de frontend:** concluída e em revisão visual pelo responsável.
 
-- Não há backend, processamento real de PDF, IA, banco de dados, autenticação nem deploy. **Não implementar** essas partes sem pedido explícito.
+- Não há backend, processamento real de PDF, IA, banco de dados, autenticação real nem deploy. **Não implementar** essas partes sem pedido explícito.
+- **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - O resultado da comparação usa **dados fictícios** (`src/features/comparison/mocks/`), identificados na interface.
 - Funcionam de verdade:
+  - login "Noite" (anéis pontilhados, cartão com folhas em leque, PREFCG) com a entrada animada: os pontos dos anéis formam o AQR, uma varredura amarela troca os pontos pela logo, e a logo voa até o cabeçalho do site; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início);
   - página inicial (`/`) com seletor das ferramentas e ilustrações animadas em SVG/CSS (pausadas fora da tela; estáticas com movimento reduzido);
   - navegação pelo menu "Ferramentas";
   - seleção e validação local dos PDFs (extensão, tipo, limite de 50 MB, assinatura `%PDF-`);
@@ -62,6 +64,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | **Login: variação "Noite"**: azul profundo, brilho que percorre os anéis, pulso ao digitar, cartão 2B com PREFCG. Falta escolher a animação de entrada. |
 | 09/10/2026 | **Entrada: "logo em pontinhos"** (pontos saem dos anéis e formam o AQR). Os traços internos da lente nunca aparecem antes da logo: entram como pontos e, na logo desenhada, crescem logo depois da faixa amarela. |
 | 09/10/2026 | **Versão da entrada: "varredura"**: os pontos formam o AQR e uma linha amarela passa trocando os pontos pela logo sólida. Falta escolher a transição da logo para o site. |
+| 09/10/2026 | **Transição: a logo voa até o cabeçalho** (branco → azul) enquanto o fundo some. **Login oficial no site** com essa sequência completa. Depois de entrar, volta para a página pedida; sem página pedida, vai para o início. |
 | 08/10/2026 | Barra superior: **menu "Ferramentas" à esquerda** (dropdown que desce da barra, sem overlay), logo AQR ao lado e **PREFCG à direita**. Sem "SEMADES" e sem "Protótipo" na barra. Sem menu lateral. |
 | 08/10/2026 | **Sem linhas divisórias** cortando a tela (`border-b/t`, `divide-*`). A separação é feita por fundo tonal, sombra (`shadow-surface`) e espaçamento. |
 | 08/10/2026 | Tela principal enxuta: título "Comparar documentos", o texto curto, os dois campos de arquivo, o botão e a seção recolhível "Como funciona". |
@@ -92,12 +95,13 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 09/10/2026 | Fechado em anéis pontilhados. Três variações dela (noite, claro, lente) em `docs/propostas-login/login-aneis-variacoes.html` | `70b2350` |
 | 09/10/2026 | Escolhida a "Noite". Três animações de entrada (pontilhado continua, logo em pontinhos, anel vira lente) em `docs/propostas-login/login-noite-entradas.html` | `1a81b9b` |
 | 09/10/2026 | Escolhida a entrada "logo em pontinhos". Três versões dela (pontos que viram logo, varredura, em sequência) em `docs/propostas-login/login-pontinhos.html`; os traços internos da lente deixam de aparecer soltos antes da logo | `7e74869` |
-| 09/10/2026 | Escolhida a "varredura". Cinco transições da logo para o site (cabeçalho, lente, varredura de volta, anéis, persianas) em `docs/propostas-login/login-transicoes.html` | ver `git log` |
+| 09/10/2026 | Escolhida a "varredura". Cinco transições da logo para o site (cabeçalho, lente, varredura de volta, anéis, persianas) em `docs/propostas-login/login-transicoes.html` | `fb18c8f` |
+| 09/10/2026 | Login implementado no site: `/entrar` antes de todas as páginas, fundo Noite, logo em pontinhos com varredura e a logo voando até o cabeçalho; testes de login e acessibilidade | ver `git log` |
 
 ## Pendências
 
-- **Tela de login:** escolher a transição da logo para o site em `login-transicoes.html` (`#t1` logo vai para o cabeçalho, `#t2` pela lente, `#t3` varredura de volta, `#t4` anéis se abrem, `#t5` persianas). Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
-- **Validação institucional:** 11 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
+- **Login:** não há botão "Sair" (a sessão termina ao fechar a aba). Decidir se entra e onde, já que a barra superior tem layout fixado. A autenticação real (credenciais SEMADES) depende de backend e de pedido explícito. Depois, implementar no app (login visual, sem autenticação real). A escolhida entra no app apenas como tela visual: sem autenticação real até haver backend e pedido explícito.
+- **Validação institucional:** 12 pontos em `docs/identidade-visual.md`. Os principais são o uso em sistema web, o tamanho mínimo digital, a posição da marca, o ajuste de cor e a logo do AQR ao lado do PREFCG.
 - **Logo do AQR:** converter a palavra em curvas, refinar o desenho e submeter à Diretoria Executiva de Comunicação Social.
 - **Procedência da `prefcg-azul.svg`:** rodar o script de novo na região registrada gera 51 caminhos, mas o arquivo tem 48 (o README diz 48). A diferença vem de antes do rodapé novo e precisa ser explicada ou corrigida.
 - **Arquivos oficiais:** se a Comunicação fornecer SVG ou AI da marca PREFCG digital azul, substituir o arquivo extraído (`src/assets/brand/`).
@@ -109,6 +113,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | Assunto | Local |
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
+| Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a logo em pontinhos e a passagem para o cabeçalho, `login.css`) |
 | Propostas de login | `docs/propostas-login/`: `propostas.html` (`#opcao-1` a `#opcao-3`) `variacoes-opcao-2.html` (`#2a` a `#2c`) `variacoes-2b.html` (fundos `#f1` a `#f5`) `login-2b-entrada-azul.html` (entrada em azul, `#e1` a `#e3`) `login-ondas.html` (login em azul com ondas, `#w1` a `#w4`; favorita `#w4`) `login-cubos.html` (cubos em onda, `#c1` a `#c5`) `login-aneis-variacoes.html` (variações finais, `#v0` a `#v3`) `login-noite-entradas.html` (entradas da Noite, `#a1` a `#a3`) `login-pontinhos.html` (versões da logo em pontinhos, `#p1` a `#p3`) e `login-transicoes.html` (da logo para o site, `#t1` a `#t5`) |
 | Página inicial | `src/pages/HomePage.tsx`, `src/features/home/` (dados em `tools.ts`, opções e demonstração em `components/`, ilustrações SVG + CSS em `illustrations/`) |
 | Barra superior e menu | `src/components/layout/AppHeader.tsx`, `ToolsMenu.tsx`, `navigation.ts` |

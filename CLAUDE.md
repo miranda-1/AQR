@@ -1,6 +1,6 @@
 # AQR: instruções para agentes
 
-Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui. Etapa atual: **apenas frontend**, sem backend, processamento real de PDF, IA, banco de dados, autenticação ou deploy.
+Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui. Etapa atual: **apenas frontend**, sem backend, processamento real de PDF, IA, banco de dados, autenticação real ou deploy. O login (`/entrar`) é apenas visual: qualquer usuário e senha preenchidos entram.
 
 ## Antes de começar
 Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter sem pedir), histórico e pendências.

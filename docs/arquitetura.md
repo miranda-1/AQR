@@ -29,6 +29,19 @@ src/
   test/                   utilitários de teste e auditoria de acessibilidade
 ```
 
+## Login (visual)
+
+```
+Qualquer rota → RequireAuth ─ sem sessão → /entrar (state.from = página pedida)
+/entrar → LoginPage
+  ├─ LoginForm (usuário e senha obrigatórios; sem verificação de credenciais)
+  └─ entrada animada (pulada com movimento reduzido ou sem canvas)
+       ├─ dot-logo: amostra a logo em pontos e os traz dos anéis (canvas)
+       ├─ varredura: linha amarela troca os pontos pela logo sólida
+       └─ EntryHandoffProvider: depois de navegar, a logo voa até [data-entry-target] (AppHeader)
+AuthSessionProvider: sessão da aba (sessionStorage), trocável por autenticação real no futuro
+```
+
 ## Fluxo da comparação
 
 ```
@@ -74,5 +87,7 @@ Para ligar o backend:
 | TypeScript 6.0 (não 7.0) | O `typescript-eslint` ainda não suporta TypeScript 7 |
 | ESLint 9 (não 10) | O `eslint-plugin-jsx-a11y` ainda não declara suporte ao ESLint 10 |
 | Ilustrações da home em SVG + CSS (`@keyframes`), sem biblioteca de animação | Só `transform` e `opacity` (sem mudança de layout). Pausadas fora da tela (IntersectionObserver) e quando inativas. Com `prefers-reduced-motion`, ficam no quadro estático |
+| Login só visual, com sessão em `sessionStorage` | A etapa é de frontend; `AuthSessionProvider` concentra o ponto de troca para a autenticação real |
+| Entrada do login em canvas + Web Animations API | Centenas de pontos animados sem biblioteca nova; a passagem para o cabeçalho sobrevive à troca de rota por ficar acima do roteador |
 | Painel de demonstração da home com `tabIndex={-1}` | Clicável com o mouse, mas sem parada extra de tabulação: as opções já levam ao mesmo destino |
 | Destaques inline como `span role="button"` | Assim o destaque quebra linha junto com o texto, o que `<button>` não faz |

@@ -30,6 +30,7 @@ O contraste não é avaliado pelo axe no jsdom, por isso foi calculado à parte.
 - **Diferenças:** cor + ícone + rótulo + tratamento do texto. Leitores de tela ouvem "Adição 2: …".
 - **Estados anunciados:** erros de arquivo (`aria-live="assertive"`), prontidão para comparar, etapas de processamento e posição "3 de 10" (`aria-live="polite"`). Erros de comparação usam `role="alert"`.
 - **Formulário:** cada campo de arquivo tem nome acessível e descrição (formato, limite e erro).
+- **Login:** campos com rótulo visível; erros ("Informe o usuário.") ligados por `aria-describedby`, com `aria-invalid` e foco no primeiro campo com erro. O botão "Mostrar/Ocultar senha" usa `aria-pressed`. A entrada animada é decorativa (`aria-hidden`); um `role="status"` anuncia "Entrando no AQR…". Com movimento reduzido, a animação é pulada.
 - **Ação indisponível:** "Exportar relatório" usa `aria-disabled` com o texto visível "indisponível". O botão continua focável para que o motivo possa ser lido.
 - **Áreas de clique:** os controles têm no mínimo 36 a 40 px de altura, acima do mínimo de 24 px do critério 2.5.8.
 - **Movimento reduzido:** `prefers-reduced-motion` desliga animações e a rolagem suave.

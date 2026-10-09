@@ -1,5 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { AuthSessionProvider } from '@/features/auth/auth-session'
+import { EntryHandoffProvider } from '@/features/auth/entry/entry-handoff'
 import { ComparisonSessionProvider } from '@/features/comparison/session/comparison-session'
 import { appRoutes } from './routes'
 
@@ -8,9 +10,13 @@ const router = createBrowserRouter(appRoutes)
 export function App() {
   return (
     <TooltipProvider delayDuration={300}>
-      <ComparisonSessionProvider>
-        <RouterProvider router={router} />
-      </ComparisonSessionProvider>
+      <AuthSessionProvider>
+        <EntryHandoffProvider>
+          <ComparisonSessionProvider>
+            <RouterProvider router={router} />
+          </ComparisonSessionProvider>
+        </EntryHandoffProvider>
+      </AuthSessionProvider>
     </TooltipProvider>
   )
 }

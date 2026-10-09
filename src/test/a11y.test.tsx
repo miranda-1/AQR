@@ -32,6 +32,16 @@ describe('acessibilidade (axe)', () => {
     expect(await violations(container)).toEqual([])
   })
 
+  it('login não tem violações', async () => {
+    const user = userEvent.setup()
+    const { container } = renderApp('/entrar', { authenticated: false })
+    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    expect(await violations(container)).toEqual([])
+    // Com os erros de preenchimento à mostra.
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await violations(container)).toEqual([])
+  })
+
   it('menu "Ferramentas" aberto e "Como funciona" expandido não têm violações', async () => {
     const user = userEvent.setup()
     renderApp('/comparacao')
