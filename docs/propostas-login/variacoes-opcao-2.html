@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: variações do login (opção 2)</title>
+<!--
+  Três variações da opção 2 ("Cartão central"), escolhida pelo responsável em 09/10/2026.
+  Arquivo estático: abra no navegador a partir do repositório (caminhos relativos da marca e da fonte).
+  Nada aqui autentica de verdade. Variação pela URL: #2a, #2b ou #2c.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-100: #dde1f1; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072; --subtle: #626886;
+    --sunken: #f4f5f9; --canvas: #e9ebf2; --line-strong: #8d92ab;
+    --add-bg: #e2f3e8; --add-line: #2e9a5a; --del-bg: #fbe7e5; --del-line: #d1453d; --mod-bg: #fdf0d9; --mod-line: #d48a1a;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+    --shadow-card: 0 2px 4px rgba(27,32,64,.06), 0 18px 40px -12px rgba(27,32,64,.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  /* Seletor de variações (não faz parte do design) */
+  .switcher { position: fixed; z-index: 50; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(27,32,64,.92); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+  .option { display: none; }
+  .option.is-active { display: block; }
+
+  /* ---------- Base comum: fundo claro + cartão central ---------- */
+  .scene { position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 48px 16px 96px; }
+  .bg { position: absolute; inset: 0; pointer-events: none; }
+  .card { position: relative; z-index: 2; background: #fff; border-radius: 16px; box-shadow: var(--shadow-card); padding: 40px 40px 34px; width: 100%; max-width: 440px;
+    animation: card .8s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes card { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  .prefcg { display: block; height: 34px; width: auto; margin: 0 auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .system { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 20px; text-align: center; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); text-align: center; }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field { position: relative; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,53,135,.22); }
+  .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .reveal:hover { background: var(--blue-50); }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s; }
+  .submit:hover { background: var(--blue-800); }
+  .submit:active { transform: translateY(1px); }
+  .submit svg { transition: transform .2s; }
+  .submit:hover svg { transform: translateX(3px); }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: center; }
+
+  .enter > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  .enter > *:nth-child(2) { animation-delay: .08s; } .enter > *:nth-child(3) { animation-delay: .14s; }
+  .enter > *:nth-child(4) { animation-delay: .2s; } .enter > *:nth-child(5) { animation-delay: .26s; } .enter > *:nth-child(6) { animation-delay: .32s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* Folha estilizada */
+  .doc { position: absolute; background: #fff; border-radius: 8px; padding: 16px 14px; box-shadow: var(--shadow-surface); }
+  .doc .tag { width: 32px; height: 8px; border-radius: 3px; background: var(--canvas); }
+  .doc .title { width: 64%; height: 6px; border-radius: 3px; background: rgba(27,32,64,.6); margin: 10px 0 12px; }
+  .doc .ln { position: relative; height: 5px; border-radius: 3px; background: rgba(98,104,134,.26); margin-bottom: 8px; }
+  .mark { position: absolute; inset: -3px -4px; border-radius: 2px; opacity: 0; transform: scaleX(.2); transform-origin: left; }
+  .mark.add { background: var(--add-bg); box-shadow: inset 0 -2px 0 var(--add-line); }
+  .mark.del { background: var(--del-bg); box-shadow: inset 0 -2px 0 var(--del-line); }
+  .mark.mod { background: var(--mod-bg); box-shadow: inset 0 -2px 0 var(--mod-line); }
+  .mark.hl { background: var(--yellow); opacity: 0; }
+
+  /* ================= 2A — Lente ao fundo ================= */
+  .a-lens { position: absolute; left: 50%; top: 50%; width: 820px; height: 820px; margin: -430px 0 0 -430px; animation: a-breathe 12s ease-in-out infinite; }
+  @keyframes a-breathe { 0%, 100% { transform: scale(.97) rotate(-2deg); } 50% { transform: scale(1.02) rotate(1deg); } }
+  .a-doc { opacity: 0; animation: a-float 18s ease-in-out infinite; }
+  @keyframes a-float { 0% { opacity: 0; transform: translateY(40px) rotate(var(--r)); } 12%, 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70px) rotate(var(--r)); } }
+  .a-doc .mark { animation: a-mark 18s ease-out infinite; }
+  @keyframes a-mark { 0%, 30% { opacity: 0; transform: scaleX(.2); } 36%, 100% { opacity: 1; transform: scaleX(1); } }
+
+  /* ================= 2B — Folhas em leque ================= */
+  .b-stack { position: relative; z-index: 2; width: 100%; max-width: 440px; }
+  .b-sheet { position: absolute; inset: 0; background: #fff; border-radius: 16px; box-shadow: var(--shadow-surface); transform-origin: 50% 100%; }
+  .b-sheet.s1 { animation: b-fan1 1.1s .25s cubic-bezier(.2,.7,.2,1) both, b-sway1 9s 1.4s ease-in-out infinite; }
+  .b-sheet.s2 { animation: b-fan2 1.1s .35s cubic-bezier(.2,.7,.2,1) both, b-sway2 9s 1.5s ease-in-out infinite; background: var(--blue-50); }
+  @keyframes b-fan1 { from { transform: none; } to { transform: rotate(-6deg) translate(-18px, 6px); } }
+  @keyframes b-fan2 { from { transform: none; } to { transform: rotate(5deg) translate(18px, 8px); } }
+  @keyframes b-sway1 { 0%, 100% { transform: rotate(-6deg) translate(-18px, 6px); } 50% { transform: rotate(-4.5deg) translate(-14px, 4px); } }
+  @keyframes b-sway2 { 0%, 100% { transform: rotate(5deg) translate(18px, 8px); } 50% { transform: rotate(3.5deg) translate(14px, 6px); } }
+  .b-stack .card { animation: none; }
+  .b-sheet .peek { position: absolute; top: 18px; left: 22px; right: 22px; }
+  .b-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(40,53,135,.10) 1.2px, transparent 1.2px); background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 70%); mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 70%); }
+  /* Lente do logo se desenha ao entrar */
+  .draw .ring { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw 1s .5s ease-out forwards; }
+  .draw .handle { stroke-dasharray: 22; stroke-dashoffset: 22; animation: draw .4s 1.3s ease-out forwards; }
+  .draw .bar { transform-box: fill-box; transform-origin: left; transform: scaleX(0); animation: grow .5s 1.5s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+
+  /* ================= 2C — Comparação discreta ================= */
+  .c-pair { position: absolute; width: 230px; height: 170px; }
+  .c-pair .doc { width: 100px; height: 136px; top: 0; }
+  .c-pair .doc:nth-child(2) { left: 116px; }
+  .c-pair .doc:nth-child(2) .tag { background: var(--blue); }
+  .c-beam { position: absolute; left: -10px; right: -10px; top: 20px; height: 2px; border-radius: 2px; background: var(--blue); opacity: 0;
+    box-shadow: 0 0 0 5px rgba(40,53,135,.06); animation: c-beam 9s linear infinite; }
+  .c-beam::after { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); box-shadow: inset 0 0 0 2px var(--yellow); }
+  @keyframes c-beam { 0%, 10% { opacity: 0; transform: translateY(0); } 14% { opacity: .8; } 60% { opacity: .8; transform: translateY(104px); } 66%, 100% { opacity: 0; transform: translateY(104px); } }
+  .c-pair .mark.r1 { animation: c-r1 9s ease-out infinite; }
+  .c-pair .mark.r2 { animation: c-r2 9s ease-out infinite; }
+  @keyframes c-r1 { 0%, 26% { opacity: 0; transform: scaleX(.2); } 31%, 88% { opacity: 1; transform: scaleX(1); } 95%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes c-r2 { 0%, 44% { opacity: 0; transform: scaleX(.2); } 49%, 88% { opacity: 1; transform: scaleX(1); } 95%, 100% { opacity: 0; transform: scaleX(1); } }
+  .c-ring { position: absolute; width: 700px; height: 700px; left: 50%; top: 50%; margin: -350px 0 0 -350px; border-radius: 50%; border: 48px solid var(--blue-50); }
+
+  @media (max-width: 900px) {
+    .card { padding: 30px 22px 26px; }
+    .a-doc, .c-pair { display: none; }
+    .a-lens { width: 560px; height: 560px; margin: -300px 0 0 -290px; }
+    .c-ring { width: 520px; height: 520px; margin: -260px 0 0 -260px; border-width: 36px; }
+    .switcher a span { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .a-doc { opacity: 1; transform: rotate(var(--r)); }
+    .mark { opacity: 1; transform: none; }
+    .b-sheet.s1 { transform: rotate(-6deg) translate(-18px, 6px); }
+    .b-sheet.s2 { transform: rotate(5deg) translate(18px, 8px); }
+    .draw .ring, .draw .handle { stroke-dashoffset: 0; }
+    .draw .bar { transform: none; }
+    .c-beam { opacity: .8; transform: translateY(52px); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="switcher" aria-label="Variações">
+  <a href="#2a">2A<span> · Lente ao fundo</span></a>
+  <a href="#2b">2B<span> · Folhas em leque</span></a>
+  <a href="#2c">2C<span> · Comparação discreta</span></a>
+</nav>
+
+<!-- 2A -->
+<section class="option" id="2a" aria-label="Variação 2A: lente ao fundo">
+  <div class="scene">
+    <div class="bg" aria-hidden="true">
+      <svg class="a-lens" viewBox="0 0 64 64">
+        <path d="M43 43 L58 58" stroke="#e3e6f3" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="29" cy="29" r="20" fill="none" stroke="#e8eaf5" stroke-width="3.6"/>
+      </svg>
+      <div data-float></div>
+    </div>
+    <div class="card"><div class="enter" data-form></div></div>
+  </div>
+</section>
+
+<!-- 2B -->
+<section class="option" id="2b" aria-label="Variação 2B: folhas em leque">
+  <div class="scene">
+    <div class="bg" aria-hidden="true"><div class="b-dots"></div></div>
+    <div class="b-stack">
+      <div class="b-sheet s2" aria-hidden="true"></div>
+      <div class="b-sheet s1" aria-hidden="true"></div>
+      <div class="card"><div class="enter" data-form data-draw></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2C -->
+<section class="option" id="2c" aria-label="Variação 2C: comparação discreta">
+  <div class="scene">
+    <div class="bg" aria-hidden="true">
+      <div class="c-ring"></div>
+      <div data-pairs></div>
+    </div>
+    <div class="card"><div class="enter" data-form></div></div>
+  </div>
+</section>
+
+<script>
+  // Lente do AQR (Proposta 3, "Lente Q"), mesma geometria de src/components/layout/AqrLogo.tsx.
+  function lens(size, draw) {
+    const s = size * 1.1
+    return `<svg class="${draw ? 'draw' : ''}" viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * 0.02}px 0 ${size * 0.04}px;transform:translateY(${size * 0.12}px)">
+      <path class="handle" d="M40.5 40.5 L55 55" stroke="var(--blue)" stroke-width="9" stroke-linecap="round"/>
+      <circle class="ring" cx="27" cy="27" r="19" fill="#fff" stroke="var(--blue)" stroke-width="7"/>
+      <rect class="bar" x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/>
+      <rect x="17" y="22" width="20" height="3.5" rx="1.75" fill="var(--blue)"/>
+      <rect x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="rgba(40,53,135,.35)"/></svg>`
+  }
+
+  function doc(widths, marks = {}) {
+    return '<div class="tag"></div><div class="title"></div>' + widths.map((w, i) =>
+      `<div class="ln" style="width:${w}%">${marks[i] ? `<span class="mark ${marks[i]}"></span>` : ''}</div>`).join('')
+  }
+
+  // 2A: folhas flutuando, cada uma com uma diferença que aparece.
+  const kinds = ['add', 'mod', 'del', 'add', 'mod', 'del']
+  const float = document.querySelector('[data-float]')
+  ;[[6, 14, -6, 0], [16, 60, 4, 6], [80, 10, 5, 12], [86, 56, -4, 3], [70, 80, 3, 15], [24, 84, -3, 9]].forEach(([x, y, r, delay], i) => {
+    const d = document.createElement('div')
+    d.className = 'doc a-doc'
+    d.style.cssText = `left:${x}%;top:${y}%;width:120px;height:150px;--r:${r}deg;animation-delay:-${delay}s`
+    d.innerHTML = doc([90, 74, 96, 60, 84], { [1 + (i % 3)]: kinds[i] })
+    d.querySelectorAll('.mark').forEach((el) => (el.style.animationDelay = `-${delay}s`))
+    float.appendChild(d)
+  })
+
+  // 2C: pares de folhas (original e atualizada) nas laterais.
+  const pairs = document.querySelector('[data-pairs]')
+  ;[[5, 12, 0], [7, 62, 4.5], [78, 18, 2.2], [80, 66, 6.7]].forEach(([x, y, delay]) => {
+    const p = document.createElement('div')
+    p.className = 'c-pair'
+    p.style.cssText = `left:${x}%;top:${y}%`
+    p.innerHTML = `<div class="doc">${doc([90, 74, 96, 60, 84, 70], { 2: 'del r1', 4: 'mod r2' })}</div>
+      <div class="doc">${doc([90, 74, 82, 60, 78, 70], { 2: 'add r1', 4: 'mod r2' })}</div><div class="c-beam"></div>`
+    p.querySelectorAll('.mark, .c-beam').forEach((el) => (el.style.animationDelay = `-${delay}s`))
+    pairs.appendChild(p)
+  })
+
+  // Formulário comum (sem aviso de protótipo).
+  const arrow = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  document.querySelectorAll('[data-form]').forEach((wrap, n) => {
+    const draw = wrap.hasAttribute('data-draw')
+    wrap.innerHTML = `
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande" height="34">
+      <div class="system"><span class="aqr" role="img" aria-label="AQR" style="font-size:24px"><span aria-hidden="true">A</span>${lens(24, draw)}<span aria-hidden="true">R</span></span>
+        <small>Análise e Qualificação<br>de Requerimentos</small></div>
+      <div class="accent" aria-hidden="true"></div>
+      <div><h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p></div>
+      <form onsubmit="event.preventDefault()">
+        <div><label for="u${n}">Usuário</label><input id="u${n}" autocomplete="username"></div>
+        <div><label for="p${n}">Senha</label><div class="field"><input id="p${n}" type="password" autocomplete="current-password" style="padding-right:84px">
+          <button type="button" class="reveal" aria-pressed="false" onclick="const i=this.previousElementSibling;const s=i.type==='password';i.type=s?'text':'password';this.textContent=s?'Ocultar':'Mostrar';this.setAttribute('aria-pressed',s)">Mostrar</button></div></div>
+        <button class="submit" type="submit">Entrar ${arrow}</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>`
+  })
+
+  // Troca de variação pela âncora; reinicia as animações de entrada ao trocar.
+  function show() {
+    const id = /^#2[abc]$/.test(location.hash) ? location.hash.slice(1) : '2a'
+    document.querySelectorAll('.option').forEach((o) => o.classList.toggle('is-active', o.id === id))
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + id)))
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>
