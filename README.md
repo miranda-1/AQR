@@ -10,17 +10,16 @@ Requer Node.js 22.13 ou superior (para rodar os testes do servidor, 22.18 ou sup
 
 ```bash
 npm install
-npm run dev:server   # API em http://127.0.0.1:3000
-npm run dev          # em outro terminal: site em http://localhost:5173 (o Vite encaminha /api para a API)
+npm run dev          # inicia API em http://127.0.0.1:3000 e site em http://localhost:5173
 ```
 
-Para revisar a interface sem servidor, com dados fictícios: `VITE_COMPARISON_SERVICE=demo npm run dev`.
+Para revisar a interface com dados fictícios, sem iniciar a API: `VITE_COMPARISON_SERVICE=demo npm run dev:web`.
 
 Administração de contas (desligada por padrão; sem autenticação real, só no computador local):
 
 ```bash
 npm run admin:criar -- --usuario maria.admin --nome "Maria Souza"   # primeiro administrador
-ADMIN_API_MODE=dev npm run dev:server                                # liga a API administrativa
+ADMIN_API_MODE=dev npm run dev                                       # liga API e site com administração local
 ```
 
 Depois, entre no site com o usuário `maria.admin` (qualquer senha): "Administração de contas" aparece no menu da conta.
@@ -28,7 +27,8 @@ Capturas das telas para aprovação visual: `docs/capturas-administracao/`.
 
 | Script | O que faz |
 |---|---|
-| `npm run dev` | Site em modo de desenvolvimento |
+| `npm run dev` | Site e API juntos em modo de desenvolvimento |
+| `npm run dev:web` | Apenas o site (útil para o modo demonstrativo) |
 | `npm run dev:server` | API em modo de desenvolvimento (recarrega ao salvar) |
 | `npm run build` | Typecheck e build do site (`dist/`) e da API (`dist-server/`) |
 | `npm run start:server` | Inicia a API já compilada |

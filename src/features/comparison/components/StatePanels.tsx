@@ -84,7 +84,7 @@ const errorContent: Record<
     icon: TriangleAlert,
     title: 'A comparação não foi concluída',
     body: () => 'Ocorreu uma falha durante o processamento. Os arquivos selecionados não foram alterados.',
-    hint: 'Tente novamente. Se a falha se repetir, verifique se os arquivos abrem normalmente em um leitor de PDF.',
+    hint: 'Tente novamente. Se a falha se repetir, confira se o servidor do AQR está funcionando e se os PDFs abrem normalmente.',
   },
   INCOMPATIBLE_DOCUMENT: {
     icon: FileX,

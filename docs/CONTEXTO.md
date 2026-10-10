@@ -42,9 +42,8 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ```bash
 npm install
-npm run dev:server   # API em http://127.0.0.1:3000
-npm run dev          # em outro terminal: http://localhost:5173 (o Vite encaminha /api para a API)
-VITE_COMPARISON_SERVICE=demo npm run dev   # alternativa: dados fictícios, sem API
+npm run dev          # API em http://127.0.0.1:3000 e site em http://localhost:5173
+VITE_COMPARISON_SERVICE=demo npm run dev:web   # alternativa: dados fictícios, sem API
 ```
 
 Variáveis do servidor (opcionais): `HOST` (padrão `127.0.0.1`), `PORT` (`3000`), `NODE_ENV`, `LOG_LEVEL`, `COMPARISON_WORKERS` (`2`), `COMPARISON_QUEUE_LIMIT` (`8`), `COMPARISON_TIMEOUT_MS` (`120000`), `COMPARISON_RESULT_TTL_MS` (`1800000`), `COMPARISON_WORKER_MEMORY_MB` (`768`).
@@ -149,6 +148,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 10/10/2026 | Criar e editar contas: páginas `/administracao/contas/nova` e `/administracao/contas/:id` com `AccountForm` (validação no navegador com as regras compartilhadas, erros por campo, foco no primeiro erro, usuário só para leitura na edição), mensagem de conflito de versão com "Recarregar a conta", confirmação de desativar e reativar em `alert-dialog` (motivo opcional, erro do último administrador dentro do diálogo) e aviso de sucesso na lista; casos novos no axe (commit 18 do plano) | `44082a2` |
 | 10/10/2026 | Auditoria: `/administracao/auditoria` (linha do tempo com filtro por tipo de evento, quem fez, quando e o que mudou, paginada) e "Histórico da conta" na página de edição (recarrega a cada alteração); botão "Auditoria" na lista de contas; casos novos no axe (commit 19 do plano). Nota: numa execução isolada o projeto `integracao` falhou uma vez ao nível do arquivo e passou em todas as 5 repetições seguintes; ficar atento a intermitência | `16088cb` |
 | 10/10/2026 | Documentação da administração e da entrada da autenticação real (`docs/arquitetura.md`), README com o passo a passo, `AQR_API_URL` para o Vite apontar para outra API e sete capturas das telas (computador e celular) em `docs/capturas-administracao/`, geradas com a API real em modo `dev` (commit 20 do plano) | ver `git log` |
+| 10/10/2026 | Inicialização local unificada: `npm run dev` sobe API e site no mesmo terminal, evitando que o navegador abra com o servidor desligado (causa da falha nos dois PDFs de teste); `dev:web` preserva o modo demonstrativo sem API. A tela de erro orienta a conferir o servidor. O pool deixa de registrar uma falha falsa quando a thread encerra após uma comparação concluída. | ver `git log` |
 
 ## Pendências
 
@@ -158,7 +158,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 - **Escala:** tarefas e resultados ficam na memória de um único processo; reiniciar o servidor apaga as comparações em andamento, e mais de uma instância exigiria um armazenamento compartilhado.
 - **Regras de texto a confirmar com o uso real:** maiúsculas, acentos e pontuação contam como diferença; NFKC iguala "1º" e "1o"; palavra com hífen no fim da linha seguida de minúscula é unida ("requeri-" + "mento"), o que também une compostos quebrados na linha ("bem-" + "estar" vira "bemestar") e pode gerar diferença falsa se só um dos documentos quebrar ali.
 - **Precisão com documentos reais:** a suíte usa PDFs sintéticos de uma coluna. Validar com requerimentos reais da SEMADES (colunas, tabelas, cabeçalhos e rodapés repetidos, numeração de páginas) antes de desligar o modo demonstrativo; limitações em `docs/criterios-comparacao.md`.
-- **Verificação visual do visualizador real:** o desenho das páginas, a camada de texto e o alinhamento dos destaques não são testáveis no jsdom e o navegador automatizado (Playwright) não estava liberado nesta sessão. O fluxo pela API foi verificado de ponta a ponta (envio pelo proxy do Vite, resultado com regiões e âncoras). Conferir no navegador, no computador e no celular, antes de liberar para uso.
+- **Verificação visual do visualizador real:** os dois PDFs de teste foram comparados no Chromium, com 18 diferenças e destaques visíveis. Ainda falta avaliar a precisão e a leitura em documentos institucionais de formatos variados e conferir o visualizador no celular.
 - **Aprovação visual da administração (D4):** o responsável revisa as capturas em `docs/capturas-administracao/` e a interface no navegador; ajustes pedidos entram como novos commits.
 - **Administração em produção:** só depois da autenticação real (passos em `docs/arquitetura.md`). Hoje o servidor recusa `ADMIN_API_MODE=dev` em produção.
 - **Triagem documental:** próxima frente, depois das duas entregas do backend.

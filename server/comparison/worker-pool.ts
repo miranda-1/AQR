@@ -126,6 +126,7 @@ export class ComparisonWorkerPool {
         else resolve(outcome)
       }
       const fail = (reason: FailureReason) => {
+        if (settled) return
         onFailureReason?.(reason)
         finish({ status: 'failed', error: { code: 'PROCESSING_FAILED' } })
       }
@@ -134,6 +135,7 @@ export class ComparisonWorkerPool {
       signal?.addEventListener('abort', onAbort, { once: true })
 
       worker.on('message', (message: WorkerMessage) => {
+        if (settled) return
         if (message.type === 'progress') onProgress?.(message.stage)
         else if (message.type === 'completed') finish({ status: 'completed', result: message.result })
         else {
