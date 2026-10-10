@@ -228,6 +228,22 @@ describe('login real com Keycloak', () => {
     expect(noOrigin.statusCode).toBe(403)
   })
 
+  it('sessões sobrevivem a reinício, ficam no banco só como hash e os acessos são registrados', async () => {
+    const { session, headers } = await login('ana')
+    expect(JSON.stringify(db.prepare('SELECT * FROM sessions').all())).not.toContain(String(session))
+
+    const restarted = await buildTestApp({
+      db,
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP },
+    })
+    expect((await restarted.inject({ method: 'GET', url: '/api/auth/me', headers })).statusCode).toBe(200)
+    await restarted.close()
+
+    const events = db.prepare('SELECT evento, usuario FROM access_events ORDER BY ocorrido_em').all().map((row) => row.evento)
+    expect(events).toEqual(expect.arrayContaining(['login.ok', 'login.sem_conta', 'login.conta_inativa', 'login.falha']))
+    expect(() => db.exec('DELETE FROM access_events')).toThrow(/não podem ser apagados/)
+  })
+
   it('sair encerra a sessão no servidor e aponta o encerramento no Keycloak', async () => {
     const { headers } = await login('ana')
     const out = await app.inject({ method: 'POST', url: '/api/auth/logout', headers })

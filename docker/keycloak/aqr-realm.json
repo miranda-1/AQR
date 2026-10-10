@@ -5,6 +5,16 @@
   "registrationAllowed": false,
   "loginWithEmailAllowed": false,
   "bruteForceProtected": true,
+  "resetPasswordAllowed": true,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "aqr@aqr.local",
+    "fromDisplayName": "AQR",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
   "clients": [
     {
       "clientId": "aqr-web",
@@ -40,6 +50,15 @@
       "lastName": "Analista",
       "email": "ana@aqr.local",
       "credentials": [{ "type": "password", "value": "ana-dev-123", "temporary": false }]
+    },
+    {
+      "username": "recuperacao",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Recuperação",
+      "lastName": "De Senha",
+      "email": "recuperacao@aqr.local",
+      "credentials": [{ "type": "password", "value": "recuperacao-dev-123", "temporary": false }]
     },
     {
       "username": "semconta",

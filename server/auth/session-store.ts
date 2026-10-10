@@ -1,55 +1,51 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
+import { integerColumn, textColumn, type Database } from '../db/database.ts'
 
 export interface SessionData {
   accountId: string
   idToken: string
 }
 
-interface Entry extends SessionData {
-  expiresAt: number
-}
+const hashOf = (id: string): string => createHash('sha256').update(id).digest('hex')
 
 /**
- * Sessões em memória do servidor: o cookie leva só um identificador aleatório e os tokens nunca
- * saem daqui. Reiniciar o servidor encerra as sessões; com mais de uma instância, trocar por
- * armazenamento compartilhado.
+ * Sessões no banco do AQR: o cookie leva só um identificador aleatório e o banco guarda apenas
+ * o hash dele, então os tokens nunca saem do servidor e as sessões sobrevivem a reinícios.
+ * Com mais de uma instância, todas precisam apontar para o mesmo banco.
  */
 export class SessionStore {
-  private readonly entries = new Map<string, Entry>()
-
+  private readonly db: Database
   private readonly ttlMs: number
 
-  constructor(ttlMs: number) {
+  constructor(db: Database, ttlMs: number) {
+    this.db = db
     this.ttlMs = ttlMs
   }
 
   create(data: SessionData): string {
     const id = randomBytes(32).toString('base64url')
-    this.entries.set(id, { ...data, expiresAt: Date.now() + this.ttlMs })
+    this.db
+      .prepare('INSERT INTO sessions (id_hash, account_id, id_token, created_at, expires_at) VALUES (?, ?, ?, ?, ?)')
+      .run(hashOf(id), data.accountId, data.idToken, new Date().toISOString(), Date.now() + this.ttlMs)
     return id
   }
 
   get(id: string | undefined): SessionData | null {
     if (!id) return null
-    const entry = this.entries.get(id)
-    if (!entry) return null
-    if (entry.expiresAt < Date.now()) {
-      this.entries.delete(id)
+    const row = this.db.prepare('SELECT account_id, id_token, expires_at FROM sessions WHERE id_hash = ?').get(hashOf(id))
+    if (!row) return null
+    if (integerColumn(row, 'expires_at') < Date.now()) {
+      this.destroy(id)
       return null
     }
-    return entry
+    return { accountId: textColumn(row, 'account_id'), idToken: textColumn(row, 'id_token') }
   }
 
   destroy(id: string | undefined): void {
-    if (id) this.entries.delete(id)
+    if (id) this.db.prepare('DELETE FROM sessions WHERE id_hash = ?').run(hashOf(id))
   }
 
   purgeExpired(): void {
-    const now = Date.now()
-    for (const [id, entry] of this.entries) if (entry.expiresAt < now) this.entries.delete(id)
-  }
-
-  clear(): void {
-    this.entries.clear()
+    this.db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now())
   }
 }

@@ -27,25 +27,37 @@ Proteções: `Origin` obrigatório e igual a `APP_BASE_URL` em pedidos `POST/PUT
 
 `AUTH_MODE=keycloak` não combina com `ADMIN_API_MODE=dev`. Em modo `visual` nada muda (login só visual).
 
-## Rodando localmente
+## Rodando localmente (Keycloak autohospedado + Mailpit)
 
 ```bash
-docker run --rm -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
-  -v "$PWD/docker/keycloak:/opt/keycloak/data/import:ro" quay.io/keycloak/keycloak:26.8.0 start-dev --import-realm
+docker compose -f docker/compose.yml up -d     # Keycloak 26.8.0 + Postgres + Mailpit
 npm run admin:criar -- --usuario admin --nome "Admin Local"
 AUTH_MODE=keycloak KEYCLOAK_ISSUER=http://localhost:8080/realms/aqr KEYCLOAK_CLIENT_ID=aqr-web \
   APP_BASE_URL=http://localhost:5173 npm run dev
 ```
 
-Usuários de desenvolvimento do realm (`docker/keycloak/aqr-realm.json`, **só local**): `admin` / `admin-dev-123`, `ana` / `ana-dev-123`, `semconta` / `semconta-dev-123` (autentica no Keycloak, mas não tem conta no AQR → bloqueado). Crie `ana` como analista pela administração.
+- Keycloak: http://localhost:8080 (console: `admin` / `admin`). Dados no volume Postgres `keycloak-db`; para reimportar o realm: `docker compose -f docker/compose.yml down -v`.
+- **Mailpit** (caixa de e-mail falsa): http://localhost:8025. O Keycloak envia a ele o e-mail de "Esqueceu a senha?" (SMTP `mailpit:1025` no realm).
+- Usuários do realm (`docker/keycloak/aqr-realm.json`, **só local**): `admin` / `admin-dev-123`, `ana` / `ana-dev-123`, `recuperacao` / `recuperacao-dev-123` e `semconta` / `semconta-dev-123` (autentica no Keycloak, mas não tem conta no AQR → bloqueado). Crie `ana` como analista pela administração.
+- Teste ponta a ponta: `AUTH_MODE=keycloak ... PORT=3100 DATABASE_PATH=<temporário> npx tsx server/main.ts` e, em outro terminal, `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>`.
+
+## Sessões e registro de acessos
+
+Sessões ficam na tabela `sessions` (migração 0002; só o hash do identificador) e sobrevivem a reinício do servidor. Logins e saídas ficam em `access_events` (só inserção): `login.ok`, `login.sem_conta`, `login.conta_inativa`, `login.falha`, `logout`, com usuário, conta e IP. Ainda não há tela para consultá-los.
+
+## Produção: o que falta (bloqueios que dependem de domínio, SMTP e servidor)
+
+- **Domínio e HTTPS:** definir o endereço do Keycloak e do AQR, com certificados; `KEYCLOAK_ISSUER` e `APP_BASE_URL` em HTTPS (a configuração já recusa HTTP fora de localhost).
+- **SMTP real:** trocar o Mailpit por um servidor SMTP (host, porta, TLS e remetente do domínio da Prefeitura) no realm; sem isso a recuperação de senha não envia e-mail.
+- **Keycloak em produção:** `start` (não `start-dev`) com `KC_HOSTNAME`, proxy reverso, Postgres com backup e senhas trocadas; recriar o realm sem os usuários de teste e com a política de senha e de bloqueio definida pela SEMADES; o cadastro dos mesmos usuários precisa existir no AQR (`preferred_username` = usuário).
+- Cookies passam a `Secure` automaticamente com `APP_BASE_URL` em HTTPS.
 
 ## Limitações conhecidas
 
-- Sessões ficam em memória: reiniciar o servidor desconecta todos; com várias instâncias é preciso armazenamento compartilhado.
-- Login e logout não entram na auditoria de contas (só as alterações de conta).
+- Sem renovação de sessão: expira em 8 h e a pessoa entra de novo.
+- O `id_token` fica guardado no banco (sem criptografia em repouso) para o encerramento da sessão no Keycloak.
+- Não há tela para ver `access_events`.
 - A tela de login, em modo Keycloak, mostra um botão "Entrar com a conta da PREFCG" no lugar dos campos usuário/senha (as credenciais são digitadas só no Keycloak). É a única mudança na tela; **aguarda validação**.
-- Sem endpoint de renovação: a sessão expira em 8 h e a pessoa entra de novo.
-- Produção: precisa de HTTPS, Keycloak institucional e revisão do realm (aqui só há o realm de desenvolvimento).
 
 ## Verificação com Keycloak real (10/10/2026)
 

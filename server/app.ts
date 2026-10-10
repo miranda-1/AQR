@@ -58,13 +58,16 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())
-    const sessions = new SessionStore(SESSION_TTL_MS)
-    const sweep = setInterval(() => sessions.purgeExpired(), 60_000)
+    const sessions = new SessionStore(db, SESSION_TTL_MS)
+    const sweep = setInterval(() => {
+      try {
+        sessions.purgeExpired()
+      } catch {
+        // Banco já fechado durante o desligamento.
+      }
+    }, 60_000)
     sweep.unref()
-    app.addHook('onClose', async () => {
-      clearInterval(sweep)
-      sessions.clear()
-    })
+    app.addHook('onClose', async () => clearInterval(sweep))
     const provider = createKeycloakAuthProvider({ sessions, db })
     const client = deps.keycloakClient ?? new KeycloakClient(config.keycloak)
     registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl }, provider)

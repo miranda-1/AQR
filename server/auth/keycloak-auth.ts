@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import type { AuthStatus, SessionUser } from '../../shared/contracts/auth.ts'
 import { isAccountRole } from '../../shared/validation/account.ts'
@@ -11,6 +12,7 @@ import type { SessionStore } from './session-store.ts'
 export const SESSION_COOKIE = 'aqr_sessao'
 export const LOGIN_COOKIE = 'aqr_login'
 const PENDING_TTL_MS = 10 * 60_000
+type AccessEvent = 'login.ok' | 'login.sem_conta' | 'login.conta_inativa' | 'login.falha' | 'logout'
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 export interface KeycloakAuthOptions {
@@ -61,7 +63,11 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
   const secure = base.protocol === 'https:'
   const redirectUri = new URL('/api/auth/callback', base).href
   const pending = new Map<string, PendingLogin & { returnTo: string; expiresAt: number }>()
-  const findByUser = db.prepare("SELECT id, situacao FROM accounts WHERE usuario = ? COLLATE NOCASE")
+  const findByUser = db.prepare('SELECT id, situacao FROM accounts WHERE usuario = ? COLLATE NOCASE')
+  const insertEvent = db.prepare('INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ip) VALUES (?, ?, ?, ?, ?, ?)')
+  const record = (evento: AccessEvent, request: FastifyRequest, usuario: string | null, contaId: string | null): void => {
+    insertEvent.run(randomUUID(), new Date().toISOString(), evento, usuario, contaId, request.ip)
+  }
 
   const cookie = (name: string, value: string, maxAgeSeconds: number): string =>
     `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure ? '; Secure' : ''}`
@@ -117,15 +123,18 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       result = await client.finishLogin(new URL(request.url, base), entry)
     } catch (error) {
       request.log.warn({ err: error }, 'Falha ao concluir o login no Keycloak')
+      record('login.falha', request, null, null)
       return goToLoginError(reply, 'falha')
     }
     const row = findByUser.get(result.identity.usuario)
     // Autenticar no Keycloak não basta: é preciso ter conta ativa no AQR.
     if (!row || textColumn(row, 'situacao') !== 'ativa') {
       // Mantém a sessão do Keycloak encerrada para a pessoa poder tentar com outro usuário.
+      record(row ? 'login.conta_inativa' : 'login.sem_conta', request, result.identity.usuario, row ? textColumn(row, 'id') : null)
       return goToLoginError(reply, row ? 'conta_inativa' : 'sem_conta')
     }
     const id = sessions.create({ accountId: textColumn(row, 'id'), idToken: result.idToken })
+    record('login.ok', request, result.identity.usuario, textColumn(row, 'id'))
     return reply
       .header('set-cookie', [cookie(SESSION_COOKIE, id, 8 * 3600), cookie(LOGIN_COOKIE, '', 0)])
       .redirect(new URL(entry.returnTo, base).href)
@@ -135,6 +144,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     const id = readCookie(request, SESSION_COOKIE)
     const session = sessions.get(id)
     sessions.destroy(id)
+    if (session) record('logout', request, null, session.accountId)
     let logoutUrl: string | null = null
     if (session) {
       try {

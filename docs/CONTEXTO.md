@@ -151,10 +151,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 10/10/2026 | Documentação da administração e da entrada da autenticação real (`docs/arquitetura.md`), README com o passo a passo, `AQR_API_URL` para o Vite apontar para outra API e sete capturas das telas (computador e celular) em `docs/capturas-administracao/`, geradas com a API real em modo `dev` (commit 20 do plano) | ver `git log` |
 | 10/10/2026 | Inicialização local unificada: `npm run dev` sobe API e site no mesmo terminal, evitando que o navegador abra com o servidor desligado (causa da falha nos dois PDFs de teste); `dev:web` preserva o modo demonstrativo sem API. A tela de erro orienta a conferir o servidor. O pool deixa de registrar uma falha falsa quando a thread encerra após uma comparação concluída. | ver `git log` |
 | 10/10/2026 | Login real com Keycloak (`AUTH_MODE=keycloak`): servidor como cliente OIDC (BFF, PKCE) com `openid-client`; sessão em cookie HttpOnly, tokens só no servidor; papel e situação vêm da conta no banco do AQR, conferidos a cada pedido; `/api/comparisons` e `/api/admin/*` protegidos; proteção de origem (CSRF); botão "Entrar com a conta da PREFCG" no lugar dos campos em modo Keycloak. Guia e limitações em `docs/login-keycloak.md` | ver `git log` |
+| 10/10/2026 | Keycloak autohospedado local (`docker/compose.yml`: Keycloak 26.8.0 + Postgres + Mailpit) com recuperação de senha por e-mail; sessões e registro de acessos no banco (migração 0002); E2E real em `scripts/e2e-keycloak.mjs` (20 verificações) | ver `git log` |
 
 ## Pendências
 
-- **Login real (Keycloak):** validar com um Keycloak real (realm de desenvolvimento em `docker/keycloak/`, imagem 26.8.0) e com o Keycloak institucional; sessões em memória; login/logout fora da auditoria; botão no lugar dos campos na tela de login aguarda validação visual. Ver `docs/login-keycloak.md`.
+- **Login real (Keycloak) em produção:** depende de domínio, HTTPS, SMTP real e Keycloak institucional ou próprio em modo `start`; sem isso só roda local (compose com Mailpit). Falta tela de consulta de `access_events`, renovação de sessão e validação visual do botão na tela de login. Ver `docs/login-keycloak.md`.
 
 - **Fontes padrão no visualizador:** o pdf.js avisa no console (`standardFontDataUrl`) ao abrir PDFs com fontes padrão não incorporadas; o desenho sai com fonte substituta. Se atrapalhar o alinhamento dos destaques, servir `pdfjs-dist/standard_fonts` e informar `standardFontDataUrl` em `load-pdf.ts`.
 

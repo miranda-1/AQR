@@ -64,6 +64,72 @@ async function browserLogin(username, password) {
 const call = (jar, method, path, extra = {}) =>
   fetch(`${API}${path}`, { method, headers: { cookie: jar.header(), origin: APP, ...(extra.headers ?? {}) }, body: extra.body, redirect: 'manual' })
 
+// Recuperação de senha: "Esqueceu a senha?" do Keycloak + e-mail no Mailpit (http://localhost:8025).
+const KC = 'http://localhost:8080'
+const MAIL = 'http://localhost:8025'
+async function resetPasswordByEmail(username, newPassword) {
+  const jar = new Jar()
+  const hop = async (url, init = {}) => {
+    const res = await fetch(url, { ...init, redirect: 'manual', headers: { ...(init.headers ?? {}), cookie: jar.header() } })
+    jar.store(res)
+    return res
+  }
+  const follow = async (url) => {
+    let res = await hop(url)
+    while (res.status >= 300 && res.status < 400) res = await hop(new URL(res.headers.get('location'), url).href)
+    return res
+  }
+  const formAction = (html) => html.match(/action="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
+  await fetch(`${MAIL}/api/v1/messages`, { method: 'DELETE' })
+  let res = await hop(`${API}/api/auth/login`)
+  res = await follow(res.headers.get('location'))
+  let html = await res.text()
+  const forgot = html.match(/href="([^"]*reset-credentials[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
+  if (!forgot) return 'sem-link-esqueci-a-senha'
+  res = await follow(new URL(forgot, KC).href)
+  html = await res.text()
+  res = await hop(formAction(html), { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ username }) })
+  let link
+  for (let i = 0; i < 20 && !link; i++) {
+    await new Promise((r) => setTimeout(r, 500))
+    const list = await (await fetch(`${MAIL}/api/v1/messages`)).json()
+    const id = list.messages?.[0]?.ID
+    if (id) link = (await (await fetch(`${MAIL}/api/v1/message/${id}`)).json()).Text.match(/https?:\/\/\S*action-token\S*/)?.[0]
+  }
+  if (!link) return 'email-nao-chegou'
+  res = await follow(link)
+  html = await res.text()
+  const proceed = html.match(/href="([^"]*action-token[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
+  if (!html.includes('password-new') && proceed) html = await (await follow(new URL(proceed, KC).href)).text()
+  if (!html.includes('password-new')) return 'sem-formulario-de-nova-senha'
+  res = await hop(formAction(html), {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ 'password-new': newPassword, 'password-confirm': newPassword }),
+  })
+  return res.status < 500 ? 'ok' : `status-${res.status}`
+}
+// Volta a senha do usuário de recuperação ao valor do realm (para o script poder rodar de novo).
+async function restorePassword(username, password) {
+  const tokenRes = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }),
+  })
+  const { access_token: token } = await tokenRes.json()
+  const auth = { authorization: `Bearer ${token}` }
+  const [user] = await (await fetch(`${KC}/admin/realms/aqr/users?username=${username}&exact=true`, { headers: auth })).json()
+  await fetch(`${KC}/admin/realms/aqr/users/${user.id}/reset-password`, {
+    method: 'PUT', headers: { ...auth, 'content-type': 'application/json' },
+    body: JSON.stringify({ type: 'password', value: password, temporary: false }),
+  })
+}
+await restorePassword('recuperacao', 'recuperacao-dev-123')
+const resetStep = await resetPasswordByEmail('recuperacao', 'NovaSenha-dev-456')
+check('recuperação de senha: e-mail chega ao Mailpit e a nova senha é aceita', resetStep === 'ok', resetStep)
+check('após recuperar, a senha antiga deixa de valer', (await browserLogin('recuperacao', 'recuperacao-dev-123')).final === 'rejeitado-pelo-keycloak')
+const afterReset = await browserLogin('recuperacao', 'NovaSenha-dev-456')
+check('após recuperar, a nova senha autentica no Keycloak (sem conta no AQR → bloqueado)', afterReset.final.includes('erro=sem_conta'), afterReset.final)
+await restorePassword('recuperacao', 'recuperacao-dev-123')
+
 // 1. sem login
 check('sem sessão: /api/auth/me = 401', (await fetch(`${API}/api/auth/me`)).status === 401)
 

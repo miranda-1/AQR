@@ -155,7 +155,9 @@ export function LoginPage() {
                   <LoginForm onSubmit={playEntry} onType={() => setPulse((value) => value + 1)} disabled={entering} />
                 )}
                 <p className="mt-[18px] text-center text-[0.84375rem] text-muted-foreground">
-                  Esqueceu a senha? Procure o suporte da {appConfig.organization.short}.
+                  {mode === 'keycloak'
+                    ? 'Esqueceu a senha? Use "Esqueceu a senha?" na próxima tela para receber um link por e-mail.'
+                    : `Esqueceu a senha? Procure o suporte da ${appConfig.organization.short}.`}
                 </p>
               </div>
             </div>
