@@ -7,6 +7,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
 import { demoComparisonResult, demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
+import { createInMemoryAccountService } from '@/features/admin/services/in-memory-account-service'
+import { sampleAccounts } from '@/features/admin/test-data'
 import { renderApp } from './render'
 
 /**
@@ -69,6 +71,16 @@ describe('acessibilidade (axe)', () => {
         <NoDifferencesPanel />
       </MemoryRouter>,
     )
+    expect(await violations(container)).toEqual([])
+  })
+})
+
+describe('acessibilidade da administração (axe)', () => {
+  it('lista de contas não tem violações', async () => {
+    const { container } = renderApp('/administracao/contas', {
+      accountService: createInMemoryAccountService({ accounts: sampleAccounts }),
+    })
+    await screen.findByRole('table', { name: 'Contas do AQR' })
     expect(await violations(container)).toEqual([])
   })
 })
