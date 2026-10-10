@@ -47,6 +47,10 @@ Usuários de desenvolvimento do realm (`docker/keycloak/aqr-realm.json`, **só l
 - Sem endpoint de renovação: a sessão expira em 8 h e a pessoa entra de novo.
 - Produção: precisa de HTTPS, Keycloak institucional e revisão do realm (aqui só há o realm de desenvolvimento).
 
+## Verificação com Keycloak real (10/10/2026)
+
+Keycloak 26.8.0 em Docker com o realm de `docker/keycloak/` + API em `PORT=3100` + banco temporário, rodando `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>` (o script percorre o navegador: formulário do Keycloak, cookies e redirecionamentos). **17 verificações, todas OK:** sem sessão (401); senha errada (Keycloak rejeita); usuário sem conta no AQR (bloqueado); admin entra e volta à página pedida; cookie opaco; admin cria o analista; analista entra, não administra (403) e compara `AQR_teste_01_original.pdf` × `AQR_teste_02_revisado.pdf` (**18 diferenças**); comparação sem login (401); desativação derruba a sessão na hora e bloqueia novo login; logout aponta o encerramento no Keycloak e invalida o cookie. Não coberto: a interface no navegador (o fluxo foi exercitado por HTTP; a tela em modo Keycloak tem teste de componente, sem inspeção visual).
+
 ## Testes
 
 `server/auth/keycloak-auth.test.ts` (servidor OIDC falso com HTTP e JWT RS256 reais): não autenticado, login correto, login errado (código inválido, público errado, sem cookie), sem conta, `returnTo` malicioso, administrador cria analista, analista sem permissão, desativação imediata, CSRF, logout. Mais `server/config.test.ts` e `KeycloakLogin.test.tsx`.
