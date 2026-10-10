@@ -113,3 +113,59 @@ export interface CurrentAdmin {
 
 /** Cabeçalho que identifica a pessoa no modo de desenvolvimento (sem autenticação real). */
 export const DEV_ACTOR_HEADER = 'x-aqr-dev-actor'
+
+export const accessEventTypes = [
+  'login.ok',
+  'login.sem_conta',
+  'login.conta_inativa',
+  'login.falha',
+  'login.vinculo_pendente',
+  'login.vinculo_divergente',
+  'logout',
+  'identidade.criada',
+  'identidade.convite_enviado',
+  'identidade.senha_redefinicao_enviada',
+  'identidade.bloqueada',
+  'identidade.reativada',
+  'identidade.sincronizada',
+  'identidade.vinculada',
+  'identidade.falha',
+] as const
+
+export type AccessEventType = (typeof accessEventTypes)[number]
+
+/** Registro de acesso (login, logout, identidade no Keycloak). Só leitura, só administradores. */
+export interface AccessEvent {
+  id: string
+  ocorridoEm: string
+  evento: AccessEventType
+  /** Usuário informado no login, ou o da conta. */
+  usuario: string | null
+  contaId: string | null
+  /** Quem agiu, nos passos feitos por um administrador (`null` no próprio login). */
+  ator: { id: string; usuario: string | null } | null
+  ip: string | null
+  detalhe: string | null
+}
+
+export type AccessEventPage = Page<AccessEvent>
+
+export interface AccessEventQuery {
+  evento?: AccessEventType
+  usuario?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Uso da comparação de PDFs por pessoa (nada do conteúdo nem os nomes dos arquivos). */
+export interface ComparisonUsage {
+  contaId: string | null
+  usuario: string | null
+  nome: string | null
+  /** Comparações enviadas no período guardado (até 1 ano). */
+  total: number
+  ultimos30Dias: number
+  concluidas: number
+  falhas: number
+  ultimaEm: string
+}

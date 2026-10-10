@@ -1,5 +1,6 @@
 import * as z from 'zod/mini'
-import type { Account, AccountPage, AdminStatus, AuditPage } from './types'
+import { accessEventTypes } from '../../../../shared/contracts/admin'
+import type { AccessEventPage, Account, AccountPage, AdminStatus, AuditPage, ComparisonUsage } from './types'
 
 /** Validação das respostas da API de contas: fora do contrato vira erro, não quebra a interface. */
 
@@ -41,6 +42,28 @@ const auditEvent = z.object({
 const pageOf = <T extends z.ZodMiniType>(item: T) =>
   z.object({ items: z.array(item), total: z.number(), page: z.number(), pageSize: z.number() })
 
+const accessEvent = z.object({
+  id: text,
+  ocorridoEm: text,
+  evento: z.enum(accessEventTypes),
+  usuario: nullableText,
+  contaId: nullableText,
+  ator: z.nullable(z.object({ id: text, usuario: nullableText })),
+  ip: nullableText,
+  detalhe: nullableText,
+})
+
+const comparisonUsage = z.object({
+  contaId: nullableText,
+  usuario: nullableText,
+  nome: nullableText,
+  total: z.number(),
+  ultimos30Dias: z.number(),
+  concluidas: z.number(),
+  falhas: z.number(),
+  ultimaEm: text,
+})
+
 const status = z.object({ available: z.boolean(), mode: z.enum(['disabled', 'dev', 'real']) })
 export const apiErrorSchema = z.object({
   error: z.object({ code: text, message: text, fields: z.optional(z.record(z.string(), z.string())) }),
@@ -64,4 +87,14 @@ export function parseAuditPage(value: unknown): AuditPage | undefined {
 export function parseAdminStatus(value: unknown): AdminStatus | undefined {
   const parsed = status.safeParse(value)
   return parsed.success ? parsed.data : undefined
+}
+
+export function parseAccessEventPage(value: unknown): AccessEventPage | undefined {
+  const parsed = pageOf(accessEvent).safeParse(value)
+  return parsed.success ? parsed.data : undefined
+}
+
+export function parseComparisonUsage(value: unknown): ComparisonUsage[] | undefined {
+  const parsed = z.object({ items: z.array(comparisonUsage) }).safeParse(value)
+  return parsed.success ? parsed.data.items : undefined
 }

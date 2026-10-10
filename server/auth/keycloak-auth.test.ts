@@ -10,6 +10,7 @@ import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
 import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
 import { makePdf } from '../test/make-pdf.ts'
+import { purgeOldComparisonEvents } from '../comparison/audit.ts'
 
 /**
  * Fluxo de login real contra um servidor OIDC falso (HTTP de verdade, tokens RS256 assinados).
@@ -429,11 +430,23 @@ describe('login real com Keycloak', () => {
 
   it('nenhum token fica no banco: a tabela de sessões não tem coluna de token e só guarda o hash', async () => {
     const columns = db.prepare('PRAGMA table_info(sessions)').all().map((row) => row.name)
-    expect(columns).toEqual(['id_hash', 'account_id', 'created_at', 'expires_at'])
+    expect(columns).toEqual(['id_hash', 'account_id', 'created_at', 'expires_at', 'last_seen_at'])
     const { session } = await login('ana')
     const dump = JSON.stringify(db.prepare('SELECT * FROM sessions').all())
     expect(dump).not.toContain(String(session))
     expect(dump).not.toMatch(/eyJ/)
+  })
+
+  it('relógio da sessão: informa quando ela cai sem contar como uso', async () => {
+    const { headers } = await login('ana')
+    const clock = await get('/api/auth/sessao', headers)
+    expect(clock.statusCode).toBe(200)
+    const expiraEm = Date.parse(clock.json<{ expiraEm: string }>().expiraEm)
+    // 30 min sem uso (bem antes do limite de 8 h).
+    expect(expiraEm - Date.now()).toBeGreaterThan(29 * 60_000)
+    expect(expiraEm - Date.now()).toBeLessThanOrEqual(30 * 60_000)
+    expect(clock.headers['cache-control']).toBe('no-store')
+    expect((await get('/api/auth/sessao', {})).statusCode).toBe(401)
   })
 
   it('enviar redefinição de senha encerra as sessões da conta no AQR e no Keycloak', async () => {
@@ -472,15 +485,43 @@ describe('login real com Keycloak', () => {
       throw new Error('a comparação não terminou')
     }
 
-    it('registra quem comparou, os nomes dos arquivos e o resultado', { timeout: 20_000 }, async () => {
+    it('registra só quem comparou, quando e o resultado: nada do conteúdo nem os nomes dos arquivos', { timeout: 20_000 }, async () => {
       const analyst = await login('ana')
       const id = await compare(analyst.headers)
-      const rows = db.prepare('SELECT evento, usuario, arquivo_original, arquivo_atualizado, diferencas FROM comparison_events WHERE comparacao_id = ? ORDER BY ocorrido_em, evento').all(id)
+      const rows = db.prepare('SELECT * FROM comparison_events WHERE comparacao_id = ? ORDER BY ocorrido_em, evento').all(id)
       expect(rows.map((row) => row.evento).sort()).toEqual(['comparacao.concluida', 'comparacao.enviada'])
-      const sent = rows.find((row) => row.evento === 'comparacao.enviada')
-      expect(sent).toMatchObject({ usuario: 'ana', arquivo_original: 'Requerimento v1.pdf', arquivo_atualizado: 'Requerimento v2.pdf' })
+      expect(rows.find((row) => row.evento === 'comparacao.enviada')).toMatchObject({ usuario: 'ana' })
       expect(Number(rows.find((row) => row.evento === 'comparacao.concluida')?.diferencas)).toBeGreaterThan(0)
-      expect(() => db.exec('DELETE FROM comparison_events')).toThrow(/não pode ser apagada/)
+      expect(Object.keys(rows[0] ?? {})).not.toContain('arquivo_original')
+      expect(JSON.stringify(rows)).not.toMatch(/Requerimento|\.pdf|prazo/)
+      // Só inserção dentro do prazo de retenção.
+      expect(() => db.exec('DELETE FROM comparison_events')).toThrow(/só pode ser apagada depois de 1 ano/)
+      expect(() => db.exec('UPDATE comparison_events SET usuario = NULL')).toThrow(/não pode ser alterada/)
+    })
+
+    it('cada comparação só é vista e cancelada por quem a enviou; entregue, ela é descartada', { timeout: 20_000 }, async () => {
+      const analyst = await login('ana')
+      const admin = await login('admin')
+      const id = await compare(analyst.headers)
+      // O administrador (e qualquer outra pessoa) recebe "não encontrada", como se não existisse.
+      expect((await get(`/api/comparisons/${id}`, admin.headers)).statusCode).toBe(404)
+      await app.inject({ method: 'DELETE', url: `/api/comparisons/${id}`, headers: admin.headers })
+      // Quem enviou ainda consegue repetir o pedido logo depois da entrega (margem de 1 min)…
+      const again = await get(`/api/comparisons/${id}`, analyst.headers)
+      expect(again.statusCode).toBe(200)
+      expect(again.json<{ status: string }>().status).toBe('completed')
+      // …e pode descartar na hora.
+      expect((await app.inject({ method: 'DELETE', url: `/api/comparisons/${id}`, headers: analyst.headers })).statusCode).toBe(204)
+      expect((await get(`/api/comparisons/${id}`, analyst.headers)).statusCode).toBe(404)
+    })
+
+    it('apaga sozinho o registro das comparações com mais de 1 ano, e só esse', async () => {
+      const anaId = (db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }).id
+      const old = new Date(Date.now() - 400 * 86_400_000).toISOString()
+      db.prepare("INSERT INTO comparison_events (id, ocorrido_em, evento, conta_id, usuario, comparacao_id) VALUES ('antigo', ?, 'comparacao.enviada', ?, 'ana', 'c-antiga')").run(old, anaId)
+      const before = Number((db.prepare('SELECT count(*) AS n FROM comparison_events').get() as { n: number }).n)
+      expect(purgeOldComparisonEvents(db)).toBe(1)
+      expect(Number((db.prepare('SELECT count(*) AS n FROM comparison_events').get() as { n: number }).n)).toBe(before - 1)
     })
 
     it('só o administrador lê os registros de acesso e de comparações, com filtro e paginação', async () => {
@@ -497,8 +538,16 @@ describe('login real com Keycloak', () => {
       expect(page.items.every((item) => item.evento === 'login.ok')).toBe(true)
       expect(page.total).toBeGreaterThan(2)
       expect(access.body).not.toMatch(/token|eyJ/)
-      const comparisons = (await get('/api/admin/comparison-events?usuario=ana', admin.headers)).json<{ items: { evento: string; arquivoOriginal: string | null }[] }>()
-      expect(comparisons.items.some((item) => item.arquivoOriginal === 'Requerimento v1.pdf')).toBe(true)
+      const comparisons = await get('/api/admin/comparison-events?usuario=ana', admin.headers)
+      expect(comparisons.json<{ items: { evento: string }[] }>().items.some((item) => item.evento === 'comparacao.enviada')).toBe(true)
+      expect(comparisons.body).not.toMatch(/arquivo|\.pdf/i)
+      expect((await get('/api/admin/comparison-events/resumo', analyst.headers)).statusCode).toBe(403)
+      const usage = (await get('/api/admin/comparison-events/resumo', admin.headers)).json<{ items: { usuario: string; nome: string; total: number; concluidas: number; ultimos30Dias: number }[] }>()
+      const ana = usage.items.find((item) => item.usuario === 'ana')
+      expect(ana).toMatchObject({ nome: expect.any(String) })
+      expect(ana?.total).toBeGreaterThanOrEqual(2)
+      expect(ana?.ultimos30Dias).toBe(ana?.total)
+      expect(ana?.concluidas).toBe(ana?.total)
       expect((await get('/api/admin/access-events?evento=' + 'x'.repeat(101), admin.headers)).statusCode).toBe(400)
     })
   })

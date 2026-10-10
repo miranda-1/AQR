@@ -11,4 +11,6 @@ export const routes = {
   adminAccountNew: '/administracao/contas/nova',
   adminAccount: (id: string) => `/administracao/contas/${encodeURIComponent(id)}`,
   adminAudit: '/administracao/auditoria',
+  /** Registros de acesso e uso da comparação (só com o login real). */
+  adminRecords: '/administracao/registros',
 } as const

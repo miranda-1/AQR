@@ -1,4 +1,4 @@
-import { ComparisonJobStore } from './job-store.ts'
+import { ComparisonJobStore, DELIVERY_GRACE_MS } from './job-store.ts'
 
 const result = {
   id: 'r',
@@ -55,5 +55,31 @@ describe('ComparisonJobStore', () => {
     store.remove(id)
     expect(signal.aborted).toBe(true)
     expect(store.get(id)).toBeUndefined()
+  })
+
+  it('só quem enviou vê e cancela a tarefa', () => {
+    const store = new ComparisonJobStore(1000)
+    const { id, signal } = store.create('conta-ana')
+    expect(store.get(id, 'conta-ana')).toBeDefined()
+    expect(store.get(id, 'conta-admin')).toBeUndefined()
+    expect(store.get(id)).toBeUndefined()
+    store.remove(id, 'conta-admin')
+    expect(signal.aborted).toBe(false)
+    store.remove(id, 'conta-ana')
+    expect(signal.aborted).toBe(true)
+    expect(store.size).toBe(0)
+  })
+
+  it('entregue, o resultado é descartado depois de uma margem curta, mesmo com prazo longo', () => {
+    let now = 0
+    const store = new ComparisonJobStore(30 * 60_000, () => now)
+    const { id } = store.create('conta-ana')
+    store.delivered(id) // ainda em andamento: nada muda
+    store.finish({ id, status: 'completed', result })
+    store.delivered(id)
+    now = DELIVERY_GRACE_MS - 1
+    expect(store.get(id, 'conta-ana')).toBeDefined()
+    now = DELIVERY_GRACE_MS
+    expect(store.get(id, 'conta-ana')).toBeUndefined()
   })
 })

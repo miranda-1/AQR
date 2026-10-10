@@ -50,3 +50,43 @@ describe('AuthSessionProvider (consulta ao servidor)', () => {
     expect(await screen.findByText('keycloak:fora')).toBeInTheDocument()
   })
 })
+
+describe('AuthSessionProvider (sessão por inatividade no login real)', () => {
+  function Expired() {
+    const { isAuthenticated, sessionExpired } = useAuthSession()
+    return <p>{`${isAuthenticated ? 'dentro' : 'fora'}:${sessionExpired ? 'expirou' : 'valendo'}`}</p>
+  }
+
+  afterEach(() => vi.useRealTimers())
+
+  it('a atividade da pessoa avisa o servidor no máximo a cada minuto; quando o relógio diz 401, a sessão termina', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let alive = true
+    const calls: string[] = []
+    respondWith((url) => {
+      calls.push(url)
+      if (url.endsWith('/api/auth/status')) return Response.json({ mode: 'keycloak' })
+      if (!alive) return new Response(null, { status: 401 })
+      if (url.endsWith('/api/auth/sessao')) return Response.json({ expiraEm: new Date().toISOString() })
+      return Response.json({ nome: 'Ana', usuario: 'ana', papel: 'analista' })
+    })
+    render(<AuthSessionProvider><Expired /></AuthSessionProvider>)
+    expect(await screen.findByText('dentro:valendo')).toBeInTheDocument()
+    const meCalls = () => calls.filter((url) => url.endsWith('/api/auth/me')).length
+    const before = meCalls()
+
+    // Atividade logo depois de entrar não gera pedido; depois de um minuto, gera um só.
+    window.dispatchEvent(new Event('keydown'))
+    expect(meCalls()).toBe(before)
+    await vi.advanceTimersByTimeAsync(61_000)
+    window.dispatchEvent(new Event('pointerdown'))
+    window.dispatchEvent(new Event('keydown'))
+    expect(meCalls()).toBe(before + 1)
+    // A conferência periódica usa o relógio, que não conta como uso.
+    expect(calls.some((url) => url.endsWith('/api/auth/sessao'))).toBe(true)
+
+    alive = false
+    await vi.advanceTimersByTimeAsync(61_000)
+    expect(await screen.findByText('fora:expirou')).toBeInTheDocument()
+  })
+})

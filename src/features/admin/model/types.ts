@@ -1,4 +1,7 @@
 import type {
+  AccessEventPage,
+  AccessEventQuery,
+  ComparisonUsage,
   Account,
   AccountPage,
   AccountQuery,
@@ -11,6 +14,11 @@ import type {
 } from '../../../../shared/contracts/admin'
 
 export type {
+  AccessEvent,
+  AccessEventPage,
+  AccessEventQuery,
+  AccessEventType,
+  ComparisonUsage,
   Account,
   AccountPage,
   AccountQuery,
@@ -64,4 +72,8 @@ export interface AccountService {
   /** Alinha o Keycloak com a conta (cria o acesso de contas antigas, corrige bloqueio e dados). */
   syncIdentity: (id: string) => Promise<Account>
   listAudit: (query?: AuditQuery, options?: RequestOptions) => Promise<AuditPage>
+  /** Registros de acesso (login real). */
+  listAccessEvents: (query?: AccessEventQuery, options?: RequestOptions) => Promise<AccessEventPage>
+  /** Quantas comparações cada pessoa fez (login real; sem conteúdo nem nomes de arquivo). */
+  listComparisonUsage: (options?: RequestOptions) => Promise<ComparisonUsage[]>
 }

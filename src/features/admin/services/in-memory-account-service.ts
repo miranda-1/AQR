@@ -10,6 +10,8 @@ import {
   type AccountService,
   type AuditAction,
   type AuditEvent,
+  type AccessEvent,
+  type ComparisonUsage,
 } from '../model/types'
 
 export interface InMemoryAccountServiceOptions {
@@ -19,6 +21,10 @@ export interface InMemoryAccountServiceOptions {
   audit?: AuditEvent[]
   /** Quem faz as alterações (vai para a auditoria). */
   actor?: string
+  /** Modo anunciado quando disponível (padrão `dev`; `real` simula o login real). */
+  mode?: 'dev' | 'real'
+  accessEvents?: AccessEvent[]
+  comparisonUsage?: ComparisonUsage[]
   /** Atraso simulado, em ms, para testar estados de carregamento. */
   delayMs?: number
 }
@@ -97,7 +103,7 @@ export function createInMemoryAccountService(options: InMemoryAccountServiceOpti
   }
 
   return {
-    getStatus: () => guarded(() => ({ available, mode: available ? 'dev' : 'disabled' })),
+    getStatus: () => guarded(() => ({ available, mode: available ? (options.mode ?? 'dev') : 'disabled' })),
     listAccounts: (query = {}) =>
       guarded(() => {
         const q = (query.q ?? '').trim().toLowerCase()
@@ -165,5 +171,16 @@ export function createInMemoryAccountService(options: InMemoryAccountServiceOpti
           query.pageSize,
         ),
       ),
+    listAccessEvents: (query = {}) =>
+      guarded(() =>
+        paginate(
+          (options.accessEvents ?? []).filter(
+            (e) => (!query.evento || e.evento === query.evento) && (!query.usuario || e.usuario?.toLowerCase() === query.usuario.toLowerCase()),
+          ),
+          query.page,
+          query.pageSize,
+        ),
+      ),
+    listComparisonUsage: () => guarded(() => options.comparisonUsage ?? []),
   }
 }

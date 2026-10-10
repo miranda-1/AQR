@@ -14,7 +14,7 @@ describe('loadConfig', () => {
       workers: 2,
       queueLimit: 8,
       jobTimeoutMs: 120_000,
-      resultTtlMs: 1_800_000,
+      resultTtlMs: 300_000,
       workerMemoryMb: 768,
       maxFileSizeBytes: 50 * 1024 * 1024,
     })

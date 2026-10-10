@@ -105,7 +105,7 @@ bytes ─ assertPdfBytes ─ extractDocument (pdf.js: palavras + caixas; erros �
 ```
 POST /api/comparisons (multipart: original, updated) ─ tipo, %PDF-, 50 MB, nome higienizado ─ 202 { id, status: queued }
   └─ ComparisonWorkerPool: fila (503 se cheia) → thread nova (memória e tempo limitados) → compareDocuments
-       └─ ComparisonJobStore (memória): queued → processing(stage) → completed | failed; descartado 30 min depois
+       └─ ComparisonJobStore (memória): queued → processing(stage) → completed | failed; descartado ao ser entregue (5 min se não buscado); com login real, só o dono vê
 GET /api/comparisons/:id → ComparisonJob        DELETE /api/comparisons/:id → cancela e descarta (204)
 ```
 

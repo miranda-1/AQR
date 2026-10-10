@@ -38,8 +38,8 @@ function HowItWorks() {
           </li>
         ) : (
           <li>
-            Os arquivos são enviados ao servidor do AQR só para a comparação e não ficam guardados. O resultado fica
-            disponível por 30 minutos.
+            Os arquivos são enviados ao servidor do AQR só para a comparação e não ficam guardados. O resultado vai
+            direto para a sua tela e é descartado do servidor em seguida.
           </li>
         )}
       </ul>

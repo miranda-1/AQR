@@ -1,5 +1,13 @@
 import { DEV_ACTOR_HEADER } from '../../../../shared/contracts/admin'
-import { apiErrorSchema, parseAccount, parseAccountPage, parseAdminStatus, parseAuditPage } from '../model/api-schema'
+import {
+  apiErrorSchema,
+  parseAccessEventPage,
+  parseAccount,
+  parseAccountPage,
+  parseAdminStatus,
+  parseAuditPage,
+  parseComparisonUsage,
+} from '../model/api-schema'
 import { AccountServiceError, type AccountService, type RequestOptions } from '../model/types'
 
 export interface HttpAccountServiceOptions {
@@ -96,6 +104,13 @@ export function createHttpAccountService(options: HttpAccountServiceOptions): Ac
     async listAudit(query = {}, opts) {
       const path = `/api/admin/audit-events${queryString({ ...query })}`
       return expect(parseAuditPage(await request('GET', path, undefined, opts)))
+    },
+    async listAccessEvents(query = {}, opts) {
+      const path = `/api/admin/access-events${queryString({ ...query })}`
+      return expect(parseAccessEventPage(await request('GET', path, undefined, opts)))
+    },
+    async listComparisonUsage(opts) {
+      return expect(parseComparisonUsage(await request('GET', '/api/admin/comparison-events/resumo', undefined, opts)))
     },
   }
 }

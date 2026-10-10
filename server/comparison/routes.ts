@@ -1,8 +1,8 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { ComparisonJob, DocumentRole } from '../../shared/contracts/comparison.ts'
 import { ApiError } from '../http/errors.ts'
 import { sanitizeFileName } from '../http/file-name.ts'
-import type { ComparisonAudit } from './audit.ts'
+import type { ComparisonAudit, ComparisonRequester } from './audit.ts'
 import type { ComparisonJobStore } from './job-store.ts'
 import type { ComparisonWorkerPool } from './worker-pool.ts'
 
@@ -16,9 +16,13 @@ interface ComparisonRoutesOptions {
   store: ComparisonJobStore
   pool: ComparisonWorkerPool
   maxFileSizeBytes: number
-  resultTtlMs: number
   /** Auditoria das comparações (login real); ausente no modo de desenvolvimento. */
   audit?: ComparisonAudit
+  /**
+   * Quem está pedindo (login real). Com ele, cada comparação só é vista e cancelada por quem a
+   * enviou. Ausente no modo de desenvolvimento, sem autenticação.
+   */
+  identify?: (request: FastifyRequest) => Promise<ComparisonRequester | null>
 }
 
 function isRole(value: string): value is DocumentRole {
@@ -29,17 +33,17 @@ function hasPdfSignature(bytes: Uint8Array): boolean {
   return PDF_SIGNATURE.every((byte, index) => bytes[index] === byte)
 }
 
-function notFound(ttlMs: number): ApiError {
-  const minutes = Math.round(ttlMs / 60_000)
+function notFound(): ApiError {
   return new ApiError(
     404,
     'COMPARISON_NOT_FOUND',
-    `Esta comparação não está mais disponível. Os resultados ficam guardados por ${minutes} minutos; envie os arquivos de novo.`,
+    'Esta comparação não está mais disponível: o resultado não fica guardado depois de entregue. Envie os arquivos de novo.',
   )
 }
 
 export function registerComparisonRoutes(app: FastifyInstance, options: ComparisonRoutesOptions): void {
-  const { store, pool, maxFileSizeBytes, resultTtlMs, audit } = options
+  const { store, pool, maxFileSizeBytes, audit, identify } = options
+  const requesterOf = async (request: FastifyRequest): Promise<ComparisonRequester | null> => (identify ? identify(request) : null)
 
   app.post('/api/comparisons', async (request, reply) => {
     if (!request.isMultipart()) {
@@ -77,8 +81,10 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
       throw queueFull()
     }
 
-    const { id, signal } = store.create()
-    await audit?.submitted(request, { id, original: original.fileName, updated: updated.fileName })
+    const requester = await requesterOf(request)
+    if (identify && !requester) throw new ApiError(401, 'UNAUTHENTICATED', 'Sua sessão terminou. Entre de novo para continuar.')
+    const { id, signal } = store.create(requester?.accountId ?? null)
+    if (requester) audit?.submitted(id, requester)
     const started = Date.now()
     pool
       .run(
@@ -112,14 +118,18 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
 
   app.get<{ Params: { id: string } }>('/api/comparisons/:id', async (request, reply) => {
     const { id } = request.params
-    const job = UUID.test(id) ? store.get(id) : undefined
-    if (!job) throw notFound(resultTtlMs)
+    const requester = await requesterOf(request)
+    const job = UUID.test(id) ? store.get(id, requester?.accountId ?? null) : undefined
+    if (!job) throw notFound()
+    // Entregue o resultado (ou o erro), ele é descartado: nada da comparação fica no servidor.
+    if (job.status === 'completed' || job.status === 'failed') store.delivered(id)
     return reply.header('cache-control', 'no-store').send(job)
   })
 
   app.delete<{ Params: { id: string } }>('/api/comparisons/:id', async (request, reply) => {
     const { id } = request.params
-    if (UUID.test(id)) store.remove(id)
+    const requester = await requesterOf(request)
+    if (UUID.test(id)) store.remove(id, requester?.accountId ?? null)
     return reply.status(204).send()
   })
 }

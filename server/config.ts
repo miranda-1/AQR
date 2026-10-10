@@ -13,7 +13,7 @@ const environmentSchema = z.object({
   COMPARISON_WORKERS: z.coerce.number().int().min(1).max(8).default(2),
   COMPARISON_QUEUE_LIMIT: z.coerce.number().int().min(0).max(100).default(8),
   COMPARISON_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(120_000),
-  COMPARISON_RESULT_TTL_MS: z.coerce.number().int().min(10_000).max(86_400_000).default(30 * 60_000),
+  COMPARISON_RESULT_TTL_MS: z.coerce.number().int().min(10_000).max(3_600_000).default(5 * 60_000),
   COMPARISON_WORKER_MEMORY_MB: z.coerce.number().int().min(128).max(4096).default(768),
   DATABASE_PATH: z.string().min(1).default('data/aqr.sqlite'),
   ADMIN_API_MODE: z.enum(['disabled', 'dev']).default('disabled'),

@@ -15,6 +15,8 @@ export type AuthMode = 'loading' | 'visual' | 'keycloak' | 'unavailable'
 interface AuthSessionValue {
   mode: AuthMode
   isAuthenticated: boolean
+  /** A sessão do login real terminou sozinha (inatividade, limite de 8 h ou conta desativada). */
+  sessionExpired: boolean
   /** Nome exibido no botão de conta: o digitado (visual) ou o do cadastro (keycloak). */
   userName: string | null
   signIn: (userName: string) => void
@@ -64,6 +66,51 @@ async function loadServerSession(signal: AbortSignal): Promise<ServerSession> {
   }
 }
 
+/** Atividade da pessoa que mantém a sessão aberta (o servidor só conta pedidos). */
+const ACTIVITY_EVENTS = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart'] as const
+/** Com atividade, avisa o servidor no máximo a cada minuto. */
+const ACTIVITY_PING_MS = 60_000
+/** De quanto em quanto tempo confere se a sessão ainda vale (sem contar como uso). */
+const CLOCK_CHECK_MS = 60_000
+
+/**
+ * No login real, a sessão cai depois de 30 min sem uso (e 8 h depois do login). Aqui a atividade da
+ * pessoa na página (cliques, teclas, rolagem) conta como uso, e o relógio da sessão é conferido a cada
+ * minuto: quando ela termina, `onExpired` leva de volta ao login.
+ */
+function useSessionKeepAlive(active: boolean, onExpired: () => void) {
+  useEffect(() => {
+    if (!active) return
+    let lastPing = Date.now()
+    let stopped = false
+    const ask = (url: string) => {
+      void fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+        .then((response) => {
+          if (!stopped && response.status === 401) onExpired()
+        })
+        .catch(() => undefined) // Sem rede: tenta de novo na próxima conferência.
+    }
+    const onActivity = () => {
+      if (Date.now() - lastPing < ACTIVITY_PING_MS) return
+      lastPing = Date.now()
+      ask('/api/auth/me')
+    }
+    const checkClock = () => ask('/api/auth/sessao')
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') checkClock()
+    }
+    for (const name of ACTIVITY_EVENTS) window.addEventListener(name, onActivity, { passive: true })
+    document.addEventListener('visibilitychange', onVisible)
+    const timer = window.setInterval(checkClock, CLOCK_CHECK_MS)
+    return () => {
+      stopped = true
+      for (const name of ACTIVITY_EVENTS) window.removeEventListener(name, onActivity)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.clearInterval(timer)
+    }
+  }, [active, onExpired])
+}
+
 interface AuthSessionProviderProps {
   children: ReactNode
   /** Estado inicial explícito (testes): modo visual, e com sessão o usuário é "servidor". Por padrão, consulta o servidor. */
@@ -81,6 +128,8 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
     return initialAuthenticated ? DEFAULT_TEST_USER : null
   })
 
+  const [sessionExpired, setSessionExpired] = useState(false)
+
   useEffect(() => {
     if (explicit) return
     const controller = new AbortController()
@@ -91,6 +140,12 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
     })
     return () => controller.abort()
   }, [explicit])
+
+  const expire = useCallback(() => {
+    setSessionExpired(true)
+    setUserName(null)
+  }, [])
+  useSessionKeepAlive(mode === 'keycloak' && userName !== null, expire)
 
   const signIn = useCallback((name: string) => {
     const clean = name.trim()
@@ -109,8 +164,8 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
   }, [mode])
 
   const value = useMemo(
-    () => ({ mode, isAuthenticated: userName !== null, userName, signIn, signOut }),
-    [mode, userName, signIn, signOut],
+    () => ({ mode, isAuthenticated: userName !== null, sessionExpired, userName, signIn, signOut }),
+    [mode, userName, sessionExpired, signIn, signOut],
   )
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>
 }

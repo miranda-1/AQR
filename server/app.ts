@@ -1,9 +1,9 @@
 import multipart from '@fastify/multipart'
-import Fastify, { type FastifyInstance } from 'fastify'
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify'
 import { registerAdminRoutes } from './admin/routes.ts'
 import type { AuthStatus } from '../shared/contracts/auth.ts'
 import type { AuthProvider } from './auth/auth-provider.ts'
-import { createComparisonAudit } from './comparison/audit.ts'
+import { createComparisonAudit, purgeOldComparisonEvents } from './comparison/audit.ts'
 import { IdentityProvisioner } from './admin/identity-sync.ts'
 import { KeycloakIdentityProvider, type IdentityProvider } from './auth/identity-provider.ts'
 import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
@@ -31,8 +31,19 @@ export interface AppDependencies {
   identityProvider?: IdentityProvider
 }
 
-/** Duração da sessão depois do login. */
-const SESSION_TTL_MS = 8 * 3600_000
+/** Sessão: cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login (decisão do responsável). */
+const SESSION_LIMITS = { maxAgeMs: 8 * 3600_000, idleMs: 30 * 60_000 }
+
+/** No login real: cada comparação pertence a quem a enviou e fica registrada (sem conteúdo nem nomes). */
+function comparisonAccess(auth: AuthProvider, db: Database, log: (message: string, error: unknown) => void) {
+  return {
+    audit: createComparisonAudit(db, log),
+    identify: async (request: FastifyRequest) => {
+      const principal = await auth.resolvePrincipal(request)
+      return principal ? { accountId: principal.accountId, usuario: principal.usuario } : null
+    },
+  }
+}
 
 /**
  * Monta o servidor sem abrir porta, para os testes usarem `app.inject()`.
@@ -64,14 +75,20 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())
-    const sessions = new SessionStore(db, SESSION_TTL_MS)
-    const sweep = setInterval(() => {
+    const sessions = new SessionStore(db, SESSION_LIMITS)
+    // Limpeza periódica: sessões vencidas (a cada minuto) e registro de comparações com mais de 1 ano (a cada hora).
+    let minutes = 0
+    const housekeeping = () => {
       try {
         sessions.purgeExpired()
-      } catch {
+        if (minutes++ % 60 === 0) purgeOldComparisonEvents(db)
+      } catch (error) {
         // Banco já fechado durante o desligamento.
+        if (db.isOpen) app.log.error({ err: error }, 'Falha na limpeza periódica do banco')
       }
-    }, 60_000)
+    }
+    housekeeping()
+    const sweep = setInterval(housekeeping, 60_000)
     sweep.unref()
     app.addHook('onClose', async () => clearInterval(sweep))
     const provider = createKeycloakAuthProvider({ sessions, db })
@@ -108,10 +125,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     store,
     pool,
     maxFileSizeBytes: config.comparison.maxFileSizeBytes,
-    resultTtlMs: config.comparison.resultTtlMs,
-    ...(realAuth && realDb
-      ? { audit: createComparisonAudit(realDb, realAuth, (message, error) => app.log.error({ err: error }, message)) }
-      : {}),
+    ...(realAuth && realDb ? comparisonAccess(realAuth, realDb, (message, error) => app.log.error({ err: error }, message)) : {}),
   })
 
   // Administração: o banco só é aberto quando ela está ligada.

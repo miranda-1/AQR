@@ -1,16 +1,23 @@
 import { randomUUID } from 'node:crypto'
 import type { ComparisonJob } from '../../shared/contracts/comparison.ts'
 
+/** Depois de entregue, o resultado ainda vale por este tempo, só para uma nova tentativa de quem o pediu. */
+export const DELIVERY_GRACE_MS = 60_000
+
 interface JobRecord {
   job: ComparisonJob
   controller: AbortController
+  /** Conta de quem enviou (login real); `null` quando não há autenticação (desenvolvimento). */
+  owner: string | null
   /** Momento a partir do qual a tarefa concluída é descartada. */
   expiresAt: number | undefined
 }
 
 /**
- * Tarefas de comparação, só em memória. O resultado fica disponível por `ttlMs` depois de pronto
- * e então é descartado; os PDFs nunca passam por aqui. Reiniciar o servidor apaga tudo.
+ * Tarefas de comparação, só em memória; os PDFs nunca passam por aqui e nada vai para o disco.
+ * Cada tarefa pertence a quem a enviou: outra pessoa recebe "não encontrada", como se não existisse.
+ * O resultado é descartado logo depois de entregue (`delivered`) ou, se ninguém o buscar, `ttlMs`
+ * depois de pronto. Reiniciar o servidor apaga tudo.
  */
 export class ComparisonJobStore {
   private readonly records = new Map<string, JobRecord>()
@@ -22,22 +29,35 @@ export class ComparisonJobStore {
     this.now = now
   }
 
-  create(): { id: string; signal: AbortSignal } {
+  create(owner: string | null = null): { id: string; signal: AbortSignal } {
     this.purgeExpired()
     const id = randomUUID()
     const controller = new AbortController()
-    this.records.set(id, { job: { id, status: 'queued' }, controller, expiresAt: undefined })
+    this.records.set(id, { job: { id, status: 'queued' }, controller, owner, expiresAt: undefined })
     return { id, signal: controller.signal }
   }
 
-  get(id: string): ComparisonJob | undefined {
+  private recordFor(id: string, requester: string | null): JobRecord | undefined {
     const record = this.records.get(id)
     if (!record) return undefined
     if (record.expiresAt !== undefined && record.expiresAt <= this.now()) {
       this.records.delete(id)
       return undefined
     }
-    return record.job
+    if (record.owner !== null && record.owner !== requester) return undefined
+    return record
+  }
+
+  /** A tarefa, se existir e for de `requester` (tarefas sem dono valem para qualquer um). */
+  get(id: string, requester: string | null = null): ComparisonJob | undefined {
+    return this.recordFor(id, requester)?.job
+  }
+
+  /** O resultado chegou a quem pediu: descarta em seguida (sobra só uma margem para repetir o pedido). */
+  delivered(id: string): void {
+    const record = this.records.get(id)
+    if (!record || record.expiresAt === undefined) return
+    record.expiresAt = Math.min(record.expiresAt, this.now() + DELIVERY_GRACE_MS)
   }
 
   /** Atualiza o andamento. Ignora tarefas já concluídas ou removidas. */
@@ -53,9 +73,9 @@ export class ComparisonJobStore {
     record.expiresAt = this.now() + this.ttlMs
   }
 
-  /** Cancela (se ainda estiver em andamento) e descarta a tarefa. */
-  remove(id: string): void {
-    const record = this.records.get(id)
+  /** Cancela (se ainda estiver em andamento) e descarta a tarefa, se ela for de `requester`. */
+  remove(id: string, requester: string | null = null): void {
+    const record = this.recordFor(id, requester)
     if (!record) return
     record.controller.abort()
     this.records.delete(id)

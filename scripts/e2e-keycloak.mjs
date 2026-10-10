@@ -198,6 +198,8 @@ for (let i = 0; i < 60 && state.status !== 'completed' && state.status !== 'fail
 }
 const diffs = state.result?.differences?.length
 check('analista compara os dois PDFs', state.status === 'completed' && diffs > 0, `diferenças=${diffs}`)
+check('a comparação da ana não aparece para o administrador (404)', (await call(admin.api, 'GET', `/api/comparisons/${job.id}`)).status === 404)
+check('entregue, a ana pode descartar o resultado na hora', (await call(analyst.api, 'DELETE', `/api/comparisons/${job.id}`)).status === 204 && (await call(analyst.api, 'GET', `/api/comparisons/${job.id}`)).status === 404)
 
 // ============ 7. Bloqueio, reativação e redefinição pelo administrador ============
 const off = await json(admin.api, 'POST', `/api/admin/accounts/${ana.id}/desativar`, { versao: ana.versao })
@@ -236,7 +238,12 @@ check('administrador lê os registros de acesso', ['login.ok', 'login.vinculo_pe
 check('analista não lê os registros de acesso (403)', (await call(analyst.api, 'GET', '/api/admin/access-events')).status !== 200)
 const cmp = await (await call(admin.api, 'GET', '/api/admin/comparison-events?usuario=ana')).json()
 const sentEvent = cmp.items.find((e) => e.evento === 'comparacao.enviada')
-check('comparação dos PDFs de teste está na auditoria (quem, arquivos, resultado)', sentEvent?.arquivoOriginal === basename(p1) && sentEvent.arquivoAtualizado === basename(p2) && cmp.items.some((e) => e.evento === 'comparacao.concluida' && e.diferencas === diffs), JSON.stringify(sentEvent))
+check('a comparação está no registro só com quem e o resultado (sem nomes de arquivo)', Boolean(sentEvent) && cmp.items.some((e) => e.evento === 'comparacao.concluida' && e.diferencas === diffs) && !JSON.stringify(cmp).includes(basename(p1)) && !JSON.stringify(cmp).includes('arquivo'), JSON.stringify(sentEvent))
+const usage = await (await call(admin.api, 'GET', '/api/admin/comparison-events/resumo')).json()
+check('resumo conta as comparações da ana', usage.items?.find((u) => u.usuario === 'ana')?.total >= 1, JSON.stringify(usage.items))
+const clock = await call(admin.api, 'GET', '/api/auth/sessao')
+const left = Date.parse((await clock.json()).expiraEm) - Date.now()
+check('relógio da sessão: cai em até 30 min sem uso', clock.status === 200 && left > 25 * 60_000 && left <= 30 * 60_000, `${Math.round(left / 1000)} s`)
 
 // ============ 10. Logout: encerra também o login único no Keycloak, sem token guardado ============
 const sso = await login('admin', 'admin-dev-123')

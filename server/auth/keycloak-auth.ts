@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import type { AuthStatus, SessionUser } from '../../shared/contracts/auth.ts'
+import type { AuthStatus, SessionClock, SessionUser } from '../../shared/contracts/auth.ts'
 import { isAccountRole } from '../../shared/validation/account.ts'
 import { optionalTextColumn, textColumn, type Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
@@ -55,6 +55,7 @@ export function createKeycloakAuthProvider(options: Pick<KeycloakAuthOptions, 's
   return {
     kind: 'real',
     async resolvePrincipal(request): Promise<Principal | null> {
+      // Todo pedido autenticado conta como uso e adia a queda por inatividade.
       const session = options.sessions.get(readCookie(request, SESSION_COOKIE))
       if (!session) return null
       // A conta é conferida a cada pedido: desativar ou mudar o papel vale na hora.
@@ -111,6 +112,18 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     return { usuario: principal.usuario, nome: principal.nome, papel: principal.papel }
   })
 
+  // Relógio da sessão para o navegador avisar e voltar ao login na hora certa. Não conta como uso:
+  // só a atividade da pessoa (cliques, teclas, pedidos de verdade) mantém a sessão aberta.
+  const isActive = db.prepare("SELECT 1 AS ok FROM accounts WHERE id = ? AND situacao = 'ativa'")
+  app.get('/api/auth/sessao', async (request, reply): Promise<SessionClock> => {
+    const session = sessions.get(readCookie(request, SESSION_COOKIE), { touch: false })
+    if (!session || !isActive.get(session.accountId)) {
+      throw new ApiError(401, 'UNAUTHENTICATED', 'Sua sessão terminou. Entre de novo para continuar.')
+    }
+    void reply.header('cache-control', 'no-store')
+    return { expiraEm: new Date(session.expiresAt).toISOString() }
+  })
+
   app.get('/api/auth/login', async (request, reply) => {
     const { returnTo } = request.query as { returnTo?: string }
     let started
@@ -153,7 +166,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       record('login.conta_inativa', request, result.identity.usuario, textColumn(row, 'id'))
       return goToLoginError(reply, 'conta_inativa')
     }
-    const id = sessions.create({ accountId: textColumn(row, 'id') })
+    const id = sessions.create(textColumn(row, 'id'))
     record('login.ok', request, result.identity.usuario, textColumn(row, 'id'))
     return reply
       .header('set-cookie', [cookie(SESSION_COOKIE, id, 8 * 3600), cookie(LOGIN_COOKIE, '', 0)])

@@ -44,7 +44,7 @@ Variáveis de ambiente: veja `.env.example`.
 - Seleção de PDFs por clique ou arrastar e soltar, com validação local (extensão, tipo, 50 MB, assinatura `%PDF-`).
 - Comparação real do **texto** dos dois PDFs no servidor: adições, exclusões e modificações, com página, posição e contexto (artigo, parágrafo, cláusula ou título). Alterações só visuais não contam; PDFs digitalizados (sem texto) são recusados com uma mensagem clara, sem OCR.
 - Visualizador com as páginas reais e os destaques, filtros, lista, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
-- Os PDFs não são gravados: ficam na memória durante a comparação, e o resultado é descartado 30 minutos depois.
+- Os PDFs não são gravados: ficam na memória durante a comparação, e o resultado é descartado assim que chega à tela de quem comparou (ou 5 minutos depois de pronto, se ninguém o buscar). No login real, cada comparação só é vista por quem a enviou e o registro guarda só quem comparou, quando e o resultado.
 
 A exportação de relatório ainda está indisponível (sinalizada na interface). Critérios de precisão e limitações: [docs/criterios-comparacao.md](docs/criterios-comparacao.md).
 

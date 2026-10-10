@@ -8,7 +8,7 @@ import { ComparisonWorkspace } from '@/features/comparison/components/Comparison
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
 import { demoComparisonResult, demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
 import { createInMemoryAccountService } from '@/features/admin/services/in-memory-account-service'
-import { sampleAccounts } from '@/features/admin/test-data'
+import { sampleAccessEvents, sampleAccounts, sampleComparisonUsage } from '@/features/admin/test-data'
 import { renderApp } from './render'
 
 /**
@@ -124,5 +124,15 @@ describe('acessibilidade da auditoria (axe)', () => {
     await screen.findByRole('region', { name: 'Histórico da conta' })
     await screen.findByText('1 evento registrado.')
     expect(await violations(detail.container)).toEqual([])
+  })
+})
+
+describe('acessibilidade dos registros (axe)', () => {
+  it('registros de uso e acesso não têm violações', async () => {
+    const service = createInMemoryAccountService({ accounts: sampleAccounts, mode: 'real', accessEvents: sampleAccessEvents, comparisonUsage: sampleComparisonUsage })
+    const { container } = renderApp('/administracao/registros', { accountService: service })
+    await screen.findByText('3 registros encontrados.')
+    await screen.findByText('2 pessoas usaram a comparação.')
+    expect(await violations(container)).toEqual([])
   })
 })

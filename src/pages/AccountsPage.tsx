@@ -1,8 +1,9 @@
-import { History, Plus } from 'lucide-react'
+import { Activity, History, Plus } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { routes } from '@/config/routes'
 import { AccountsList } from '@/features/admin/components/AccountsList'
+import { useAdminSession } from '@/features/admin/session/admin-session'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
 /** Mensagem de sucesso deixada pelas telas de criar e editar (vem no estado da navegação). */
@@ -14,6 +15,7 @@ function noticeFrom(state: unknown): string | undefined {
 export function AccountsPage() {
   useDocumentTitle('Contas')
   const notice = noticeFrom(useLocation().state)
+  const { mode } = useAdminSession()
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:px-6">
@@ -25,6 +27,14 @@ export function AccountsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          {mode === 'real' && (
+            <Button asChild variant="outline" className="min-h-11">
+              <Link to={routes.adminRecords} viewTransition>
+                <Activity aria-hidden />
+                Registros
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="outline" className="min-h-11">
             <Link to={routes.adminAudit} viewTransition>
               <History aria-hidden />
