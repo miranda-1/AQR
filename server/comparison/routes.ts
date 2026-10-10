@@ -3,7 +3,7 @@ import type { ComparisonJob, DocumentRole } from '../../shared/contracts/compari
 import { ApiError } from '../http/errors.ts'
 import { sanitizeFileName } from '../http/file-name.ts'
 import type { ComparisonAudit, ComparisonRequester } from './audit.ts'
-import type { ComparisonJobStore } from './job-store.ts'
+import { CANCELLED_BY_REQUESTER, type ComparisonJobStore } from './job-store.ts'
 import type { ComparisonWorkerPool } from './worker-pool.ts'
 
 const ACCEPTED_TYPES = new Set(['application/pdf', 'application/x-pdf'])
@@ -107,7 +107,8 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
       .catch((error: unknown) => {
         if (signal.aborted) {
           // Cancelada por quem enviou (saiu da tela ou desistiu): fica registrada como tal no resumo.
-          audit?.finished(id, { status: 'failed', reason: 'CANCELLED' })
+          // Interrompida pelo desligamento do servidor: não é escolha de ninguém e o banco já pode estar fechado.
+          if (signal.reason === CANCELLED_BY_REQUESTER) audit?.finished(id, { status: 'failed', reason: 'CANCELLED' })
           return
         }
         // Fila cheia entre a checagem e a execução, ou falha ao iniciar a thread.

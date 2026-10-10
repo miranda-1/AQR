@@ -1,4 +1,4 @@
-import { ComparisonJobStore, DELIVERY_GRACE_MS } from './job-store.ts'
+import { CANCELLED_BY_REQUESTER, ComparisonJobStore, DELIVERY_GRACE_MS, SERVER_SHUTDOWN } from './job-store.ts'
 
 const result = {
   id: 'r',
@@ -81,5 +81,15 @@ describe('ComparisonJobStore', () => {
     expect(store.get(id, 'conta-ana')).toBeDefined()
     now = DELIVERY_GRACE_MS
     expect(store.get(id, 'conta-ana')).toBeUndefined()
+  })
+
+  it('o sinal diz por que a tarefa parou: pedido de quem enviou ou desligamento do servidor', () => {
+    const store = new ComparisonJobStore(1000)
+    const cancelled = store.create('conta-ana')
+    const running = store.create('conta-ana')
+    store.remove(cancelled.id, 'conta-ana')
+    store.clear()
+    expect(cancelled.signal.reason).toBe(CANCELLED_BY_REQUESTER)
+    expect(running.signal.reason).toBe(SERVER_SHUTDOWN)
   })
 })

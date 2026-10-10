@@ -69,6 +69,17 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
 
   app.get('/api/health', async () => ({ status: 'ok' as const }))
 
+  // Atrás de um proxy não informado em TRUST_PROXY, todo pedido parece vir do mesmo IP: os registros
+  // perdem o IP real e o limite de tentativas de login passa a valer para todos juntos. Avisa uma vez.
+  if (config.trustProxy.length === 0) {
+    let warned = false
+    app.addHook('onRequest', async (request) => {
+      if (warned || request.headers['x-forwarded-for'] === undefined) return
+      warned = true
+      request.log.warn('Pedido com X-Forwarded-For, mas TRUST_PROXY está vazio: informe o IP do proxy reverso em TRUST_PROXY.')
+    })
+  }
+
   // Login real: precisa vir antes das demais rotas, porque registra os ganchos que as protegem.
   let realAuth: AuthProvider | null = null
   let realDb: Database | null = null

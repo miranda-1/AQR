@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import type { ComparisonJob } from '../../shared/contracts/comparison.ts'
 
+/** Motivos do cancelamento de uma tarefa (`signal.reason`). */
+export const CANCELLED_BY_REQUESTER = 'cancelada_por_quem_enviou'
+export const SERVER_SHUTDOWN = 'servidor_desligando'
+
 /** Depois de entregue, o resultado ainda vale por este tempo, só para uma nova tentativa de quem o pediu. */
 export const DELIVERY_GRACE_MS = 60_000
 
@@ -77,7 +81,7 @@ export class ComparisonJobStore {
   remove(id: string, requester: string | null = null): void {
     const record = this.recordFor(id, requester)
     if (!record) return
-    record.controller.abort()
+    record.controller.abort(CANCELLED_BY_REQUESTER)
     this.records.delete(id)
   }
 
@@ -90,7 +94,7 @@ export class ComparisonJobStore {
 
   /** Cancela tudo (ao desligar o servidor). */
   clear(): void {
-    for (const record of this.records.values()) record.controller.abort()
+    for (const record of this.records.values()) record.controller.abort(SERVER_SHUTDOWN)
     this.records.clear()
   }
 

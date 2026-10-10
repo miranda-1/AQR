@@ -9,7 +9,7 @@ import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
 import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
-import { safeReturnTo } from './keycloak-auth.ts'
+import { rateLimitKey, safeReturnTo } from './keycloak-auth.ts'
 import { makePdf } from '../test/make-pdf.ts'
 import { purgeOldComparisonEvents } from '../comparison/audit.ts'
 
@@ -139,12 +139,12 @@ describe('login real com Keycloak', () => {
       audience: options.audience ?? CLIENT_ID,
     })
     const state = target.searchParams.get('state') ?? ''
-    expect(cookieOf(start, `aqr_login_${state}`)).toBe('1')
-    expect(String(start.headers['set-cookie'])).toContain('Path=/api/auth/callback')
+    expect(cookieOf(start, 'aqr_login')).toBe(state)
+    expect(String(start.headers['set-cookie'])).toContain('Path=/api/auth;')
     const back = await app.inject({
       method: 'GET',
       url: `/api/auth/callback?code=${code}&state=${state}&iss=${encodeURIComponent(issuer)}`,
-      headers: { cookie: `aqr_login_${state}=1` },
+      headers: { cookie: `aqr_login=${state}` },
     })
     const session = cookieOf(back, 'aqr_sessao')
     const headers: Record<string, string> = session ? { cookie: `aqr_sessao=${session}`, origin: APP } : { origin: APP }
@@ -178,13 +178,22 @@ describe('login real com Keycloak', () => {
     const state = target.searchParams.get('state') ?? ''
     const bad = await app.inject({
       method: 'GET', url: `/api/auth/callback?code=forjado&state=${state}`,
-      headers: { cookie: `aqr_login_${state}=1` },
+      headers: { cookie: `aqr_login=${state}` },
     })
     expect(bad.headers.location).toBe(`${APP}/entrar?erro=falha`)
     expect(cookieOf(bad, 'aqr_sessao')).toBeUndefined()
 
-    const noCookie = await app.inject({ method: 'GET', url: '/api/auth/callback?code=x&state=y' })
+    // State válido e em andamento, mas sem o cookie deste navegador: recusado (e o login do dono segue valendo).
+    const pendingStart = await app.inject({ method: 'GET', url: '/api/auth/login' })
+    const pendingState = new URL(String(pendingStart.headers.location)).searchParams.get('state') ?? ''
+    const noCookie = await app.inject({ method: 'GET', url: `/api/auth/callback?code=x&state=${pendingState}` })
     expect(noCookie.headers.location).toBe(`${APP}/entrar?erro=expirado`)
+    // O dono cancela no Keycloak: "negado" (o state ainda valia, então não foi gasto pelo pedido acima).
+    const denied = await app.inject({
+      method: 'GET', url: `/api/auth/callback?error=access_denied&state=${pendingState}`, headers: { cookie: `aqr_login=${pendingState}` },
+    })
+    expect(denied.headers.location).toBe(`${APP}/entrar?erro=negado`)
+    expect(String(denied.headers['set-cookie'])).toMatch(/aqr_login=;.*Max-Age=0/)
     // O retorno de um login começado em OUTRO navegador (sem o cookie daquele state) não vale.
     const other = await app.inject({ method: 'GET', url: '/api/auth/login' })
     const otherState = new URL(String(other.headers.location)).searchParams.get('state') ?? ''
@@ -194,9 +203,39 @@ describe('login real com Keycloak', () => {
     const wrongAudience = await login('admin', { audience: 'outro-app' })
     expect(wrongAudience.location).toBe(`${APP}/entrar?erro=falha`)
     expect(wrongAudience.session).toBeUndefined()
+  })
 
-    const denied = await app.inject({ method: 'GET', url: `/api/auth/callback?error=access_denied`, headers: { cookie: 'aqr_login_x=1' } })
-    expect(denied.statusCode).toBe(302)
+  it('duas abas no mesmo navegador entram ao mesmo tempo, e logins abandonados não acumulam cookies', async () => {
+    let jar = ''
+    const starts: string[] = []
+    for (let i = 0; i < 7; i++) {
+      const start = await app.inject({ method: 'GET', url: '/api/auth/login', headers: jar ? { cookie: `aqr_login=${jar}` } : {} })
+      jar = cookieOf(start, 'aqr_login') ?? ''
+      starts.push(new URL(String(start.headers.location)).searchParams.get('state') ?? '')
+    }
+    // Só os 5 mais recentes ficam no cookie (um só cookie, de tamanho limitado).
+    expect(jar.split('.')).toEqual(starts.slice(-5).reverse())
+    // Duas abas: as duas concluem, na ordem inversa, com o mesmo navegador (mesmo cookie).
+    const tab = async () => {
+      const begin = await app.inject({ method: 'GET', url: '/api/auth/login', headers: { cookie: `aqr_login=${jar}` } })
+      jar = cookieOf(begin, 'aqr_login') ?? ''
+      return new URL(String(begin.headers.location))
+    }
+    const tabs = [await tab(), await tab()]
+    for (const target of tabs.reverse()) {
+      const state = target.searchParams.get('state') ?? ''
+      const code = `code-aba-${state}`
+      grants.set(code, {
+        sub: 'sub-ana', username: 'ana', audience: CLIENT_ID,
+        nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
+      })
+      const back = await app.inject({
+        method: 'GET', url: `/api/auth/callback?code=${code}&state=${state}&iss=${encodeURIComponent(issuer)}`, headers: { cookie: `aqr_login=${jar}` },
+      })
+      expect(cookieOf(back, 'aqr_sessao')).toBeDefined()
+      jar = cookieOf(back, 'aqr_login') ?? ''
+      expect(jar.split('.')).not.toContain(state)
+    }
   })
 
   it('autenticar não basta: precisa de conta no AQR', async () => {
@@ -219,7 +258,15 @@ describe('login real com Keycloak', () => {
     expect(new URL(safeReturnTo('/%2F%2Fmalicioso.example'), APP).origin).toBe(APP)
   })
 
-  it('logins abandonados e excesso de tentativas não enchem a memória', async () => {
+  it('limite de tentativas agrupa o IPv6 por bloco /64', () => {
+    expect(rateLimitKey('10.0.0.1')).toBe('10.0.0.1')
+    expect(rateLimitKey('::ffff:10.0.0.1')).toBe('10.0.0.1')
+    expect(rateLimitKey('2001:db8:1:2::1')).toBe(rateLimitKey('2001:0db8:0001:0002:ffff:1:2:3'))
+    expect(rateLimitKey('2001:db8:1:2::1')).not.toBe(rateLimitKey('2001:db8:1:3::1'))
+    expect(rateLimitKey('::1')).toBe('0:0:0:0::/64')
+  })
+
+  it('excesso de tentativas de login por origem é recusado', async () => {
     const limited = await buildTestApp({
       db,
       env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '3' },
@@ -228,7 +275,11 @@ describe('login real com Keycloak', () => {
     try {
       for (let i = 0; i < 3; i++) expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toMatch(new RegExp(`^${issuer}`))
       expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
-      expect((await limited.inject({ method: 'GET', url: '/api/auth/callback?code=x&state=y' })).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
+      // Outro bloco IPv6 tem o próprio limite; o mesmo /64 com outro endereço, não.
+      const v6 = (remoteAddress: string) => limited.inject({ method: 'GET', url: '/api/auth/login', remoteAddress })
+      for (let i = 0; i < 3; i++) expect((await v6(`2001:db8:1:2::${i + 1}`)).headers.location).toMatch(new RegExp(`^${issuer}`))
+      expect((await v6('2001:db8:1:2:ffff::9')).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
+      expect((await v6('2001:db8:1:3::1')).headers.location).toMatch(new RegExp(`^${issuer}`))
     } finally {
       await limited.close()
     }
@@ -294,11 +345,13 @@ describe('login real com Keycloak', () => {
     const id = seedAccount(db, 'dora', 'analista')
     db.prepare("UPDATE accounts SET keycloak_sub = 'sub-dora' WHERE id = ?").run(id)
     const { headers } = await login('dora')
-    db.prepare("UPDATE sessions SET last_seen_at = 0 WHERE account_id = ?").run(id)
+    // Último uso há 1 min: a sessão ainda vale pela inatividade, e um pedido normal a renovaria.
+    const lastSeen = Date.now() - 60_000
+    db.prepare('UPDATE sessions SET last_seen_at = ? WHERE account_id = ?').run(lastSeen, id)
     db.prepare("UPDATE accounts SET situacao = 'inativa', desativada_em = ? WHERE id = ?").run(new Date().toISOString(), id)
     expect((await get('/api/auth/me', headers)).statusCode).toBe(401)
-    // O pedido não contou como uso (a sessão já estava parada; segue parada e cai sozinha).
-    expect(db.prepare('SELECT last_seen_at FROM sessions WHERE account_id = ?').all(id).every((row) => row.last_seen_at === 0)).toBe(true)
+    // Conta inativa: o pedido é recusado e NÃO conta como uso (a sessão segue lá, parada, e cai sozinha).
+    expect(db.prepare('SELECT last_seen_at FROM sessions WHERE account_id = ?').all(id)).toEqual([{ last_seen_at: lastSeen }])
   })
 
   it('sessões sobrevivem a reinício, ficam no banco só como hash e os acessos são registrados', async () => {
