@@ -5,6 +5,7 @@ import { isAccountRole } from '../../shared/validation/account.ts'
 import { optionalTextColumn, textColumn, type Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
 import type { AuthProvider } from './auth-provider.ts'
+import type { IdentityProvider } from './identity-provider.ts'
 import type { KeycloakClient, PendingLogin } from './keycloak-client.ts'
 import type { Principal } from './principal.ts'
 import type { SessionStore } from './session-store.ts'
@@ -28,6 +29,8 @@ export interface KeycloakAuthOptions {
   db: Database
   /** Endereço público do site (origem do navegador), ex.: http://localhost:5173. */
   appBaseUrl: string
+  /** Credencial de serviço, usada para encerrar a sessão da pessoa no Keycloak no logout. */
+  identity: IdentityProvider
 }
 
 function readCookie(request: FastifyRequest, name: string): string | undefined {
@@ -65,7 +68,7 @@ export function createKeycloakAuthProvider(options: Pick<KeycloakAuthOptions, 's
 }
 
 export function registerKeycloakAuthRoutes(app: FastifyInstance, options: KeycloakAuthOptions, provider: AuthProvider): void {
-  const { client, sessions, db } = options
+  const { client, sessions, db, identity } = options
   const base = new URL(options.appBaseUrl)
   const secure = base.protocol === 'https:'
   const redirectUri = new URL('/api/auth/callback', base).href
@@ -73,9 +76,10 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
   // A conta é localizada pelo `sub` (imutável) do Keycloak. O nome de usuário só serve para explicar a recusa.
   const findBySub = db.prepare('SELECT id, situacao FROM accounts WHERE keycloak_sub = ?')
   const findByUser = db.prepare('SELECT id, keycloak_sub FROM accounts WHERE usuario = ? COLLATE NOCASE')
-  const insertEvent = db.prepare('INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ip) VALUES (?, ?, ?, ?, ?, ?)')
-  const record = (evento: AccessEvent, request: FastifyRequest, usuario: string | null, contaId: string | null): void => {
-    insertEvent.run(randomUUID(), new Date().toISOString(), evento, usuario, contaId, request.ip)
+  const findSub = db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?')
+  const insertEvent = db.prepare('INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ip, detalhe) VALUES (?, ?, ?, ?, ?, ?, ?)')
+  const record = (evento: AccessEvent, request: FastifyRequest, usuario: string | null, contaId: string | null, detalhe: string | null = null): void => {
+    insertEvent.run(randomUUID(), new Date().toISOString(), evento, usuario, contaId, request.ip, detalhe)
   }
 
   const cookie = (name: string, value: string, maxAgeSeconds: number): string =>
@@ -149,7 +153,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       record('login.conta_inativa', request, result.identity.usuario, textColumn(row, 'id'))
       return goToLoginError(reply, 'conta_inativa')
     }
-    const id = sessions.create({ accountId: textColumn(row, 'id'), idToken: result.idToken })
+    const id = sessions.create({ accountId: textColumn(row, 'id') })
     record('login.ok', request, result.identity.usuario, textColumn(row, 'id'))
     return reply
       .header('set-cookie', [cookie(SESSION_COOKIE, id, 8 * 3600), cookie(LOGIN_COOKIE, '', 0)])
@@ -160,15 +164,20 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     const id = readCookie(request, SESSION_COOKIE)
     const session = sessions.get(id)
     sessions.destroy(id)
-    if (session) record('logout', request, null, session.accountId)
-    let logoutUrl: string | null = null
+    let detalhe: string | null = null
     if (session) {
+      // Encerra também o login único no Keycloak, pelo backend, com a credencial de serviço (sem
+      // guardar nem enviar token): o próximo "Entrar" volta a pedir usuário e senha.
+      const sub = findSub.get(session.accountId)
+      const keycloakId = sub ? optionalTextColumn(sub, 'keycloak_sub') : null
       try {
-        logoutUrl = await client.logoutUrl(session.idToken, new URL('/entrar', base).href)
+        if (keycloakId) await identity.logoutUser(keycloakId)
       } catch (error) {
-        request.log.warn({ err: error }, 'Não foi possível montar o encerramento no Keycloak')
+        detalhe = 'keycloak_nao_encerrado'
+        request.log.warn({ err: error }, 'Não foi possível encerrar a sessão no Keycloak')
       }
+      record('logout', request, null, session.accountId, detalhe)
     }
-    return reply.header('set-cookie', cookie(SESSION_COOKIE, '', 0)).send({ logoutUrl })
+    return reply.header('set-cookie', cookie(SESSION_COOKIE, '', 0)).send({ keycloakEncerrado: detalhe === null })
   })
 }

@@ -73,7 +73,7 @@ export class KeycloakClient {
   }
 
   /** `callbackUrl` é a URL completa em que o Keycloak devolveu a pessoa (com `code` e `state`). */
-  async finishLogin(callbackUrl: URL, pending: PendingLogin): Promise<{ identity: Identity; idToken: string }> {
+  async finishLogin(callbackUrl: URL, pending: PendingLogin): Promise<{ identity: Identity }> {
     const config = await this.config()
     const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
       pkceCodeVerifier: pending.verifier,
@@ -82,7 +82,7 @@ export class KeycloakClient {
       idTokenExpected: true,
     })
     const claims = tokens.claims()
-    if (!claims || !tokens.id_token) throw new Error('O Keycloak não devolveu o token de identidade.')
+    if (!claims) throw new Error('O Keycloak não devolveu o token de identidade.')
     const usuario = typeof claims.preferred_username === 'string' ? claims.preferred_username.trim().toLowerCase() : ''
     return {
       identity: {
@@ -91,14 +91,6 @@ export class KeycloakClient {
         nome: typeof claims.name === 'string' ? claims.name : null,
         email: typeof claims.email === 'string' ? claims.email : null,
       },
-      idToken: tokens.id_token,
     }
-  }
-
-  /** Endereço de encerramento da sessão no Keycloak, ou `null` se ele não oferecer. */
-  async logoutUrl(idToken: string, returnTo: string): Promise<string | null> {
-    const config = await this.config()
-    if (!config.serverMetadata().end_session_endpoint) return null
-    return oidc.buildEndSessionUrl(config, { id_token_hint: idToken, post_logout_redirect_uri: returnTo }).href
   }
 }

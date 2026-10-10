@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import type { ComparisonJob, DocumentRole } from '../../shared/contracts/comparison.ts'
 import { ApiError } from '../http/errors.ts'
 import { sanitizeFileName } from '../http/file-name.ts'
+import type { ComparisonAudit } from './audit.ts'
 import type { ComparisonJobStore } from './job-store.ts'
 import type { ComparisonWorkerPool } from './worker-pool.ts'
 
@@ -16,6 +17,8 @@ interface ComparisonRoutesOptions {
   pool: ComparisonWorkerPool
   maxFileSizeBytes: number
   resultTtlMs: number
+  /** Auditoria das comparações (login real); ausente no modo de desenvolvimento. */
+  audit?: ComparisonAudit
 }
 
 function isRole(value: string): value is DocumentRole {
@@ -36,7 +39,7 @@ function notFound(ttlMs: number): ApiError {
 }
 
 export function registerComparisonRoutes(app: FastifyInstance, options: ComparisonRoutesOptions): void {
-  const { store, pool, maxFileSizeBytes, resultTtlMs } = options
+  const { store, pool, maxFileSizeBytes, resultTtlMs, audit } = options
 
   app.post('/api/comparisons', async (request, reply) => {
     if (!request.isMultipart()) {
@@ -75,6 +78,7 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
     }
 
     const { id, signal } = store.create()
+    await audit?.submitted(request, { id, original: original.fileName, updated: updated.fileName })
     const started = Date.now()
     pool
       .run(
@@ -87,6 +91,8 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
       )
       .then((outcome) => {
         store.finish({ id, ...outcome })
+        if (outcome.status === 'completed') audit?.finished(id, { status: 'completed', differences: outcome.result.summary.total })
+        else audit?.finished(id, { status: 'failed', reason: outcome.error.code })
         request.log.info(
           { comparison: id, status: outcome.status, ms: Date.now() - started, bytes: original.bytes.byteLength + updated.bytes.byteLength },
           'comparação terminada',
@@ -96,6 +102,7 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
         if (signal.aborted) return
         // Fila cheia entre a checagem e a execução, ou falha ao iniciar a thread.
         store.finish({ id, status: 'failed', error: { code: 'PROCESSING_FAILED' } })
+        audit?.finished(id, { status: 'failed', reason: 'PROCESSING_FAILED' })
         request.log.warn({ comparison: id, err: error instanceof Error ? error.name : 'desconhecido' }, 'comparação não iniciada')
       })
 

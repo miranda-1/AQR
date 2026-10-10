@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import { registerAdminRoutes } from './admin/routes.ts'
 import type { AuthStatus } from '../shared/contracts/auth.ts'
 import type { AuthProvider } from './auth/auth-provider.ts'
+import { createComparisonAudit } from './comparison/audit.ts'
 import { IdentityProvisioner } from './admin/identity-sync.ts'
 import { KeycloakIdentityProvider, type IdentityProvider } from './auth/identity-provider.ts'
 import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
@@ -58,6 +59,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   // Login real: precisa vir antes das demais rotas, porque registra os ganchos que as protegem.
   let realAuth: AuthProvider | null = null
   let realDb: Database | null = null
+  let realIdentity: IdentityProvider | null = null
   if (config.keycloak) {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)
@@ -74,7 +76,16 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     app.addHook('onClose', async () => clearInterval(sweep))
     const provider = createKeycloakAuthProvider({ sessions, db })
     const client = deps.keycloakClient ?? new KeycloakClient(config.keycloak)
-    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl }, provider)
+    realIdentity =
+      deps.identityProvider ??
+      new KeycloakIdentityProvider({
+        issuer: config.keycloak.issuer,
+        adminClientId: config.keycloak.adminClientId,
+        adminClientSecret: config.keycloak.adminClientSecret,
+        appClientId: config.keycloak.clientId,
+        appBaseUrl: config.keycloak.appBaseUrl,
+      })
+    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl, identity: realIdentity }, provider)
     realAuth = provider
     realDb = db
   } else {
@@ -98,21 +109,14 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     pool,
     maxFileSizeBytes: config.comparison.maxFileSizeBytes,
     resultTtlMs: config.comparison.resultTtlMs,
+    ...(realAuth && realDb
+      ? { audit: createComparisonAudit(realDb, realAuth, (message, error) => app.log.error({ err: error }, message)) }
+      : {}),
   })
 
   // Administração: o banco só é aberto quando ela está ligada.
-  if (realAuth && realDb) {
-    const keycloak = config.keycloak
-    const provider =
-      deps.identityProvider ??
-      new KeycloakIdentityProvider({
-        issuer: keycloak?.issuer ?? '',
-        adminClientId: keycloak?.adminClientId ?? '',
-        adminClientSecret: keycloak?.adminClientSecret ?? '',
-        appClientId: keycloak?.clientId ?? '',
-        appBaseUrl: keycloak?.appBaseUrl ?? '',
-      })
-    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(provider, realDb) })
+  if (realAuth && realDb && realIdentity) {
+    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(realIdentity, realDb) })
   } else if (config.adminMode === 'dev') {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)

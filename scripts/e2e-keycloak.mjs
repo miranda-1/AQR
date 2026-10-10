@@ -6,6 +6,7 @@
 // exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { DatabaseSync } from 'node:sqlite'
 import { basename } from 'node:path'
 
 const API = 'http://127.0.0.1:3100'
@@ -58,23 +59,22 @@ function browser() {
   return { jars, hop, follow }
 }
 
-async function login(username, password, returnTo = '%2Fadministracao%2Fcontas') {
-  const b = browser()
+async function login(username, password, returnTo = '%2Fadministracao%2Fcontas', b = browser()) {
   const start = await b.hop(`${API}/api/auth/login?returnTo=${returnTo}`)
   const page = await b.follow(start.headers.get('location'))
   const action = formAction(await page.res.text())
-  if (!action) return { api: b.jars.api, final: 'sem-formulario' }
+  if (!action) return { b, api: b.jars.api, final: 'sem-formulario' }
   const sent = await b.hop(action, form({ username, password, credentialId: '' }))
-  if (sent.status === 200) return { api: b.jars.api, final: 'rejeitado-pelo-keycloak' }
+  if (sent.status === 200) return { b, api: b.jars.api, final: 'rejeitado-pelo-keycloak' }
   let url = sent.headers.get('location')
   while (url) {
     const target = url.startsWith(APP) ? url.replace(APP, API) : url
-    if (url.startsWith(APP) && !url.startsWith(`${APP}/api`)) return { api: b.jars.api, final: url }
+    if (url.startsWith(APP) && !url.startsWith(`${APP}/api`)) return { b, api: b.jars.api, final: url }
     const res = await b.hop(target)
     url = res.headers.get('location') ? new URL(res.headers.get('location'), target).href : null
-    if (!url) return { api: b.jars.api, final: `status-${res.status}` }
+    if (!url) return { b, api: b.jars.api, final: `status-${res.status}` }
   }
-  return { api: b.jars.api, final: 'fim' }
+  return { b, api: b.jars.api, final: 'fim' }
 }
 
 const call = (jar, method, path, extra = {}) =>
@@ -212,11 +212,14 @@ const on = await json(admin.api, 'POST', `/api/admin/accounts/${ana.id}/reativar
 const onBody = await on.json()
 check('admin reativa "ana"', on.status === 200 && !onBody.aviso)
 check('usuário reativado no Keycloak', (await kcAdmin('users?username=ana&exact=true'))[0]?.enabled === true)
-check('ana volta a entrar com a mesma senha', (await login('ana', 'Ana-dev-123')).api.cookies.has('aqr_sessao'))
+const anaBack = await login('ana', 'Ana-dev-123')
+check('ana volta a entrar com a mesma senha', anaBack.api.cookies.has('aqr_sessao'))
 
 const t2 = Date.now()
 const reset = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/redefinir-senha`)
 check('admin pede redefinição de senha (204)', reset.status === 204)
+check('redefinição encerra as sessões da ana no AQR (401)', (await call(anaBack.api, 'GET', '/api/auth/me')).status === 401)
+check('o administrador segue conectado', (await call(admin.api, 'GET', '/api/auth/me')).status === 200)
 const resetLink = linkOf(await waitForMail('ana@aqr.local', t2))
 check('e-mail de redefinição chega ao Mailpit', Boolean(resetLink))
 check('ana define a nova senha', resetLink && (await setPasswordFromLink(resetLink, 'Ana-nova-456')))
@@ -226,9 +229,28 @@ check('nova senha funciona', (await login('ana', 'Ana-nova-456')).api.cookies.ha
 // ============ 8. Sincronização e logout ============
 const sync = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/sincronizar`)
 check('sincronizar com o Keycloak (200)', sync.status === 200)
-const out = await call(admin.api, 'POST', '/api/auth/logout')
-check('logout devolve a URL de encerramento do Keycloak', (await out.json()).logoutUrl?.includes('id_token_hint='))
-check('depois do logout a sessão não vale', (await call(admin.api, 'GET', '/api/auth/me')).status === 401)
+// ============ 9. Registros para o administrador (acessos e comparações) ============
+const access = await (await call(admin.api, 'GET', '/api/admin/access-events?pageSize=100')).json()
+const kinds = new Set(access.items.map((e) => e.evento))
+check('administrador lê os registros de acesso', ['login.ok', 'login.vinculo_pendente', 'login.sem_conta', 'identidade.criada', 'identidade.bloqueada', 'identidade.senha_redefinicao_enviada', 'identidade.vinculada'].every((k) => kinds.has(k)), [...kinds].join(', '))
+check('analista não lê os registros de acesso (403)', (await call(analyst.api, 'GET', '/api/admin/access-events')).status !== 200)
+const cmp = await (await call(admin.api, 'GET', '/api/admin/comparison-events?usuario=ana')).json()
+const sentEvent = cmp.items.find((e) => e.evento === 'comparacao.enviada')
+check('comparação dos PDFs de teste está na auditoria (quem, arquivos, resultado)', sentEvent?.arquivoOriginal === basename(p1) && sentEvent.arquivoAtualizado === basename(p2) && cmp.items.some((e) => e.evento === 'comparacao.concluida' && e.diferencas === diffs), JSON.stringify(sentEvent))
+
+// ============ 10. Logout: encerra também o login único no Keycloak, sem token guardado ============
+const sso = await login('admin', 'admin-dev-123')
+const out = await call(sso.api, 'POST', '/api/auth/logout')
+check('logout responde sem URL nem token', JSON.stringify(await out.json()) === '{"keycloakEncerrado":true}')
+check('depois do logout a sessão não vale', (await call(sso.api, 'GET', '/api/auth/me')).status === 401)
+const again = await login('admin', 'admin-dev-123', '%2F', sso.b)
+check('no mesmo navegador, o Keycloak volta a pedir a senha (login único encerrado)', again.final !== 'sem-formulario' && again.api.cookies.has('aqr_sessao'), again.final)
+if (process.env.DATABASE_PATH) {
+  const db = new DatabaseSync(process.env.DATABASE_PATH, { readOnly: true })
+  const cols = db.prepare('PRAGMA table_info(sessions)').all().map((c) => c.name)
+  check('o banco não guarda id_token nem JWT', !cols.includes('id_token') && !JSON.stringify(db.prepare('SELECT * FROM sessions').all()).includes('eyJ'), cols.join(','))
+  db.close()
+}
 
 console.log(results.every(Boolean) ? 'TUDO OK' : 'HÁ FALHAS')
 process.exit(results.every(Boolean) ? 0 : 1)

@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { AdminStatus, CurrentAdmin } from '../../shared/contracts/admin.ts'
 import type { AuthProvider } from '../auth/auth-provider.ts'
+import { registerEventRoutes } from './event-routes.ts'
 import type { IdentityProvisioner } from './identity-sync.ts'
 import { principalOf, requireRole } from '../auth/require-role.ts'
 import type { Database } from '../db/database.ts'
@@ -114,6 +115,9 @@ export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOp
       const account = service.reactivate(idParam(request), statusChangeInput(request.body), actor)
       return identity ? identity.afterStatusChange(account, actor.id ?? '') : account
     })
+
+    // Registros de acesso e de comparações (leitura, só administradores): só com o login real.
+    if (options.mode === 'real') registerEventRoutes(admin, db, onlyAdmins)
 
     if (identity) {
       // Link por e-mail para a pessoa definir ou redefinir a senha (a senha nunca passa pelo AQR).

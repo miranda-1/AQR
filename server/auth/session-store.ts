@@ -3,14 +3,13 @@ import { integerColumn, textColumn, type Database } from '../db/database.ts'
 
 export interface SessionData {
   accountId: string
-  idToken: string
 }
 
 const hashOf = (id: string): string => createHash('sha256').update(id).digest('hex')
 
 /**
  * Sessões no banco do AQR: o cookie leva só um identificador aleatório e o banco guarda apenas
- * o hash dele, então os tokens nunca saem do servidor e as sessões sobrevivem a reinícios.
+ * o hash dele. Nenhum token do Keycloak é guardado; as sessões sobrevivem a reinícios.
  * Com mais de uma instância, todas precisam apontar para o mesmo banco.
  */
 export class SessionStore {
@@ -25,20 +24,20 @@ export class SessionStore {
   create(data: SessionData): string {
     const id = randomBytes(32).toString('base64url')
     this.db
-      .prepare('INSERT INTO sessions (id_hash, account_id, id_token, created_at, expires_at) VALUES (?, ?, ?, ?, ?)')
-      .run(hashOf(id), data.accountId, data.idToken, new Date().toISOString(), Date.now() + this.ttlMs)
+      .prepare('INSERT INTO sessions (id_hash, account_id, created_at, expires_at) VALUES (?, ?, ?, ?)')
+      .run(hashOf(id), data.accountId, new Date().toISOString(), Date.now() + this.ttlMs)
     return id
   }
 
   get(id: string | undefined): SessionData | null {
     if (!id) return null
-    const row = this.db.prepare('SELECT account_id, id_token, expires_at FROM sessions WHERE id_hash = ?').get(hashOf(id))
+    const row = this.db.prepare('SELECT account_id, expires_at FROM sessions WHERE id_hash = ?').get(hashOf(id))
     if (!row) return null
     if (integerColumn(row, 'expires_at') < Date.now()) {
       this.destroy(id)
       return null
     }
-    return { accountId: textColumn(row, 'account_id'), idToken: textColumn(row, 'id_token') }
+    return { accountId: textColumn(row, 'account_id') }
   }
 
   destroy(id: string | undefined): void {

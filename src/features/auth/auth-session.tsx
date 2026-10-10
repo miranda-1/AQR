@@ -102,14 +102,10 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
     writeStoredSession(null)
     setUserName(null)
     if (mode !== 'keycloak') return
-    // O servidor apaga a sessão e devolve o endereço que encerra a sessão também no Keycloak.
+    // O servidor apaga a sessão (e encerra o login no Keycloak, pelo backend); depois disso, volta ao login.
     void fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-      .then(async (response) => {
-        const body: unknown = response.ok ? await response.json() : null
-        const url = typeof body === 'object' && body !== null && 'logoutUrl' in body && typeof body.logoutUrl === 'string' ? body.logoutUrl : null
-        window.location.assign(url ?? '/entrar')
-      })
-      .catch(() => window.location.assign('/entrar'))
+      .catch(() => undefined)
+      .finally(() => window.location.assign('/entrar'))
   }, [mode])
 
   const value = useMemo(

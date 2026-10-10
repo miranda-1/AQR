@@ -172,8 +172,12 @@ export class IdentityProvisioner {
     try {
       const id = this.boundSub(account.id)
       if (!id) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
+      // Redefinir senha costuma ser resposta a um acesso indevido: encerra já as sessões da conta no
+      // AQR (valem em seguida) e, se possível, as do Keycloak, antes mesmo de o e-mail sair.
+      this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
+      await this.provider.logoutUser(id).catch(() => undefined)
       await this.provider.sendPasswordEmail(id)
-      this.record('identidade.senha_redefinicao_enviada', account, actorId)
+      this.record('identidade.senha_redefinicao_enviada', account, actorId, 'sessoes_encerradas')
     } catch (error) {
       if (error instanceof ApiError) throw error
       this.record('identidade.falha', account, actorId, error instanceof Error ? error.message : 'erro')

@@ -8,7 +8,8 @@ import { openDatabase, type Database } from '../db/database.ts'
 import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
-import { buildTestApp } from '../test/build-test-app.ts'
+import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
+import { makePdf } from '../test/make-pdf.ts'
 
 /**
  * Fluxo de login real contra um servidor OIDC falso (HTTP de verdade, tokens RS256 assinados).
@@ -403,14 +404,102 @@ describe('login real com Keycloak', () => {
     })
   })
 
-  it('sair encerra a sessão no servidor e aponta o encerramento no Keycloak', async () => {
+  it('sair encerra a sessão no servidor e no Keycloak, pelo backend, sem token guardado', async () => {
     const { headers } = await login('ana')
+    identity.loggedOut.length = 0
     const out = await app.inject({ method: 'POST', url: '/api/auth/logout', headers })
     expect(out.statusCode).toBe(200)
-    const { logoutUrl } = out.json<{ logoutUrl: string | null }>()
-    expect(logoutUrl).toContain(`${issuer}/logout`)
-    expect(logoutUrl).toContain('id_token_hint=')
+    expect(out.json()).toEqual({ keycloakEncerrado: true })
+    expect(out.body).not.toMatch(/token|logoutUrl/i)
+    // O encerramento no Keycloak usa o sub vinculado, com a credencial de serviço.
+    expect(identity.loggedOut).toEqual(['sub-ana'])
     // O cookie antigo não vale mais, mesmo que alguém o guarde.
     expect((await get('/api/auth/me', headers)).statusCode).toBe(401)
+    expect(db.prepare("SELECT detalhe FROM access_events WHERE evento = 'logout' ORDER BY ocorrido_em DESC LIMIT 1").get()).toEqual({ detalhe: null })
+  })
+
+  it('Keycloak fora do ar no logout: a sessão do AQR cai mesmo assim e o registro avisa', async () => {
+    const { headers } = await login('ana')
+    identity.down = true
+    const out = await app.inject({ method: 'POST', url: '/api/auth/logout', headers })
+    identity.down = false
+    expect(out.json()).toEqual({ keycloakEncerrado: false })
+    expect((await get('/api/auth/me', headers)).statusCode).toBe(401)
+  })
+
+  it('nenhum token fica no banco: a tabela de sessões não tem coluna de token e só guarda o hash', async () => {
+    const columns = db.prepare('PRAGMA table_info(sessions)').all().map((row) => row.name)
+    expect(columns).toEqual(['id_hash', 'account_id', 'created_at', 'expires_at'])
+    const { session } = await login('ana')
+    const dump = JSON.stringify(db.prepare('SELECT * FROM sessions').all())
+    expect(dump).not.toContain(String(session))
+    expect(dump).not.toMatch(/eyJ/)
+  })
+
+  it('enviar redefinição de senha encerra as sessões da conta no AQR e no Keycloak', async () => {
+    const admin = await login('admin')
+    const victim = await login('ana')
+    const other = await login('ana')
+    const anaId = (db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }).id
+    db.prepare("UPDATE accounts SET email = 'ana@x.gov.br' WHERE id = ?").run(anaId)
+    identity.loggedOut.length = 0
+    const reset = await app.inject({ method: 'POST', url: `/api/admin/accounts/${anaId}/redefinir-senha`, headers: admin.headers })
+    expect(reset.statusCode).toBe(204)
+    expect((await get('/api/auth/me', victim.headers)).statusCode).toBe(401)
+    expect((await get('/api/auth/me', other.headers)).statusCode).toBe(401)
+    expect(identity.loggedOut).toContain('sub-ana')
+    // O administrador não é afetado.
+    expect((await get('/api/auth/me', admin.headers)).statusCode).toBe(200)
+    expect(db.prepare("SELECT detalhe FROM access_events WHERE evento = 'identidade.senha_redefinicao_enviada' ORDER BY ocorrido_em DESC LIMIT 1").get()).toEqual({ detalhe: 'sessoes_encerradas' })
+  })
+
+  describe('auditoria das comparações e registros para o administrador', () => {
+    async function compare(headers: Record<string, string>) {
+      const first = await makePdf([['Art. 1º O prazo é de dez dias.']])
+      const second = await makePdf([['Art. 1º O prazo é de quinze dias.']])
+      const body = await multipartBody([
+        { field: 'original', name: 'Requerimento v1.pdf', bytes: first.bytes },
+        { field: 'updated', name: 'Requerimento v2.pdf', bytes: second.bytes },
+      ])
+      const sent = await app.inject({ method: 'POST', url: '/api/comparisons', headers: { ...headers, ...body.headers }, payload: body.payload })
+      expect(sent.statusCode).toBe(202)
+      const { id } = sent.json<{ id: string }>()
+      for (let i = 0; i < 100; i++) {
+        const job = (await get(`/api/comparisons/${id}`, headers)).json<{ status: string }>()
+        if (job.status === 'completed' || job.status === 'failed') return id
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+      throw new Error('a comparação não terminou')
+    }
+
+    it('registra quem comparou, os nomes dos arquivos e o resultado', { timeout: 20_000 }, async () => {
+      const analyst = await login('ana')
+      const id = await compare(analyst.headers)
+      const rows = db.prepare('SELECT evento, usuario, arquivo_original, arquivo_atualizado, diferencas FROM comparison_events WHERE comparacao_id = ? ORDER BY ocorrido_em, evento').all(id)
+      expect(rows.map((row) => row.evento).sort()).toEqual(['comparacao.concluida', 'comparacao.enviada'])
+      const sent = rows.find((row) => row.evento === 'comparacao.enviada')
+      expect(sent).toMatchObject({ usuario: 'ana', arquivo_original: 'Requerimento v1.pdf', arquivo_atualizado: 'Requerimento v2.pdf' })
+      expect(Number(rows.find((row) => row.evento === 'comparacao.concluida')?.diferencas)).toBeGreaterThan(0)
+      expect(() => db.exec('DELETE FROM comparison_events')).toThrow(/não pode ser apagada/)
+    })
+
+    it('só o administrador lê os registros de acesso e de comparações, com filtro e paginação', async () => {
+      const admin = await login('admin')
+      const analyst = await login('ana')
+      for (const path of ['/api/admin/access-events', '/api/admin/comparison-events']) {
+        expect((await get(path, analyst.headers)).statusCode).toBe(403)
+        expect((await get(path, {})).statusCode).toBe(401)
+      }
+      const access = await get('/api/admin/access-events?pageSize=2&evento=login.ok', admin.headers)
+      expect(access.statusCode).toBe(200)
+      const page = access.json<{ items: { evento: string }[]; total: number; pageSize: number }>()
+      expect(page.items.length).toBeLessThanOrEqual(2)
+      expect(page.items.every((item) => item.evento === 'login.ok')).toBe(true)
+      expect(page.total).toBeGreaterThan(2)
+      expect(access.body).not.toMatch(/token|eyJ/)
+      const comparisons = (await get('/api/admin/comparison-events?usuario=ana', admin.headers)).json<{ items: { evento: string; arquivoOriginal: string | null }[] }>()
+      expect(comparisons.items.some((item) => item.arquivoOriginal === 'Requerimento v1.pdf')).toBe(true)
+      expect((await get('/api/admin/access-events?evento=' + 'x'.repeat(101), admin.headers)).statusCode).toBe(400)
+    })
   })
 })
