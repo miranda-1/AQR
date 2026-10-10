@@ -37,6 +37,12 @@ export class FakeIdentityProvider implements IdentityProvider {
     return this.byName(usuario)?.id ?? null
   }
 
+  async findUser(usuario: string): Promise<{ id: string; email: string | null } | null> {
+    this.guard()
+    const user = this.byName(usuario)
+    return user ? { id: user.id, email: user.email } : null
+  }
+
   async deleteUser(id: string): Promise<void> {
     this.users.delete(id)
   }

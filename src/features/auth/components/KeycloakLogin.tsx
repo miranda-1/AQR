@@ -8,6 +8,8 @@ const errorMessages: Record<string, string> = {
   conta_inativa: 'Sua conta do AQR está desativada. Fale com um administrador do AQR para reativá-la.',
   negado: 'O login foi cancelado. Escolha "Entrar" para tentar de novo.',
   expirado: 'O login demorou demais e foi interrompido. Escolha "Entrar" para começar de novo.',
+  vinculo_pendente: 'Sua conta do AQR ainda não foi vinculada ao seu acesso. Peça a um administrador do AQR para concluir o vínculo.',
+  vinculo_divergente: 'Este acesso não corresponde à conta do AQR com o mesmo usuário. Por segurança, o login foi recusado; fale com um administrador do AQR.',
   falha: 'Não foi possível confirmar seu login. Tente de novo; se continuar, fale com o suporte da SEMADES.',
   indisponivel: 'O sistema de login está indisponível agora. Tente de novo em alguns minutos.',
 }

@@ -1,0 +1,36 @@
+{
+  "realm": "aqr",
+  "enabled": true,
+  "sslRequired": "all",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "bruteForceProtected": true,
+  "resetPasswordAllowed": true,
+  "clients": [
+    {
+      "clientId": "aqr-web",
+      "name": "AQR",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["https://TROCAR-PELO-DOMINIO-DO-AQR/api/auth/callback", "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar"],
+      "webOrigins": ["https://TROCAR-PELO-DOMINIO-DO-AQR"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar"
+      }
+    },
+    {
+      "clientId": "aqr-admin",
+      "name": "AQR (servidor)",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ]
+}

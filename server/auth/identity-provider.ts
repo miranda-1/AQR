@@ -27,6 +27,8 @@ export interface IdentityProvider {
   /** Cria o usuário (ativo, sem senha). Devolve o id no provedor. `IdentityError` com status 409 se já existir. */
   createUser(profile: IdentityProfile): Promise<string>
   findUserId(usuario: string): Promise<string | null>
+  /** O usuário pelo nome, com o e-mail cadastrado (para conferir a identidade antes de vincular). */
+  findUser(usuario: string): Promise<{ id: string; email: string | null } | null>
   deleteUser(id: string): Promise<void>
   setEnabled(id: string, enabled: boolean): Promise<void>
   updateProfile(id: string, profile: IdentityProfile): Promise<void>
@@ -128,6 +130,14 @@ export class KeycloakIdentityProvider implements IdentityProvider {
     const list: unknown = await response.json()
     const first: unknown = Array.isArray(list) ? list[0] : undefined
     return typeof first === 'object' && first !== null && 'id' in first && typeof first.id === 'string' ? first.id : null
+  }
+
+  async findUser(usuario: string): Promise<{ id: string; email: string | null } | null> {
+    const response = await this.call('GET', `/users?username=${encodeURIComponent(usuario)}&exact=true`)
+    const list: unknown = await response.json()
+    const first: unknown = Array.isArray(list) ? list[0] : undefined
+    if (typeof first !== 'object' || first === null || !('id' in first) || typeof first.id !== 'string') return null
+    return { id: first.id, email: 'email' in first && typeof first.email === 'string' ? first.email : null }
   }
 
   async deleteUser(id: string): Promise<void> {

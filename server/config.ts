@@ -28,6 +28,9 @@ const environmentSchema = z.object({
   KEYCLOAK_ADMIN_CLIENT_SECRET: z.string().min(1).optional(),
 })
 
+/** Segredos que existem nos arquivos de desenvolvimento do repositório; nunca valem em produção. */
+const DEV_ONLY_SECRETS = new Set(['aqr-admin-dev-secret'])
+
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
 
 export interface ComparisonSettings {
@@ -81,6 +84,12 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     throw new ConfigError(`Configuração do servidor inválida (${problems}). Corrija as variáveis de ambiente e inicie de novo.`)
   }
   const data = parsed.data
+  // Falha fechado: o login visual aceita qualquer usuário e senha, então nunca pode rodar em produção.
+  if (data.NODE_ENV === 'production' && data.AUTH_MODE !== 'keycloak') {
+    throw new ConfigError(
+      'AUTH_MODE=visual não é permitido em produção: o login fictício aceita qualquer usuário e senha. Defina AUTH_MODE=keycloak (e as variáveis KEYCLOAK_*) ou não inicie em produção.',
+    )
+  }
   if (data.ADMIN_API_MODE === 'dev' && data.NODE_ENV === 'production') {
     throw new ConfigError(
       'ADMIN_API_MODE=dev não é permitido em produção: esse modo não tem autenticação real. Use ADMIN_API_MODE=disabled até a autenticação real existir.',
@@ -106,6 +115,17 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       const url = new URL(value)
       if (url.protocol !== 'https:' && !LOOPBACK_HOSTS.has(url.hostname)) {
         throw new ConfigError(`${name} precisa usar HTTPS (HTTP só é aceito em localhost).`)
+      }
+    }
+    if (data.NODE_ENV === 'production') {
+      // Nada de configuração local de desenvolvimento em produção.
+      for (const [name, value] of [['KEYCLOAK_ISSUER', data.KEYCLOAK_ISSUER], ['APP_BASE_URL', data.APP_BASE_URL]] as const) {
+        if (LOOPBACK_HOSTS.has(new URL(value).hostname)) {
+          throw new ConfigError(`${name} aponta para localhost, que é só de desenvolvimento. Use o endereço HTTPS de produção.`)
+        }
+      }
+      if (DEV_ONLY_SECRETS.has(data.KEYCLOAK_ADMIN_CLIENT_SECRET) || data.KEYCLOAK_ADMIN_CLIENT_SECRET.length < 24) {
+        throw new ConfigError('KEYCLOAK_ADMIN_CLIENT_SECRET é um segredo de desenvolvimento ou curto demais (mínimo de 24 caracteres). Gere um segredo novo no Keycloak de produção.')
       }
     }
     keycloak = {

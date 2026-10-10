@@ -29,6 +29,7 @@ function signToken(claims: object): string {
 }
 
 interface Grant {
+  sub: string
   username: string
   nonce: string
   challenge: string
@@ -71,7 +72,7 @@ beforeAll(async () => {
           token_type: 'Bearer',
           access_token: 'nao-usado',
           id_token: signToken({
-            iss: issuer, aud: grant.audience, sub: `sub-${grant.username}`, exp: now + 300, iat: now,
+            iss: issuer, aud: grant.audience, sub: grant.sub, exp: now + 300, iat: now,
             nonce: grant.nonce, preferred_username: grant.username, name: grant.username.toUpperCase(),
           }),
         })
@@ -94,6 +95,10 @@ describe('login real com Keycloak', () => {
     migrate(db)
     seedAccount(db, 'admin', 'administrador')
     seedAccount(db, 'ana', 'analista')
+    // Contas já vinculadas ao Keycloak pelo sub; "antiga" continua sem vínculo.
+    db.prepare("UPDATE accounts SET keycloak_sub = 'sub-' || usuario WHERE usuario IN ('admin', 'ana')").run()
+    seedAccount(db, 'antiga', 'analista')
+    db.prepare("UPDATE accounts SET email = 'antiga@x.gov.br' WHERE usuario = 'antiga'").run()
     app = await buildTestApp({
       db,
       env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo' },
@@ -114,7 +119,11 @@ describe('login real com Keycloak', () => {
   }
 
   /** Percorre o login como o navegador faria. Devolve o cookie de sessão (se houve) e o destino final. */
-  async function login(username: string, options: { returnTo?: string; audience?: string } = {}) {
+  /**
+   * `sub`: id do usuário no Keycloak (padrão: o do usuário criado pela API, ou `sub-<usuario>`).
+   * `claimUsername`: o preferred_username que vai no token (padrão: o próprio usuário).
+   */
+  async function login(username: string, options: { returnTo?: string; audience?: string; sub?: string; claimUsername?: string } = {}) {
     const start = await app.inject({ method: 'GET', url: `/api/auth/login${options.returnTo ? `?returnTo=${encodeURIComponent(options.returnTo)}` : ''}` })
     expect(start.statusCode).toBe(302)
     const target = new URL(String(start.headers.location))
@@ -122,7 +131,8 @@ describe('login real com Keycloak', () => {
     expect(target.searchParams.get('code_challenge_method')).toBe('S256')
     const code = `code-${grants.size}`
     grants.set(code, {
-      username, nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
+      sub: options.sub ?? identity.byName(username)?.id ?? `sub-${username}`,
+      username: options.claimUsername ?? username, nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
       audience: options.audience ?? CLIENT_ID,
     })
     const loginCookie = cookieOf(start, 'aqr_login')
@@ -248,6 +258,54 @@ describe('login real com Keycloak', () => {
     expect(() => db.exec('DELETE FROM access_events')).toThrow(/não podem ser apagados/)
   })
 
+  describe('vínculo pelo sub do Keycloak', () => {
+    it('o nome de usuário sozinho não basta: conta sem vínculo não entra', async () => {
+      const result = await login('antiga', { sub: 'sub-outra-pessoa' })
+      expect(result.location).toBe(`${APP}/entrar?erro=vinculo_pendente`)
+      expect(result.session).toBeUndefined()
+    })
+
+    it('mesmo nome com outro sub (nome reaproveitado ou trocado no Keycloak) é recusado', async () => {
+      const result = await login('admin', { sub: 'sub-invasor' })
+      expect(result.location).toBe(`${APP}/entrar?erro=vinculo_divergente`)
+      expect(result.session).toBeUndefined()
+      const events = db.prepare('SELECT evento FROM access_events').all().map((row) => row.evento)
+      expect(events).toEqual(expect.arrayContaining(['login.vinculo_pendente', 'login.vinculo_divergente']))
+    })
+
+    it('o sub manda: trocar o nome no Keycloak não tira o acesso nem dá acesso a outra conta', async () => {
+      const renamed = await login('admin', { sub: 'sub-admin', claimUsername: 'nome-novo' })
+      expect(renamed.session).toBeDefined()
+      expect((await get('/api/auth/me', renamed.headers)).json<SessionUser>().usuario).toBe('admin')
+      // Um sub vinculado à "ana" com o nome "admin" continua sendo a ana, nunca o administrador.
+      const impostor = await login('admin', { sub: 'sub-ana' })
+      expect((await get('/api/auth/me', impostor.headers)).json<SessionUser>()).toMatchObject({ usuario: 'ana', papel: 'analista' })
+    })
+
+    it('o vínculo é definitivo: o banco recusa trocar o sub ou repeti-lo em outra conta', () => {
+      expect(() => db.prepare("UPDATE accounts SET keycloak_sub = 'outro' WHERE usuario = 'admin'").run()).toThrow(/vínculo/)
+      expect(() => db.prepare("UPDATE accounts SET keycloak_sub = 'sub-admin' WHERE usuario = 'antiga'").run()).toThrow()
+    })
+
+    it('vincular conta antiga confere o e-mail e nunca sobrescreve', async () => {
+      const admin = await login('admin')
+      const id = seedAccount(db, 'legado', 'analista')
+      db.prepare("UPDATE accounts SET email = 'legado@x.gov.br' WHERE id = ?").run(id)
+      await identity.createUser({ usuario: 'legado', nome: 'Legado', email: 'outro-email@x.gov.br' })
+      const url = `/api/admin/accounts/${id}/sincronizar`
+      const mismatch = await app.inject({ method: 'POST', url, headers: admin.headers })
+      expect(mismatch.statusCode).toBe(409)
+      expect(mismatch.body).toMatch(/e-mail/)
+      expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(id)).toEqual({ keycloak_sub: null })
+
+      const kc = identity.byName('legado')
+      if (kc) kc.email = 'LEGADO@x.gov.br'
+      expect((await app.inject({ method: 'POST', url, headers: admin.headers })).statusCode).toBe(200)
+      expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(id)).toEqual({ keycloak_sub: kc?.id })
+      expect((await login('legado')).session).toBeDefined()
+    })
+  })
+
   describe('provisionamento da identidade no Keycloak', () => {
     const post = (headers: Record<string, string>, url: string, payload?: object) =>
       app.inject({ method: 'POST', url, headers, ...(payload ? { payload } : {}) })
@@ -325,12 +383,12 @@ describe('login real com Keycloak', () => {
       expect((await post(admin.headers, `/api/admin/accounts/${created.id}/sincronizar`)).statusCode).toBe(200)
       expect(identity.users.get(kcId)?.enabled).toBe(false)
 
-      // Conta antiga, que só existe no AQR (ana), ganha o usuário e o convite ao sincronizar.
-      const ana = db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }
-      db.prepare("UPDATE accounts SET email = 'ana@x.gov.br' WHERE usuario = 'ana'").run()
-      expect(identity.byName('ana')).toBeUndefined()
-      expect((await post(admin.headers, `/api/admin/accounts/${ana.id}/sincronizar`)).statusCode).toBe(200)
-      expect(identity.byName('ana')).toMatchObject({ enabled: true })
+      // Conta antiga, que só existe no AQR, ganha o usuário, o vínculo pelo sub e o convite ao sincronizar.
+      const old = db.prepare("SELECT id FROM accounts WHERE usuario = 'antiga'").get() as { id: string }
+      expect(identity.byName('antiga')).toBeUndefined()
+      expect((await post(admin.headers, `/api/admin/accounts/${old.id}/sincronizar`)).statusCode).toBe(200)
+      expect(identity.byName('antiga')).toMatchObject({ enabled: true })
+      expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(old.id)).toEqual({ keycloak_sub: identity.byName('antiga')?.id })
     })
 
     it('só administrador provisiona e tudo fica registrado', async () => {

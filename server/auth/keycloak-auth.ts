@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import type { AuthStatus, SessionUser } from '../../shared/contracts/auth.ts'
 import { isAccountRole } from '../../shared/validation/account.ts'
-import { textColumn, type Database } from '../db/database.ts'
+import { optionalTextColumn, textColumn, type Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
 import type { AuthProvider } from './auth-provider.ts'
 import type { KeycloakClient, PendingLogin } from './keycloak-client.ts'
@@ -12,7 +12,14 @@ import type { SessionStore } from './session-store.ts'
 export const SESSION_COOKIE = 'aqr_sessao'
 export const LOGIN_COOKIE = 'aqr_login'
 const PENDING_TTL_MS = 10 * 60_000
-type AccessEvent = 'login.ok' | 'login.sem_conta' | 'login.conta_inativa' | 'login.falha' | 'logout'
+type AccessEvent =
+  | 'login.ok'
+  | 'login.sem_conta'
+  | 'login.conta_inativa'
+  | 'login.falha'
+  | 'login.vinculo_pendente'
+  | 'login.vinculo_divergente'
+  | 'logout'
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 export interface KeycloakAuthOptions {
@@ -63,7 +70,9 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
   const secure = base.protocol === 'https:'
   const redirectUri = new URL('/api/auth/callback', base).href
   const pending = new Map<string, PendingLogin & { returnTo: string; expiresAt: number }>()
-  const findByUser = db.prepare('SELECT id, situacao FROM accounts WHERE usuario = ? COLLATE NOCASE')
+  // A conta é localizada pelo `sub` (imutável) do Keycloak. O nome de usuário só serve para explicar a recusa.
+  const findBySub = db.prepare('SELECT id, situacao FROM accounts WHERE keycloak_sub = ?')
+  const findByUser = db.prepare('SELECT id, keycloak_sub FROM accounts WHERE usuario = ? COLLATE NOCASE')
   const insertEvent = db.prepare('INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ip) VALUES (?, ?, ?, ?, ?, ?)')
   const record = (evento: AccessEvent, request: FastifyRequest, usuario: string | null, contaId: string | null): void => {
     insertEvent.run(randomUUID(), new Date().toISOString(), evento, usuario, contaId, request.ip)
@@ -126,12 +135,19 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       record('login.falha', request, null, null)
       return goToLoginError(reply, 'falha')
     }
-    const row = findByUser.get(result.identity.usuario)
-    // Autenticar no Keycloak não basta: é preciso ter conta ativa no AQR.
-    if (!row || textColumn(row, 'situacao') !== 'ativa') {
-      // Mantém a sessão do Keycloak encerrada para a pessoa poder tentar com outro usuário.
-      record(row ? 'login.conta_inativa' : 'login.sem_conta', request, result.identity.usuario, row ? textColumn(row, 'id') : null)
-      return goToLoginError(reply, row ? 'conta_inativa' : 'sem_conta')
+    const row = findBySub.get(result.identity.sub)
+    if (!row) {
+      // Sem vínculo pelo sub, ninguém entra, nem que o nome de usuário coincida: o nome pode ser
+      // trocado ou reaproveitado no Keycloak. Contas antigas esperam o vínculo feito por um administrador.
+      const byName = findByUser.get(result.identity.usuario)
+      const bound = byName ? optionalTextColumn(byName, 'keycloak_sub') : null
+      const event = !byName ? 'login.sem_conta' : bound ? 'login.vinculo_divergente' : 'login.vinculo_pendente'
+      record(event, request, result.identity.usuario, byName ? textColumn(byName, 'id') : null)
+      return goToLoginError(reply, !byName ? 'sem_conta' : bound ? 'vinculo_divergente' : 'vinculo_pendente')
+    }
+    if (textColumn(row, 'situacao') !== 'ativa') {
+      record('login.conta_inativa', request, result.identity.usuario, textColumn(row, 'id'))
+      return goToLoginError(reply, 'conta_inativa')
     }
     const id = sessions.create({ accountId: textColumn(row, 'id'), idToken: result.idToken })
     record('login.ok', request, result.identity.usuario, textColumn(row, 'id'))

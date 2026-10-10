@@ -149,7 +149,11 @@ export function LoginPage() {
                 </p>
               </div>
               <div>
-                {mode === 'keycloak' ? (
+                {mode === 'unavailable' ? (
+                  <p role="alert" className="mt-6 rounded-lg bg-destructive/10 px-3.5 py-3 text-sm font-medium text-destructive">
+                    Não foi possível verificar o sistema de login. Recarregue a página em instantes; se continuar, fale com o suporte da {appConfig.organization.short}.
+                  </p>
+                ) : mode === 'keycloak' ? (
                   <KeycloakLogin returnTo={destination} />
                 ) : (
                   <LoginForm onSubmit={playEntry} onType={() => setPulse((value) => value + 1)} disabled={entering} />

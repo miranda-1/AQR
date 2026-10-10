@@ -9,7 +9,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
  */
 const STORAGE_KEY = 'aqr.sessao'
 
-export type AuthMode = 'loading' | 'visual' | 'keycloak'
+/** `unavailable`: não foi possível confirmar o login real (só em produção; nunca cai no login visual). */
+export type AuthMode = 'loading' | 'visual' | 'keycloak' | 'unavailable'
 
 interface AuthSessionValue {
   mode: AuthMode
@@ -40,7 +41,7 @@ function writeStoredSession(userName: string | null) {
 }
 
 interface ServerSession {
-  mode: 'visual' | 'keycloak'
+  mode: 'visual' | 'keycloak' | 'unavailable'
   userName: string | null
 }
 
@@ -50,15 +51,16 @@ async function loadServerSession(signal: AbortSignal): Promise<ServerSession> {
     const status = await fetch('/api/auth/status', { signal, credentials: 'same-origin' })
     const body: unknown = status.ok ? await status.json() : null
     const mode = typeof body === 'object' && body !== null && 'mode' in body && body.mode === 'keycloak' ? 'keycloak' : 'visual'
-    if (mode === 'visual') return { mode, userName: null }
+    // Em produção o login visual nunca vale, nem que o servidor o anuncie.
+    if (mode === 'visual') return { mode: import.meta.env.PROD ? 'unavailable' : 'visual', userName: null }
     const me = await fetch('/api/auth/me', { signal, credentials: 'same-origin' })
     if (!me.ok) return { mode, userName: null }
     const user: unknown = await me.json()
     const name = typeof user === 'object' && user !== null && 'nome' in user && typeof user.nome === 'string' ? user.nome : null
     return { mode, userName: name }
   } catch {
-    // Servidor fora do ar (ou site aberto sem API): segue no modo visual, como antes.
-    return { mode: 'visual', userName: null }
+    // Servidor fora do ar: em desenvolvimento segue no modo visual; em produção falha fechado.
+    return { mode: import.meta.env.PROD ? 'unavailable' : 'visual', userName: null }
   }
 }
 

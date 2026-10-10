@@ -22,6 +22,8 @@ describe('KeycloakLogin', () => {
   it.each([
     ['sem_conta', /ainda não tem conta no AQR/],
     ['conta_inativa', /desativada/],
+    ['vinculo_pendente', /ainda não foi vinculada/],
+    ['vinculo_divergente', /não corresponde/],
     ['falha', /Não foi possível confirmar/],
     ['qualquer-outro', /Não foi possível confirmar/],
   ])('explica o erro %s e o que fazer', (code, text) => {

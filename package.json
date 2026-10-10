@@ -16,6 +16,7 @@
     "start:server": "node dist-server/server/main.js",
     "db:migrar": "tsx server/db/cli-migrar.ts",
     "admin:criar": "tsx server/scripts/criar-admin.ts",
+    "admin:vincular": "tsx server/scripts/vincular-identidade.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",

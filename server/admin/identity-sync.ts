@@ -11,12 +11,13 @@ type IdentityEvent =
   | 'identidade.bloqueada'
   | 'identidade.reativada'
   | 'identidade.sincronizada'
+  | 'identidade.vinculada'
   | 'identidade.falha'
 
 /** Conta devolvida pela API, com um aviso quando a parte do Keycloak não pôde ser concluída. */
 export type AccountWithNotice = Account & { aviso?: string }
 
-const NOT_IN_KEYCLOAK = 'Esta conta ainda não existe no Keycloak. Use "Sincronizar com o Keycloak" para criá-la e enviar o convite.'
+const NOT_IN_KEYCLOAK = 'Esta conta ainda não está vinculada a um usuário do Keycloak. Use "Sincronizar com o Keycloak" para criar ou vincular o acesso.'
 
 /**
  * Mantém a identidade da pessoa no Keycloak alinhada com a conta do AQR. A conta do AQR é a
@@ -26,9 +27,11 @@ const NOT_IN_KEYCLOAK = 'Esta conta ainda não existe no Keycloak. Use "Sincroni
 export class IdentityProvisioner {
   private readonly provider: IdentityProvider
   private readonly insertEvent: ReturnType<Database['prepare']>
+  private readonly db: Database
 
   constructor(provider: IdentityProvider, db: Database) {
     this.provider = provider
+    this.db = db
     this.insertEvent = db.prepare(
       'INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ator_id, detalhe) VALUES (?, ?, ?, ?, ?, ?, ?)',
     )
@@ -36,6 +39,53 @@ export class IdentityProvisioner {
 
   private record(evento: IdentityEvent, account: Pick<Account, 'id' | 'usuario'>, actorId: string | null, detalhe: string | null = null): void {
     this.insertEvent.run(randomUUID(), new Date().toISOString(), evento, account.usuario, account.id, actorId, detalhe)
+  }
+
+  /**
+   * Vincula a conta ao `sub` do Keycloak (uma única vez, para sempre). Se a conta já estiver
+   * vinculada a outro `sub`, ou o `sub` a outra conta, recusa: nunca sobrescreve um vínculo.
+   */
+  bind(account: Pick<Account, 'id' | 'usuario'>, sub: string, actorId: string | null): void {
+    let changes: number | bigint
+    try {
+      changes = this.db.prepare('UPDATE accounts SET keycloak_sub = ? WHERE id = ? AND keycloak_sub IS NULL').run(sub, account.id).changes
+    } catch {
+      throw new ApiError(409, 'VINCULO_DIVERGENTE', 'Esta identidade do Keycloak já está vinculada a outra conta do AQR.')
+    }
+    if (Number(changes) === 0) {
+      const current = this.db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(account.id)
+      if (current?.keycloak_sub !== sub) {
+        throw new ApiError(409, 'VINCULO_DIVERGENTE', 'A conta já está vinculada a outra identidade do Keycloak. O vínculo não pode ser trocado.')
+      }
+      return
+    }
+    this.record('identidade.vinculada', account, actorId, `sub=${sub}`)
+  }
+
+  /**
+   * Vincula uma conta antiga ao usuário que já existe no Keycloak. A identidade é conferida pelo
+   * e-mail: o do Keycloak precisa ser o da conta. `allowWithoutEmail` é só para o operador no
+   * servidor (`npm run admin:vincular`), para contas criadas sem e-mail (ex.: o primeiro administrador).
+   */
+  async linkExisting(account: Account, actorId: string | null, options: { allowWithoutEmail?: boolean } = {}): Promise<string> {
+    const found = await this.provider.findUser(account.usuario)
+    if (!found) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
+    const sameEmail = account.email !== null && found.email !== null && account.email.toLowerCase() === found.email.toLowerCase()
+    if (!sameEmail && !(options.allowWithoutEmail && account.email === null)) {
+      throw new ApiError(
+        409,
+        'EMAIL_DIVERGENTE',
+        'O e-mail do usuário no Keycloak não é o da conta do AQR. Corrija um dos dois antes de vincular: o vínculo não pode ser desfeito.',
+      )
+    }
+    this.bind(account, found.id, actorId)
+    return found.id
+  }
+
+  /** O `sub` a que a conta está vinculada, ou null (contas antigas ainda sem vínculo). */
+  private boundSub(accountId: string): string | null {
+    const row = this.db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(accountId)
+    return typeof row?.keycloak_sub === 'string' ? row.keycloak_sub : null
   }
 
   private fail(account: Account, actorId: string, error: unknown, message: string): string {
@@ -63,6 +113,7 @@ export class IdentityProvisioner {
   }
 
   async afterCreate(account: Account, keycloakId: string, actorId: string): Promise<AccountWithNotice> {
+    this.bind(account, keycloakId, actorId)
     this.record('identidade.criada', account, actorId)
     try {
       await this.provider.sendPasswordEmail(keycloakId)
@@ -79,7 +130,7 @@ export class IdentityProvisioner {
   async afterStatusChange(account: Account, actorId: string): Promise<AccountWithNotice> {
     const active = account.situacao === 'ativa'
     try {
-      const id = await this.provider.findUserId(account.usuario)
+      const id = this.boundSub(account.id)
       if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_IN_KEYCLOAK) }
       await this.provider.setEnabled(id, active)
       if (!active) await this.provider.logoutUser(id)
@@ -101,7 +152,7 @@ export class IdentityProvisioner {
   async afterUpdate(account: Account, actorId: string): Promise<AccountWithNotice> {
     if (!account.email) return account
     try {
-      const id = await this.provider.findUserId(account.usuario)
+      const id = this.boundSub(account.id)
       if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_IN_KEYCLOAK) }
       await this.provider.updateProfile(id, { usuario: account.usuario, nome: account.nome, email: account.email })
       return account
@@ -119,7 +170,7 @@ export class IdentityProvisioner {
       throw new ApiError(422, 'EMAIL_REQUIRED', 'A conta não tem e-mail. Edite a conta e informe o e-mail antes de enviar o link.')
     }
     try {
-      const id = await this.provider.findUserId(account.usuario)
+      const id = this.boundSub(account.id)
       if (!id) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
       await this.provider.sendPasswordEmail(id)
       this.record('identidade.senha_redefinicao_enviada', account, actorId)
@@ -137,9 +188,11 @@ export class IdentityProvisioner {
     }
     const profile = { usuario: account.usuario, nome: account.nome, email: account.email }
     try {
-      const existing = await this.provider.findUserId(account.usuario)
-      if (!existing) {
+      const bound = this.boundSub(account.id)
+      const byName = bound ? null : await this.provider.findUser(account.usuario)
+      if (!bound && !byName) {
         const id = await this.provider.createUser(profile)
+        this.bind(account, id, actorId)
         if (account.situacao === 'inativa') await this.provider.setEnabled(id, false)
         this.record('identidade.criada', account, actorId)
         if (account.situacao === 'ativa') {
@@ -148,11 +201,14 @@ export class IdentityProvisioner {
         }
         return account
       }
-      await this.provider.updateProfile(existing, profile)
-      await this.provider.setEnabled(existing, account.situacao === 'ativa')
+      // Conta já vinculada: usa sempre o sub gravado (nunca procura pelo nome). Senão, vincula conferindo o e-mail.
+      const target = bound ?? (await this.linkExisting(account, actorId))
+      await this.provider.updateProfile(target, profile)
+      await this.provider.setEnabled(target, account.situacao === 'ativa')
       this.record('identidade.sincronizada', account, actorId)
       return account
     } catch (error) {
+      if (error instanceof ApiError) throw error
       this.record('identidade.falha', account, actorId, error instanceof Error ? error.message : 'erro')
       throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'Não foi possível sincronizar com o Keycloak agora. Tente de novo em instantes.')
     }

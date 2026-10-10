@@ -1,6 +1,6 @@
 # Keycloak autohospedado para desenvolvimento local, com Postgres (dados persistentes) e Mailpit
 # (caixa de e-mail falsa: recebe os e-mails de "Esqueci a senha" em http://localhost:8025).
-# Uso: docker compose -f docker/compose.yml up -d
+# Uso: docker compose -f docker/dev/compose.yml up -d
 # SÓ DESENVOLVIMENTO: senhas fixas, HTTP e start-dev. Ver docs/login-keycloak.md → "Produção".
 name: aqr-auth
 
@@ -40,7 +40,7 @@ services:
     ports:
       - '127.0.0.1:8080:8080'
     volumes:
-      - ./keycloak:/opt/keycloak/data/import:ro
+      - ./realm:/opt/keycloak/data/import:ro
 
 volumes:
   keycloak-db:

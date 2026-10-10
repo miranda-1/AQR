@@ -54,7 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
-| 10/10/2026 | Login real com Keycloak, usando biblioteca OIDC madura (`openid-client`), sem OIDC/JWT/criptografia próprios e com tokens fora do navegador. Imagem do Keycloak local: 26.8.0 (não a 26.0). O login visual segue como padrão (`AUTH_MODE=visual`). |
+| 10/10/2026 | Produção nunca roda com login visual e a conta se liga ao Keycloak pelo `sub` imutável. Login real com Keycloak, usando biblioteca OIDC madura (`openid-client`), sem OIDC/JWT/criptografia próprios e com tokens fora do navegador. Imagem do Keycloak local: 26.8.0 (não a 26.0). O login visual segue como padrão (`AUTH_MODE=visual`). |
 | 08/10/2026 | Usar a marca PREFCG na versão digital azul, sem "Siga @prefcg". ~~A marca SEMADES não entra; a sigla aparece só no rodapé, em texto.~~ Parte substituída pela decisão sobre o rodapé, abaixo. |
 | 08/10/2026 | Cor da marca unificada em **#283587**, o valor do manual. O arquivo 2026 tinha azuis divergentes. |
 | 08/10/2026 | Limite de **50 MB** por PDF. |
@@ -151,8 +151,9 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 10/10/2026 | Documentação da administração e da entrada da autenticação real (`docs/arquitetura.md`), README com o passo a passo, `AQR_API_URL` para o Vite apontar para outra API e sete capturas das telas (computador e celular) em `docs/capturas-administracao/`, geradas com a API real em modo `dev` (commit 20 do plano) | ver `git log` |
 | 10/10/2026 | Inicialização local unificada: `npm run dev` sobe API e site no mesmo terminal, evitando que o navegador abra com o servidor desligado (causa da falha nos dois PDFs de teste); `dev:web` preserva o modo demonstrativo sem API. A tela de erro orienta a conferir o servidor. O pool deixa de registrar uma falha falsa quando a thread encerra após uma comparação concluída. | ver `git log` |
 | 10/10/2026 | Login real com Keycloak (`AUTH_MODE=keycloak`): servidor como cliente OIDC (BFF, PKCE) com `openid-client`; sessão em cookie HttpOnly, tokens só no servidor; papel e situação vêm da conta no banco do AQR, conferidos a cada pedido; `/api/comparisons` e `/api/admin/*` protegidos; proteção de origem (CSRF); botão "Entrar com a conta da PREFCG" no lugar dos campos em modo Keycloak. Guia e limitações em `docs/login-keycloak.md` | ver `git log` |
-| 10/10/2026 | Keycloak autohospedado local (`docker/compose.yml`: Keycloak 26.8.0 + Postgres + Mailpit) com recuperação de senha por e-mail; sessões e registro de acessos no banco (migração 0002); E2E real em `scripts/e2e-keycloak.mjs` (20 verificações) | ver `git log` |
+| 10/10/2026 | Keycloak autohospedado local (`docker/dev/compose.yml`: Keycloak 26.8.0 + Postgres + Mailpit) com recuperação de senha por e-mail; sessões e registro de acessos no banco (migração 0002); E2E real em `scripts/e2e-keycloak.mjs` (20 verificações) | ver `git log` |
 | 10/10/2026 | Provisionamento da identidade pelo backend (API Admin do Keycloak com credencial de serviço `aqr-admin`): criar conta cria o usuário no Keycloak e envia convite por e-mail para a pessoa definir a senha; desativar/reativar bloqueia/desbloqueia; admin envia redefinição e sincroniza; migração 0003 (eventos de identidade); seção "Acesso ao sistema" na edição de conta; E2E com Mailpit (40 verificações). Sem push, aguardando revisão | ver `git log` |
+| 10/10/2026 | Correções de segurança da revisão: produção recusa `AUTH_MODE=visual` (servidor e frontend falham fechado), recusa localhost e segredo de teste; conta vinculada ao `sub` imutável do Keycloak (migração 0004, `admin:vincular`, sincronizar confere o e-mail), nunca ao `preferred_username`; arquivos de teste movidos para `docker/dev/`, modelo de produção sem credenciais em `docker/producao/`. Sem push, aguardando revisão | ver `git log` |
 
 ## Pendências
 

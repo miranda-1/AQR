@@ -1,8 +1,10 @@
 // Ponta a ponta com Keycloak real + Mailpit + API do AQR (ver docs/login-keycloak.md).
 // Uso: node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>
-// Pré-requisitos: docker compose -f docker/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
+// Pré-requisitos: docker compose -f docker/dev/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
 // KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret e banco novo
-// com o administrador "admin" (npm run admin:criar). Só para desenvolvimento local.
+// com o administrador "admin" (npm run admin:criar, sem vínculo) e as MESMAS variáveis KEYCLOAK_*/DATABASE_PATH
+// exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
+import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 
@@ -140,6 +142,15 @@ check('senha errada: Keycloak rejeita, sem sessão', wrong.final === 'rejeitado-
 check('autenticado sem conta no AQR: bloqueado', (await login('semconta', 'semconta-dev-123')).final.includes('erro=sem_conta'))
 
 // ============ 3. Administrador ============
+// O primeiro administrador (criado por `npm run admin:criar`) ainda não tem vínculo pelo sub: não entra
+// só porque o nome de usuário coincide. O operador o vincula no servidor, conferindo a identidade.
+const unlinked = await login('admin', 'admin-dev-123')
+check('administrador sem vínculo pelo sub NÃO entra (vinculo_pendente)', unlinked.final.includes('erro=vinculo_pendente') && !unlinked.api.cookies.has('aqr_sessao'), unlinked.final)
+const linked = spawnSync('npx', ['tsx', 'server/scripts/vincular-identidade.ts', '--usuario', 'admin', '--confirmo-identidade'], { encoding: 'utf8', env: process.env })
+check('operador vincula o administrador ao sub do Keycloak (admin:vincular)', linked.status === 0 && linked.stdout.includes('Vinculada: admin'), (linked.stdout + linked.stderr).trim())
+const relinked = spawnSync('npx', ['tsx', 'server/scripts/vincular-identidade.ts', '--usuario', 'admin', '--confirmo-identidade'], { encoding: 'utf8', env: process.env })
+check('vincular de novo não faz nada (vínculo definitivo)', relinked.status === 0 && relinked.stdout.includes('Nenhuma conta sem vínculo'))
+
 const admin = await login('admin', 'admin-dev-123')
 check('admin entra e volta à página pedida', admin.final === `${APP}/administracao/contas` && admin.api.cookies.has('aqr_sessao'), admin.final)
 const me = await (await call(admin.api, 'GET', '/api/auth/me')).json()

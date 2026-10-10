@@ -22,14 +22,14 @@ describe('loadConfig', () => {
 
   it('lê as variáveis de ambiente', () => {
     const config = loadConfig({
-      NODE_ENV: 'production',
+      NODE_ENV: 'development',
       HOST: '0.0.0.0',
       PORT: '8080',
       LOG_LEVEL: 'warn',
       COMPARISON_WORKERS: '4',
       COMPARISON_QUEUE_LIMIT: '0',
     })
-    expect(config).toMatchObject({ environment: 'production', host: '0.0.0.0', port: 8080, logLevel: 'warn' })
+    expect(config).toMatchObject({ environment: 'development', host: '0.0.0.0', port: 8080, logLevel: 'warn' })
     expect(config.comparison).toMatchObject({ workers: 4, queueLimit: 0 })
   })
 
@@ -39,17 +39,35 @@ describe('loadConfig', () => {
   })
 
   it('recusa iniciar com a administração de desenvolvimento em produção ou exposta na rede', () => {
-    expect(() => loadConfig({ NODE_ENV: 'production', ADMIN_API_MODE: 'dev' })).toThrow(/não é permitido em produção/)
+    expect(() => loadConfig({ NODE_ENV: 'production', ADMIN_API_MODE: 'dev', AUTH_MODE: 'keycloak' })).toThrow(ConfigError)
     expect(() => loadConfig({ ADMIN_API_MODE: 'dev', HOST: '0.0.0.0' })).toThrow(/só funciona com HOST=127.0.0.1/)
     expect(() => loadConfig({ ADMIN_API_MODE: 'producao' })).toThrow(ConfigError)
-    expect(loadConfig({ NODE_ENV: 'production' }).adminMode).toBe('disabled')
+  })
+
+  it('falha fechado: produção recusa o login visual (que aceita qualquer senha), com ou sem AUTH_MODE', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(/AUTH_MODE=visual não é permitido em produção/)
+    expect(() => loadConfig({ NODE_ENV: 'production', AUTH_MODE: 'visual' })).toThrow(/AUTH_MODE=visual não é permitido em produção/)
+    expect(loadConfig({ NODE_ENV: 'development' }).keycloak).toBeNull()
+  })
+
+  it('produção recusa configuração de desenvolvimento: localhost e segredos de teste', () => {
+    const prod = {
+      NODE_ENV: 'production', AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: 'https://login.exemplo.gov.br/realms/aqr',
+      KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
+      KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
+    }
+    expect(loadConfig(prod).keycloak?.adminClientId).toBe('aqr-admin')
+    expect(() => loadConfig({ ...prod, KEYCLOAK_ADMIN_CLIENT_SECRET: 'aqr-admin-dev-secret' })).toThrow(/segredo de desenvolvimento/)
+    expect(() => loadConfig({ ...prod, KEYCLOAK_ADMIN_CLIENT_SECRET: 'curto' })).toThrow(/curto demais/)
+    expect(() => loadConfig({ ...prod, KEYCLOAK_ISSUER: 'http://localhost:8080/realms/aqr' })).toThrow(/localhost/)
+    expect(() => loadConfig({ ...prod, APP_BASE_URL: 'http://localhost:5173' })).toThrow(/localhost/)
   })
 
   it('valida a configuração do login real com Keycloak', () => {
     const ok = {
       AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: 'https://login.exemplo.gov.br/realms/aqr/',
       KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
-      KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo',
+      KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
     }
     expect(loadConfig({ NODE_ENV: 'production', ...ok }).keycloak).toMatchObject({ issuer: 'https://login.exemplo.gov.br/realms/aqr', clientId: 'aqr-web' })
     expect(loadConfig({}).keycloak).toBeNull()
