@@ -1,14 +1,23 @@
-// Fluxo real: Keycloak 26.8.0 + API do AQR. Uso: node live-e2e.mjs <pdf1> <pdf2>
+// Ponta a ponta com Keycloak real + Mailpit + API do AQR (ver docs/login-keycloak.md).
+// Uso: node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>
+// Pré-requisitos: docker compose -f docker/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
+// KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret e banco novo
+// com o administrador "admin" (npm run admin:criar). Só para desenvolvimento local.
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 
 const API = 'http://127.0.0.1:3100'
 const APP = 'http://localhost:5173'
+const KC = 'http://localhost:8080'
+const MAIL = 'http://localhost:8025'
 const results = []
 const check = (name, ok, extra = '') => {
   results.push(ok)
   console.log(`${ok ? 'OK  ' : 'FALHA'} ${name}${extra ? ` — ${extra}` : ''}`)
 }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const form = (data) => ({ method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data) })
+const formAction = (html) => html.match(/action="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
 
 class Jar {
   cookies = new Map()
@@ -21,178 +30,193 @@ class Jar {
       else this.cookies.set(k, v)
     }
   }
-  header(url) {
+  header() {
     return [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ')
   }
 }
 
-// Um jar por domínio (Keycloak e API ficam em hosts diferentes).
-async function browserLogin(username, password) {
-  const kc = new Jar(), api = new Jar()
+/** Um navegador mínimo: um jar de cookies por servidor (Keycloak e API). */
+function browser() {
+  const jars = { kc: new Jar(), api: new Jar() }
   const hop = async (url, init = {}) => {
-    const u = new URL(url)
-    const jar = u.port === '8080' ? kc : api
+    const jar = new URL(url).port === '8080' ? jars.kc : jars.api
     const res = await fetch(url, { ...init, redirect: 'manual', headers: { ...(init.headers ?? {}), cookie: jar.header() } })
     jar.store(res)
     return res
   }
-  let res = await hop(`${API}/api/auth/login?returnTo=%2Fadministracao%2Fcontas`)
-  let url = res.headers.get('location')
-  res = await hop(url)
-  const html = await res.text()
-  const action = html.match(/action="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
-  if (!action) return { api, final: 'sem-formulario', html }
-  res = await hop(action, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ username, password, credentialId: '' }),
-  })
-  if (res.status === 200) return { api, final: 'rejeitado-pelo-keycloak' }
-  url = res.headers.get('location')
-  while (url) {
-    // O callback aponta para o site (5173); o proxy do Vite o levaria à API.
-    const target = url.startsWith(APP) ? url.replace(APP, API) : url
-    if (target.startsWith(`${API}/entrar`) || target.startsWith(APP)) return { api, final: url }
-    res = await hop(target)
-    url = res.headers.get('location')
-    if (!url) return { api, final: `status-${res.status}` }
-    if (url.startsWith(APP) && !url.startsWith(`${APP}/api`)) return { api, final: url }
+  const follow = async (url, init) => {
+    let res = await hop(url, init)
+    while (res.status >= 300 && res.status < 400) {
+      const next = new URL(res.headers.get('location'), url).href
+      if (next.startsWith(APP)) return { res, final: next }
+      res = await hop(next)
+    }
+    return { res, final: url }
   }
-  return { api, final: 'fim' }
+  return { jars, hop, follow }
+}
+
+async function login(username, password, returnTo = '%2Fadministracao%2Fcontas') {
+  const b = browser()
+  const start = await b.hop(`${API}/api/auth/login?returnTo=${returnTo}`)
+  const page = await b.follow(start.headers.get('location'))
+  const action = formAction(await page.res.text())
+  if (!action) return { api: b.jars.api, final: 'sem-formulario' }
+  const sent = await b.hop(action, form({ username, password, credentialId: '' }))
+  if (sent.status === 200) return { api: b.jars.api, final: 'rejeitado-pelo-keycloak' }
+  let url = sent.headers.get('location')
+  while (url) {
+    const target = url.startsWith(APP) ? url.replace(APP, API) : url
+    if (url.startsWith(APP) && !url.startsWith(`${APP}/api`)) return { api: b.jars.api, final: url }
+    const res = await b.hop(target)
+    url = res.headers.get('location') ? new URL(res.headers.get('location'), target).href : null
+    if (!url) return { api: b.jars.api, final: `status-${res.status}` }
+  }
+  return { api: b.jars.api, final: 'fim' }
 }
 
 const call = (jar, method, path, extra = {}) =>
   fetch(`${API}${path}`, { method, headers: { cookie: jar.header(), origin: APP, ...(extra.headers ?? {}) }, body: extra.body, redirect: 'manual' })
+const json = (jar, method, path, data) =>
+  call(jar, method, path, { headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
 
-// Recuperação de senha: "Esqueceu a senha?" do Keycloak + e-mail no Mailpit (http://localhost:8025).
-const KC = 'http://localhost:8080'
-const MAIL = 'http://localhost:8025'
-async function resetPasswordByEmail(username, newPassword) {
-  const jar = new Jar()
-  const hop = async (url, init = {}) => {
-    const res = await fetch(url, { ...init, redirect: 'manual', headers: { ...(init.headers ?? {}), cookie: jar.header() } })
-    jar.store(res)
-    return res
-  }
-  const follow = async (url) => {
-    let res = await hop(url)
-    while (res.status >= 300 && res.status < 400) res = await hop(new URL(res.headers.get('location'), url).href)
-    return res
-  }
-  const formAction = (html) => html.match(/action="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
-  await fetch(`${MAIL}/api/v1/messages`, { method: 'DELETE' })
-  let res = await hop(`${API}/api/auth/login`)
-  res = await follow(res.headers.get('location'))
-  let html = await res.text()
-  const forgot = html.match(/href="([^"]*reset-credentials[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
-  if (!forgot) return 'sem-link-esqueci-a-senha'
-  res = await follow(new URL(forgot, KC).href)
-  html = await res.text()
-  res = await hop(formAction(html), { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ username }) })
-  let link
-  for (let i = 0; i < 20 && !link; i++) {
-    await new Promise((r) => setTimeout(r, 500))
+// ---- Mailpit ----
+async function waitForMail(to, since) {
+  for (let i = 0; i < 30; i++) {
     const list = await (await fetch(`${MAIL}/api/v1/messages`)).json()
-    const id = list.messages?.[0]?.ID
-    if (id) link = (await (await fetch(`${MAIL}/api/v1/message/${id}`)).json()).Text.match(/https?:\/\/\S*action-token\S*/)?.[0]
+    const found = (list.messages ?? []).find((m) => m.To.some((t) => t.Address === to) && new Date(m.Created).getTime() >= since)
+    if (found) return (await (await fetch(`${MAIL}/api/v1/message/${found.ID}`)).json()).Text
+    await sleep(500)
   }
-  if (!link) return 'email-nao-chegou'
-  res = await follow(link)
-  html = await res.text()
+  return null
+}
+const linkOf = (text) => text?.match(/https?:\/\/\S*action-token\S*/)?.[0]
+
+/** Abre o link do e-mail e define a senha, como a pessoa faria. */
+async function setPasswordFromLink(link, password) {
+  const b = browser()
+  let { res } = await b.follow(link)
+  let html = await res.text()
   const proceed = html.match(/href="([^"]*action-token[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
-  if (!html.includes('password-new') && proceed) html = await (await follow(new URL(proceed, KC).href)).text()
-  if (!html.includes('password-new')) return 'sem-formulario-de-nova-senha'
-  res = await hop(formAction(html), {
-    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ 'password-new': newPassword, 'password-confirm': newPassword }),
-  })
-  return res.status < 500 ? 'ok' : `status-${res.status}`
+  if (!html.includes('password-new') && proceed) html = await (await b.follow(new URL(proceed, KC).href)).res.text()
+  if (!html.includes('password-new')) return false
+  const sent = await b.hop(formAction(html), form({ 'password-new': password, 'password-confirm': password }))
+  return sent.status < 500
 }
-// Volta a senha do usuário de recuperação ao valor do realm (para o script poder rodar de novo).
-async function restorePassword(username, password) {
-  const tokenRes = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, {
-    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }),
-  })
-  const { access_token: token } = await tokenRes.json()
-  const auth = { authorization: `Bearer ${token}` }
-  const [user] = await (await fetch(`${KC}/admin/realms/aqr/users?username=${username}&exact=true`, { headers: auth })).json()
-  await fetch(`${KC}/admin/realms/aqr/users/${user.id}/reset-password`, {
-    method: 'PUT', headers: { ...auth, 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'password', value: password, temporary: false }),
-  })
-}
-await restorePassword('recuperacao', 'recuperacao-dev-123')
-const resetStep = await resetPasswordByEmail('recuperacao', 'NovaSenha-dev-456')
-check('recuperação de senha: e-mail chega ao Mailpit e a nova senha é aceita', resetStep === 'ok', resetStep)
-check('após recuperar, a senha antiga deixa de valer', (await browserLogin('recuperacao', 'recuperacao-dev-123')).final === 'rejeitado-pelo-keycloak')
-const afterReset = await browserLogin('recuperacao', 'NovaSenha-dev-456')
-check('após recuperar, a nova senha autentica no Keycloak (sem conta no AQR → bloqueado)', afterReset.final.includes('erro=sem_conta'), afterReset.final)
-await restorePassword('recuperacao', 'recuperacao-dev-123')
 
-// 1. sem login
+// ---- API Admin do Keycloak (só para conferir o resultado) ----
+async function kcAdmin(path) {
+  const t = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, form({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }))
+  const { access_token: token } = await t.json()
+  return (await fetch(`${KC}/admin/realms/aqr/${path}`, { headers: { authorization: `Bearer ${token}` } })).json()
+}
+
+// ============ 1. Recuperação de senha pelo "Esqueceu a senha?" ============
+{
+  const b = browser()
+  const t0 = Date.now()
+  const start = await b.hop(`${API}/api/auth/login`)
+  const page = await b.follow(start.headers.get('location'))
+  const forgot = (await page.res.text()).match(/href="([^"]*reset-credentials[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
+  check('tela do Keycloak oferece "Esqueceu a senha?"', Boolean(forgot))
+  const askPage = await b.follow(new URL(forgot, KC).href)
+  await b.hop(formAction(await askPage.res.text()), form({ username: 'recuperacao' }))
+  const link = linkOf(await waitForMail('recuperacao@aqr.local', t0))
+  check('e-mail de recuperação chega ao Mailpit', Boolean(link))
+  check('nova senha definida pelo link', link && (await setPasswordFromLink(link, 'NovaSenha-dev-456')))
+  check('senha antiga deixa de valer', (await login('recuperacao', 'recuperacao-dev-123')).final === 'rejeitado-pelo-keycloak')
+  check('nova senha autentica (sem conta no AQR → bloqueado)', (await login('recuperacao', 'NovaSenha-dev-456')).final.includes('erro=sem_conta'))
+  // devolve a senha original para a próxima execução
+  const t = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, form({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }))
+  const auth = { authorization: `Bearer ${(await t.json()).access_token}` }
+  const [u] = await (await fetch(`${KC}/admin/realms/aqr/users?username=recuperacao&exact=true`, { headers: auth })).json()
+  await fetch(`${KC}/admin/realms/aqr/users/${u.id}/reset-password`, { method: 'PUT', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify({ type: 'password', value: 'recuperacao-dev-123', temporary: false }) })
+}
+
+// ============ 2. Acesso sem login e login errado ============
 check('sem sessão: /api/auth/me = 401', (await fetch(`${API}/api/auth/me`)).status === 401)
+const wrong = await login('admin', 'senha-errada')
+check('senha errada: Keycloak rejeita, sem sessão', wrong.final === 'rejeitado-pelo-keycloak' && !wrong.api.cookies.has('aqr_sessao'))
+check('autenticado sem conta no AQR: bloqueado', (await login('semconta', 'semconta-dev-123')).final.includes('erro=sem_conta'))
 
-// 2. login errado
-const wrong = await browserLogin('admin', 'senha-errada')
-check('senha errada: Keycloak rejeita, sem sessão', wrong.final === 'rejeitado-pelo-keycloak' && !wrong.api.cookies.has('aqr_sessao'), wrong.final)
-
-// 3. login correto, mas sem conta no AQR
-const ghost = await browserLogin('semconta', 'semconta-dev-123')
-check('autenticado no Keycloak sem conta no AQR: bloqueado', ghost.final.includes('erro=sem_conta') && !ghost.api.cookies.has('aqr_sessao'), ghost.final)
-
-// 4. admin
-const admin = await browserLogin('admin', 'admin-dev-123')
-check('admin entra e volta para a página pedida', admin.final === `${APP}/administracao/contas` && admin.api.cookies.has('aqr_sessao'), admin.final)
+// ============ 3. Administrador ============
+const admin = await login('admin', 'admin-dev-123')
+check('admin entra e volta à página pedida', admin.final === `${APP}/administracao/contas` && admin.api.cookies.has('aqr_sessao'), admin.final)
 const me = await (await call(admin.api, 'GET', '/api/auth/me')).json()
-check('/api/auth/me = administrador', me.papel === 'administrador', JSON.stringify(me))
-const cookieValue = admin.api.cookies.get('aqr_sessao')
-check('cookie de sessão é opaco (não é JWT)', !cookieValue.includes('.') && cookieValue.length >= 40)
+check('/api/auth/me = administrador', me.papel === 'administrador')
+check('cookie de sessão é opaco (não é JWT)', !admin.api.cookies.get('aqr_sessao').includes('.'))
 
-// 5. cria analista
-const created = await call(admin.api, 'POST', '/api/admin/accounts', {
-  headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ usuario: 'ana', nome: 'Ana Analista', email: null, papel: 'analista' }),
-})
+// ============ 4. Admin cria o analista: nasce no Keycloak e recebe convite ============
+const noEmail = await json(admin.api, 'POST', '/api/admin/accounts', { usuario: 'ana', nome: 'Ana Analista', email: null, papel: 'analista' })
+check('criar conta sem e-mail é recusado (o convite precisa dele)', noEmail.status === 400)
+check('usuário ainda não existe no Keycloak', (await kcAdmin('users?username=ana&exact=true')).length === 0)
+
+const t1 = Date.now()
+const created = await json(admin.api, 'POST', '/api/admin/accounts', { usuario: 'ana', nome: 'Ana Analista', email: 'ana@aqr.local', papel: 'analista' })
 const ana = await created.json()
-check('admin cria o analista "ana"', created.status === 201, `status ${created.status}`)
+check('admin cria a conta "ana"', created.status === 201 && !ana.aviso, `status ${created.status} ${ana.aviso ?? ''}`)
+const [kcAna] = await kcAdmin('users?username=ana&exact=true')
+check('usuário nasce no Keycloak (ativo, com nome e e-mail, sem senha)', kcAna?.enabled === true && kcAna.email === 'ana@aqr.local' && kcAna.firstName === 'Ana' && kcAna.lastName === 'Analista')
+check('antes de definir a senha, "ana" não consegue entrar', (await login('ana', 'qualquer-coisa')).final === 'rejeitado-pelo-keycloak')
 
-// 6. analista: permissão
-const analyst = await browserLogin('ana', 'ana-dev-123')
-check('analista entra', analyst.api.cookies.has('aqr_sessao'), analyst.final)
+// ============ 5. Convite por e-mail: a pessoa define a própria senha ============
+const invite = await waitForMail('ana@aqr.local', t1)
+const inviteLink = linkOf(invite)
+check('convite chega ao Mailpit com link para definir a senha', Boolean(inviteLink))
+check('ana define a senha pelo link', inviteLink && (await setPasswordFromLink(inviteLink, 'Ana-dev-123')))
+const analyst = await login('ana', 'Ana-dev-123')
+check('ana entra com a senha que ela definiu', analyst.api.cookies.has('aqr_sessao'), analyst.final)
 check('analista não administra contas (403)', (await call(analyst.api, 'GET', '/api/admin/accounts')).status === 403)
+check('analista não provisiona acessos (403)', (await call(analyst.api, 'POST', `/api/admin/accounts/${ana.id}/redefinir-senha`)).status === 403)
 
-// 7. comparação com os dois PDFs, como analista
-const form = new FormData()
+// ============ 6. Comparação dos dois PDFs ============
 const [p1, p2] = process.argv.slice(2)
-form.append('original', new Blob([readFileSync(p1)], { type: 'application/pdf' }), basename(p1))
-form.append('updated', new Blob([readFileSync(p2)], { type: 'application/pdf' }), basename(p2))
-const noAuth = await fetch(`${API}/api/comparisons`, { method: 'POST', headers: { origin: APP }, body: form })
-check('comparação sem login = 401', noAuth.status === 401)
-const sent = await call(analyst.api, 'POST', '/api/comparisons', { body: form })
+const mkForm = () => {
+  const f = new FormData()
+  f.append('original', new Blob([readFileSync(p1)], { type: 'application/pdf' }), basename(p1))
+  f.append('updated', new Blob([readFileSync(p2)], { type: 'application/pdf' }), basename(p2))
+  return f
+}
+check('comparação sem login = 401', (await fetch(`${API}/api/comparisons`, { method: 'POST', headers: { origin: APP }, body: mkForm() })).status === 401)
+const sent = await call(analyst.api, 'POST', '/api/comparisons', { body: mkForm() })
 const job = await sent.json()
-check('analista envia os PDFs', sent.status === 202 || sent.status === 201, `status ${sent.status}`)
 let state = job
 for (let i = 0; i < 60 && state.status !== 'completed' && state.status !== 'failed'; i++) {
-  await new Promise((r) => setTimeout(r, 1000))
+  await sleep(1000)
   state = await (await call(analyst.api, 'GET', `/api/comparisons/${job.id}`)).json()
 }
-const diffs = state.result?.differences?.length ?? state.result?.summary?.total
-check('comparação concluída com diferenças', state.status === 'completed' && diffs > 0, `status=${state.status} diferenças=${diffs}`)
+const diffs = state.result?.differences?.length
+check('analista compara os dois PDFs', state.status === 'completed' && diffs > 0, `diferenças=${diffs}`)
 
-// 8. desativação imediata
-const off = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/desativar`, {
-  headers: { 'content-type': 'application/json' }, body: JSON.stringify({ versao: ana.versao }),
-})
-check('admin desativa "ana"', off.status === 200)
+// ============ 7. Bloqueio, reativação e redefinição pelo administrador ============
+const off = await json(admin.api, 'POST', `/api/admin/accounts/${ana.id}/desativar`, { versao: ana.versao })
+const offBody = await off.json()
+check('admin desativa "ana"', off.status === 200 && !offBody.aviso, offBody.aviso ?? '')
+check('usuário bloqueado no Keycloak (enabled=false)', (await kcAdmin('users?username=ana&exact=true'))[0]?.enabled === false)
 check('sessão do analista cai na hora (401)', (await call(analyst.api, 'GET', '/api/auth/me')).status === 401)
-const again = await browserLogin('ana', 'ana-dev-123')
-check('login da conta desativada é bloqueado', again.final.includes('erro=conta_inativa'), again.final)
+check('login bloqueado no Keycloak mesmo com a senha certa', (await login('ana', 'Ana-dev-123')).final === 'rejeitado-pelo-keycloak')
+check('redefinir senha de conta desativada é recusado (422)', (await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/redefinir-senha`)).status === 422)
 
-// 9. logout
+const on = await json(admin.api, 'POST', `/api/admin/accounts/${ana.id}/reativar`, { versao: offBody.versao })
+const onBody = await on.json()
+check('admin reativa "ana"', on.status === 200 && !onBody.aviso)
+check('usuário reativado no Keycloak', (await kcAdmin('users?username=ana&exact=true'))[0]?.enabled === true)
+check('ana volta a entrar com a mesma senha', (await login('ana', 'Ana-dev-123')).api.cookies.has('aqr_sessao'))
+
+const t2 = Date.now()
+const reset = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/redefinir-senha`)
+check('admin pede redefinição de senha (204)', reset.status === 204)
+const resetLink = linkOf(await waitForMail('ana@aqr.local', t2))
+check('e-mail de redefinição chega ao Mailpit', Boolean(resetLink))
+check('ana define a nova senha', resetLink && (await setPasswordFromLink(resetLink, 'Ana-nova-456')))
+check('senha antiga deixa de valer', (await login('ana', 'Ana-dev-123')).final === 'rejeitado-pelo-keycloak')
+check('nova senha funciona', (await login('ana', 'Ana-nova-456')).api.cookies.has('aqr_sessao'))
+
+// ============ 8. Sincronização e logout ============
+const sync = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/sincronizar`)
+check('sincronizar com o Keycloak (200)', sync.status === 200)
 const out = await call(admin.api, 'POST', '/api/auth/logout')
-const { logoutUrl } = await out.json()
-check('logout devolve URL do Keycloak', typeof logoutUrl === 'string' && logoutUrl.includes('id_token_hint='))
+check('logout devolve a URL de encerramento do Keycloak', (await out.json()).logoutUrl?.includes('id_token_hint='))
 check('depois do logout a sessão não vale', (await call(admin.api, 'GET', '/api/auth/me')).status === 401)
 
 console.log(results.every(Boolean) ? 'TUDO OK' : 'HÁ FALHAS')

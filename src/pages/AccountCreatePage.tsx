@@ -9,14 +9,17 @@ import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function AccountCreatePage() {
   useDocumentTitle('Nova conta')
-  const { service } = useAdminSession()
+  const { service, mode } = useAdminSession()
   const navigate = useNavigate()
   const [formError, setFormError] = useState<string | undefined>()
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 lg:px-6">
       <h1 className="text-3xl font-extrabold tracking-tight text-ink">Nova conta</h1>
-      <p className="mt-2 text-muted-foreground">A conta nasce ativa. A senha não é guardada no AQR.</p>
+      <p className="mt-2 text-muted-foreground">{mode === 'real'
+          ? 'A conta nasce ativa. A pessoa recebe um e-mail para definir a própria senha, por isso o e-mail é obrigatório. A senha não passa pelo AQR.'
+          : 'A conta nasce ativa. A senha não é guardada no AQR.'}
+      </p>
       <div className="mt-6 rounded-xl bg-white p-5 shadow-surface sm:p-8">
         <AccountForm
           submitLabel="Criar conta"
@@ -26,7 +29,7 @@ export function AccountCreatePage() {
             setFormError(undefined)
             try {
               const created = await service.createAccount(values)
-              await navigate(routes.adminAccounts, { state: { notice: `Conta de ${created.nome} criada.` } })
+              await navigate(routes.adminAccounts, { state: { notice: created.aviso ?? (mode === 'real' ? `Conta de ${created.nome} criada. O convite para definir a senha foi enviado para ${created.email ?? 'o e-mail informado'}.` : `Conta de ${created.nome} criada.`) } })
               return undefined
             } catch (error) {
               const fields = fieldErrorsOf(error)

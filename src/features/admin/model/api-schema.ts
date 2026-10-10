@@ -18,6 +18,7 @@ const account = z.object({
   atualizadaEm: text,
   desativadaEm: nullableText,
   versao: z.number(),
+  aviso: z.optional(text),
 })
 
 const snapshot = z.object({

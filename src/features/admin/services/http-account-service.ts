@@ -87,6 +87,12 @@ export function createHttpAccountService(options: HttpAccountServiceOptions): Ac
     async reactivateAccount(id, input) {
       return expect(parseAccount(await request('POST', `${accountPath(id)}/reativar`, input)))
     },
+    async sendPasswordLink(id) {
+      await request('POST', `${accountPath(id)}/redefinir-senha`)
+    },
+    async syncIdentity(id) {
+      return expect(parseAccount(await request('POST', `${accountPath(id)}/sincronizar`)))
+    },
     async listAudit(query = {}, opts) {
       const path = `/api/admin/audit-events${queryString({ ...query })}`
       return expect(parseAuditPage(await request('GET', path, undefined, opts)))

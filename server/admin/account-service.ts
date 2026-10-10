@@ -111,14 +111,22 @@ export class AccountService {
     return { ...this.audits.list(filter), page, pageSize }
   }
 
-  create(input: CreateAccountInput, actor: AuditActor): Account {
+  /** Normaliza e valida os campos de uma nova conta. `requireEmail`: o convite por e-mail precisa dele. */
+  prepareCreate(input: CreateAccountInput, requireEmail = false): CreateAccountInput {
     const usuario = normalizeUsername(input.usuario)
     const nome = normalizeName(input.nome)
     const email = normalizeEmail(input.email)
     const fields = validateAccountFields({ usuario, nome, email, papel: input.papel })
+    if (requireEmail && !email && !fields.email) fields.email = 'Informe o e-mail: é por ele que a pessoa recebe o convite para definir a senha.'
     if (Object.keys(fields).length > 0) {
       throw new ApiError(400, 'VALIDATION_FAILED', 'Revise os campos informados.', { fields })
     }
+    return { usuario, nome, email, papel: input.papel }
+  }
+
+  create(rawInput: CreateAccountInput, actor: AuditActor): Account {
+    const input = this.prepareCreate(rawInput)
+    const { usuario, nome, email } = input
 
     return transaction(this.db, () => {
       if (this.accounts.usernameExists(usuario)) {

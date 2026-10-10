@@ -22,6 +22,8 @@ export interface Account {
   desativadaEm: string | null
   /** Aumenta a cada alteração; enviada de volta para detectar edições simultâneas. */
   versao: number
+  /** Só nas respostas de alteração: algo no Keycloak não foi concluído (a conta do AQR foi alterada). */
+  aviso?: string
 }
 
 export interface Page<T> {

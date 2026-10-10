@@ -1,5 +1,6 @@
 import { integerColumn, transaction, type Database } from './database.ts'
 import { migration0001 } from './migrations/0001_contas_e_auditoria.ts'
+import { migration0003 } from './migrations/0003_eventos_de_identidade.ts'
 import { migration0002 } from './migrations/0002_sessoes_e_eventos_de_acesso.ts'
 
 export interface Migration {
@@ -9,7 +10,7 @@ export interface Migration {
 }
 
 /** Todas as migrações, em ordem. As migrações ficam em código, para irem junto no build. */
-export const migrations: readonly Migration[] = [migration0001, migration0002]
+export const migrations: readonly Migration[] = [migration0001, migration0002, migration0003]
 
 /**
  * Aplica as migrações que faltam, cada uma na sua transação, e registra em `schema_migrations`.

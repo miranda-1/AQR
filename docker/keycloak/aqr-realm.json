@@ -24,12 +24,28 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:5173/api/auth/callback"],
-      "webOrigins": ["http://localhost:5173"],
+      "redirectUris": [
+        "http://localhost:5173/api/auth/callback",
+        "http://localhost:5173/entrar"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:5173/entrar"
       }
+    },
+    {
+      "clientId": "aqr-admin",
+      "name": "AQR (servidor)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "aqr-admin-dev-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
     }
   ],
   "users": [
@@ -40,16 +56,13 @@
       "firstName": "Admin",
       "lastName": "Local",
       "email": "admin@aqr.local",
-      "credentials": [{ "type": "password", "value": "admin-dev-123", "temporary": false }]
-    },
-    {
-      "username": "ana",
-      "enabled": true,
-      "emailVerified": true,
-      "firstName": "Ana",
-      "lastName": "Analista",
-      "email": "ana@aqr.local",
-      "credentials": [{ "type": "password", "value": "ana-dev-123", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin-dev-123",
+          "temporary": false
+        }
+      ]
     },
     {
       "username": "recuperacao",
@@ -58,7 +71,13 @@
       "firstName": "Recuperação",
       "lastName": "De Senha",
       "email": "recuperacao@aqr.local",
-      "credentials": [{ "type": "password", "value": "recuperacao-dev-123", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "recuperacao-dev-123",
+          "temporary": false
+        }
+      ]
     },
     {
       "username": "semconta",
@@ -67,7 +86,24 @@
       "firstName": "Sem",
       "lastName": "Conta",
       "email": "semconta@aqr.local",
-      "credentials": [{ "type": "password", "value": "semconta-dev-123", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "semconta-dev-123",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-aqr-admin",
+      "enabled": true,
+      "serviceAccountClientId": "aqr-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users"
+        ]
+      }
     }
   ]
 }

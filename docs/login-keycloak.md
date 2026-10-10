@@ -23,6 +23,7 @@ Proteções: `Origin` obrigatório e igual a `APP_BASE_URL` em pedidos `POST/PUT
 | `KEYCLOAK_ISSUER` | URL do realm, ex.: `http://localhost:8080/realms/aqr` |
 | `KEYCLOAK_CLIENT_ID` | ex.: `aqr-web` (cliente público com PKCE) |
 | `KEYCLOAK_CLIENT_SECRET` | opcional (cliente confidencial) |
+| `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET` | credencial de serviço do AQR (cliente confidencial `aqr-admin`, com `manage-users` e `view-users` do `realm-management`); **obrigatória** com `AUTH_MODE=keycloak`; só o servidor a conhece |
 | `APP_BASE_URL` | origem pública do site, ex.: `http://localhost:5173` (o callback é `APP_BASE_URL/api/auth/callback`) |
 
 `AUTH_MODE=keycloak` não combina com `ADMIN_API_MODE=dev`. Em modo `visual` nada muda (login só visual).
@@ -38,8 +39,22 @@ AUTH_MODE=keycloak KEYCLOAK_ISSUER=http://localhost:8080/realms/aqr KEYCLOAK_CLI
 
 - Keycloak: http://localhost:8080 (console: `admin` / `admin`). Dados no volume Postgres `keycloak-db`; para reimportar o realm: `docker compose -f docker/compose.yml down -v`.
 - **Mailpit** (caixa de e-mail falsa): http://localhost:8025. O Keycloak envia a ele o e-mail de "Esqueceu a senha?" (SMTP `mailpit:1025` no realm).
-- Usuários do realm (`docker/keycloak/aqr-realm.json`, **só local**): `admin` / `admin-dev-123`, `ana` / `ana-dev-123`, `recuperacao` / `recuperacao-dev-123` e `semconta` / `semconta-dev-123` (autentica no Keycloak, mas não tem conta no AQR → bloqueado). Crie `ana` como analista pela administração.
+- Cliente de serviço `aqr-admin` (segredo de desenvolvimento `aqr-admin-dev-secret`; use `KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret`). Usuários do realm (`docker/keycloak/aqr-realm.json`, **só local**): `admin` / `admin-dev-123`, `recuperacao` / `recuperacao-dev-123` e `semconta` / `semconta-dev-123` (autentica no Keycloak, mas não tem conta no AQR → bloqueado). O analista `ana` **não** vem no realm: o E2E a cria pela administração, como no uso real.
 - Teste ponta a ponta: `AUTH_MODE=keycloak ... PORT=3100 DATABASE_PATH=<temporário> npx tsx server/main.ts` e, em outro terminal, `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>`.
+
+## Provisionamento da identidade (conta do AQR → usuário no Keycloak)
+
+O backend usa a API Admin do Keycloak com a credencial de serviço (`client_credentials`, via `openid-client`). **Nenhuma senha passa pelo AQR nem pelo navegador**: a pessoa define a própria senha por um link enviado pelo próprio Keycloak.
+
+| Ação do administrador | O que acontece |
+|---|---|
+| Criar conta (`POST /api/admin/accounts`, **e-mail obrigatório**) | cria o usuário no Keycloak (ativo, sem senha) → grava a conta no AQR (se falhar, apaga o usuário do Keycloak) → envia o e-mail de convite (UPDATE_PASSWORD, 72 h). Keycloak fora do ar: nenhuma conta é criada (502). Só o e-mail falhou: conta criada e resposta com `aviso`; reenvie pelo botão |
+| Desativar / reativar | o AQR bloqueia na hora; depois bloqueia/desbloqueia o usuário no Keycloak e encerra as sessões dele. Falha no Keycloak: a conta fica alterada no AQR e a resposta traz `aviso` |
+| Editar | nome e e-mail seguem para o Keycloak |
+| `POST /api/admin/accounts/:id/redefinir-senha` | envia o link para definir uma nova senha (conta ativa e com e-mail) |
+| `POST /api/admin/accounts/:id/sincronizar` | alinha o Keycloak com a conta: cria o usuário e o convite de contas antigas, ou corrige situação e dados |
+
+Na tela: página de criação (e-mail obrigatório) e, na edição, a seção **Acesso ao sistema** com "Enviar link para definir a senha" e "Sincronizar com o Keycloak". Cada passo fica em `access_events` (`identidade.criada`, `convite_enviado`, `senha_redefinicao_enviada`, `bloqueada`, `reativada`, `sincronizada`, `falha`) com quem agiu.
 
 ## Sessões e registro de acessos
 
@@ -61,8 +76,8 @@ Sessões ficam na tabela `sessions` (migração 0002; só o hash do identificado
 
 ## Verificação com Keycloak real (10/10/2026)
 
-Keycloak 26.8.0 em Docker com o realm de `docker/keycloak/` + API em `PORT=3100` + banco temporário, rodando `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>` (o script percorre o navegador: formulário do Keycloak, cookies e redirecionamentos). **17 verificações, todas OK:** sem sessão (401); senha errada (Keycloak rejeita); usuário sem conta no AQR (bloqueado); admin entra e volta à página pedida; cookie opaco; admin cria o analista; analista entra, não administra (403) e compara `AQR_teste_01_original.pdf` × `AQR_teste_02_revisado.pdf` (**18 diferenças**); comparação sem login (401); desativação derruba a sessão na hora e bloqueia novo login; logout aponta o encerramento no Keycloak e invalida o cookie. Não coberto: a interface no navegador (o fluxo foi exercitado por HTTP; a tela em modo Keycloak tem teste de componente, sem inspeção visual).
+Compose (Keycloak 26.8.0 + Postgres + Mailpit) recriado do zero + API em `PORT=3100` + banco novo, com `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>`. **40 verificações, todas OK:** recuperação de senha (e-mail no Mailpit, senha antiga invalidada); sem sessão (401); senha errada; sem conta no AQR; admin entra; criar conta sem e-mail recusado; **a conta nasce no Keycloak** (ativa, com nome e e-mail, sem senha) e a pessoa não entra antes de definir a senha; **convite no Mailpit → a própria `ana` define a senha → entra**; analista sem permissão de administrar (403); comparação dos PDFs de teste (**18 diferenças**) e sem login (401); **desativar bloqueia no Keycloak** e derruba a sessão; **reativar** desbloqueia; **redefinição pelo admin** (e-mail, senha antiga invalidada, nova funciona); redefinição de conta desativada recusada (422); sincronizar; logout. Não coberto ao vivo: sincronizar uma conta antiga que não existe no Keycloak (coberto por teste com Keycloak falso), falha de SMTP/Keycloak (idem) e a interface no navegador (sem inspeção visual).
 
 ## Testes
 
-`server/auth/keycloak-auth.test.ts` (servidor OIDC falso com HTTP e JWT RS256 reais): não autenticado, login correto, login errado (código inválido, público errado, sem cookie), sem conta, `returnTo` malicioso, administrador cria analista, analista sem permissão, desativação imediata, CSRF, logout. Mais `server/config.test.ts` e `KeycloakLogin.test.tsx`.
+`server/auth/keycloak-auth.test.ts` (servidor OIDC falso com HTTP e JWT RS256 reais): não autenticado, login correto, login errado (código inválido, público errado, sem cookie), sem conta, `returnTo` malicioso, administrador cria analista, analista sem permissão, desativação imediata, CSRF, logout. Com o provedor de identidade falso (`server/test/fake-identity.ts`): criação com convite, e-mail obrigatório, desfazer o usuário se a conta falhar, Keycloak fora do ar (502), SMTP fora do ar (aviso e reenvio), bloqueio/reativação, sincronização e permissões. Mais `server/config.test.ts` e `KeycloakLogin.test.tsx`.

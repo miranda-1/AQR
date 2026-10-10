@@ -23,6 +23,9 @@ const environmentSchema = z.object({
   KEYCLOAK_CLIENT_ID: z.string().min(1).optional(),
   KEYCLOAK_CLIENT_SECRET: z.string().min(1).optional(),
   APP_BASE_URL: z.url().optional(),
+  /** Credencial de serviço do AQR no Keycloak (cria usuários e envia convites); nunca vai ao navegador. */
+  KEYCLOAK_ADMIN_CLIENT_ID: z.string().min(1).optional(),
+  KEYCLOAK_ADMIN_CLIENT_SECRET: z.string().min(1).optional(),
 })
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
@@ -56,7 +59,14 @@ export interface ServerConfig {
    */
   adminMode: 'disabled' | 'dev'
   /** Login real com Keycloak; `null` no login visual (desenvolvimento). */
-  keycloak: { issuer: string; clientId: string; clientSecret: string | undefined; appBaseUrl: string } | null
+  keycloak: {
+    issuer: string
+    clientId: string
+    clientSecret: string | undefined
+    appBaseUrl: string
+    adminClientId: string
+    adminClientSecret: string
+  } | null
 }
 
 export class ConfigError extends Error {
@@ -86,6 +96,9 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     if (!data.KEYCLOAK_ISSUER || !data.KEYCLOAK_CLIENT_ID || !data.APP_BASE_URL) {
       throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID e APP_BASE_URL. Defina as três e inicie de novo.')
     }
+    if (!data.KEYCLOAK_ADMIN_CLIENT_ID || !data.KEYCLOAK_ADMIN_CLIENT_SECRET) {
+      throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ADMIN_CLIENT_ID e KEYCLOAK_ADMIN_CLIENT_SECRET (credencial de serviço para criar usuários e enviar convites).')
+    }
     if (data.ADMIN_API_MODE === 'dev') {
       throw new ConfigError('ADMIN_API_MODE=dev não pode ser usado com AUTH_MODE=keycloak: o login real já liga a administração.')
     }
@@ -100,6 +113,8 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       clientId: data.KEYCLOAK_CLIENT_ID,
       clientSecret: data.KEYCLOAK_CLIENT_SECRET,
       appBaseUrl: data.APP_BASE_URL,
+      adminClientId: data.KEYCLOAK_ADMIN_CLIENT_ID,
+      adminClientSecret: data.KEYCLOAK_ADMIN_CLIENT_SECRET,
     }
   }
   return {

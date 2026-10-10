@@ -7,6 +7,7 @@ import type { SessionUser } from '../../shared/contracts/auth.ts'
 import { openDatabase, type Database } from '../db/database.ts'
 import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
+import { FakeIdentityProvider } from '../test/fake-identity.ts'
 import { buildTestApp } from '../test/build-test-app.ts'
 
 /**
@@ -87,6 +88,7 @@ afterAll(() => new Promise<void>((resolve) => fake.close(() => resolve())))
 describe('login real com Keycloak', () => {
   let app: FastifyInstance
   let db: Database
+  const identity = new FakeIdentityProvider()
   beforeAll(async () => {
     db = openDatabase(':memory:')
     migrate(db)
@@ -94,7 +96,8 @@ describe('login real com Keycloak', () => {
     seedAccount(db, 'ana', 'analista')
     app = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo' },
+      identityProvider: identity,
     })
   })
   afterAll(async () => {
@@ -192,7 +195,7 @@ describe('login real com Keycloak', () => {
     const admin = await login('admin')
     const created = await app.inject({
       method: 'POST', url: '/api/admin/accounts', headers: admin.headers,
-      payload: { usuario: 'bruno', nome: 'Bruno Souza', email: null, papel: 'analista' },
+      payload: { usuario: 'bruno', nome: 'Bruno Souza', email: 'bruno@x.gov.br', papel: 'analista' },
     })
     expect(created.statusCode).toBe(201)
     const bruno = created.json<Account>()
@@ -221,7 +224,7 @@ describe('login real com Keycloak', () => {
     const admin = await login('admin')
     const forged = await app.inject({
       method: 'POST', url: '/api/admin/accounts', headers: { cookie: String(admin.headers.cookie), origin: 'https://malicioso.example' },
-      payload: { usuario: 'intruso', nome: 'Intruso', email: null, papel: 'administrador' },
+      payload: { usuario: 'intruso', nome: 'Intruso', email: 'intruso@x.gov.br', papel: 'administrador' },
     })
     expect(forged.statusCode).toBe(403)
     const noOrigin = await app.inject({ method: 'POST', url: '/api/auth/logout', headers: { cookie: String(admin.headers.cookie) } })
@@ -234,7 +237,8 @@ describe('login real com Keycloak', () => {
 
     const restarted = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo' },
+      identityProvider: identity,
     })
     expect((await restarted.inject({ method: 'GET', url: '/api/auth/me', headers })).statusCode).toBe(200)
     await restarted.close()
@@ -242,6 +246,103 @@ describe('login real com Keycloak', () => {
     const events = db.prepare('SELECT evento, usuario FROM access_events ORDER BY ocorrido_em').all().map((row) => row.evento)
     expect(events).toEqual(expect.arrayContaining(['login.ok', 'login.sem_conta', 'login.conta_inativa', 'login.falha']))
     expect(() => db.exec('DELETE FROM access_events')).toThrow(/não podem ser apagados/)
+  })
+
+  describe('provisionamento da identidade no Keycloak', () => {
+    const post = (headers: Record<string, string>, url: string, payload?: object) =>
+      app.inject({ method: 'POST', url, headers, ...(payload ? { payload } : {}) })
+
+    it('criar conta cria o usuário no Keycloak e envia o convite; sem e-mail, recusa', async () => {
+      const admin = await login('admin')
+      const noEmail = await post(admin.headers, '/api/admin/accounts', { usuario: 'carla', nome: 'Carla Lima', email: null, papel: 'analista' })
+      expect(noEmail.statusCode).toBe(400)
+      expect(noEmail.body).toMatch(/convite/)
+      expect(identity.byName('carla')).toBeUndefined()
+
+      const ok = await post(admin.headers, '/api/admin/accounts', { usuario: 'carla', nome: 'Carla Lima', email: 'carla@x.gov.br', papel: 'analista' })
+      expect(ok.statusCode).toBe(201)
+      expect(ok.json<Account>().aviso).toBeUndefined()
+      const kc = identity.byName('carla')
+      expect(kc).toMatchObject({ email: 'carla@x.gov.br', nome: 'Carla Lima', enabled: true })
+      expect(identity.emails).toContain(kc?.id)
+      expect(ok.body).not.toMatch(/senha|password/i)
+    })
+
+    it('conta duplicada no AQR desfaz o usuário criado no Keycloak', async () => {
+      const admin = await login('admin')
+      const before = identity.users.size
+      // "ana" já existe no AQR, mas não no Keycloak falso: o usuário criado precisa ser removido.
+      const dup = await post(admin.headers, '/api/admin/accounts', { usuario: 'ana', nome: 'Outra Ana', email: 'outra@x.gov.br', papel: 'analista' })
+      expect(dup.statusCode).toBe(409)
+      expect(identity.users.size).toBe(before)
+    })
+
+    it('Keycloak fora do ar: não cria conta; e-mail com falha: cria e avisa', async () => {
+      const admin = await login('admin')
+      identity.down = true
+      const down = await post(admin.headers, '/api/admin/accounts', { usuario: 'duda', nome: 'Duda Reis', email: 'duda@x.gov.br', papel: 'analista' })
+      identity.down = false
+      expect(down.statusCode).toBe(502)
+      expect(db.prepare("SELECT 1 FROM accounts WHERE usuario = 'duda'").get()).toBeUndefined()
+
+      identity.mailDown = true
+      const noMail = await post(admin.headers, '/api/admin/accounts', { usuario: 'duda', nome: 'Duda Reis', email: 'duda@x.gov.br', papel: 'analista' })
+      identity.mailDown = false
+      expect(noMail.statusCode).toBe(201)
+      expect(noMail.json<Account>().aviso).toMatch(/e-mail de convite não foi enviado/)
+      // O convite pode ser reenviado depois.
+      const resend = await post(admin.headers, `/api/admin/accounts/${noMail.json<Account>().id}/redefinir-senha`)
+      expect(resend.statusCode).toBe(204)
+      expect(identity.emails).toContain(identity.byName('duda')?.id)
+    })
+
+    it('bloquear e reativar refletem no Keycloak; redefinir exige conta ativa; sincronizar cria contas antigas', async () => {
+      const admin = await login('admin')
+      const created = (
+        await post(admin.headers, '/api/admin/accounts', { usuario: 'edu', nome: 'Edu Prado', email: 'edu@x.gov.br', papel: 'analista' })
+      ).json<Account>()
+      const kcId = identity.byName('edu')?.id ?? ''
+
+      const off = await post(admin.headers, `/api/admin/accounts/${created.id}/desativar`, { versao: created.versao })
+      expect(off.statusCode).toBe(200)
+      expect(identity.users.get(kcId)?.enabled).toBe(false)
+      expect(identity.loggedOut).toContain(kcId)
+      const blockedReset = await post(admin.headers, `/api/admin/accounts/${created.id}/redefinir-senha`)
+      expect(blockedReset.statusCode).toBe(422)
+
+      const on = await post(admin.headers, `/api/admin/accounts/${created.id}/reativar`, { versao: off.json<Account>().versao })
+      expect(on.statusCode).toBe(200)
+      expect(identity.users.get(kcId)?.enabled).toBe(true)
+
+      // Keycloak fora do ar na desativação: o AQR bloqueia mesmo assim e avisa; sincronizar conclui depois.
+      identity.down = true
+      const partial = await post(admin.headers, `/api/admin/accounts/${created.id}/desativar`, { versao: on.json<Account>().versao })
+      identity.down = false
+      expect(partial.statusCode).toBe(200)
+      expect(partial.json<Account>()).toMatchObject({ situacao: 'inativa' })
+      expect(partial.json<Account>().aviso).toMatch(/já está bloqueado/)
+      expect(identity.users.get(kcId)?.enabled).toBe(true)
+      expect((await post(admin.headers, `/api/admin/accounts/${created.id}/sincronizar`)).statusCode).toBe(200)
+      expect(identity.users.get(kcId)?.enabled).toBe(false)
+
+      // Conta antiga, que só existe no AQR (ana), ganha o usuário e o convite ao sincronizar.
+      const ana = db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }
+      db.prepare("UPDATE accounts SET email = 'ana@x.gov.br' WHERE usuario = 'ana'").run()
+      expect(identity.byName('ana')).toBeUndefined()
+      expect((await post(admin.headers, `/api/admin/accounts/${ana.id}/sincronizar`)).statusCode).toBe(200)
+      expect(identity.byName('ana')).toMatchObject({ enabled: true })
+    })
+
+    it('só administrador provisiona e tudo fica registrado', async () => {
+      const analyst = await login('ana')
+      const forbidden = await post(analyst.headers, '/api/admin/accounts', { usuario: 'x1x', nome: 'X', email: 'x@x.gov.br', papel: 'analista' })
+      expect(forbidden.statusCode).toBe(403)
+      expect(identity.byName('x1x')).toBeUndefined()
+      const events = db.prepare('SELECT DISTINCT evento FROM access_events').all().map((row) => row.evento)
+      expect(events).toEqual(
+        expect.arrayContaining(['identidade.criada', 'identidade.convite_enviado', 'identidade.bloqueada', 'identidade.reativada', 'identidade.falha', 'identidade.sincronizada']),
+      )
+    })
   })
 
   it('sair encerra a sessão no servidor e aponta o encerramento no Keycloak', async () => {

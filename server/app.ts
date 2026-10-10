@@ -3,6 +3,8 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import { registerAdminRoutes } from './admin/routes.ts'
 import type { AuthStatus } from '../shared/contracts/auth.ts'
 import type { AuthProvider } from './auth/auth-provider.ts'
+import { IdentityProvisioner } from './admin/identity-sync.ts'
+import { KeycloakIdentityProvider, type IdentityProvider } from './auth/identity-provider.ts'
 import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
 import { createKeycloakAuthProvider, registerKeycloakAuthRoutes } from './auth/keycloak-auth.ts'
 import { KeycloakClient } from './auth/keycloak-client.ts'
@@ -24,6 +26,8 @@ export interface AppDependencies {
   db?: Database
   /** Cliente do Keycloak (testes trocam por um servidor OIDC falso). */
   keycloakClient?: KeycloakClient
+  /** Provedor de identidades (testes trocam por um falso). */
+  identityProvider?: IdentityProvider
 }
 
 /** Duração da sessão depois do login. */
@@ -98,7 +102,17 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
 
   // Administração: o banco só é aberto quando ela está ligada.
   if (realAuth && realDb) {
-    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb })
+    const keycloak = config.keycloak
+    const provider =
+      deps.identityProvider ??
+      new KeycloakIdentityProvider({
+        issuer: keycloak?.issuer ?? '',
+        adminClientId: keycloak?.adminClientId ?? '',
+        adminClientSecret: keycloak?.adminClientSecret ?? '',
+        appClientId: keycloak?.clientId ?? '',
+        appBaseUrl: keycloak?.appBaseUrl ?? '',
+      })
+    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(provider, realDb) })
   } else if (config.adminMode === 'dev') {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)

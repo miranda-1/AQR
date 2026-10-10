@@ -155,6 +155,8 @@ export function createInMemoryAccountService(options: InMemoryAccountServiceOpti
       }),
     deactivateAccount: (id, input) => guarded(() => changeStatus(id, 'inativa', input.versao, input.motivo)),
     reactivateAccount: (id, input) => guarded(() => changeStatus(id, 'ativa', input.versao, input.motivo)),
+    sendPasswordLink: (id) => guarded(() => void find(id)),
+    syncIdentity: (id) => guarded(() => find(id)),
     listAudit: (query = {}) =>
       guarded(() =>
         paginate(

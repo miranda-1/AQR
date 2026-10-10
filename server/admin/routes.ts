@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { AdminStatus, CurrentAdmin } from '../../shared/contracts/admin.ts'
 import type { AuthProvider } from '../auth/auth-provider.ts'
+import type { IdentityProvisioner } from './identity-sync.ts'
 import { principalOf, requireRole } from '../auth/require-role.ts'
 import type { Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
@@ -41,6 +42,8 @@ export interface AdminRoutesOptions {
   auth?: AuthProvider
   /** Banco das contas e da auditoria; presente quando a administração está ligada. */
   db?: Database
+  /** Provisiona o acesso no Keycloak junto com a conta (login real). Sem ele, só o AQR é alterado. */
+  identity?: IdentityProvisioner
 }
 
 /**
@@ -51,7 +54,7 @@ export interface AdminRoutesOptions {
 export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOptions): void {
   app.get('/api/admin/status', async (): Promise<AdminStatus> => ({ available: options.mode !== 'disabled', mode: options.mode }))
 
-  const { auth, db } = options
+  const { auth, db, identity } = options
   if (options.mode === 'disabled' || !auth || !db) return
   const service = new AccountService(db)
 
@@ -75,23 +78,55 @@ export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOp
     admin.get('/api/admin/accounts', { preHandler: onlyAdmins }, async (request) => service.list(accountQuery(request)))
 
     admin.post('/api/admin/accounts', { preHandler: onlyAdmins }, async (request, reply) => {
-      const account = service.create(createInput(request.body), actorFromPrincipal(principalOf(request)))
-      return reply.status(201).send(account)
+      const actor = actorFromPrincipal(principalOf(request))
+      const input = createInput(request.body)
+      if (!identity) return reply.status(201).send(service.create(input, actor))
+
+      // Primeiro o acesso no Keycloak (sem conta no AQR ninguém entra); se a conta falhar, desfaz.
+      const prepared = service.prepareCreate(input, true)
+      const keycloakId = await identity.createUser({ usuario: prepared.usuario, nome: prepared.nome, email: prepared.email ?? '' })
+      let account
+      try {
+        account = service.create(prepared, actor)
+      } catch (error) {
+        await identity.rollbackUser(keycloakId)
+        throw error
+      }
+      return reply.status(201).send(await identity.afterCreate(account, keycloakId, actor.id ?? ''))
     })
 
     admin.get('/api/admin/accounts/:id', { preHandler: onlyAdmins }, async (request) => service.get(idParam(request)))
 
-    admin.patch('/api/admin/accounts/:id', { preHandler: onlyAdmins }, async (request) =>
-      service.update(idParam(request), updateInput(request.body), actorFromPrincipal(principalOf(request))),
-    )
+    admin.patch('/api/admin/accounts/:id', { preHandler: onlyAdmins }, async (request) => {
+      const actor = actorFromPrincipal(principalOf(request))
+      const account = service.update(idParam(request), updateInput(request.body), actor)
+      return identity ? identity.afterUpdate(account, actor.id ?? '') : account
+    })
 
-    admin.post('/api/admin/accounts/:id/desativar', { preHandler: onlyAdmins }, async (request) =>
-      service.deactivate(idParam(request), statusChangeInput(request.body), actorFromPrincipal(principalOf(request))),
-    )
+    admin.post('/api/admin/accounts/:id/desativar', { preHandler: onlyAdmins }, async (request) => {
+      const actor = actorFromPrincipal(principalOf(request))
+      const account = service.deactivate(idParam(request), statusChangeInput(request.body), actor)
+      return identity ? identity.afterStatusChange(account, actor.id ?? '') : account
+    })
 
-    admin.post('/api/admin/accounts/:id/reativar', { preHandler: onlyAdmins }, async (request) =>
-      service.reactivate(idParam(request), statusChangeInput(request.body), actorFromPrincipal(principalOf(request))),
-    )
+    admin.post('/api/admin/accounts/:id/reativar', { preHandler: onlyAdmins }, async (request) => {
+      const actor = actorFromPrincipal(principalOf(request))
+      const account = service.reactivate(idParam(request), statusChangeInput(request.body), actor)
+      return identity ? identity.afterStatusChange(account, actor.id ?? '') : account
+    })
+
+    if (identity) {
+      // Link por e-mail para a pessoa definir ou redefinir a senha (a senha nunca passa pelo AQR).
+      admin.post('/api/admin/accounts/:id/redefinir-senha', { preHandler: onlyAdmins }, async (request, reply) => {
+        const actor = actorFromPrincipal(principalOf(request))
+        await identity.sendPasswordEmail(service.get(idParam(request)), actor.id ?? '')
+        return reply.status(204).send()
+      })
+      // Alinha o Keycloak com a conta (cria o acesso de contas antigas, corrige bloqueio e dados).
+      admin.post('/api/admin/accounts/:id/sincronizar', { preHandler: onlyAdmins }, async (request) =>
+        identity.sync(service.get(idParam(request)), actorFromPrincipal(principalOf(request)).id ?? ''),
+      )
+    }
 
     admin.get('/api/admin/audit-events', { preHandler: onlyAdmins }, async (request) => service.listAudit(auditQuery(request)))
   })

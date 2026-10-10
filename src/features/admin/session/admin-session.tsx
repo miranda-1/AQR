@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAuthSession } from '@/features/auth/auth-session'
 import { createHttpAccountService } from '../services/http-account-service'
-import type { AccountService } from '../model/types'
+import type { AccountService, AdminStatus } from '../model/types'
 
 /**
  * Disponibilidade da administração de contas. O servidor decide (`GET /api/admin/status`):
@@ -11,6 +11,8 @@ export type AdminAvailability = 'checking' | 'available' | 'unavailable'
 
 interface AdminSessionValue {
   availability: AdminAvailability
+  /** Como o servidor autentica a administração; `real` provisiona o acesso no Keycloak. */
+  mode: AdminStatus['mode'] | null
   service: AccountService
 }
 
@@ -29,19 +31,23 @@ export function AdminSessionProvider({ children, service: provided }: AdminSessi
     [provided, userName],
   )
   const [availability, setAvailability] = useState<AdminAvailability>('checking')
+  const [mode, setMode] = useState<AdminStatus['mode'] | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
     service
       .getStatus({ signal: controller.signal })
-      .then((status) => setAvailability(status.available ? 'available' : 'unavailable'))
+      .then((status) => {
+        setMode(status.mode)
+        setAvailability(status.available ? 'available' : 'unavailable')
+      })
       .catch(() => {
         if (!controller.signal.aborted) setAvailability('unavailable')
       })
     return () => controller.abort()
   }, [service])
 
-  const value = useMemo(() => ({ availability, service }), [availability, service])
+  const value = useMemo(() => ({ availability, mode, service }), [availability, mode, service])
   return <AdminSessionContext.Provider value={value}>{children}</AdminSessionContext.Provider>
 }
 
