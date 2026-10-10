@@ -1,0 +1,54 @@
+{
+  "realm": "aqr",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "bruteForceProtected": true,
+  "clients": [
+    {
+      "clientId": "aqr-web",
+      "name": "AQR",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:5173/api/auth/callback"],
+      "webOrigins": ["http://localhost:5173"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/entrar"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Local",
+      "email": "admin@aqr.local",
+      "credentials": [{ "type": "password", "value": "admin-dev-123", "temporary": false }]
+    },
+    {
+      "username": "ana",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ana",
+      "lastName": "Analista",
+      "email": "ana@aqr.local",
+      "credentials": [{ "type": "password", "value": "ana-dev-123", "temporary": false }]
+    },
+    {
+      "username": "semconta",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Sem",
+      "lastName": "Conta",
+      "email": "semconta@aqr.local",
+      "credentials": [{ "type": "password", "value": "semconta-dev-123", "temporary": false }]
+    }
+  ]
+}

@@ -1,7 +1,12 @@
 import multipart from '@fastify/multipart'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { registerAdminRoutes } from './admin/routes.ts'
+import type { AuthStatus } from '../shared/contracts/auth.ts'
+import type { AuthProvider } from './auth/auth-provider.ts'
 import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
+import { createKeycloakAuthProvider, registerKeycloakAuthRoutes } from './auth/keycloak-auth.ts'
+import { KeycloakClient } from './auth/keycloak-client.ts'
+import { SessionStore } from './auth/session-store.ts'
 import { openDatabase, type Database } from './db/database.ts'
 import { migrate } from './db/migrate.ts'
 import { ComparisonJobStore } from './comparison/job-store.ts'
@@ -17,7 +22,12 @@ const JSON_BODY_LIMIT = 64 * 1024
 export interface AppDependencies {
   /** Banco já aberto (testes). Sem ele, a administração abre `config.databasePath`. */
   db?: Database
+  /** Cliente do Keycloak (testes trocam por um servidor OIDC falso). */
+  keycloakClient?: KeycloakClient
 }
+
+/** Duração da sessão depois do login. */
+const SESSION_TTL_MS = 8 * 3600_000
 
 /**
  * Monta o servidor sem abrir porta, para os testes usarem `app.inject()`.
@@ -41,6 +51,29 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
 
   app.get('/api/health', async () => ({ status: 'ok' as const }))
 
+  // Login real: precisa vir antes das demais rotas, porque registra os ganchos que as protegem.
+  let realAuth: AuthProvider | null = null
+  let realDb: Database | null = null
+  if (config.keycloak) {
+    const db = deps.db ?? openDatabase(config.databasePath)
+    migrate(db)
+    if (!deps.db) app.addHook('onClose', async () => db.close())
+    const sessions = new SessionStore(SESSION_TTL_MS)
+    const sweep = setInterval(() => sessions.purgeExpired(), 60_000)
+    sweep.unref()
+    app.addHook('onClose', async () => {
+      clearInterval(sweep)
+      sessions.clear()
+    })
+    const provider = createKeycloakAuthProvider({ sessions, db })
+    const client = deps.keycloakClient ?? new KeycloakClient(config.keycloak)
+    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl }, provider)
+    realAuth = provider
+    realDb = db
+  } else {
+    app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'visual' }))
+  }
+
   const store = new ComparisonJobStore(config.comparison.resultTtlMs)
   const pool = new ComparisonWorkerPool(config.comparison, {
     ...defaultComparisonLimits,
@@ -61,7 +94,9 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   })
 
   // Administração: o banco só é aberto quando ela está ligada.
-  if (config.adminMode === 'dev') {
+  if (realAuth && realDb) {
+    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb })
+  } else if (config.adminMode === 'dev') {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())

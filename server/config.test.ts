@@ -45,6 +45,20 @@ describe('loadConfig', () => {
     expect(loadConfig({ NODE_ENV: 'production' }).adminMode).toBe('disabled')
   })
 
+  it('valida a configuração do login real com Keycloak', () => {
+    const ok = {
+      AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: 'https://login.exemplo.gov.br/realms/aqr/',
+      KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
+    }
+    expect(loadConfig({ NODE_ENV: 'production', ...ok }).keycloak).toMatchObject({ issuer: 'https://login.exemplo.gov.br/realms/aqr', clientId: 'aqr-web' })
+    expect(loadConfig({}).keycloak).toBeNull()
+    expect(() => loadConfig({ AUTH_MODE: 'keycloak' })).toThrow(/exige KEYCLOAK_ISSUER/)
+    expect(() => loadConfig({ ...ok, KEYCLOAK_ISSUER: 'http://login.exemplo.gov.br/realms/aqr' })).toThrow(/HTTPS/)
+    expect(() => loadConfig({ ...ok, APP_BASE_URL: 'http://aqr.exemplo.gov.br' })).toThrow(/HTTPS/)
+    expect(() => loadConfig({ ...ok, ADMIN_API_MODE: 'dev' })).toThrow(/não pode ser usado com AUTH_MODE=keycloak/)
+    expect(loadConfig({ ...ok, KEYCLOAK_ISSUER: 'http://localhost:8080/realms/aqr', APP_BASE_URL: 'http://localhost:5173' }).keycloak?.appBaseUrl).toBe('http://localhost:5173')
+  })
+
   it('recusa valores inválidos com uma mensagem que diz o que corrigir', () => {
     expect(() => loadConfig({ PORT: 'abc' })).toThrow(ConfigError)
     expect(() => loadConfig({ PORT: '70000' })).toThrow(/PORT/)

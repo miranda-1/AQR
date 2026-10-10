@@ -7,7 +7,7 @@ import { ApiError } from '../http/errors.ts'
 import { AccountService, actorFromPrincipal } from './account-service.ts'
 import { accountQuery, auditQuery, createInput, idParam, statusChangeInput, updateInput } from './schemas.ts'
 
-export type AdminMode = 'disabled' | 'dev'
+export type AdminMode = 'disabled' | 'dev' | 'real'
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 
@@ -57,7 +57,8 @@ export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOp
 
   app.register(async (admin) => {
     admin.decorateRequest('principal', null)
-    admin.addHook('onRequest', async (request) => assertLocalRequest(request))
+    // Só o modo sem autenticação real precisa ficar restrito ao computador local.
+    if (options.mode === 'dev') admin.addHook('onRequest', async (request) => assertLocalRequest(request))
     const onlyAdmins = requireRole(auth, 'administrador')
 
     admin.get('/api/admin/me', { preHandler: onlyAdmins }, async (request): Promise<CurrentAdmin> => {

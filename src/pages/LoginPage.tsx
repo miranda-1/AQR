@@ -6,6 +6,7 @@ import { appConfig } from '@/config/app'
 import { useAuthSession } from '@/features/auth/auth-session'
 import { ComparedSheet } from '@/features/auth/components/ComparedSheet'
 import { DottedRings, ringRadii } from '@/features/auth/components/DottedRings'
+import { KeycloakLogin } from '@/features/auth/components/KeycloakLogin'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { drawDots, sampleLogo, scatterFromRings } from '@/features/auth/entry/dot-logo'
 import { useEntryHandoff } from '@/features/auth/entry/entry-handoff'
@@ -23,7 +24,7 @@ const LOGO_FONT = '800 80px "Plus Jakarta Sans Variable"'
 
 export function LoginPage() {
   useDocumentTitle('Entrar')
-  const { isAuthenticated, signIn } = useAuthSession()
+  const { isAuthenticated, mode, signIn } = useAuthSession()
   const navigate = useNavigate()
   const location = useLocation()
   const handoff = useEntryHandoff()
@@ -114,6 +115,7 @@ export function LoginPage() {
 
   // Já com sessão (inclusive logo depois de entrar), o login leva ao destino.
   if (isAuthenticated) return <Navigate to={destination} replace />
+  if (mode === 'loading') return null
 
   const entering = phase === 'entering'
 
@@ -147,7 +149,11 @@ export function LoginPage() {
                 </p>
               </div>
               <div>
-                <LoginForm onSubmit={playEntry} onType={() => setPulse((value) => value + 1)} disabled={entering} />
+                {mode === 'keycloak' ? (
+                  <KeycloakLogin returnTo={destination} />
+                ) : (
+                  <LoginForm onSubmit={playEntry} onType={() => setPulse((value) => value + 1)} disabled={entering} />
+                )}
                 <p className="mt-[18px] text-center text-[0.84375rem] text-muted-foreground">
                   Esqueceu a senha? Procure o suporte da {appConfig.organization.short}.
                 </p>

@@ -97,7 +97,7 @@ export interface AuditQuery {
  */
 export interface AdminStatus {
   available: boolean
-  mode: 'disabled' | 'dev'
+  mode: 'disabled' | 'dev' | 'real'
 }
 
 /** Quem está usando a administração, como o servidor a identificou. */

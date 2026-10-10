@@ -17,6 +17,12 @@ const environmentSchema = z.object({
   COMPARISON_WORKER_MEMORY_MB: z.coerce.number().int().min(128).max(4096).default(768),
   DATABASE_PATH: z.string().min(1).default('data/aqr.sqlite'),
   ADMIN_API_MODE: z.enum(['disabled', 'dev']).default('disabled'),
+  /** "keycloak": login real; exige as variáveis KEYCLOAK_* e APP_BASE_URL e liga a administração. */
+  AUTH_MODE: z.enum(['visual', 'keycloak']).default('visual'),
+  KEYCLOAK_ISSUER: z.url().optional(),
+  KEYCLOAK_CLIENT_ID: z.string().min(1).optional(),
+  KEYCLOAK_CLIENT_SECRET: z.string().min(1).optional(),
+  APP_BASE_URL: z.url().optional(),
 })
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
@@ -49,6 +55,8 @@ export interface ServerConfig {
    * identificando a pessoa por `X-AQR-Dev-Actor`; só fora de produção e só na máquina local.
    */
   adminMode: 'disabled' | 'dev'
+  /** Login real com Keycloak; `null` no login visual (desenvolvimento). */
+  keycloak: { issuer: string; clientId: string; clientSecret: string | undefined; appBaseUrl: string } | null
 }
 
 export class ConfigError extends Error {
@@ -73,7 +81,29 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       `ADMIN_API_MODE=dev só funciona com HOST=127.0.0.1 (agora: ${data.HOST}). Sem autenticação real, a administração não pode ficar exposta na rede.`,
     )
   }
+  let keycloak: ServerConfig['keycloak'] = null
+  if (data.AUTH_MODE === 'keycloak') {
+    if (!data.KEYCLOAK_ISSUER || !data.KEYCLOAK_CLIENT_ID || !data.APP_BASE_URL) {
+      throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID e APP_BASE_URL. Defina as três e inicie de novo.')
+    }
+    if (data.ADMIN_API_MODE === 'dev') {
+      throw new ConfigError('ADMIN_API_MODE=dev não pode ser usado com AUTH_MODE=keycloak: o login real já liga a administração.')
+    }
+    for (const [name, value] of [['KEYCLOAK_ISSUER', data.KEYCLOAK_ISSUER], ['APP_BASE_URL', data.APP_BASE_URL]] as const) {
+      const url = new URL(value)
+      if (url.protocol !== 'https:' && !LOOPBACK_HOSTS.has(url.hostname)) {
+        throw new ConfigError(`${name} precisa usar HTTPS (HTTP só é aceito em localhost).`)
+      }
+    }
+    keycloak = {
+      issuer: data.KEYCLOAK_ISSUER.replace(/\/$/, ''),
+      clientId: data.KEYCLOAK_CLIENT_ID,
+      clientSecret: data.KEYCLOAK_CLIENT_SECRET,
+      appBaseUrl: data.APP_BASE_URL,
+    }
+  }
   return {
+    keycloak,
     environment: data.NODE_ENV,
     host: data.HOST,
     port: data.PORT,

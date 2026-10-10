@@ -54,6 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 10/10/2026 | Login real com Keycloak, usando biblioteca OIDC madura (`openid-client`), sem OIDC/JWT/criptografia próprios e com tokens fora do navegador. Imagem do Keycloak local: 26.8.0 (não a 26.0). O login visual segue como padrão (`AUTH_MODE=visual`). |
 | 08/10/2026 | Usar a marca PREFCG na versão digital azul, sem "Siga @prefcg". ~~A marca SEMADES não entra; a sigla aparece só no rodapé, em texto.~~ Parte substituída pela decisão sobre o rodapé, abaixo. |
 | 08/10/2026 | Cor da marca unificada em **#283587**, o valor do manual. O arquivo 2026 tinha azuis divergentes. |
 | 08/10/2026 | Limite de **50 MB** por PDF. |
@@ -149,8 +150,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 10/10/2026 | Auditoria: `/administracao/auditoria` (linha do tempo com filtro por tipo de evento, quem fez, quando e o que mudou, paginada) e "Histórico da conta" na página de edição (recarrega a cada alteração); botão "Auditoria" na lista de contas; casos novos no axe (commit 19 do plano). Nota: numa execução isolada o projeto `integracao` falhou uma vez ao nível do arquivo e passou em todas as 5 repetições seguintes; ficar atento a intermitência | `16088cb` |
 | 10/10/2026 | Documentação da administração e da entrada da autenticação real (`docs/arquitetura.md`), README com o passo a passo, `AQR_API_URL` para o Vite apontar para outra API e sete capturas das telas (computador e celular) em `docs/capturas-administracao/`, geradas com a API real em modo `dev` (commit 20 do plano) | ver `git log` |
 | 10/10/2026 | Inicialização local unificada: `npm run dev` sobe API e site no mesmo terminal, evitando que o navegador abra com o servidor desligado (causa da falha nos dois PDFs de teste); `dev:web` preserva o modo demonstrativo sem API. A tela de erro orienta a conferir o servidor. O pool deixa de registrar uma falha falsa quando a thread encerra após uma comparação concluída. | ver `git log` |
+| 10/10/2026 | Login real com Keycloak (`AUTH_MODE=keycloak`): servidor como cliente OIDC (BFF, PKCE) com `openid-client`; sessão em cookie HttpOnly, tokens só no servidor; papel e situação vêm da conta no banco do AQR, conferidos a cada pedido; `/api/comparisons` e `/api/admin/*` protegidos; proteção de origem (CSRF); botão "Entrar com a conta da PREFCG" no lugar dos campos em modo Keycloak. Guia e limitações em `docs/login-keycloak.md` | ver `git log` |
 
 ## Pendências
+
+- **Login real (Keycloak):** validar com um Keycloak real (realm de desenvolvimento em `docker/keycloak/`, imagem 26.8.0) e com o Keycloak institucional; sessões em memória; login/logout fora da auditoria; botão no lugar dos campos na tela de login aguarda validação visual. Ver `docs/login-keycloak.md`.
 
 - **Fontes padrão no visualizador:** o pdf.js avisa no console (`standardFontDataUrl`) ao abrir PDFs com fontes padrão não incorporadas; o desenho sai com fonte substituta. Se atrapalhar o alinhamento dos destaques, servir `pdfjs-dist/standard_fonts` e informar `standardFontDataUrl` em `load-pdf.ts`.
 

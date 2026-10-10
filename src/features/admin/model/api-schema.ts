@@ -40,7 +40,7 @@ const auditEvent = z.object({
 const pageOf = <T extends z.ZodMiniType>(item: T) =>
   z.object({ items: z.array(item), total: z.number(), page: z.number(), pageSize: z.number() })
 
-const status = z.object({ available: z.boolean(), mode: z.enum(['disabled', 'dev']) })
+const status = z.object({ available: z.boolean(), mode: z.enum(['disabled', 'dev', 'real']) })
 export const apiErrorSchema = z.object({
   error: z.object({ code: text, message: text, fields: z.optional(z.record(z.string(), z.string())) }),
 })
