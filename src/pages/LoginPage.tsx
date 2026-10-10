@@ -160,7 +160,7 @@ export function LoginPage() {
                 )}
                 <p className="mt-[18px] text-center text-[0.84375rem] text-muted-foreground">
                   {mode === 'keycloak'
-                    ? 'Esqueceu a senha? Use "Esqueceu a senha?" na próxima tela para receber um link por e-mail.'
+                    ? 'Esqueceu a senha? Use "Esqueceu sua senha?" na próxima tela para receber um link por e-mail.'
                     : `Esqueceu a senha? Procure o suporte da ${appConfig.organization.short}.`}
                 </p>
               </div>
