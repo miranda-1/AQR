@@ -113,6 +113,40 @@ GET /api/comparisons/:id → ComparisonJob        DELETE /api/comparisons/:id �
 - A API administrativa fica desligada por padrão e o servidor recusa o modo de desenvolvimento em produção.
   A autenticação real entrará trocando o `AuthProvider`, sem mexer em rotas, regras ou auditoria.
 
+### Administração de contas
+
+```
+GET  /api/admin/status                         sempre responde { available, mode }
+GET|POST /api/admin/accounts                   lista (q, papel, situacao, page, pageSize) · cria
+GET|PATCH /api/admin/accounts/:id              detalhe · edita (nome, e-mail, papel + versao)
+POST /api/admin/accounts/:id/desativar|reativar   situação (+ motivo opcional + versao)
+GET  /api/admin/audit-events                   auditoria (contaId, acao, page, pageSize)
+```
+
+Com `ADMIN_API_MODE=dev`, o `DevAuthProvider` identifica a pessoa pelo cabeçalho `X-AQR-Dev-Actor` (o frontend envia o nome
+digitado no login visual) e só aceita administradores ativos no banco. Cada alteração e o evento de auditoria compartilham a
+mesma transação SQLite; a trilha é só de inserção (gatilhos do banco). O primeiro administrador sai de
+`npm run admin:criar -- --usuario x --nome "Y"`.
+
+Frontend (`src/features/admin/`): `AccountService` (contrato) com `createHttpAccountService` e `createInMemoryAccountService`
+(testes); `AdminSessionProvider` consulta o `status` e o menu da conta só oferece "Administração de contas" quando está
+disponível. Telas: `/administracao/contas` (lista e busca), `/administracao/contas/nova`, `/administracao/contas/:id`
+(edição, situação e histórico) e `/administracao/auditoria`.
+
+### Como entrará a autenticação real
+
+Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:
+
+1. Implementar outro `AuthProvider` (`server/auth/auth-provider.ts`) que leia a sessão (LDAP/AD, SSO da Prefeitura ou outro)
+   e devolva o `Principal` com `origem: 'real'`; ligar em `server/app.ts` no lugar do `DevAuthProvider`.
+2. Sessão em cookie `HttpOnly; Secure; SameSite=Strict`, com proteção contra CSRF nas rotas que alteram dados.
+3. Migração `0002_identidade_externa` para ligar a conta ao identificador do provedor (o `usuario` institucional já casa
+   com o login; não há senha guardada).
+4. Trocar o login visual (`src/features/auth/`) pela autenticação real, **só com pedido explícito**; o `AdminSessionProvider`
+   deixa de enviar `X-AQR-Dev-Actor` e passa a depender da sessão.
+5. Remover o `DevAuthProvider`, o `ADMIN_API_MODE=dev` e a restrição de loopback em `server/admin/routes.ts`; manter a trava
+   de que produção nunca inicia sem autenticação real.
+
 ## Decisões
 
 | Decisão | Motivo |

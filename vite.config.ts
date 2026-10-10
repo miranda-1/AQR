@@ -11,7 +11,8 @@ export default defineConfig({
   },
   server: {
     // No desenvolvimento, a API (npm run dev:server) fica na mesma origem do site.
-    proxy: { '/api': 'http://127.0.0.1:3000' },
+    // `AQR_API_URL` permite apontar para outra API (por exemplo, numa porta diferente).
+    proxy: { '/api': process.env.AQR_API_URL ?? 'http://127.0.0.1:3000' },
   },
   test: {
     globals: true,

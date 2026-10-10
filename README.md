@@ -16,6 +16,16 @@ npm run dev          # em outro terminal: site em http://localhost:5173 (o Vite 
 
 Para revisar a interface sem servidor, com dados fictícios: `VITE_COMPARISON_SERVICE=demo npm run dev`.
 
+Administração de contas (desligada por padrão; sem autenticação real, só no computador local):
+
+```bash
+npm run admin:criar -- --usuario maria.admin --nome "Maria Souza"   # primeiro administrador
+ADMIN_API_MODE=dev npm run dev:server                                # liga a API administrativa
+```
+
+Depois, entre no site com o usuário `maria.admin` (qualquer senha): "Administração de contas" aparece no menu da conta.
+Capturas das telas para aprovação visual: `docs/capturas-administracao/`.
+
 | Script | O que faz |
 |---|---|
 | `npm run dev` | Site em modo de desenvolvimento |
