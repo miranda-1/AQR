@@ -76,7 +76,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     app.addHook('onRequest', async (request) => {
       if (warned || request.headers['x-forwarded-for'] === undefined) return
       warned = true
-      request.log.warn('Pedido com X-Forwarded-For, mas TRUST_PROXY está vazio: informe o IP do proxy reverso em TRUST_PROXY.')
+      request.log.warn('Chegou um pedido com X-Forwarded-For e TRUST_PROXY está vazio. Se o AQR estiver atrás de um proxy reverso, informe o IP dele em TRUST_PROXY.')
     })
   }
 

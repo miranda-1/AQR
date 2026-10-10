@@ -96,6 +96,9 @@ O **frontend** também falha fechado: no build de produção, se o servidor não
 - **Contas antigas ficam sem acesso até serem vinculadas** (é o comportamento seguro; planeje a janela de migração).
 - **Sessões**: caem com 30 min sem uso ou 8 h depois do login; não há aviso antes de cair (quem está usando não é interrompido, porque a atividade renova a sessão). Quem tiver o banco não assume sessões (só há hash) e não encontra tokens.
 - **Três sistemas para manter coerentes** (SQLite do AQR, Keycloak, e-mail): falhas parciais geram `aviso` e o botão "Sincronizar com o Keycloak" conclui; não há reconciliação automática periódica. Uma conta desativada no AQR com falha no Keycloak continua sem entrar (o AQR confere a situação a cada pedido).
+- **Limite de tentativas de login** é por IPv4 ou bloco /64 do IPv6: quem controla muitos blocos (um /48 inteiro, por exemplo) ainda consegue encher o teto de 10 mil logins em andamento e fazer logins legítimos caírem em "expirado" (basta tentar de novo). Proteção mais forte exige limite no proxy reverso ou no firewall.
+- **Duas abas clicando em "Entrar" no mesmo instante** podem fazer a primeira cair em "expirado" (o cookie com os logins em andamento é um só); basta clicar de novo.
+- **Comparação com `comparacao.enviada` e sem desfecho no registro** significa servidor interrompido no meio dela (o desligamento não é registrado como cancelamento).
 - **Registro das comparações** vale só no login real. Os **registros de acesso** (`access_events`, com IP) não têm prazo de retenção definido: nada é apagado automaticamente.
 - **Encerramento no Keycloak** depende da credencial de serviço estar no ar; sem ela, o login único do Keycloak pode continuar ativo até expirar (a sessão do AQR sempre cai).
 - **Auditoria de contas** (`audit_events`) não registra o vínculo nem os convites; esses ficam em `access_events`.

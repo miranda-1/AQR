@@ -654,6 +654,27 @@ describe('login real com Keycloak', () => {
       ])
     })
 
+    it('desligar o servidor no meio de uma comparação não a registra como cancelada', { timeout: 20_000 }, async () => {
+      const other = await buildTestApp({
+        db,
+        env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
+        identityProvider: identity,
+      })
+      const analyst = await login('admin')
+      const first = await makePdf([['Art. 1º O prazo é de dez dias.']])
+      const second = await makePdf([['Art. 1º O prazo é de quinze dias.']])
+      const body = await multipartBody([
+        { field: 'original', name: 'a.pdf', bytes: first.bytes },
+        { field: 'updated', name: 'b.pdf', bytes: second.bytes },
+      ])
+      const sent = await other.inject({ method: 'POST', url: '/api/comparisons', headers: { ...analyst.headers, ...body.headers }, payload: body.payload })
+      const { id } = sent.json<{ id: string }>()
+      await other.close()
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      // Interrompida antes de terminar (nada de "concluída") e sem o falso "cancelada por quem enviou".
+      expect(db.prepare('SELECT evento FROM comparison_events WHERE comparacao_id = ?').all(id)).toEqual([{ evento: 'comparacao.enviada' }])
+    })
+
     it('apaga sozinho o registro das comparações com mais de 1 ano, e só esse', async () => {
       const anaId = (db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }).id
       const old = new Date(Date.now() - 400 * 86_400_000).toISOString()
