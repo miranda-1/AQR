@@ -105,7 +105,11 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
         )
       })
       .catch((error: unknown) => {
-        if (signal.aborted) return
+        if (signal.aborted) {
+          // Cancelada por quem enviou (saiu da tela ou desistiu): fica registrada como tal no resumo.
+          audit?.finished(id, { status: 'failed', reason: 'CANCELLED' })
+          return
+        }
         // Fila cheia entre a checagem e a execução, ou falha ao iniciar a thread.
         store.finish({ id, status: 'failed', error: { code: 'PROCESSING_FAILED' } })
         audit?.finished(id, { status: 'failed', reason: 'PROCESSING_FAILED' })

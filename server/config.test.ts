@@ -20,6 +20,14 @@ describe('loadConfig', () => {
     })
   })
 
+  it('confia só nos proxies informados, nunca em "todos"', () => {
+    expect(loadConfig({}).trustProxy).toEqual([])
+    expect(loadConfig({ TRUST_PROXY: '10.0.0.5, 10.1.0.0/16,fd00::/8' }).trustProxy).toEqual(['10.0.0.5', '10.1.0.0/16', 'fd00::/8'])
+    for (const bad of ['true', '*', '10.0.0.0/33', 'proxy.local', '10.0.0.1/8/1']) {
+      expect(() => loadConfig({ TRUST_PROXY: bad }), bad).toThrow(ConfigError)
+    }
+  })
+
   it('lê as variáveis de ambiente', () => {
     const config = loadConfig({
       NODE_ENV: 'development',

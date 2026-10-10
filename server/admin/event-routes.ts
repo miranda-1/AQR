@@ -21,7 +21,7 @@ function text(request: FastifyRequest, key: string): string | null {
   const value = (request.query as Record<string, unknown>)[key]
   if (value === undefined || value === '') return null
   if (typeof value !== 'string' || value.length > 100) throw new ApiError(400, 'VALIDATION_FAILED', `O filtro "${key}" é inválido.`)
-  return value.trim()
+  return value.trim() || null
 }
 
 const isAccessEventType = (value: string): value is AccessEventType => (accessEventTypes as readonly string[]).includes(value)

@@ -3,6 +3,8 @@ import { IdentityError, type IdentityProfile, type IdentityProvider } from '../a
 interface FakeUser extends IdentityProfile {
   id: string
   enabled: boolean
+  /** E-mail confirmado no Keycloak (padrão: sim; os testes podem desmarcar). */
+  emailVerified: boolean
 }
 
 /** Provedor de identidades em memória, para testar o provisionamento sem Keycloak. */
@@ -28,7 +30,7 @@ export class FakeIdentityProvider implements IdentityProvider {
     this.guard()
     if (this.byName(profile.usuario)) throw new IdentityError('já existe', 409)
     const id = `kc-${this.next++}`
-    this.users.set(id, { ...profile, id, enabled: true })
+    this.users.set(id, { ...profile, id, enabled: true, emailVerified: true })
     return id
   }
 
@@ -37,10 +39,10 @@ export class FakeIdentityProvider implements IdentityProvider {
     return this.byName(usuario)?.id ?? null
   }
 
-  async findUser(usuario: string): Promise<{ id: string; email: string | null } | null> {
+  async findUser(usuario: string): Promise<{ id: string; email: string | null; emailVerified: boolean } | null> {
     this.guard()
     const user = this.byName(usuario)
-    return user ? { id: user.id, email: user.email } : null
+    return user ? { id: user.id, email: user.email, emailVerified: user.emailVerified } : null
   }
 
   async deleteUser(id: string): Promise<void> {

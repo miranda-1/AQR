@@ -1,3 +1,4 @@
+import { announceSessionEnded } from '@/features/auth/session-events'
 import { DEV_ACTOR_HEADER } from '../../../../shared/contracts/admin'
 import {
   apiErrorSchema,
@@ -55,6 +56,7 @@ export function createHttpAccountService(options: HttpAccountServiceOptions): Ac
     }
 
     const json: unknown = await response.json().catch(() => undefined)
+    if (response.status === 401) announceSessionEnded()
     if (!response.ok) {
       const parsed = apiErrorSchema.safeParse(json)
       if (parsed.success) {

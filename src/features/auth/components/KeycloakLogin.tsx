@@ -11,7 +11,8 @@ const errorMessages: Record<string, string> = {
   vinculo_pendente: 'Sua conta do AQR ainda não foi vinculada ao seu acesso. Peça a um administrador do AQR para concluir o vínculo.',
   vinculo_divergente: 'Este acesso não corresponde à conta do AQR com o mesmo usuário. Por segurança, o login foi recusado; fale com um administrador do AQR.',
   falha: 'Não foi possível confirmar seu login. Tente de novo; se continuar, fale com o suporte da SEMADES.',
-  sessao_expirada: 'Sua sessão terminou por falta de uso (30 minutos) ou pelo limite de 8 horas. Entre de novo para voltar à página em que estava.',
+  sessao_expirada: 'Sua sessão terminou: 30 minutos sem uso, limite de 8 horas ou uma alteração na sua conta. Entre de novo para voltar à página em que estava.',
+  muitas_tentativas: 'Foram muitas tentativas de entrar em pouco tempo. Aguarde um minuto e tente de novo.',
   indisponivel: 'O sistema de login está indisponível agora. Tente de novo em alguns minutos.',
 }
 

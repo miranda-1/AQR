@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { SESSION_ENDED_EVENT } from './session-events'
 
 /**
  * Sessão de acesso. Dois modos, escolhidos pelo servidor (`GET /api/auth/status`):
@@ -99,11 +100,17 @@ function useSessionKeepAlive(active: boolean, onExpired: () => void) {
     const onVisible = () => {
       if (document.visibilityState === 'visible') checkClock()
     }
+    // Qualquer pedido recusado com 401 (comparação, administração) encerra na hora.
+    const onEnded = () => {
+      if (!stopped) onExpired()
+    }
+    window.addEventListener(SESSION_ENDED_EVENT, onEnded)
     for (const name of ACTIVITY_EVENTS) window.addEventListener(name, onActivity, { passive: true })
     document.addEventListener('visibilitychange', onVisible)
     const timer = window.setInterval(checkClock, CLOCK_CHECK_MS)
     return () => {
       stopped = true
+      window.removeEventListener(SESSION_ENDED_EVENT, onEnded)
       for (const name of ACTIVITY_EVENTS) window.removeEventListener(name, onActivity)
       document.removeEventListener('visibilitychange', onVisible)
       window.clearInterval(timer)

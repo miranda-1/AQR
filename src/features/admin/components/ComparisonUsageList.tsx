@@ -43,7 +43,7 @@ export function ComparisonUsageList() {
                   <th scope="col" className="px-4 py-3 text-right font-semibold">Em 12 meses</th>
                   <th scope="col" className="px-4 py-3 text-right font-semibold">Em 30 dias</th>
                   <th scope="col" className="px-4 py-3 text-right font-semibold">Concluídas</th>
-                  <th scope="col" className="px-4 py-3 text-right font-semibold">Com falha</th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">Com falha ou canceladas</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Última</th>
                 </tr>
               </thead>
@@ -74,7 +74,7 @@ export function ComparisonUsageList() {
                   {plural(item.total, 'comparação', 'comparações')} em 12 meses · {item.ultimos30Dias} em 30 dias
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {plural(item.concluidas, 'concluída', 'concluídas')} · {plural(item.falhas, 'com falha', 'com falha')} · última em{' '}
+                  {plural(item.concluidas, 'concluída', 'concluídas')} · {item.falhas} com falha ou canceladas · última em{' '}
                   <time dateTime={item.ultimaEm}>{formatDate(item.ultimaEm)}</time>
                 </p>
               </li>

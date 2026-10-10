@@ -51,6 +51,8 @@ function comparisonAccess(auth: AuthProvider, db: Database, log: (message: strin
 export async function buildApp(config: ServerConfig, deps: AppDependencies = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
+    // Só os proxies informados em TRUST_PROXY podem dizer o IP de quem acessa (X-Forwarded-For).
+    trustProxy: config.trustProxy.length > 0 ? config.trustProxy : false,
     bodyLimit: JSON_BODY_LIMIT,
     // Ids de requisição curtos e sem dados do cliente.
     disableRequestLogging: config.environment === 'test',
@@ -102,7 +104,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
         appClientId: config.keycloak.clientId,
         appBaseUrl: config.keycloak.appBaseUrl,
       })
-    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl, identity: realIdentity }, provider)
+    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl, identity: realIdentity, loginAttemptsPerMinute: config.keycloak.loginAttemptsPerMinute }, provider)
     realAuth = provider
     realDb = db
   } else {

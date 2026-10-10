@@ -67,6 +67,14 @@ export class SessionStore {
     return { accountId: textColumn(row, 'account_id'), expiresAt: Math.min(hardLimit, lastSeen + this.limits.idleMs) }
   }
 
+  /** Conta o pedido como uso (no máximo uma gravação a cada 30 s). */
+  touch(id: string): void {
+    const now = this.now()
+    this.db
+      .prepare('UPDATE sessions SET last_seen_at = ? WHERE id_hash = ? AND last_seen_at <= ? AND expires_at > ?')
+      .run(now, hashOf(id), now - TOUCH_EVERY_MS, now)
+  }
+
   destroy(id: string | undefined): void {
     if (id) this.db.prepare('DELETE FROM sessions WHERE id_hash = ?').run(hashOf(id))
   }

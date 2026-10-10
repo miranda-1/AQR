@@ -46,6 +46,12 @@ const detailLabels: Record<string, string> = {
   keycloak_nao_encerrado: 'O AQR encerrou a sessão, mas não conseguiu encerrar a do Keycloak.',
 }
 
+function detailOf(detalhe: string): string {
+  if (detailLabels[detalhe]) return detailLabels[detalhe]
+  if (detalhe.startsWith('sub=')) return `Identificador no Keycloak: ${detalhe.slice(4)}`
+  return `Detalhe: ${detalhe}`
+}
+
 function describe(event: AccessEvent): string {
   const who = event.usuario ? `Usuário ${event.usuario}` : 'Usuário não identificado'
   const by = event.ator ? ` Por ${event.ator.usuario ?? 'um administrador'}.` : ''
@@ -136,7 +142,7 @@ export function AccessEventList({ pageSize = 15 }: { pageSize?: number }) {
         <ol className="mt-4 grid gap-3">
           {data.items.map((event) => {
             const { label, Icon, alert } = accessEventMeta[event.evento]
-            const detail = event.detalhe ? (detailLabels[event.detalhe] ?? `Detalhe: ${event.detalhe}`) : null
+            const detail = event.detalhe ? detailOf(event.detalhe) : null
             return (
               <li key={event.id} className="rounded-lg bg-white p-4 shadow-surface">
                 <div className="flex flex-wrap items-center justify-between gap-2">

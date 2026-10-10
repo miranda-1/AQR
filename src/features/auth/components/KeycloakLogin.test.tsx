@@ -24,7 +24,8 @@ describe('KeycloakLogin', () => {
     ['conta_inativa', /desativada/],
     ['vinculo_pendente', /ainda não foi vinculada/],
     ['vinculo_divergente', /não corresponde/],
-    ['sessao_expirada', /sessão terminou por falta de uso/],
+    ['sessao_expirada', /sessão terminou: 30 minutos sem uso/],
+    ['muitas_tentativas', /Aguarde um minuto/],
     ['falha', /Não foi possível confirmar/],
     ['qualquer-outro', /Não foi possível confirmar/],
   ])('explica o erro %s e o que fazer', (code, text) => {

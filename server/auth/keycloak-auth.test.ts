@@ -9,6 +9,7 @@ import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
 import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
+import { safeReturnTo } from './keycloak-auth.ts'
 import { makePdf } from '../test/make-pdf.ts'
 import { purgeOldComparisonEvents } from '../comparison/audit.ts'
 
@@ -103,7 +104,7 @@ describe('login real com Keycloak', () => {
     db.prepare("UPDATE accounts SET email = 'antiga@x.gov.br' WHERE usuario = 'antiga'").run()
     app = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo' },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
       identityProvider: identity,
     })
   })
@@ -137,11 +138,13 @@ describe('login real com Keycloak', () => {
       username: options.claimUsername ?? username, nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
       audience: options.audience ?? CLIENT_ID,
     })
-    const loginCookie = cookieOf(start, 'aqr_login')
+    const state = target.searchParams.get('state') ?? ''
+    expect(cookieOf(start, `aqr_login_${state}`)).toBe('1')
+    expect(String(start.headers['set-cookie'])).toContain('Path=/api/auth/callback')
     const back = await app.inject({
       method: 'GET',
-      url: `/api/auth/callback?code=${code}&state=${target.searchParams.get('state')}&iss=${encodeURIComponent(issuer)}`,
-      headers: { cookie: `aqr_login=${loginCookie}` },
+      url: `/api/auth/callback?code=${code}&state=${state}&iss=${encodeURIComponent(issuer)}`,
+      headers: { cookie: `aqr_login_${state}=1` },
     })
     const session = cookieOf(back, 'aqr_sessao')
     const headers: Record<string, string> = session ? { cookie: `aqr_sessao=${session}`, origin: APP } : { origin: APP }
@@ -171,23 +174,28 @@ describe('login real com Keycloak', () => {
 
   it('login errado: código inválido, estado trocado ou token de outro aplicativo não criam sessão', async () => {
     const start = await app.inject({ method: 'GET', url: '/api/auth/login' })
-    const loginCookie = cookieOf(start, 'aqr_login')
     const target = new URL(String(start.headers.location))
+    const state = target.searchParams.get('state') ?? ''
     const bad = await app.inject({
-      method: 'GET', url: `/api/auth/callback?code=forjado&state=${target.searchParams.get('state')}`,
-      headers: { cookie: `aqr_login=${loginCookie}` },
+      method: 'GET', url: `/api/auth/callback?code=forjado&state=${state}`,
+      headers: { cookie: `aqr_login_${state}=1` },
     })
     expect(bad.headers.location).toBe(`${APP}/entrar?erro=falha`)
     expect(cookieOf(bad, 'aqr_sessao')).toBeUndefined()
 
     const noCookie = await app.inject({ method: 'GET', url: '/api/auth/callback?code=x&state=y' })
     expect(noCookie.headers.location).toBe(`${APP}/entrar?erro=expirado`)
+    // O retorno de um login começado em OUTRO navegador (sem o cookie daquele state) não vale.
+    const other = await app.inject({ method: 'GET', url: '/api/auth/login' })
+    const otherState = new URL(String(other.headers.location)).searchParams.get('state') ?? ''
+    const stolen = await app.inject({ method: 'GET', url: `/api/auth/callback?code=x&state=${otherState}` })
+    expect(stolen.headers.location).toBe(`${APP}/entrar?erro=expirado`)
 
     const wrongAudience = await login('admin', { audience: 'outro-app' })
     expect(wrongAudience.location).toBe(`${APP}/entrar?erro=falha`)
     expect(wrongAudience.session).toBeUndefined()
 
-    const denied = await app.inject({ method: 'GET', url: `/api/auth/callback?error=access_denied`, headers: { cookie: 'aqr_login=nada' } })
+    const denied = await app.inject({ method: 'GET', url: `/api/auth/callback?error=access_denied`, headers: { cookie: 'aqr_login_x=1' } })
     expect(denied.statusCode).toBe(302)
   })
 
@@ -201,6 +209,29 @@ describe('login real com Keycloak', () => {
     expect((await login('admin', { returnTo: '/administracao/contas' })).location).toBe(`${APP}/administracao/contas`)
     expect((await login('admin', { returnTo: 'https://malicioso.example' })).location).toBe(`${APP}/`)
     expect((await login('admin', { returnTo: '//malicioso.example' })).location).toBe(`${APP}/`)
+    // O navegador ignora tab e quebra de linha e trata "\\" como "/": nada disso pode virar "//site".
+    for (const tricky of ['/\t/malicioso.example', '/\n/malicioso.example', '/\\malicioso.example', '/%09/x', `/${'a'.repeat(3000)}`]) {
+      expect((await login('admin', { returnTo: tricky })).location).toMatch(new RegExp(`^${APP}/`))
+      expect(safeReturnTo(tricky)).not.toMatch(/^\/\//)
+    }
+    expect(safeReturnTo('/\t/malicioso.example')).toBe('/')
+    expect(safeReturnTo('/comparacao?x=1#y')).toBe('/comparacao?x=1#y')
+    expect(new URL(safeReturnTo('/%2F%2Fmalicioso.example'), APP).origin).toBe(APP)
+  })
+
+  it('logins abandonados e excesso de tentativas não enchem a memória', async () => {
+    const limited = await buildTestApp({
+      db,
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '3' },
+      identityProvider: identity,
+    })
+    try {
+      for (let i = 0; i < 3; i++) expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toMatch(new RegExp(`^${issuer}`))
+      expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
+      expect((await limited.inject({ method: 'GET', url: '/api/auth/callback?code=x&state=y' })).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
+    } finally {
+      await limited.close()
+    }
   })
 
   it('administrador cria analista, analista não administra e a desativação vale na hora', async () => {
@@ -226,6 +257,13 @@ describe('login real com Keycloak', () => {
     expect((await get('/api/admin/accounts', analyst.headers)).statusCode).toBe(401)
     const again = await login('bruno')
     expect(again.location).toBe(`${APP}/entrar?erro=conta_inativa`)
+    // A sessão aberta foi apagada: reativar a conta não ressuscita o cookie antigo.
+    expect(db.prepare('SELECT count(*) AS n FROM sessions WHERE account_id = ?').get(bruno.id)).toEqual({ n: 0 })
+    const back = await app.inject({
+      method: 'POST', url: `/api/admin/accounts/${bruno.id}/reativar`, headers: admin.headers, payload: { versao: bruno.versao + 1 },
+    })
+    expect(back.statusCode).toBe(200)
+    expect((await get('/api/auth/me', analyst.headers)).statusCode).toBe(401)
 
     const audit = await get('/api/admin/audit-events', admin.headers)
     expect(audit.body).toContain('conta.desativada')
@@ -241,6 +279,26 @@ describe('login real com Keycloak', () => {
     expect(forged.statusCode).toBe(403)
     const noOrigin = await app.inject({ method: 'POST', url: '/api/auth/logout', headers: { cookie: String(admin.headers.cookie) } })
     expect(noOrigin.statusCode).toBe(403)
+    // Caminho codificado (`%61` = "a") cai na mesma rota, mas não escapa da conferência de origem…
+    const encoded = await app.inject({
+      method: 'POST', url: '/%61pi/admin/accounts', headers: { cookie: String(admin.headers.cookie), origin: 'https://malicioso.example' },
+      payload: { usuario: 'intruso', nome: 'Intruso', email: 'intruso@x.gov.br', papel: 'administrador' },
+    })
+    expect(encoded.statusCode).toBe(403)
+    // …nem da exigência de login na comparação.
+    expect((await app.inject({ method: 'POST', url: '/%61pi/comparisons', headers: { origin: APP } })).statusCode).toBe(401)
+    expect((await app.inject({ method: 'GET', url: '/%61pi/comparisons/00000000-0000-4000-8000-000000000000' })).statusCode).toBe(401)
+  })
+
+  it('conta desativada não mantém a sessão viva com pedidos', async () => {
+    const id = seedAccount(db, 'dora', 'analista')
+    db.prepare("UPDATE accounts SET keycloak_sub = 'sub-dora' WHERE id = ?").run(id)
+    const { headers } = await login('dora')
+    db.prepare("UPDATE sessions SET last_seen_at = 0 WHERE account_id = ?").run(id)
+    db.prepare("UPDATE accounts SET situacao = 'inativa', desativada_em = ? WHERE id = ?").run(new Date().toISOString(), id)
+    expect((await get('/api/auth/me', headers)).statusCode).toBe(401)
+    // O pedido não contou como uso (a sessão já estava parada; segue parada e cai sozinha).
+    expect(db.prepare('SELECT last_seen_at FROM sessions WHERE account_id = ?').all(id).every((row) => row.last_seen_at === 0)).toBe(true)
   })
 
   it('sessões sobrevivem a reinício, ficam no banco só como hash e os acessos são registrados', async () => {
@@ -300,8 +358,17 @@ describe('login real com Keycloak', () => {
       expect(mismatch.body).toMatch(/e-mail/)
       expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(id)).toEqual({ keycloak_sub: null })
 
+      // Mesmo e-mail, mas ainda não confirmado no Keycloak: a pessoa poderia tê-lo trocado sozinha.
       const kc = identity.byName('legado')
-      if (kc) kc.email = 'LEGADO@x.gov.br'
+      if (kc) {
+        kc.email = 'LEGADO@x.gov.br'
+        kc.emailVerified = false
+      }
+      const unverified = await app.inject({ method: 'POST', url, headers: admin.headers })
+      expect(unverified.statusCode).toBe(409)
+      expect(unverified.json<{ error: { code: string } }>().error.code).toBe('EMAIL_NAO_CONFIRMADO')
+      expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(id)).toEqual({ keycloak_sub: null })
+      if (kc) kc.emailVerified = true
       expect((await app.inject({ method: 'POST', url, headers: admin.headers })).statusCode).toBe(200)
       expect(db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(id)).toEqual({ keycloak_sub: kc?.id })
       expect((await login('legado')).session).toBeDefined()
@@ -416,7 +483,7 @@ describe('login real com Keycloak', () => {
     expect(identity.loggedOut).toEqual(['sub-ana'])
     // O cookie antigo não vale mais, mesmo que alguém o guarde.
     expect((await get('/api/auth/me', headers)).statusCode).toBe(401)
-    expect(db.prepare("SELECT detalhe FROM access_events WHERE evento = 'logout' ORDER BY ocorrido_em DESC LIMIT 1").get()).toEqual({ detalhe: null })
+    expect(db.prepare("SELECT detalhe, usuario FROM access_events WHERE evento = 'logout' ORDER BY ocorrido_em DESC LIMIT 1").get()).toEqual({ detalhe: null, usuario: 'ana' })
   })
 
   it('Keycloak fora do ar no logout: a sessão do AQR cai mesmo assim e o registro avisa', async () => {
@@ -515,6 +582,25 @@ describe('login real com Keycloak', () => {
       expect((await get(`/api/comparisons/${id}`, analyst.headers)).statusCode).toBe(404)
     })
 
+    it('comparação cancelada por quem enviou fica registrada como cancelada', { timeout: 20_000 }, async () => {
+      const analyst = await login('ana')
+      const first = await makePdf([['Art. 1º O prazo é de dez dias.']])
+      const second = await makePdf([['Art. 1º O prazo é de quinze dias.']])
+      const body = await multipartBody([
+        { field: 'original', name: 'a.pdf', bytes: first.bytes },
+        { field: 'updated', name: 'b.pdf', bytes: second.bytes },
+      ])
+      const sent = await app.inject({ method: 'POST', url: '/api/comparisons', headers: { ...analyst.headers, ...body.headers }, payload: body.payload })
+      const { id } = sent.json<{ id: string }>()
+      expect((await app.inject({ method: 'DELETE', url: `/api/comparisons/${id}`, headers: analyst.headers })).statusCode).toBe(204)
+      for (let i = 0; i < 100 && !db.prepare("SELECT 1 FROM comparison_events WHERE comparacao_id = ? AND evento != 'comparacao.enviada'").get(id); i++) {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+      expect(db.prepare("SELECT evento, detalhe FROM comparison_events WHERE comparacao_id = ? AND evento != 'comparacao.enviada'").all(id)).toEqual([
+        { evento: 'comparacao.falhou', detalhe: 'CANCELLED' },
+      ])
+    })
+
     it('apaga sozinho o registro das comparações com mais de 1 ano, e só esse', async () => {
       const anaId = (db.prepare("SELECT id FROM accounts WHERE usuario = 'ana'").get() as { id: string }).id
       const old = new Date(Date.now() - 400 * 86_400_000).toISOString()
@@ -542,13 +628,20 @@ describe('login real com Keycloak', () => {
       expect(comparisons.json<{ items: { evento: string }[] }>().items.some((item) => item.evento === 'comparacao.enviada')).toBe(true)
       expect(comparisons.body).not.toMatch(/arquivo|\.pdf/i)
       expect((await get('/api/admin/comparison-events/resumo', analyst.headers)).statusCode).toBe(403)
-      const usage = (await get('/api/admin/comparison-events/resumo', admin.headers)).json<{ items: { usuario: string; nome: string; total: number; concluidas: number; ultimos30Dias: number }[] }>()
+      const usage = (await get('/api/admin/comparison-events/resumo', admin.headers)).json<{ items: { usuario: string; nome: string; total: number; concluidas: number; falhas: number; ultimos30Dias: number }[] }>()
       const ana = usage.items.find((item) => item.usuario === 'ana')
       expect(ana).toMatchObject({ nome: expect.any(String) })
       expect(ana?.total).toBeGreaterThanOrEqual(2)
       expect(ana?.ultimos30Dias).toBe(ana?.total)
-      expect(ana?.concluidas).toBe(ana?.total)
+      // Toda comparação enviada termina concluída ou com falha (cancelada conta como falha).
+      expect((ana?.concluidas ?? 0) + (ana?.falhas ?? 0)).toBe(ana?.total)
+      expect(ana?.falhas).toBe(1)
       expect((await get('/api/admin/access-events?evento=' + 'x'.repeat(101), admin.headers)).statusCode).toBe(400)
+      expect((await get('/api/admin/access-events?evento=nao.existe', admin.headers)).statusCode).toBe(400)
+      // Filtro só com espaços vale como "sem filtro" (antes, deslocava os parâmetros e dava 500).
+      expect((await get('/api/admin/access-events?usuario=%20%20&evento=%20', admin.headers)).statusCode).toBe(200)
+      const logouts = await get('/api/admin/access-events?evento=logout&usuario=ana', admin.headers)
+      expect(logouts.statusCode).toBe(200)
     })
   })
 })

@@ -64,13 +64,21 @@ export class IdentityProvisioner {
 
   /**
    * Vincula uma conta antiga ao usuário que já existe no Keycloak. A identidade é conferida pelo
-   * e-mail: o do Keycloak precisa ser o da conta. `allowWithoutEmail` é só para o operador no
+   * e-mail: o do Keycloak precisa ser o da conta e estar confirmado (senão a própria pessoa poderia
+   * trocar o e-mail no Keycloak para o de outra conta e ganhar o vínculo). `allowWithoutEmail` é só para o operador no
    * servidor (`npm run admin:vincular`), para contas criadas sem e-mail (ex.: o primeiro administrador).
    */
   async linkExisting(account: Account, actorId: string | null, options: { allowWithoutEmail?: boolean } = {}): Promise<string> {
     const found = await this.provider.findUser(account.usuario)
     if (!found) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
     const sameEmail = account.email !== null && found.email !== null && account.email.toLowerCase() === found.email.toLowerCase()
+    if (sameEmail && !found.emailVerified) {
+      throw new ApiError(
+        409,
+        'EMAIL_NAO_CONFIRMADO',
+        'O e-mail do usuário no Keycloak ainda não foi confirmado. Confirme-o no Keycloak (ou peça à pessoa para confirmar) antes de vincular: o vínculo não pode ser desfeito.',
+      )
+    }
     if (!sameEmail && !(options.allowWithoutEmail && account.email === null)) {
       throw new ApiError(
         409,
@@ -129,6 +137,9 @@ export class IdentityProvisioner {
 
   async afterStatusChange(account: Account, actorId: string): Promise<AccountWithNotice> {
     const active = account.situacao === 'ativa'
+    // Desativada, a conta perde na hora as sessões abertas no AQR: nem um cookie antigo volta a
+    // valer se ela for reativada depois.
+    if (!active) this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
     try {
       const id = this.boundSub(account.id)
       if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_IN_KEYCLOAK) }

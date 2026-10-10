@@ -28,7 +28,7 @@ export interface IdentityProvider {
   createUser(profile: IdentityProfile): Promise<string>
   findUserId(usuario: string): Promise<string | null>
   /** O usuário pelo nome, com o e-mail cadastrado (para conferir a identidade antes de vincular). */
-  findUser(usuario: string): Promise<{ id: string; email: string | null } | null>
+  findUser(usuario: string): Promise<{ id: string; email: string | null; emailVerified: boolean } | null>
   deleteUser(id: string): Promise<void>
   setEnabled(id: string, enabled: boolean): Promise<void>
   updateProfile(id: string, profile: IdentityProfile): Promise<void>
@@ -132,12 +132,16 @@ export class KeycloakIdentityProvider implements IdentityProvider {
     return typeof first === 'object' && first !== null && 'id' in first && typeof first.id === 'string' ? first.id : null
   }
 
-  async findUser(usuario: string): Promise<{ id: string; email: string | null } | null> {
+  async findUser(usuario: string): Promise<{ id: string; email: string | null; emailVerified: boolean } | null> {
     const response = await this.call('GET', `/users?username=${encodeURIComponent(usuario)}&exact=true`)
     const list: unknown = await response.json()
     const first: unknown = Array.isArray(list) ? list[0] : undefined
     if (typeof first !== 'object' || first === null || !('id' in first) || typeof first.id !== 'string') return null
-    return { id: first.id, email: 'email' in first && typeof first.email === 'string' ? first.email : null }
+    return {
+      id: first.id,
+      email: 'email' in first && typeof first.email === 'string' ? first.email : null,
+      emailVerified: 'emailVerified' in first && first.emailVerified === true,
+    }
   }
 
   async deleteUser(id: string): Promise<void> {

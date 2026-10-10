@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
+import { act } from 'react'
 import { AuthSessionProvider, useAuthSession } from './auth-session'
+import { announceSessionEnded } from './session-events'
 
 function Probe() {
   const { mode, isAuthenticated } = useAuthSession()
@@ -88,5 +90,22 @@ describe('AuthSessionProvider (sessão por inatividade no login real)', () => {
     alive = false
     await vi.advanceTimersByTimeAsync(61_000)
     expect(await screen.findByText('fora:expirou')).toBeInTheDocument()
+  })
+
+  it('um 401 em qualquer pedido (comparação, administração) encerra na hora', async () => {
+    respondWith((url) =>
+      url.endsWith('/api/auth/status') ? Response.json({ mode: 'keycloak' }) : Response.json({ nome: 'Ana', usuario: 'ana', papel: 'analista' }),
+    )
+    render(<AuthSessionProvider><Expired /></AuthSessionProvider>)
+    expect(await screen.findByText('dentro:valendo')).toBeInTheDocument()
+    act(() => announceSessionEnded())
+    expect(await screen.findByText('fora:expirou')).toBeInTheDocument()
+  })
+
+  it('no modo visual, o aviso de 401 não derruba ninguém', async () => {
+    respondWith(() => Response.json({ mode: 'visual' }))
+    render(<AuthSessionProvider initialAuthenticated><Expired /></AuthSessionProvider>)
+    act(() => announceSessionEnded())
+    expect(screen.getByText('dentro:valendo')).toBeInTheDocument()
   })
 })

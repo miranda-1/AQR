@@ -6,6 +6,10 @@
   "loginWithEmailAllowed": false,
   "bruteForceProtected": true,
   "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
   "clients": [
     {
       "clientId": "aqr-web",

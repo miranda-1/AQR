@@ -1,7 +1,8 @@
 // Ponta a ponta com Keycloak real + Mailpit + API do AQR (ver docs/login-keycloak.md).
 // Uso: node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>
 // Pré-requisitos: docker compose -f docker/dev/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
-// KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret e banco novo
+// KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret, AUTH_LOGIN_ATTEMPTS_PER_MINUTE=1000
+// (o script faz dezenas de logins por minuto do mesmo IP; o padrão é 30) e banco novo
 // com o administrador "admin" (npm run admin:criar, sem vínculo) e as MESMAS variáveis KEYCLOAK_*/DATABASE_PATH
 // exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
 import { spawnSync } from 'node:child_process'

@@ -1,3 +1,4 @@
+import { isIP } from 'node:net'
 import { z } from 'zod'
 import { defaultComparisonLimits } from './comparison/limits.ts'
 
@@ -9,6 +10,13 @@ const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /**
+   * Proxies reversos confiáveis (IPs ou faixas CIDR, separados por vírgula), para o IP real de quem
+   * acessa vir de `X-Forwarded-For`. Vazio: nenhum (o IP registrado é o da conexão).
+   */
+  TRUST_PROXY: z.string().default(''),
+  /** Inícios de login e retornos do Keycloak aceitos por IP, a cada minuto. */
+  AUTH_LOGIN_ATTEMPTS_PER_MINUTE: z.coerce.number().int().min(1).max(100_000).default(30),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   COMPARISON_WORKERS: z.coerce.number().int().min(1).max(8).default(2),
   COMPARISON_QUEUE_LIMIT: z.coerce.number().int().min(0).max(100).default(8),
@@ -53,6 +61,8 @@ export interface ServerConfig {
   host: string
   port: number
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent'
+  /** Proxies reversos confiáveis; vazio = nenhum. */
+  trustProxy: string[]
   comparison: ComparisonSettings
   /** Arquivo do banco SQLite (contas e auditoria). `:memory:` nos testes. */
   databasePath: string
@@ -69,6 +79,8 @@ export interface ServerConfig {
     appBaseUrl: string
     adminClientId: string
     adminClientSecret: string
+    /** Inícios de login e retornos do Keycloak aceitos por IP, a cada minuto. */
+    loginAttemptsPerMinute: number
   } | null
 }
 
@@ -135,6 +147,7 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       appBaseUrl: data.APP_BASE_URL,
       adminClientId: data.KEYCLOAK_ADMIN_CLIENT_ID,
       adminClientSecret: data.KEYCLOAK_ADMIN_CLIENT_SECRET,
+      loginAttemptsPerMinute: data.AUTH_LOGIN_ATTEMPTS_PER_MINUTE,
     }
   }
   return {
@@ -143,6 +156,7 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     host: data.HOST,
     port: data.PORT,
     logLevel: data.LOG_LEVEL,
+    trustProxy: parseTrustProxy(data.TRUST_PROXY),
     comparison: {
       workers: data.COMPARISON_WORKERS,
       queueLimit: data.COMPARISON_QUEUE_LIMIT,
@@ -154,4 +168,19 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     databasePath: data.DATABASE_PATH,
     adminMode: data.ADMIN_API_MODE,
   }
+}
+
+/** Lista de proxies confiáveis: só IPs ou faixas CIDR explícitos, nunca "todos". */
+function parseTrustProxy(value: string): string[] {
+  const entries = value.split(',').map((item) => item.trim()).filter(Boolean)
+  for (const entry of entries) {
+    const [address = '', bits, extra] = entry.split('/')
+    const version = isIP(address)
+    const maxBits = version === 6 ? 128 : 32
+    const validBits = bits === undefined || (/^\d{1,3}$/u.test(bits) && Number(bits) <= maxBits)
+    if (version === 0 || !validBits || extra !== undefined) {
+      throw new ConfigError(`TRUST_PROXY: "${entry}" não é um IP nem uma faixa CIDR. Informe só os endereços do proxy reverso.`)
+    }
+  }
+  return entries
 }
