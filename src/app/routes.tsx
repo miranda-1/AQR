@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType } from 'react'
 import type { RouteObject } from 'react-router'
 import { AppShell, type RouteHandle } from '@/components/layout/AppShell'
 import { routes } from '@/config/routes'
+import { RequireAdmin } from '@/features/admin/components/RequireAdmin'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { ComparisonSetupPage } from '@/pages/ComparisonSetupPage'
 import { HomePage } from '@/pages/HomePage'
@@ -42,6 +43,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: routes.triage,
         element: lazyPage(() => import('@/pages/TriagePage').then((m) => ({ default: m.TriagePage }))),
+      },
+      {
+        path: routes.adminAccounts,
+        element: <RequireAdmin>{lazyPage(() => import('@/pages/AccountsPage').then((m) => ({ default: m.AccountsPage })))}</RequireAdmin>,
       },
       {
         path: '*',

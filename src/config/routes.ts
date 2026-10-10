@@ -6,4 +6,7 @@ export const routes = {
   comparison: '/comparacao',
   comparisonWorkspace: '/comparacao/resultado',
   triage: '/triagem',
+  /** Administração de contas (só quando o servidor a disponibiliza). */
+  adminAccounts: '/administracao/contas',
+  adminAudit: '/administracao/auditoria',
 } as const
