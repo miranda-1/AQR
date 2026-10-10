@@ -111,3 +111,18 @@ describe('acessibilidade dos formulários de contas (axe)', () => {
     expect(await violations(document.body)).toEqual([])
   })
 })
+
+describe('acessibilidade da auditoria (axe)', () => {
+  it('auditoria geral e histórico da conta não têm violações', async () => {
+    const service = createInMemoryAccountService({ accounts: sampleAccounts })
+    await service.updateAccount('u2', { nome: 'Bruno Reis Filho', email: null, papel: 'analista', versao: 1 })
+    const general = renderApp('/administracao/auditoria', { accountService: service })
+    await screen.findByText('1 evento registrado.')
+    expect(await violations(general.container)).toEqual([])
+    general.unmount()
+    const detail = renderApp('/administracao/contas/u2', { accountService: service })
+    await screen.findByRole('region', { name: 'Histórico da conta' })
+    await screen.findByText('1 evento registrado.')
+    expect(await violations(detail.container)).toEqual([])
+  })
+})

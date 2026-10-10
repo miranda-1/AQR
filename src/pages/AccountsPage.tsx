@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { History, Plus } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { routes } from '@/config/routes'
@@ -24,12 +24,20 @@ export function AccountsPage() {
             Contas de quem usa o AQR. Contas desativadas não entram, mas continuam no histórico.
           </p>
         </div>
-        <Button asChild className="min-h-11">
-          <Link to={routes.adminAccountNew} viewTransition>
-            <Plus aria-hidden />
-            Nova conta
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="outline" className="min-h-11">
+            <Link to={routes.adminAudit} viewTransition>
+              <History aria-hidden />
+              Auditoria
+            </Link>
+          </Button>
+          <Button asChild className="min-h-11">
+            <Link to={routes.adminAccountNew} viewTransition>
+              <Plus aria-hidden />
+              Nova conta
+            </Link>
+          </Button>
+        </div>
       </div>
       {notice && <p role="status" className="mt-4 rounded-lg bg-addition-bg p-4 font-semibold text-addition">{notice}</p>}
       <AccountsList />

@@ -5,6 +5,7 @@ import { routes } from '@/config/routes'
 import { StatusBadge } from '@/features/admin/components/AccountBadges'
 import { AccountForm } from '@/features/admin/components/AccountForm'
 import { fieldErrorsOf } from '@/features/admin/components/field-errors'
+import { AuditList } from '@/features/admin/components/AuditList'
 import { StatusChangeDialog } from '@/features/admin/components/StatusChangeDialog'
 import { formatDate } from '@/features/admin/components/AccountsList'
 import { messageOf, useAsyncData } from '@/features/admin/hooks/use-async-data'
@@ -94,6 +95,11 @@ export function AccountEditPage() {
             }}
           />
         </div>
+      </section>
+
+      <section aria-labelledby="historico-titulo" className="mt-6">
+        <h2 id="historico-titulo" className="text-xl font-extrabold text-ink">Histórico da conta</h2>
+        <AuditList contaId={id} pageSize={5} refreshKey={String(account.versao)} />
       </section>
       {back}
     </div>
