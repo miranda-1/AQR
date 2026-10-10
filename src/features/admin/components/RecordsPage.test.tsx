@@ -49,4 +49,9 @@ describe('registros de uso e acesso', () => {
     expect(await screen.findByText('1 registro encontrado.')).toBeInTheDocument()
     expect(timeline().getByText('Login recusado: sem conta no AQR')).toBeInTheDocument()
   })
+
+  it('sem comparações, diz isso uma vez só', async () => {
+    renderApp('/administracao/registros', { accountService: createInMemoryAccountService({ accounts: sampleAccounts, mode: 'real' }) })
+    expect(await screen.findAllByText('Ninguém comparou documentos nos últimos 12 meses.')).toHaveLength(1)
+  })
 })

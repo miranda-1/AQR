@@ -19,7 +19,12 @@ export function ComparisonUsageList() {
     <div>
       <p role="status" className="text-sm text-muted-foreground">
         {result.status === 'loading' && 'Carregando o uso da comparação…'}
-        {items && (items.length === 1 ? '1 pessoa usou a comparação.' : `${items.length} pessoas usaram a comparação.`)}
+        {items &&
+          (items.length === 0
+            ? 'Ninguém comparou documentos nos últimos 12 meses.'
+            : items.length === 1
+              ? '1 pessoa usou a comparação.'
+              : `${items.length} pessoas usaram a comparação.`)}
       </p>
 
       {result.status === 'error' && (
@@ -29,8 +34,6 @@ export function ComparisonUsageList() {
           <Button type="button" variant="outline" className="mt-4 bg-white text-ink" onClick={result.reload}>Tentar de novo</Button>
         </div>
       )}
-
-      {items && items.length === 0 && <p className="mt-4 text-muted-foreground">Ninguém comparou documentos nos últimos 12 meses.</p>}
 
       {items && items.length > 0 &&
         (isWide ? (
