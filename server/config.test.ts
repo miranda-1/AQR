@@ -73,8 +73,11 @@ describe('loadConfig', () => {
       NODE_ENV: 'production', AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: 'https://login.exemplo.gov.br/realms/aqr',
       KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
       KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
+      KEYCLOAK_CLIENT_SECRET: 'P9w-outro-segredo-do-cliente-web-77',
     }
     expect(loadConfig(prod).keycloak?.adminClientId).toBe('aqr-admin')
+    expect(() => loadConfig({ ...prod, KEYCLOAK_CLIENT_SECRET: 'aqr-web-dev-secret' })).toThrow(/KEYCLOAK_CLIENT_SECRET é um segredo de desenvolvimento/)
+    expect(() => loadConfig({ ...prod, KEYCLOAK_CLIENT_SECRET: 'curto' })).toThrow(/KEYCLOAK_CLIENT_SECRET .*curto demais/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_ADMIN_CLIENT_SECRET: 'aqr-admin-dev-secret' })).toThrow(/segredo de desenvolvimento/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_ADMIN_CLIENT_SECRET: 'curto' })).toThrow(/curto demais/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_ISSUER: 'http://localhost:8080/realms/aqr' })).toThrow(/localhost/)
@@ -86,7 +89,9 @@ describe('loadConfig', () => {
       AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: 'https://login.exemplo.gov.br/realms/aqr/',
       KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
       KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
+      KEYCLOAK_CLIENT_SECRET: 'P9w-outro-segredo-do-cliente-web-77',
     }
+    expect(() => loadConfig({ ...ok, KEYCLOAK_CLIENT_SECRET: undefined })).toThrow(/KEYCLOAK_CLIENT_SECRET \(cliente confidencial/)
     expect(loadConfig({ NODE_ENV: 'production', ...ok }).keycloak).toMatchObject({ issuer: 'https://login.exemplo.gov.br/realms/aqr', clientId: 'aqr-web' })
     expect(loadConfig({}).keycloak).toBeNull()
     expect(() => loadConfig({ AUTH_MODE: 'keycloak' })).toThrow(/exige KEYCLOAK_ISSUER/)

@@ -44,7 +44,7 @@ const environmentSchema = z.object({
 })
 
 /** Segredos que existem nos arquivos de desenvolvimento do repositório; nunca valem em produção. */
-const DEV_ONLY_SECRETS = new Set(['aqr-admin-dev-secret'])
+const DEV_ONLY_SECRETS = new Set(['aqr-admin-dev-secret', 'aqr-web-dev-secret'])
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', 'localhost'])
 
@@ -90,7 +90,7 @@ export interface ServerConfig {
   keycloak: {
     issuer: string
     clientId: string
-    clientSecret: string | undefined
+    clientSecret: string
     appBaseUrl: string
     adminClientId: string
     adminClientSecret: string
@@ -129,8 +129,10 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
   }
   let keycloak: ServerConfig['keycloak'] = null
   if (data.AUTH_MODE === 'keycloak') {
-    if (!data.KEYCLOAK_ISSUER || !data.KEYCLOAK_CLIENT_ID || !data.APP_BASE_URL) {
-      throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID e APP_BASE_URL. Defina as três e inicie de novo.')
+    if (!data.KEYCLOAK_ISSUER || !data.KEYCLOAK_CLIENT_ID || !data.KEYCLOAK_CLIENT_SECRET || !data.APP_BASE_URL) {
+      throw new ConfigError(
+        'AUTH_MODE=keycloak exige KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET (cliente confidencial do AQR, que confere as senhas) e APP_BASE_URL. Defina as quatro e inicie de novo.',
+      )
     }
     if (!data.KEYCLOAK_ADMIN_CLIENT_ID || !data.KEYCLOAK_ADMIN_CLIENT_SECRET) {
       throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ADMIN_CLIENT_ID e KEYCLOAK_ADMIN_CLIENT_SECRET (credencial de serviço para criar usuários e enviar convites).')
@@ -150,6 +152,9 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
         if (LOOPBACK_HOSTS.has(new URL(value).hostname)) {
           throw new ConfigError(`${name} aponta para localhost, que é só de desenvolvimento. Use o endereço HTTPS de produção.`)
         }
+      }
+      if (DEV_ONLY_SECRETS.has(data.KEYCLOAK_CLIENT_SECRET) || data.KEYCLOAK_CLIENT_SECRET.length < 24) {
+        throw new ConfigError('KEYCLOAK_CLIENT_SECRET é um segredo de desenvolvimento ou curto demais (mínimo de 24 caracteres). Gere um segredo novo no Keycloak de produção.')
       }
       if (DEV_ONLY_SECRETS.has(data.KEYCLOAK_ADMIN_CLIENT_SECRET) || data.KEYCLOAK_ADMIN_CLIENT_SECRET.length < 24) {
         throw new ConfigError('KEYCLOAK_ADMIN_CLIENT_SECRET é um segredo de desenvolvimento ou curto demais (mínimo de 24 caracteres). Gere um segredo novo no Keycloak de produção.')

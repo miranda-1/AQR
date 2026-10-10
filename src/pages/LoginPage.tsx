@@ -6,12 +6,13 @@ import { appConfig } from '@/config/app'
 import { useAuthSession } from '@/features/auth/auth-session'
 import { ComparedSheet, DifferenceChip, sheetDifferences } from '@/features/auth/components/ComparedSheet'
 import { DottedRings } from '@/features/auth/components/DottedRings'
-import { KeycloakLogin } from '@/features/auth/components/KeycloakLogin'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useEntryHandoff } from '@/features/auth/entry/entry-handoff'
 import { greetingFor } from '@/features/auth/entry/greeting'
 import { playScanEntry } from '@/features/auth/entry/scan-entry'
 import { isAbortError } from '@/features/auth/entry/timing'
+import { loginNotice } from '@/features/auth/login-messages'
+import { loginWithPassword } from '@/features/auth/password-login'
 import { destinationAfterLogin } from '@/features/auth/RequireAuth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/use-media-query'
@@ -22,7 +23,7 @@ type Phase = 'form' | 'entering'
 
 export function LoginPage() {
   useDocumentTitle('Entrar')
-  const { isAuthenticated, mode, signIn } = useAuthSession()
+  const { isAuthenticated, mode, recoverPasswordUrl, signIn } = useAuthSession()
   const navigate = useNavigate()
   const location = useLocation()
   const handoff = useEntryHandoff()
@@ -41,6 +42,9 @@ export function LoginPage() {
   const greetingLayerRef = useRef<HTMLDivElement>(null)
   const greetingTextRef = useRef<HTMLParagraphElement>(null)
   const logoLayerRef = useRef<HTMLDivElement>(null)
+  const [checking, setChecking] = useState(false)
+  // Aviso do login: o motivo de ter voltado (?erro=) ou a recusa do servidor (senha errada, sem conta…).
+  const [notice, setNotice] = useState<string | null>(() => loginNotice(new URLSearchParams(location.search).get('erro')))
   const logoRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLParagraphElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -94,6 +98,19 @@ export function LoginPage() {
     [goToSite, reducedMotion],
   )
 
+  /** Login real: o servidor confere usuário e senha no Keycloak; só depois a entrada animada começa. */
+  const submitReal = useCallback(
+    async (userName: string, password: string) => {
+      setNotice(null)
+      setChecking(true)
+      const result = await loginWithPassword(userName.trim(), password)
+      setChecking(false)
+      if (!result.ok) return setNotice(result.message)
+      void playEntry(result.nome)
+    },
+    [playEntry],
+  )
+
   // Já com sessão (inclusive logo depois de entrar), o login leva ao destino.
   if (isAuthenticated) return <Navigate to={destination} replace />
   if (mode === 'loading') return null
@@ -134,15 +151,27 @@ export function LoginPage() {
                   <p role="alert" className="mt-6 rounded-lg bg-destructive/10 px-3.5 py-3 text-sm font-medium text-destructive">
                     Não foi possível verificar o sistema de login. Recarregue a página em instantes; se continuar, fale com o suporte da {appConfig.organization.short}.
                   </p>
-                ) : mode === 'keycloak' ? (
-                  <KeycloakLogin returnTo={destination} />
                 ) : (
-                  <LoginForm onSubmit={playEntry} onType={() => setPulse((value) => value + 1)} disabled={entering} />
+                  <LoginForm
+                    onSubmit={(userName, password) => (mode === 'keycloak' ? void submitReal(userName, password) : void playEntry(userName))}
+                    notice={notice}
+                    onEdit={() => setNotice(null)}
+                    onType={() => setPulse((value) => value + 1)}
+                    disabled={entering || checking}
+                  />
                 )}
                 <p className="mt-[18px] text-center text-[0.84375rem] text-muted-foreground">
-                  {mode === 'keycloak'
-                    ? 'Esqueceu a senha? Use "Esqueceu sua senha?" na próxima tela para receber um link por e-mail.'
-                    : `Esqueceu a senha? Procure o suporte da ${appConfig.organization.short}.`}
+                  {mode === 'keycloak' && recoverPasswordUrl ? (
+                    <>
+                      Esqueceu a senha?{' '}
+                      <a href={recoverPasswordUrl} className="font-semibold text-brand underline-offset-4 hover:underline">
+                        Receba um link por e-mail
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    `Esqueceu a senha? Procure o suporte da ${appConfig.organization.short}.`
+                  )}
                 </p>
               </div>
             </div>
@@ -178,7 +207,7 @@ export function LoginPage() {
         <div ref={scanRef} className="login-scan" />
       </div>
       <p role="status" className="sr-only">
-        {entering ? `${greeting}. Entrando no AQR…` : ''}
+        {entering ? `${greeting}. Entrando no AQR…` : checking ? 'Conferindo usuário e senha…' : ''}
       </p>
     </div>
   )

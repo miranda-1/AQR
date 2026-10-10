@@ -1,24 +1,19 @@
 import { randomUUID } from 'node:crypto'
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { AuthStatus, SessionClock, SessionUser } from '../../shared/contracts/auth.ts'
 import { isAccountRole } from '../../shared/validation/account.ts'
 import { optionalTextColumn, textColumn, type Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
 import type { AuthProvider } from './auth-provider.ts'
 import type { IdentityProvider } from './identity-provider.ts'
-import type { KeycloakClient } from './keycloak-client.ts'
-import { PendingLogins } from './pending-logins.ts'
+import { InvalidCredentialsError, type KeycloakClient } from './keycloak-client.ts'
 import type { Principal } from './principal.ts'
 import type { SessionStore } from './session-store.ts'
 
 export const SESSION_COOKIE = 'aqr_sessao'
-export const LOGIN_COOKIE = 'aqr_login'
-const PENDING_TTL_MS = 10 * 60_000
-/** Logins em andamento guardados ao mesmo tempo; além disso, os mais antigos são descartados. */
-const MAX_PENDING = 10_000
-const STATE_FORMAT = /^[\w-]{16,128}$/u
-/** Logins em andamento lembrados por navegador (abas ao mesmo tempo); os mais antigos saem. */
-const MAX_LOGINS_PER_BROWSER = 5
+/** Origens diferentes acompanhadas ao mesmo tempo pelo limite de tentativas; as mais antigas saem. */
+const MAX_TRACKED_ORIGINS = 10_000
+const SESSION_MAX_AGE_SECONDS = 8 * 3600
 
 /**
  * Chave do limite de tentativas: o IPv4 inteiro ou o bloco /64 do IPv6 (quem tem um /64 troca de
@@ -52,7 +47,7 @@ export interface KeycloakAuthOptions {
   appBaseUrl: string
   /** Credencial de serviço, usada para encerrar a sessão da pessoa no Keycloak no logout. */
   identity: IdentityProvider
-  /** Inícios de login e retornos do Keycloak aceitos por IP, a cada minuto. */
+  /** Tentativas de login aceitas por origem (IP ou bloco /64 do IPv6), a cada minuto. */
   loginAttemptsPerMinute: number
 }
 
@@ -62,28 +57,6 @@ function readCookie(request: FastifyRequest, name: string): string | undefined {
     if (key === name) return rest.join('=')
   }
   return undefined
-}
-
-const INTERNAL = 'http://aqr.interno'
-
-/**
- * Só caminhos internos; evita redirecionar a pessoa para outro site depois do login. O caminho é
- * interpretado como o navegador faria (que ignora tab e quebras de linha e trata `\` como `/`) e
- * precisa continuar na mesma origem.
- */
-export function safeReturnTo(value: unknown): string {
-  if (typeof value !== 'string' || value.length > 2048 || !value.startsWith('/')) return '/'
-  // eslint-disable-next-line no-control-regex
-  if (/[\u0000-\u001f\u007f\\]/u.test(value)) return '/'
-  let url: URL
-  try {
-    url = new URL(value, INTERNAL)
-  } catch {
-    return '/'
-  }
-  if (url.origin !== INTERNAL) return '/'
-  const path = `${url.pathname}${url.search}${url.hash}`
-  return path.startsWith('//') || path.startsWith('/entrar') ? '/' : path
 }
 
 /** Provedor de autenticação real: a pessoa vem da sessão do servidor e da conta ativa no banco. */
@@ -107,15 +80,32 @@ export function createKeycloakAuthProvider(options: Pick<KeycloakAuthOptions, 's
   }
 }
 
+const MESSAGES = {
+  credenciais: 'Usuário ou senha incorretos. Confira e tente de novo.',
+  semConta: 'Seu usuário e senha estão certos, mas você ainda não tem conta no AQR. Peça a um administrador do AQR para cadastrá-lo.',
+  contaInativa: 'Sua conta do AQR está desativada. Fale com um administrador do AQR para reativá-la.',
+  vinculoPendente: 'Sua conta do AQR ainda não foi vinculada ao seu acesso. Peça a um administrador do AQR para concluir o vínculo.',
+  vinculoDivergente: 'Este acesso não corresponde à conta do AQR com o mesmo usuário. Por segurança, o login foi recusado; fale com um administrador do AQR.',
+  muitas: 'Foram muitas tentativas de entrar em pouco tempo. Aguarde um minuto e tente de novo.',
+  indisponivel: 'O sistema de login está indisponível agora. Tente de novo em alguns minutos.',
+} as const
+
+function readCredentials(body: unknown): { usuario: string; senha: string } {
+  const usuario = typeof body === 'object' && body !== null && 'usuario' in body && typeof body.usuario === 'string' ? body.usuario.trim() : ''
+  const senha = typeof body === 'object' && body !== null && 'senha' in body && typeof body.senha === 'string' ? body.senha : ''
+  if (!usuario || !senha || usuario.length > 100 || senha.length > 256) {
+    throw new ApiError(400, 'VALIDATION_FAILED', 'Informe o usuário e a senha.')
+  }
+  return { usuario, senha }
+}
+
 export function registerKeycloakAuthRoutes(app: FastifyInstance, options: KeycloakAuthOptions, provider: AuthProvider): void {
   const { client, sessions, db, identity } = options
   const base = new URL(options.appBaseUrl)
   const secure = base.protocol === 'https:'
-  const redirectUri = new URL('/api/auth/callback', base).href
-  const pending = new PendingLogins(PENDING_TTL_MS, MAX_PENDING)
-  // Limite simples por origem (janela de 1 min) para iniciar login: evita encher a memória e o registro.
-  // O retorno do Keycloak não conta: ele só vale com um login começado (e limitado) aqui.
-  // O mapa guarda as janelas em ordem de abertura e tem teto: as mais antigas saem primeiro.
+  // Limite simples por origem (janela de 1 min) para tentativas de login: além do bloqueio por usuário
+  // do próprio Keycloak, segura quem testa muitas senhas de muitos usuários. O mapa guarda as janelas em
+  // ordem de abertura e tem teto: as mais antigas saem primeiro.
   const attempts = new Map<string, { windowStart: number; count: number }>()
   const tooManyAttempts = (ip: string): boolean => {
     const now = Date.now()
@@ -125,7 +115,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       attempts.delete(key)
       attempts.set(key, { windowStart: now, count: 1 })
       for (const [oldKey, value] of attempts) {
-        if (attempts.size <= MAX_PENDING && now - value.windowStart < 60_000) break
+        if (attempts.size <= MAX_TRACKED_ORIGINS && now - value.windowStart < 60_000) break
         attempts.delete(oldKey)
       }
       return false
@@ -134,30 +124,15 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     return current.count > options.loginAttemptsPerMinute
   }
   // A conta é localizada pelo `sub` (imutável) do Keycloak. O nome de usuário só serve para explicar a recusa.
-  const findBySub = db.prepare('SELECT id, situacao FROM accounts WHERE keycloak_sub = ?')
+  const findBySub = db.prepare('SELECT id, situacao, usuario, nome, papel FROM accounts WHERE keycloak_sub = ?')
   const findByUser = db.prepare('SELECT id, keycloak_sub FROM accounts WHERE usuario = ? COLLATE NOCASE')
   const findSub = db.prepare('SELECT keycloak_sub, usuario FROM accounts WHERE id = ?')
   const insertEvent = db.prepare('INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ip, detalhe) VALUES (?, ?, ?, ?, ?, ?, ?)')
   const record = (evento: AccessEvent, request: FastifyRequest, usuario: string | null, contaId: string | null, detalhe: string | null = null): void => {
     insertEvent.run(randomUUID(), new Date().toISOString(), evento, usuario, contaId, request.ip, detalhe)
   }
-
-  const cookie = (name: string, value: string, maxAgeSeconds: number, path = '/'): string =>
-    `${name}=${value}; Path=${path}; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure ? '; Secure' : ''}`
-  // O cookie `aqr_login` (só em /api/auth) lista os `state` dos logins em andamento NESTE navegador
-  // (até 5, separados por "."): liga o retorno do Keycloak a quem começou o login e permite abas
-  // simultâneas, sem acumular um cookie por login abandonado.
-  const statesOf = (request: FastifyRequest): string[] =>
-    (readCookie(request, LOGIN_COOKIE) ?? '').split('.').filter((state) => STATE_FORMAT.test(state)).slice(0, MAX_LOGINS_PER_BROWSER)
-  const loginCookie = (states: readonly string[]): string =>
-    states.length > 0 ? cookie(LOGIN_COOKIE, states.join('.'), PENDING_TTL_MS / 1000, '/api/auth') : cookie(LOGIN_COOKIE, '', 0, '/api/auth')
-  /** O cookie sem o `state` que acabou de ser usado (ou recusado). */
-  const withoutState = (request: FastifyRequest, state: string | undefined): string =>
-    loginCookie(statesOf(request).filter((item) => item !== state))
-  const goToLoginError = (reply: FastifyReply, code: string, request?: FastifyRequest, state?: string): FastifyReply => {
-    if (request && state) void reply.header('set-cookie', withoutState(request, state))
-    return reply.redirect(new URL(`/entrar?erro=${code}`, base).href)
-  }
+  const sessionCookie = (value: string, maxAgeSeconds: number): string =>
+    `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure ? '; Secure' : ''}`
 
   // Defesa contra requisições forjadas por outros sites: pedidos que alteram dados precisam vir da nossa origem.
   app.addHook('onRequest', async (request) => {
@@ -177,7 +152,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     }
   })
 
-  app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'keycloak' }))
+  app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'keycloak', recuperarSenhaUrl: client.resetPasswordUrl() }))
 
   app.get('/api/auth/me', async (request): Promise<SessionUser> => {
     const principal = await provider.resolvePrincipal(request)
@@ -197,56 +172,49 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     return { expiraEm: new Date(session.expiresAt).toISOString() }
   })
 
-  app.get('/api/auth/login', async (request, reply) => {
-    if (tooManyAttempts(request.ip)) return goToLoginError(reply, 'muitas_tentativas')
-    const { returnTo } = request.query as { returnTo?: string }
-    let started
+  // Login na tela do próprio AQR: o usuário e a senha vêm no corpo (JSON, só por HTTPS em produção),
+  // são conferidos no Keycloak e descartados. Nada da senha vai para log, banco ou resposta.
+  app.post('/api/auth/entrar', async (request, reply): Promise<SessionUser> => {
+    if (tooManyAttempts(request.ip)) throw new ApiError(429, 'MUITAS_TENTATIVAS', MESSAGES.muitas)
+    const { usuario, senha } = readCredentials(request.body)
+    let person
     try {
-      started = await client.startLogin(redirectUri)
+      person = await client.passwordLogin(usuario, senha)
     } catch (error) {
-      request.log.error({ err: error }, 'Keycloak indisponível ao iniciar o login')
-      return goToLoginError(reply, 'indisponivel')
+      if (error instanceof InvalidCredentialsError) {
+        record('login.falha', request, usuario.toLowerCase(), null, 'credenciais_invalidas')
+        throw new ApiError(401, 'CREDENCIAIS_INVALIDAS', MESSAGES.credenciais)
+      }
+      request.log.error({ err: error }, 'Keycloak indisponível ao conferir o login')
+      throw new ApiError(503, 'INDISPONIVEL', MESSAGES.indisponivel)
     }
-    pending.add(started.pending, safeReturnTo(returnTo))
-    const states = [started.pending.state, ...statesOf(request)].slice(0, MAX_LOGINS_PER_BROWSER)
-    return reply.header('set-cookie', loginCookie(states)).redirect(started.url)
-  })
-
-  app.get('/api/auth/callback', async (request, reply) => {
-    const query = request.query as { state?: unknown; error?: unknown }
-    const state = typeof query.state === 'string' && STATE_FORMAT.test(query.state) ? query.state : undefined
-    // O retorno só vale no navegador que começou o login (cookie daquele `state`).
-    const entry = state && statesOf(request).includes(state) ? pending.take(state) : undefined
-    if (!state || !entry) return goToLoginError(reply, 'expirado', request, state)
-    if (query.error) return goToLoginError(reply, 'negado', request, state)
-
-    let result
-    try {
-      result = await client.finishLogin(new URL(request.url, base), entry)
-    } catch (error) {
-      request.log.warn({ err: error }, 'Falha ao concluir o login no Keycloak')
-      record('login.falha', request, null, null)
-      return goToLoginError(reply, 'falha', request, state)
-    }
-    const row = findBySub.get(result.identity.sub)
+    const row = findBySub.get(person.sub)
     if (!row) {
       // Sem vínculo pelo sub, ninguém entra, nem que o nome de usuário coincida: o nome pode ser
       // trocado ou reaproveitado no Keycloak. Contas antigas esperam o vínculo feito por um administrador.
-      const byName = findByUser.get(result.identity.usuario)
+      const byName = findByUser.get(person.usuario)
       const bound = byName ? optionalTextColumn(byName, 'keycloak_sub') : null
-      const event = !byName ? 'login.sem_conta' : bound ? 'login.vinculo_divergente' : 'login.vinculo_pendente'
-      record(event, request, result.identity.usuario, byName ? textColumn(byName, 'id') : null)
-      return goToLoginError(reply, !byName ? 'sem_conta' : bound ? 'vinculo_divergente' : 'vinculo_pendente', request, state)
+      const contaId = byName ? textColumn(byName, 'id') : null
+      if (!byName) {
+        record('login.sem_conta', request, person.usuario, null)
+        throw new ApiError(403, 'SEM_CONTA', MESSAGES.semConta)
+      }
+      record(bound ? 'login.vinculo_divergente' : 'login.vinculo_pendente', request, person.usuario, contaId)
+      throw bound ? new ApiError(403, 'VINCULO_DIVERGENTE', MESSAGES.vinculoDivergente) : new ApiError(403, 'VINCULO_PENDENTE', MESSAGES.vinculoPendente)
     }
+    const accountId = textColumn(row, 'id')
     if (textColumn(row, 'situacao') !== 'ativa') {
-      record('login.conta_inativa', request, result.identity.usuario, textColumn(row, 'id'))
-      return goToLoginError(reply, 'conta_inativa', request, state)
+      record('login.conta_inativa', request, person.usuario, accountId)
+      throw new ApiError(403, 'CONTA_INATIVA', MESSAGES.contaInativa)
     }
-    const id = sessions.create(textColumn(row, 'id'))
-    record('login.ok', request, result.identity.usuario, textColumn(row, 'id'))
-    return reply
-      .header('set-cookie', [cookie(SESSION_COOKIE, id, 8 * 3600), withoutState(request, state)])
-      .redirect(new URL(entry.returnTo, base).href)
+    const papel = textColumn(row, 'papel')
+    if (!isAccountRole(papel)) throw new ApiError(500, 'INTERNAL', 'A conta tem um papel inválido. Fale com o suporte.')
+    // Um login novo substitui a sessão que este navegador já tivesse.
+    sessions.destroy(readCookie(request, SESSION_COOKIE))
+    const id = sessions.create(accountId)
+    record('login.ok', request, person.usuario, accountId)
+    void reply.header('set-cookie', sessionCookie(id, SESSION_MAX_AGE_SECONDS)).header('cache-control', 'no-store')
+    return { usuario: textColumn(row, 'usuario'), nome: textColumn(row, 'nome'), papel }
   })
 
   app.post('/api/auth/logout', async (request, reply) => {
@@ -255,8 +223,8 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     sessions.destroy(id)
     let detalhe: string | null = null
     if (session) {
-      // Encerra também o login único no Keycloak, pelo backend, com a credencial de serviço (sem
-      // guardar nem enviar token): o próximo "Entrar" volta a pedir usuário e senha.
+      // Encerra também a sessão aberta no Keycloak, pelo backend, com a credencial de serviço (sem
+      // guardar nem enviar token).
       const account = findSub.get(session.accountId)
       const keycloakId = account ? optionalTextColumn(account, 'keycloak_sub') : null
       try {
@@ -267,6 +235,6 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
       }
       record('logout', request, account ? textColumn(account, 'usuario') : null, session.accountId, detalhe)
     }
-    return reply.header('set-cookie', cookie(SESSION_COOKIE, '', 0)).send({ keycloakEncerrado: detalhe === null })
+    return reply.header('set-cookie', sessionCookie('', 0)).send({ keycloakEncerrado: detalhe === null })
   })
 }

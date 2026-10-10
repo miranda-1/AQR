@@ -1,24 +1,20 @@
 import * as oidc from 'openid-client'
 
 /**
- * Cliente do Keycloak. Todo o protocolo OIDC (descoberta, PKCE, troca do código, validação de
- * assinatura, emissor, público, expiração e nonce do token) é da biblioteca `openid-client`
- * (mantida e certificada pela OpenID Foundation). Aqui só há a cola. Os tokens ficam no
- * servidor: o navegador recebe apenas um cookie de sessão opaco.
+ * Cliente do Keycloak. O protocolo (descoberta, pedido ao endpoint de token, validação do token de
+ * identidade: emissor, público, expiração) é da biblioteca `openid-client` (mantida e certificada pela
+ * OpenID Foundation); aqui só há a cola. O usuário e a senha chegam ao servidor do AQR pela tela de
+ * login do próprio AQR e são repassados ao Keycloak ("direct access grant"), por um cliente
+ * CONFIDENCIAL: só quem tem o segredo (o servidor) consegue trocar senha por token. Nada é guardado:
+ * nem a senha, nem os tokens; o navegador recebe apenas um cookie de sessão opaco.
  */
 
 export interface KeycloakSettings {
   /** URL do realm, ex.: https://login.exemplo.gov.br/realms/aqr */
   issuer: string
   clientId: string
-  /** Ausente em cliente público (PKCE basta). */
-  clientSecret?: string | undefined
-}
-
-export interface PendingLogin {
-  state: string
-  nonce: string
-  verifier: string
+  /** Segredo do cliente confidencial do AQR (obrigatório para a troca de senha). */
+  clientSecret: string
 }
 
 export interface Identity {
@@ -26,6 +22,11 @@ export interface Identity {
   usuario: string
   nome: string | null
   email: string | null
+}
+
+/** Usuário ou senha errados, conta bloqueada no Keycloak ou acesso ainda sem senha definida. */
+export class InvalidCredentialsError extends Error {
+  override name = 'InvalidCredentialsError'
 }
 
 export class KeycloakClient {
@@ -43,7 +44,7 @@ export class KeycloakClient {
         new URL(this.settings.issuer),
         this.settings.clientId,
         undefined,
-        this.settings.clientSecret ? oidc.ClientSecretPost(this.settings.clientSecret) : oidc.None(),
+        oidc.ClientSecretPost(this.settings.clientSecret),
         // HTTP só é aceito para o Keycloak local (a configuração recusa HTTP fora de localhost).
         this.settings.issuer.startsWith('http:') ? { execute: [oidc.allowInsecureRequests] } : undefined,
       )
@@ -54,43 +55,33 @@ export class KeycloakClient {
     return this.configuration
   }
 
-  async startLogin(redirectUri: string): Promise<{ url: string; pending: PendingLogin }> {
+  /**
+   * Confere usuário e senha no Keycloak e devolve quem é a pessoa (pelo token de identidade).
+   * Rejeita com `InvalidCredentialsError` quando o Keycloak recusa; outros erros são indisponibilidade.
+   */
+  async passwordLogin(usuario: string, senha: string): Promise<Identity> {
     const config = await this.config()
-    const pending: PendingLogin = {
-      state: oidc.randomState(),
-      nonce: oidc.randomNonce(),
-      verifier: oidc.randomPKCECodeVerifier(),
+    let tokens
+    try {
+      tokens = await oidc.genericGrantRequest(config, 'password', { username: usuario, password: senha, scope: 'openid profile email' })
+    } catch (error) {
+      if (error instanceof oidc.ResponseBodyError && error.error === 'invalid_grant') throw new InvalidCredentialsError(error.error)
+      throw error
     }
-    const url = oidc.buildAuthorizationUrl(config, {
-      redirect_uri: redirectUri,
-      scope: 'openid profile email',
-      state: pending.state,
-      nonce: pending.nonce,
-      code_challenge: await oidc.calculatePKCECodeChallenge(pending.verifier),
-      code_challenge_method: 'S256',
-    })
-    return { url: url.href, pending }
-  }
-
-  /** `callbackUrl` é a URL completa em que o Keycloak devolveu a pessoa (com `code` e `state`). */
-  async finishLogin(callbackUrl: URL, pending: PendingLogin): Promise<{ identity: Identity }> {
-    const config = await this.config()
-    const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
-      pkceCodeVerifier: pending.verifier,
-      expectedState: pending.state,
-      expectedNonce: pending.nonce,
-      idTokenExpected: true,
-    })
     const claims = tokens.claims()
     if (!claims) throw new Error('O Keycloak não devolveu o token de identidade.')
-    const usuario = typeof claims.preferred_username === 'string' ? claims.preferred_username.trim().toLowerCase() : ''
     return {
-      identity: {
-        sub: claims.sub,
-        usuario,
-        nome: typeof claims.name === 'string' ? claims.name : null,
-        email: typeof claims.email === 'string' ? claims.email : null,
-      },
+      sub: claims.sub,
+      usuario: typeof claims.preferred_username === 'string' ? claims.preferred_username.trim().toLowerCase() : '',
+      nome: typeof claims.name === 'string' ? claims.name : null,
+      email: typeof claims.email === 'string' ? claims.email : null,
     }
+  }
+
+  /** Página do Keycloak para receber por e-mail o link de nova senha ("Esqueceu a senha?"). */
+  resetPasswordUrl(): string {
+    const url = new URL(`${this.settings.issuer}/login-actions/reset-credentials`)
+    url.searchParams.set('client_id', this.settings.clientId)
+    return url.href
   }
 }

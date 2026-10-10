@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface LoginFormProps {
-  /** Chamado com os campos preenchidos (recebe o usuário). Nesta etapa não há verificação de credenciais. */
-  onSubmit: (userName: string) => void
+  /** Chamado com os campos preenchidos. No login visual não há verificação; no real, o servidor confere. */
+  onSubmit: (userName: string, password: string) => void
+  /** Aviso geral do login (senha errada, sessão que terminou…), mostrado acima dos campos. */
+  notice?: string | null
+  /** Chamado quando a pessoa volta a digitar, para limpar o aviso. */
+  onEdit?: () => void
   /** Chamado a cada tecla, para os anéis do fundo pulsarem. */
   onType?: () => void
   disabled?: boolean
@@ -21,7 +25,7 @@ const messages: Record<Field, string> = {
 const inputClass =
   'h-[46px] w-full rounded-lg border border-line-strong bg-white px-3.5 text-[0.9375rem] text-ink transition-[border-color,box-shadow] focus-visible:border-brand focus-visible:shadow-[0_0_0_3px_rgb(40_53_135_/_0.22)] focus-visible:outline-none aria-[invalid=true]:border-destructive'
 
-export function LoginForm({ onSubmit, onType, disabled = false }: LoginFormProps) {
+export function LoginForm({ onSubmit, notice = null, onEdit, onType, disabled = false }: LoginFormProps) {
   const id = useId()
   const usernameRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -36,11 +40,12 @@ export function LoginForm({ onSubmit, onType, disabled = false }: LoginFormProps
     setErrors(next)
     if (next.username) return usernameRef.current?.focus()
     if (next.password) return passwordRef.current?.focus()
-    onSubmit(usernameRef.current?.value ?? '')
+    onSubmit(usernameRef.current?.value ?? '', passwordRef.current?.value ?? '')
   }
 
   function clearError(field: Field) {
     onType?.()
+    onEdit?.()
     if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }))
   }
 
@@ -48,6 +53,11 @@ export function LoginForm({ onSubmit, onType, disabled = false }: LoginFormProps
 
   return (
     <form noValidate onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4" aria-label="Entrar no AQR">
+      {notice && (
+        <p role="alert" className="rounded-lg bg-destructive/10 px-3.5 py-3 text-sm font-medium text-destructive">
+          {notice}
+        </p>
+      )}
       <div>
         <label htmlFor={`${id}-usuario`} className="mb-1.5 block text-sm font-semibold text-ink">
           Usuário

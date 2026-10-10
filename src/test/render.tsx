@@ -11,6 +11,8 @@ import { ComparisonSessionProvider } from '@/features/comparison/session/compari
 
 interface RenderAppOptions {
   authenticated?: boolean
+  /** Consulta o servidor (fetch) para saber o modo de login e quem está conectado, como no site real. */
+  serverAuth?: boolean
   /** Serviço de contas dos testes. Por padrão, a administração está desligada. */
   accountService?: AccountService
 }
@@ -19,11 +21,11 @@ interface RenderAppOptions {
  * Renderiza a aplicação completa em uma rota, com roteador em memória.
  * Por padrão já com sessão; use `{ authenticated: false }` para testar o login.
  */
-export function renderApp(path = '/', { authenticated = true, accountService }: RenderAppOptions = {}) {
+export function renderApp(path = '/', { authenticated = true, serverAuth = false, accountService }: RenderAppOptions = {}) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] })
   const utils = render(
     <TooltipProvider>
-      <AuthSessionProvider initialAuthenticated={authenticated}>
+      <AuthSessionProvider {...(serverAuth ? {} : { initialAuthenticated: authenticated })}>
         <EntryHandoffProvider>
           <AdminSessionProvider service={accountService ?? createInMemoryAccountService({ available: false })}>
             <ComparisonSessionProvider>

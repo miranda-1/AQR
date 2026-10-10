@@ -1,7 +1,7 @@
 // Ponta a ponta com Keycloak real + Mailpit + API do AQR (ver docs/login-keycloak.md).
 // Uso: node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>
 // Pré-requisitos: docker compose -f docker/dev/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
-// KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret, AUTH_LOGIN_ATTEMPTS_PER_MINUTE=1000
+// KEYCLOAK_CLIENT_SECRET=aqr-web-dev-secret, KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret, AUTH_LOGIN_ATTEMPTS_PER_MINUTE=1000
 // (o script faz dezenas de logins por minuto do mesmo IP; o padrão é 30) e banco novo
 // com o administrador "admin" (npm run admin:criar, sem vínculo) e as MESMAS variáveis KEYCLOAK_*/DATABASE_PATH
 // exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
@@ -60,22 +60,15 @@ function browser() {
   return { jars, hop, follow }
 }
 
-async function login(username, password, returnTo = '%2Fadministracao%2Fcontas', b = browser()) {
-  const start = await b.hop(`${API}/api/auth/login?returnTo=${returnTo}`)
-  const page = await b.follow(start.headers.get('location'))
-  const action = formAction(await page.res.text())
-  if (!action) return { b, api: b.jars.api, final: 'sem-formulario' }
-  const sent = await b.hop(action, form({ username, password, credentialId: '' }))
-  if (sent.status === 200) return { b, api: b.jars.api, final: 'rejeitado-pelo-keycloak' }
-  let url = sent.headers.get('location')
-  while (url) {
-    const target = url.startsWith(APP) ? url.replace(APP, API) : url
-    if (url.startsWith(APP) && !url.startsWith(`${APP}/api`)) return { b, api: b.jars.api, final: url }
-    const res = await b.hop(target)
-    url = res.headers.get('location') ? new URL(res.headers.get('location'), target).href : null
-    if (!url) return { b, api: b.jars.api, final: `status-${res.status}` }
-  }
-  return { b, api: b.jars.api, final: 'fim' }
+/** Entra pela tela do AQR, como o navegador faria: `final` é "ok" ou o código de erro da API. */
+async function login(username, password, b = browser()) {
+  const res = await b.hop(`${API}/api/auth/entrar`, {
+    method: 'POST',
+    headers: { origin: APP, 'content-type': 'application/json' },
+    body: JSON.stringify({ usuario: username, senha: password }),
+  })
+  const body = await res.json().catch(() => null)
+  return { b, api: b.jars.api, final: res.ok ? 'ok' : (body?.error?.code ?? `status-${res.status}`), body }
 }
 
 const call = (jar, method, path, extra = {}) =>
@@ -118,17 +111,15 @@ async function kcAdmin(path) {
 {
   const b = browser()
   const t0 = Date.now()
-  const start = await b.hop(`${API}/api/auth/login`)
-  const page = await b.follow(start.headers.get('location'))
-  const forgot = (await page.res.text()).match(/href="([^"]*reset-credentials[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
-  check('tela do Keycloak oferece "Esqueceu a senha?"', Boolean(forgot))
-  const askPage = await b.follow(new URL(forgot, KC).href)
+  const forgot = (await (await fetch(`${API}/api/auth/status`)).json()).recuperarSenhaUrl
+  check('o AQR oferece o link de "Esqueceu a senha?" do Keycloak', typeof forgot === 'string' && forgot.includes('reset-credentials'), forgot)
+  const askPage = await b.follow(forgot)
   await b.hop(formAction(await askPage.res.text()), form({ username: 'recuperacao' }))
   const link = linkOf(await waitForMail('recuperacao@aqr.local', t0))
   check('e-mail de recuperação chega ao Mailpit', Boolean(link))
   check('nova senha definida pelo link', link && (await setPasswordFromLink(link, 'NovaSenha-dev-456')))
-  check('senha antiga deixa de valer', (await login('recuperacao', 'recuperacao-dev-123')).final === 'rejeitado-pelo-keycloak')
-  check('nova senha autentica (sem conta no AQR → bloqueado)', (await login('recuperacao', 'NovaSenha-dev-456')).final.includes('erro=sem_conta'))
+  check('senha antiga deixa de valer', (await login('recuperacao', 'recuperacao-dev-123')).final === 'CREDENCIAIS_INVALIDAS')
+  check('nova senha autentica (sem conta no AQR → bloqueado)', (await login('recuperacao', 'NovaSenha-dev-456')).final === 'SEM_CONTA')
   // devolve a senha original para a próxima execução
   const t = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, form({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }))
   const auth = { authorization: `Bearer ${(await t.json()).access_token}` }
@@ -139,21 +130,26 @@ async function kcAdmin(path) {
 // ============ 2. Acesso sem login e login errado ============
 check('sem sessão: /api/auth/me = 401', (await fetch(`${API}/api/auth/me`)).status === 401)
 const wrong = await login('admin', 'senha-errada')
-check('senha errada: Keycloak rejeita, sem sessão', wrong.final === 'rejeitado-pelo-keycloak' && !wrong.api.cookies.has('aqr_sessao'))
-check('autenticado sem conta no AQR: bloqueado', (await login('semconta', 'semconta-dev-123')).final.includes('erro=sem_conta'))
+check('senha errada: Keycloak rejeita, sem sessão', wrong.final === 'CREDENCIAIS_INVALIDAS' && !wrong.api.cookies.has('aqr_sessao'), wrong.final)
+check('autenticado sem conta no AQR: bloqueado', (await login('semconta', 'semconta-dev-123')).final === 'SEM_CONTA')
 
 // ============ 3. Administrador ============
 // O primeiro administrador (criado por `npm run admin:criar`) ainda não tem vínculo pelo sub: não entra
 // só porque o nome de usuário coincide. O operador o vincula no servidor, conferindo a identidade.
 const unlinked = await login('admin', 'admin-dev-123')
-check('administrador sem vínculo pelo sub NÃO entra (vinculo_pendente)', unlinked.final.includes('erro=vinculo_pendente') && !unlinked.api.cookies.has('aqr_sessao'), unlinked.final)
+check('administrador sem vínculo pelo sub NÃO entra (vinculo_pendente)', unlinked.final === 'VINCULO_PENDENTE' && !unlinked.api.cookies.has('aqr_sessao'), unlinked.final)
 const linked = spawnSync('npx', ['tsx', 'server/scripts/vincular-identidade.ts', '--usuario', 'admin', '--confirmo-identidade'], { encoding: 'utf8', env: process.env })
 check('operador vincula o administrador ao sub do Keycloak (admin:vincular)', linked.status === 0 && linked.stdout.includes('Vinculada: admin'), (linked.stdout + linked.stderr).trim())
 const relinked = spawnSync('npx', ['tsx', 'server/scripts/vincular-identidade.ts', '--usuario', 'admin', '--confirmo-identidade'], { encoding: 'utf8', env: process.env })
 check('vincular de novo não faz nada (vínculo definitivo)', relinked.status === 0 && relinked.stdout.includes('Nenhuma conta sem vínculo'))
 
 const admin = await login('admin', 'admin-dev-123')
-check('admin entra e volta à página pedida', admin.final === `${APP}/administracao/contas` && admin.api.cookies.has('aqr_sessao'), admin.final)
+check('admin entra pela tela do AQR (senha conferida no Keycloak)', admin.final === 'ok' && admin.body?.papel === 'administrador' && admin.api.cookies.has('aqr_sessao'), admin.final)
+check('a resposta do login não traz token nem senha', !JSON.stringify(admin.body).match(/token|admin-dev-123/i))
+// O cliente do AQR é confidencial: sem o segredo, ninguém troca senha por token direto no Keycloak.
+const direct = await fetch(`${KC}/realms/aqr/protocol/openid-connect/token`, form({ grant_type: 'password', client_id: 'aqr-web', username: 'admin', password: 'admin-dev-123' }))
+check('direto no Keycloak, sem o segredo do AQR, a senha não vira token', direct.status === 401 || direct.status === 400, `status ${direct.status}`)
+check('login vindo de outro site é recusado (403)', (await fetch(`${API}/api/auth/entrar`, { method: 'POST', headers: { origin: 'https://malicioso.example', 'content-type': 'application/json' }, body: JSON.stringify({ usuario: 'admin', senha: 'admin-dev-123' }) })).status === 403)
 const me = await (await call(admin.api, 'GET', '/api/auth/me')).json()
 check('/api/auth/me = administrador', me.papel === 'administrador')
 check('cookie de sessão é opaco (não é JWT)', !admin.api.cookies.get('aqr_sessao').includes('.'))
@@ -169,7 +165,7 @@ const ana = await created.json()
 check('admin cria a conta "ana"', created.status === 201 && !ana.aviso, `status ${created.status} ${ana.aviso ?? ''}`)
 const [kcAna] = await kcAdmin('users?username=ana&exact=true')
 check('usuário nasce no Keycloak (ativo, com nome e e-mail, sem senha)', kcAna?.enabled === true && kcAna.email === 'ana@aqr.local' && kcAna.firstName === 'Ana' && kcAna.lastName === 'Analista')
-check('antes de definir a senha, "ana" não consegue entrar', (await login('ana', 'qualquer-coisa')).final === 'rejeitado-pelo-keycloak')
+check('antes de definir a senha, "ana" não consegue entrar', (await login('ana', 'qualquer-coisa')).final === 'CREDENCIAIS_INVALIDAS')
 
 // ============ 5. Convite por e-mail: a pessoa define a própria senha ============
 const invite = await waitForMail('ana@aqr.local', t1)
@@ -208,7 +204,7 @@ const offBody = await off.json()
 check('admin desativa "ana"', off.status === 200 && !offBody.aviso, offBody.aviso ?? '')
 check('usuário bloqueado no Keycloak (enabled=false)', (await kcAdmin('users?username=ana&exact=true'))[0]?.enabled === false)
 check('sessão do analista cai na hora (401)', (await call(analyst.api, 'GET', '/api/auth/me')).status === 401)
-check('login bloqueado no Keycloak mesmo com a senha certa', (await login('ana', 'Ana-dev-123')).final === 'rejeitado-pelo-keycloak')
+check('login bloqueado no Keycloak mesmo com a senha certa', (await login('ana', 'Ana-dev-123')).final === 'CREDENCIAIS_INVALIDAS')
 check('redefinir senha de conta desativada é recusado (422)', (await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/redefinir-senha`)).status === 422)
 
 const on = await json(admin.api, 'POST', `/api/admin/accounts/${ana.id}/reativar`, { versao: offBody.versao })
@@ -226,7 +222,7 @@ check('o administrador segue conectado', (await call(admin.api, 'GET', '/api/aut
 const resetLink = linkOf(await waitForMail('ana@aqr.local', t2))
 check('e-mail de redefinição chega ao Mailpit', Boolean(resetLink))
 check('ana define a nova senha', resetLink && (await setPasswordFromLink(resetLink, 'Ana-nova-456')))
-check('senha antiga deixa de valer', (await login('ana', 'Ana-dev-123')).final === 'rejeitado-pelo-keycloak')
+check('senha antiga deixa de valer', (await login('ana', 'Ana-dev-123')).final === 'CREDENCIAIS_INVALIDAS')
 check('nova senha funciona', (await login('ana', 'Ana-nova-456')).api.cookies.has('aqr_sessao'))
 
 // ============ 8. Sincronização e logout ============
@@ -246,13 +242,14 @@ const clock = await call(admin.api, 'GET', '/api/auth/sessao')
 const left = Date.parse((await clock.json()).expiraEm) - Date.now()
 check('relógio da sessão: cai em até 30 min sem uso', clock.status === 200 && left > 25 * 60_000 && left <= 30 * 60_000, `${Math.round(left / 1000)} s`)
 
-// ============ 10. Logout: encerra também o login único no Keycloak, sem token guardado ============
+// ============ 10. Logout: encerra também a sessão no Keycloak, sem token guardado ============
 const sso = await login('admin', 'admin-dev-123')
+const [adminKc] = await kcAdmin('users?username=admin&exact=true')
+check('com o login, o Keycloak tem sessão aberta do admin', (await kcAdmin(`users/${adminKc.id}/sessions`)).length > 0)
 const out = await call(sso.api, 'POST', '/api/auth/logout')
 check('logout responde sem URL nem token', JSON.stringify(await out.json()) === '{"keycloakEncerrado":true}')
 check('depois do logout a sessão não vale', (await call(sso.api, 'GET', '/api/auth/me')).status === 401)
-const again = await login('admin', 'admin-dev-123', '%2F', sso.b)
-check('no mesmo navegador, o Keycloak volta a pedir a senha (login único encerrado)', again.final !== 'sem-formulario' && again.api.cookies.has('aqr_sessao'), again.final)
+check('depois do logout, nenhuma sessão do admin fica aberta no Keycloak', (await kcAdmin(`users/${adminKc.id}/sessions`)).length === 0)
 if (process.env.DATABASE_PATH) {
   const db = new DatabaseSync(process.env.DATABASE_PATH, { readOnly: true })
   const cols = db.prepare('PRAGMA table_info(sessions)').all().map((c) => c.name)

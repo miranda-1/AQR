@@ -20,6 +20,8 @@ interface AuthSessionValue {
   sessionExpired: boolean
   /** Nome exibido no botão de conta: o digitado (visual) ou o do cadastro (keycloak). */
   userName: string | null
+  /** Só no login real: página do Keycloak para receber por e-mail o link de nova senha. */
+  recoverPasswordUrl: string | null
   signIn: (userName: string) => void
   signOut: () => void
 }
@@ -46,6 +48,7 @@ function writeStoredSession(userName: string | null) {
 interface ServerSession {
   mode: 'visual' | 'keycloak' | 'unavailable'
   userName: string | null
+  recoverPasswordUrl?: string | null
 }
 
 /** Pergunta ao servidor como a autenticação funciona e, no modo real, quem está conectado. */
@@ -56,11 +59,15 @@ async function loadServerSession(signal: AbortSignal): Promise<ServerSession> {
     const mode = typeof body === 'object' && body !== null && 'mode' in body && body.mode === 'keycloak' ? 'keycloak' : 'visual'
     // Em produção o login visual nunca vale, nem que o servidor o anuncie.
     if (mode === 'visual') return { mode: import.meta.env.PROD ? 'unavailable' : 'visual', userName: null }
+    const recoverPasswordUrl =
+      typeof body === 'object' && body !== null && 'recuperarSenhaUrl' in body && typeof body.recuperarSenhaUrl === 'string' && /^https?:\/\//u.test(body.recuperarSenhaUrl)
+        ? body.recuperarSenhaUrl
+        : null
     const me = await fetch('/api/auth/me', { signal, credentials: 'same-origin' })
-    if (!me.ok) return { mode, userName: null }
+    if (!me.ok) return { mode, userName: null, recoverPasswordUrl }
     const user: unknown = await me.json()
     const name = typeof user === 'object' && user !== null && 'nome' in user && typeof user.nome === 'string' ? user.nome : null
-    return { mode, userName: name }
+    return { mode, userName: name, recoverPasswordUrl }
   } catch {
     // Servidor fora do ar: em desenvolvimento segue no modo visual; em produção falha fechado.
     return { mode: import.meta.env.PROD ? 'unavailable' : 'visual', userName: null }
@@ -136,6 +143,7 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
   })
 
   const [sessionExpired, setSessionExpired] = useState(false)
+  const [recoverPasswordUrl, setRecoverPasswordUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (explicit) return
@@ -143,6 +151,7 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
     void loadServerSession(controller.signal).then((session) => {
       if (controller.signal.aborted) return
       setMode(session.mode)
+      setRecoverPasswordUrl(session.recoverPasswordUrl ?? null)
       setUserName(session.mode === 'visual' ? readStoredSession() : session.userName)
     })
     return () => controller.abort()
@@ -154,25 +163,32 @@ export function AuthSessionProvider({ children, initialAuthenticated }: AuthSess
   }, [])
   useSessionKeepAlive(mode === 'keycloak' && userName !== null, expire)
 
-  const signIn = useCallback((name: string) => {
-    const clean = name.trim()
-    writeStoredSession(clean)
-    setUserName(clean)
-  }, [])
+  /**
+   * Marca a pessoa como conectada. No login visual, guarda o nome na aba; no real, a sessão já foi
+   * criada pelo servidor (cookie HttpOnly) e aqui só fica o nome do cadastro, para o botão de conta.
+   */
+  const signIn = useCallback(
+    (name: string) => {
+      const clean = name.trim()
+      if (mode !== 'keycloak') writeStoredSession(clean)
+      setSessionExpired(false)
+      setUserName(clean)
+    },
+    [mode],
+  )
 
   const signOut = useCallback(() => {
     writeStoredSession(null)
     setUserName(null)
     if (mode !== 'keycloak') return
-    // O servidor apaga a sessão (e encerra o login no Keycloak, pelo backend); depois disso, volta ao login.
-    void fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-      .catch(() => undefined)
-      .finally(() => window.location.assign('/entrar'))
+    // O servidor apaga a sessão e encerra a do Keycloak, pelo backend. A volta ao login segue a mesma
+    // animação do modo visual (a logo volta ao centro), sem recarregar a página.
+    void fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => undefined)
   }, [mode])
 
   const value = useMemo(
-    () => ({ mode, isAuthenticated: userName !== null, sessionExpired, userName, signIn, signOut }),
-    [mode, userName, sessionExpired, signIn, signOut],
+    () => ({ mode, isAuthenticated: userName !== null, sessionExpired, userName, recoverPasswordUrl, signIn, signOut }),
+    [mode, userName, sessionExpired, recoverPasswordUrl, signIn, signOut],
   )
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>
 }

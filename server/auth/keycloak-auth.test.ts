@@ -1,4 +1,4 @@
-import { createHash, createSign, generateKeyPairSync } from 'node:crypto'
+import { createSign, generateKeyPairSync } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify'
@@ -9,7 +9,7 @@ import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
 import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
-import { rateLimitKey, safeReturnTo } from './keycloak-auth.ts'
+import { rateLimitKey } from './keycloak-auth.ts'
 import { makePdf } from '../test/make-pdf.ts'
 import { purgeOldComparisonEvents } from '../comparison/audit.ts'
 
@@ -31,17 +31,22 @@ function signToken(claims: object): string {
   return `${head}.${body}.${b64(sig)}`
 }
 
-interface Grant {
-  sub: string
-  username: string
-  nonce: string
-  challenge: string
-  audience: string
+/** Como o Keycloak falso responde a um usuário (padrão: senha `senha-<usuario>`, sub `sub-<usuario>`). */
+interface FakeUserOverride {
+  sub?: string
+  /** preferred_username que vai no token (padrão: o próprio usuário). */
+  claimUsername?: string
+  audience?: string
 }
+
+const CLIENT_SECRET = 'segredo-do-aqr-web'
 
 let fake: Server
 let issuer: string
-const grants = new Map<string, Grant>()
+const overrides = new Map<string, FakeUserOverride>()
+/** Corpos recebidos pelo endpoint de token (para conferir que só ele vê a senha). */
+const tokenRequests: URLSearchParams[] = []
+let keycloakDown = false
 
 beforeAll(async () => {
   fake = createServer((req, res) => {
@@ -65,18 +70,22 @@ beforeAll(async () => {
       let raw = ''
       req.on('data', (chunk: Buffer) => (raw += chunk.toString()))
       req.on('end', () => {
+        if (keycloakDown) return void res.writeHead(503).end()
         const form = new URLSearchParams(raw)
-        const grant = grants.get(form.get('code') ?? '')
-        const verifier = form.get('code_verifier') ?? ''
-        const challenge = createHash('sha256').update(verifier).digest('base64url')
-        if (!grant || grant.challenge !== challenge) return void res.writeHead(400, { 'content-type': 'application/json' }).end('{"error":"invalid_grant"}')
+        tokenRequests.push(form)
+        const fail = (status: number, error: string) => void res.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify({ error }))
+        // Cliente confidencial: sem o segredo certo, o Keycloak recusa (ninguém troca senha por token sem o servidor).
+        if (form.get('client_id') !== CLIENT_ID || form.get('client_secret') !== CLIENT_SECRET) return fail(401, 'unauthorized_client')
+        const username = form.get('username') ?? ''
+        if (form.get('grant_type') !== 'password' || form.get('password') !== `senha-${username}`) return fail(401, 'invalid_grant')
+        const over = overrides.get(username) ?? {}
         const now = Math.floor(Date.now() / 1000)
         json({
           token_type: 'Bearer',
           access_token: 'nao-usado',
           id_token: signToken({
-            iss: issuer, aud: grant.audience, sub: grant.sub, exp: now + 300, iat: now,
-            nonce: grant.nonce, preferred_username: grant.username, name: grant.username.toUpperCase(),
+            iss: issuer, aud: over.audience ?? CLIENT_ID, sub: over.sub ?? `sub-${username}`, exp: now + 300, iat: now,
+            preferred_username: over.claimUsername ?? username, name: username.toUpperCase(),
           }),
         })
       })
@@ -104,7 +113,7 @@ describe('login real com Keycloak', () => {
     db.prepare("UPDATE accounts SET email = 'antiga@x.gov.br' WHERE usuario = 'antiga'").run()
     app = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', KEYCLOAK_CLIENT_SECRET: CLIENT_SECRET, AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
       identityProvider: identity,
     })
   })
@@ -121,34 +130,29 @@ describe('login real com Keycloak', () => {
     return value || undefined
   }
 
-  /** Percorre o login como o navegador faria. Devolve o cookie de sessão (se houve) e o destino final. */
   /**
-   * `sub`: id do usuário no Keycloak (padrão: o do usuário criado pela API, ou `sub-<usuario>`).
-   * `claimUsername`: o preferred_username que vai no token (padrão: o próprio usuário).
+   * Entra pela tela do AQR, como o navegador faria (POST com a origem do site). `sub` e
+   * `claimUsername` mudam o que o Keycloak falso devolve; `password` permite errar a senha.
+   * Devolve o cookie de sessão (se houve), o código de erro (se houve) e os cabeçalhos para os próximos pedidos.
    */
-  async function login(username: string, options: { returnTo?: string; audience?: string; sub?: string; claimUsername?: string } = {}) {
-    const start = await app.inject({ method: 'GET', url: `/api/auth/login${options.returnTo ? `?returnTo=${encodeURIComponent(options.returnTo)}` : ''}` })
-    expect(start.statusCode).toBe(302)
-    const target = new URL(String(start.headers.location))
-    expect(target.origin + target.pathname).toBe(`${issuer}/auth`)
-    expect(target.searchParams.get('code_challenge_method')).toBe('S256')
-    const code = `code-${grants.size}`
-    grants.set(code, {
+  async function login(
+    username: string,
+    options: FakeUserOverride & { password?: string; app?: FastifyInstance; remoteAddress?: string } = {},
+  ) {
+    overrides.set(username, {
       sub: options.sub ?? identity.byName(username)?.id ?? `sub-${username}`,
-      username: options.claimUsername ?? username, nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
-      audience: options.audience ?? CLIENT_ID,
+      ...(options.claimUsername ? { claimUsername: options.claimUsername } : {}),
+      ...(options.audience ? { audience: options.audience } : {}),
     })
-    const state = target.searchParams.get('state') ?? ''
-    expect(cookieOf(start, 'aqr_login')).toBe(state)
-    expect(String(start.headers['set-cookie'])).toContain('Path=/api/auth;')
-    const back = await app.inject({
-      method: 'GET',
-      url: `/api/auth/callback?code=${code}&state=${state}&iss=${encodeURIComponent(issuer)}`,
-      headers: { cookie: `aqr_login=${state}` },
+    const res = await (options.app ?? app).inject({
+      method: 'POST', url: '/api/auth/entrar', headers: { origin: APP },
+      payload: { usuario: username, senha: options.password ?? `senha-${username}` },
+      ...(options.remoteAddress ? { remoteAddress: options.remoteAddress } : {}),
     })
-    const session = cookieOf(back, 'aqr_sessao')
+    const session = cookieOf(res, 'aqr_sessao')
     const headers: Record<string, string> = session ? { cookie: `aqr_sessao=${session}`, origin: APP } : { origin: APP }
-    return { session, location: String(back.headers.location), headers }
+    const code = res.statusCode === 200 ? null : res.json<{ error: { code: string; message: string } }>().error.code
+    return { session, status: res.statusCode, code, headers, body: res.body }
   }
 
   const get = (url: string, headers: Record<string, string>) => app.inject({ method: 'GET', url, headers })
@@ -157,105 +161,64 @@ describe('login real com Keycloak', () => {
     expect((await get('/api/auth/me', {})).statusCode).toBe(401)
     expect((await get('/api/admin/accounts', {})).statusCode).toBe(401)
     expect((await app.inject({ method: 'POST', url: '/api/comparisons', headers: { origin: APP } })).statusCode).toBe(401)
-    expect((await get('/api/auth/status', {})).json()).toEqual({ mode: 'keycloak' })
+    expect((await get('/api/auth/status', {})).json()).toMatchObject({ mode: 'keycloak' })
   })
 
-  it('entra com senha certa: sessão opaca em cookie HttpOnly, sem tokens no navegador', async () => {
-    const start = await app.inject({ method: 'GET', url: '/api/auth/login' })
-    expect(String(start.headers['set-cookie'])).toMatch(/HttpOnly/)
-    const { session, location, headers } = await login('admin')
-    expect(location).toBe(`${APP}/`)
-    expect(session).toMatch(/^[\w-]{40,}$/)
-    expect(session?.split('.')).toHaveLength(1)
-    const me = await get('/api/auth/me', headers)
+  it('entra com senha certa: sessão opaca em cookie HttpOnly, sem tokens nem senha na resposta', async () => {
+    tokenRequests.length = 0
+    const res = await app.inject({ method: 'POST', url: '/api/auth/entrar', headers: { origin: APP }, payload: { usuario: 'admin', senha: 'senha-admin' } })
+    expect(res.statusCode).toBe(200)
+    expect(res.json<SessionUser>()).toMatchObject({ usuario: 'admin', papel: 'administrador' })
+    expect(res.body).not.toMatch(/token|senha-admin/i)
+    const setCookie = String(res.headers['set-cookie'])
+    expect(setCookie).toMatch(/aqr_sessao=[\w-]{40,}; Path=\/; HttpOnly; SameSite=Lax/)
+    // A senha só foi ao Keycloak, pelo cliente confidencial, e nada fica no banco.
+    expect(tokenRequests.at(-1)?.get('client_secret')).toBe(CLIENT_SECRET)
+    expect(JSON.stringify(db.prepare('SELECT * FROM access_events').all())).not.toContain('senha-admin')
+    const me = await get('/api/auth/me', { cookie: setCookie.split(';')[0] ?? '' })
     expect(me.json<SessionUser>()).toMatchObject({ usuario: 'admin', papel: 'administrador' })
-    expect(me.body).not.toMatch(/token/i)
   })
 
-  it('login errado: código inválido, estado trocado ou token de outro aplicativo não criam sessão', async () => {
-    const start = await app.inject({ method: 'GET', url: '/api/auth/login' })
-    const target = new URL(String(start.headers.location))
-    const state = target.searchParams.get('state') ?? ''
-    const bad = await app.inject({
-      method: 'GET', url: `/api/auth/callback?code=forjado&state=${state}`,
-      headers: { cookie: `aqr_login=${state}` },
+  it('senha errada, campos vazios ou token de outro aplicativo não criam sessão', async () => {
+    const wrong = await login('admin', { password: 'errada' })
+    expect(wrong).toMatchObject({ status: 401, code: 'CREDENCIAIS_INVALIDAS', session: undefined })
+    expect(wrong.body).toMatch(/Usuário ou senha incorretos/)
+    expect(db.prepare("SELECT usuario, detalhe FROM access_events WHERE evento = 'login.falha' ORDER BY ocorrido_em DESC LIMIT 1").get()).toEqual({
+      usuario: 'admin', detalhe: 'credenciais_invalidas',
     })
-    expect(bad.headers.location).toBe(`${APP}/entrar?erro=falha`)
-    expect(cookieOf(bad, 'aqr_sessao')).toBeUndefined()
-
-    // State válido e em andamento, mas sem o cookie deste navegador: recusado (e o login do dono segue valendo).
-    const pendingStart = await app.inject({ method: 'GET', url: '/api/auth/login' })
-    const pendingState = new URL(String(pendingStart.headers.location)).searchParams.get('state') ?? ''
-    const noCookie = await app.inject({ method: 'GET', url: `/api/auth/callback?code=x&state=${pendingState}` })
-    expect(noCookie.headers.location).toBe(`${APP}/entrar?erro=expirado`)
-    // O dono cancela no Keycloak: "negado" (o state ainda valia, então não foi gasto pelo pedido acima).
-    const denied = await app.inject({
-      method: 'GET', url: `/api/auth/callback?error=access_denied&state=${pendingState}`, headers: { cookie: `aqr_login=${pendingState}` },
-    })
-    expect(denied.headers.location).toBe(`${APP}/entrar?erro=negado`)
-    expect(String(denied.headers['set-cookie'])).toMatch(/aqr_login=;.*Max-Age=0/)
-    // O retorno de um login começado em OUTRO navegador (sem o cookie daquele state) não vale.
-    const other = await app.inject({ method: 'GET', url: '/api/auth/login' })
-    const otherState = new URL(String(other.headers.location)).searchParams.get('state') ?? ''
-    const stolen = await app.inject({ method: 'GET', url: `/api/auth/callback?code=x&state=${otherState}` })
-    expect(stolen.headers.location).toBe(`${APP}/entrar?erro=expirado`)
-
+    for (const payload of [{}, { usuario: 'admin' }, { usuario: '  ', senha: 'x' }, { usuario: 'a'.repeat(101), senha: 'x' }, { usuario: 'admin', senha: 'x'.repeat(257) }]) {
+      expect((await app.inject({ method: 'POST', url: '/api/auth/entrar', headers: { origin: APP }, payload })).statusCode).toBe(400)
+    }
     const wrongAudience = await login('admin', { audience: 'outro-app' })
-    expect(wrongAudience.location).toBe(`${APP}/entrar?erro=falha`)
+    expect(wrongAudience.status).toBe(503)
     expect(wrongAudience.session).toBeUndefined()
   })
 
-  it('duas abas no mesmo navegador entram ao mesmo tempo, e logins abandonados não acumulam cookies', async () => {
-    let jar = ''
-    const starts: string[] = []
-    for (let i = 0; i < 7; i++) {
-      const start = await app.inject({ method: 'GET', url: '/api/auth/login', headers: jar ? { cookie: `aqr_login=${jar}` } : {} })
-      jar = cookieOf(start, 'aqr_login') ?? ''
-      starts.push(new URL(String(start.headers.location)).searchParams.get('state') ?? '')
+  it('Keycloak fora do ar: recusa com mensagem clara, sem sessão', async () => {
+    keycloakDown = true
+    try {
+      const res = await login('admin')
+      expect(res).toMatchObject({ status: 503, code: 'INDISPONIVEL', session: undefined })
+    } finally {
+      keycloakDown = false
     }
-    // Só os 5 mais recentes ficam no cookie (um só cookie, de tamanho limitado).
-    expect(jar.split('.')).toEqual(starts.slice(-5).reverse())
-    // Duas abas: as duas concluem, na ordem inversa, com o mesmo navegador (mesmo cookie).
-    const tab = async () => {
-      const begin = await app.inject({ method: 'GET', url: '/api/auth/login', headers: { cookie: `aqr_login=${jar}` } })
-      jar = cookieOf(begin, 'aqr_login') ?? ''
-      return new URL(String(begin.headers.location))
-    }
-    const tabs = [await tab(), await tab()]
-    for (const target of tabs.reverse()) {
-      const state = target.searchParams.get('state') ?? ''
-      const code = `code-aba-${state}`
-      grants.set(code, {
-        sub: 'sub-ana', username: 'ana', audience: CLIENT_ID,
-        nonce: target.searchParams.get('nonce') ?? '', challenge: target.searchParams.get('code_challenge') ?? '',
-      })
-      const back = await app.inject({
-        method: 'GET', url: `/api/auth/callback?code=${code}&state=${state}&iss=${encodeURIComponent(issuer)}`, headers: { cookie: `aqr_login=${jar}` },
-      })
-      expect(cookieOf(back, 'aqr_sessao')).toBeDefined()
-      jar = cookieOf(back, 'aqr_login') ?? ''
-      expect(jar.split('.')).not.toContain(state)
-    }
+  })
+
+  it('o login exige a origem do AQR (outro site não consegue logar alguém sem querer)', async () => {
+    const forged = await app.inject({ method: 'POST', url: '/api/auth/entrar', headers: { origin: 'https://malicioso.example' }, payload: { usuario: 'admin', senha: 'senha-admin' } })
+    expect(forged.statusCode).toBe(403)
+    expect(forged.headers['set-cookie']).toBeUndefined()
   })
 
   it('autenticar não basta: precisa de conta no AQR', async () => {
     const result = await login('desconhecida')
-    expect(result.location).toBe(`${APP}/entrar?erro=sem_conta`)
-    expect(result.session).toBeUndefined()
+    expect(result).toMatchObject({ status: 403, code: 'SEM_CONTA', session: undefined })
   })
 
-  it('só aceita caminhos internos em returnTo', async () => {
-    expect((await login('admin', { returnTo: '/administracao/contas' })).location).toBe(`${APP}/administracao/contas`)
-    expect((await login('admin', { returnTo: 'https://malicioso.example' })).location).toBe(`${APP}/`)
-    expect((await login('admin', { returnTo: '//malicioso.example' })).location).toBe(`${APP}/`)
-    // O navegador ignora tab e quebra de linha e trata "\\" como "/": nada disso pode virar "//site".
-    for (const tricky of ['/\t/malicioso.example', '/\n/malicioso.example', '/\\malicioso.example', '/%09/x', `/${'a'.repeat(3000)}`]) {
-      expect((await login('admin', { returnTo: tricky })).location).toMatch(new RegExp(`^${APP}/`))
-      expect(safeReturnTo(tricky)).not.toMatch(/^\/\//)
-    }
-    expect(safeReturnTo('/\t/malicioso.example')).toBe('/')
-    expect(safeReturnTo('/comparacao?x=1#y')).toBe('/comparacao?x=1#y')
-    expect(new URL(safeReturnTo('/%2F%2Fmalicioso.example'), APP).origin).toBe(APP)
+  it('status informa o modo e o link de "Esqueceu a senha?" do Keycloak', async () => {
+    const status = (await get('/api/auth/status', {})).json<{ mode: string; recuperarSenhaUrl: string }>()
+    expect(status.mode).toBe('keycloak')
+    expect(status.recuperarSenhaUrl).toBe(`${issuer}/login-actions/reset-credentials?client_id=${CLIENT_ID}`)
   })
 
   it('limite de tentativas agrupa o IPv6 por bloco /64', () => {
@@ -269,17 +232,17 @@ describe('login real com Keycloak', () => {
   it('excesso de tentativas de login por origem é recusado', async () => {
     const limited = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '3' },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', KEYCLOAK_CLIENT_SECRET: CLIENT_SECRET, AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '3' },
       identityProvider: identity,
     })
     try {
-      for (let i = 0; i < 3; i++) expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toMatch(new RegExp(`^${issuer}`))
-      expect((await limited.inject({ method: 'GET', url: '/api/auth/login' })).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
+      for (let i = 0; i < 3; i++) expect((await login('admin', { app: limited, password: 'errada' })).code).toBe('CREDENCIAIS_INVALIDAS')
+      const blocked = await login('admin', { app: limited })
+      expect(blocked).toMatchObject({ status: 429, code: 'MUITAS_TENTATIVAS', session: undefined })
       // Outro bloco IPv6 tem o próprio limite; o mesmo /64 com outro endereço, não.
-      const v6 = (remoteAddress: string) => limited.inject({ method: 'GET', url: '/api/auth/login', remoteAddress })
-      for (let i = 0; i < 3; i++) expect((await v6(`2001:db8:1:2::${i + 1}`)).headers.location).toMatch(new RegExp(`^${issuer}`))
-      expect((await v6('2001:db8:1:2:ffff::9')).headers.location).toBe(`${APP}/entrar?erro=muitas_tentativas`)
-      expect((await v6('2001:db8:1:3::1')).headers.location).toMatch(new RegExp(`^${issuer}`))
+      for (let i = 0; i < 3; i++) expect((await login('admin', { app: limited, remoteAddress: `2001:db8:1:2::${i + 1}` })).status).toBe(200)
+      expect((await login('admin', { app: limited, remoteAddress: '2001:db8:1:2:ffff::9' })).status).toBe(429)
+      expect((await login('admin', { app: limited, remoteAddress: '2001:db8:1:3::1' })).status).toBe(200)
     } finally {
       await limited.close()
     }
@@ -307,7 +270,7 @@ describe('login real com Keycloak', () => {
     expect((await get('/api/auth/me', analyst.headers)).statusCode).toBe(401)
     expect((await get('/api/admin/accounts', analyst.headers)).statusCode).toBe(401)
     const again = await login('bruno')
-    expect(again.location).toBe(`${APP}/entrar?erro=conta_inativa`)
+    expect(again).toMatchObject({ status: 403, code: 'CONTA_INATIVA', session: undefined })
     // A sessão aberta foi apagada: reativar a conta não ressuscita o cookie antigo.
     expect(db.prepare('SELECT count(*) AS n FROM sessions WHERE account_id = ?').get(bruno.id)).toEqual({ n: 0 })
     const back = await app.inject({
@@ -360,7 +323,7 @@ describe('login real com Keycloak', () => {
 
     const restarted = await buildTestApp({
       db,
-      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo' },
+      env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', KEYCLOAK_CLIENT_SECRET: CLIENT_SECRET },
       identityProvider: identity,
     })
     expect((await restarted.inject({ method: 'GET', url: '/api/auth/me', headers })).statusCode).toBe(200)
@@ -374,13 +337,13 @@ describe('login real com Keycloak', () => {
   describe('vínculo pelo sub do Keycloak', () => {
     it('o nome de usuário sozinho não basta: conta sem vínculo não entra', async () => {
       const result = await login('antiga', { sub: 'sub-outra-pessoa' })
-      expect(result.location).toBe(`${APP}/entrar?erro=vinculo_pendente`)
+      expect(result).toMatchObject({ status: 403, code: 'VINCULO_PENDENTE' })
       expect(result.session).toBeUndefined()
     })
 
     it('mesmo nome com outro sub (nome reaproveitado ou trocado no Keycloak) é recusado', async () => {
       const result = await login('admin', { sub: 'sub-invasor' })
-      expect(result.location).toBe(`${APP}/entrar?erro=vinculo_divergente`)
+      expect(result).toMatchObject({ status: 403, code: 'VINCULO_DIVERGENTE' })
       expect(result.session).toBeUndefined()
       const events = db.prepare('SELECT evento FROM access_events').all().map((row) => row.evento)
       expect(events).toEqual(expect.arrayContaining(['login.vinculo_pendente', 'login.vinculo_divergente']))
@@ -657,7 +620,7 @@ describe('login real com Keycloak', () => {
     it('desligar o servidor no meio de uma comparação não a registra como cancelada', { timeout: 20_000 }, async () => {
       const other = await buildTestApp({
         db,
-        env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
+        env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', KEYCLOAK_CLIENT_SECRET: CLIENT_SECRET, AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
         identityProvider: identity,
       })
       const analyst = await login('admin')

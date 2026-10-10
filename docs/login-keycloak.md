@@ -1,5 +1,7 @@
 # Login real com Keycloak: relatório e guia
 
+> **Atualização (10/10/2026):** o login agora é feito **na tela do próprio AQR** (`POST /api/auth/entrar` com usuário e senha, conferidos no Keycloak pelo servidor, cliente `aqr-web` confidencial com `KEYCLOAK_CLIENT_SECRET`). O fluxo por redirecionamento descrito abaixo (`/api/auth/login`, callback, `state`, cookie `aqr_login`, `returnTo`) foi removido; o restante (sessão, vínculo pelo `sub`, registros, produção) continua valendo. O E2E real desta versão ainda precisa ser rodado.
+
 ## Como funciona
 
 O servidor do AQR é o cliente OIDC (padrão BFF): código de autorização + PKCE (S256), `state` e `nonce`.

@@ -4,7 +4,9 @@
   "sslRequired": "all",
   "registrationAllowed": false,
   "internationalizationEnabled": true,
-  "supportedLocales": ["pt-BR"],
+  "supportedLocales": [
+    "pt-BR"
+  ],
   "defaultLocale": "pt-BR",
   "loginWithEmailAllowed": false,
   "bruteForceProtected": true,
@@ -18,16 +20,22 @@
       "clientId": "aqr-web",
       "name": "AQR",
       "enabled": true,
-      "publicClient": true,
+      "publicClient": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "redirectUris": ["https://TROCAR-PELO-DOMINIO-DO-AQR/api/auth/callback", "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar"],
-      "webOrigins": ["https://TROCAR-PELO-DOMINIO-DO-AQR"],
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar",
+        "https://TROCAR-PELO-DOMINIO-DO-AQR/"
+      ],
+      "webOrigins": [
+        "https://TROCAR-PELO-DOMINIO-DO-AQR"
+      ],
       "attributes": {
-        "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar"
-      }
+      },
+      "clientAuthenticatorType": "client-secret",
+      "baseUrl": "https://TROCAR-PELO-DOMINIO-DO-AQR/entrar"
     },
     {
       "clientId": "aqr-admin",
