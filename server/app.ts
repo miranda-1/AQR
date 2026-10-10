@@ -66,7 +66,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())
     app.log.warn('Administração em modo de desenvolvimento: sem autenticação real, só para este computador.')
-    registerAdminRoutes(app, { mode: 'dev', auth: createDevAuthProvider(db) })
+    registerAdminRoutes(app, { mode: 'dev', auth: createDevAuthProvider(db), db })
   } else {
     registerAdminRoutes(app, { mode: 'disabled' })
   }

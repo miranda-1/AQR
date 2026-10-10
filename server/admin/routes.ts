@@ -2,7 +2,10 @@ import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { AdminStatus, CurrentAdmin } from '../../shared/contracts/admin.ts'
 import type { AuthProvider } from '../auth/auth-provider.ts'
 import { principalOf, requireRole } from '../auth/require-role.ts'
+import type { Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
+import { AccountService, actorFromPrincipal } from './account-service.ts'
+import { accountQuery, auditQuery, createInput, idParam, statusChangeInput, updateInput } from './schemas.ts'
 
 export type AdminMode = 'disabled' | 'dev'
 
@@ -36,6 +39,8 @@ export interface AdminRoutesOptions {
   mode: AdminMode
   /** Presente quando a administração está ligada. */
   auth?: AuthProvider
+  /** Banco das contas e da auditoria; presente quando a administração está ligada. */
+  db?: Database
 }
 
 /**
@@ -46,8 +51,9 @@ export interface AdminRoutesOptions {
 export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOptions): void {
   app.get('/api/admin/status', async (): Promise<AdminStatus> => ({ available: options.mode !== 'disabled', mode: options.mode }))
 
-  const auth = options.auth
-  if (options.mode === 'disabled' || !auth) return
+  const { auth, db } = options
+  if (options.mode === 'disabled' || !auth || !db) return
+  const service = new AccountService(db)
 
   app.register(async (admin) => {
     admin.decorateRequest('principal', null)
@@ -64,5 +70,28 @@ export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOp
         origem: principal.origem,
       }
     })
+
+    admin.get('/api/admin/accounts', { preHandler: onlyAdmins }, async (request) => service.list(accountQuery(request)))
+
+    admin.post('/api/admin/accounts', { preHandler: onlyAdmins }, async (request, reply) => {
+      const account = service.create(createInput(request.body), actorFromPrincipal(principalOf(request)))
+      return reply.status(201).send(account)
+    })
+
+    admin.get('/api/admin/accounts/:id', { preHandler: onlyAdmins }, async (request) => service.get(idParam(request)))
+
+    admin.patch('/api/admin/accounts/:id', { preHandler: onlyAdmins }, async (request) =>
+      service.update(idParam(request), updateInput(request.body), actorFromPrincipal(principalOf(request))),
+    )
+
+    admin.post('/api/admin/accounts/:id/desativar', { preHandler: onlyAdmins }, async (request) =>
+      service.deactivate(idParam(request), statusChangeInput(request.body), actorFromPrincipal(principalOf(request))),
+    )
+
+    admin.post('/api/admin/accounts/:id/reativar', { preHandler: onlyAdmins }, async (request) =>
+      service.reactivate(idParam(request), statusChangeInput(request.body), actorFromPrincipal(principalOf(request))),
+    )
+
+    admin.get('/api/admin/audit-events', { preHandler: onlyAdmins }, async (request) => service.listAudit(auditQuery(request)))
   })
 }
