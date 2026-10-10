@@ -84,3 +84,30 @@ describe('acessibilidade da administração (axe)', () => {
     expect(await violations(container)).toEqual([])
   })
 })
+
+describe('acessibilidade dos formulários de contas (axe)', () => {
+  it.each([
+    ['nova conta', '/administracao/contas/nova', 'Nova conta'],
+    ['editar conta', '/administracao/contas/u2', 'Editar conta'],
+  ])('%s não tem violações', async (_, path, heading) => {
+    const { container } = renderApp(path, { accountService: createInMemoryAccountService({ accounts: sampleAccounts }) })
+    await screen.findByRole('heading', { level: 1, name: heading })
+    expect(await violations(container)).toEqual([])
+  })
+
+  it('formulário com erros e diálogo de confirmação não têm violações', async () => {
+    const user = userEvent.setup()
+    const service = createInMemoryAccountService({ accounts: sampleAccounts })
+    const { container } = renderApp('/administracao/contas/nova', { accountService: service })
+    await user.click(await screen.findByRole('button', { name: 'Criar conta' }))
+    expect(await violations(container)).toEqual([])
+  })
+
+  it('diálogo de desativação não tem violações', async () => {
+    const user = userEvent.setup()
+    renderApp('/administracao/contas/u2', { accountService: createInMemoryAccountService({ accounts: sampleAccounts }) })
+    await user.click(await screen.findByRole('button', { name: 'Desativar conta' }))
+    await screen.findByRole('alertdialog')
+    expect(await violations(document.body)).toEqual([])
+  })
+})

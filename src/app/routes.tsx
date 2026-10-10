@@ -49,6 +49,14 @@ export const appRoutes: RouteObject[] = [
         element: <RequireAdmin>{lazyPage(() => import('@/pages/AccountsPage').then((m) => ({ default: m.AccountsPage })))}</RequireAdmin>,
       },
       {
+        path: routes.adminAccountNew,
+        element: <RequireAdmin>{lazyPage(() => import('@/pages/AccountCreatePage').then((m) => ({ default: m.AccountCreatePage })))}</RequireAdmin>,
+      },
+      {
+        path: '/administracao/contas/:id',
+        element: <RequireAdmin>{lazyPage(() => import('@/pages/AccountEditPage').then((m) => ({ default: m.AccountEditPage })))}</RequireAdmin>,
+      },
+      {
         path: '*',
         element: lazyPage(() => import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))),
       },

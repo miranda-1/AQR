@@ -8,5 +8,7 @@ export const routes = {
   triage: '/triagem',
   /** Administração de contas (só quando o servidor a disponibiliza). */
   adminAccounts: '/administracao/contas',
+  adminAccountNew: '/administracao/contas/nova',
+  adminAccount: (id: string) => `/administracao/contas/${encodeURIComponent(id)}`,
   adminAudit: '/administracao/auditoria',
 } as const

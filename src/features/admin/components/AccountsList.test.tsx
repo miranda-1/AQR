@@ -12,7 +12,7 @@ describe('lista de contas', () => {
     open()
     const table = await screen.findByRole('table', { name: 'Contas do AQR' })
     expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
-      'Nome', 'Usuário', 'E-mail', 'Papel', 'Situação', 'Atualizada em',
+      'Nome', 'Usuário', 'E-mail', 'Papel', 'Situação', 'Atualizada em', 'Ações',
     ])
     expect(within(table).getByRole('rowheader', { name: 'Ana Lima' })).toBeInTheDocument()
     expect(within(table).getByText('Desativada')).toBeInTheDocument()

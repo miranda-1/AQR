@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { routes } from '@/config/routes'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useAsyncData } from '../hooks/use-async-data'
 import type { AccountQuery, AccountRole, AccountStatus } from '../model/types'
@@ -138,6 +140,7 @@ export function AccountsList() {
                   <th scope="col" className="px-4 py-3 font-semibold">Papel</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Situação</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Atualizada em</th>
+                  <th scope="col" className="px-4 py-3 font-semibold"><span className="sr-only">Ações</span></th>
                 </tr>
               </thead>
               <tbody className="[&>tr:nth-child(even)]:bg-surface-sunken/60">
@@ -149,6 +152,11 @@ export function AccountsList() {
                     <td className="px-4 py-3.5"><RoleBadge role={account.papel} /></td>
                     <td className="px-4 py-3.5"><StatusBadge status={account.situacao} /></td>
                     <td className="px-4 py-3.5 text-muted-foreground">{formatDate(account.atualizadaEm)}</td>
+                    <td className="px-4 py-3.5 text-right">
+                      <Link to={routes.adminAccount(account.id)} viewTransition className="font-semibold text-brand underline-offset-4 hover:underline">
+                        Editar<span className="sr-only"> conta de {account.nome}</span>
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -164,6 +172,9 @@ export function AccountsList() {
                   <RoleBadge role={account.papel} />
                   <StatusBadge status={account.situacao} />
                 </div>
+                <Link to={routes.adminAccount(account.id)} viewTransition className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand underline-offset-4 hover:underline">
+                  Editar<span className="sr-only"> conta de {account.nome}</span>
+                </Link>
               </li>
             ))}
           </ul>
