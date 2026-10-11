@@ -6,7 +6,7 @@ Passos (resumo; detalhes e limitações em `docs/login-keycloak.md`):
 
 1. Subir o Keycloak de produção em modo `start`, com HTTPS, `KC_HOSTNAME`, Postgres com backup e administrador próprio (nada de `admin/admin`).
 2. Importar o modelo, trocando `TROCAR-PELO-DOMINIO-DO-AQR` pelo domínio real.
-3. Em *Clients → aqr-admin → Credentials*, gerar o segredo (será `KEYCLOAK_ADMIN_CLIENT_SECRET`, mínimo de 24 caracteres; o AQR recusa o segredo de desenvolvimento).
+3. Em *Clients → aqr-web → Credentials*, gerar o segredo do cliente do site (será `KEYCLOAK_CLIENT_SECRET`, mínimo de 24 caracteres; o AQR recusa o de desenvolvimento). O `aqr-web` é confidencial e tem a troca por senha ligada, porque o login é digitado na tela do AQR e conferido pelo servidor. Também em *Clients → aqr-admin → Credentials*, gerar o segredo (será `KEYCLOAK_ADMIN_CLIENT_SECRET`, mínimo de 24 caracteres; o AQR recusa o segredo de desenvolvimento).
 4. Em *Clients → aqr-admin → Service accounts roles*, atribuir somente `manage-users` e `view-users` do `realm-management`.
 5. Configurar o SMTP real em *Realm settings → Email*.
 6. Guardar o segredo no cofre/variáveis de ambiente do servidor; nunca no frontend nem no git.
