@@ -3,7 +3,7 @@ import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { DocumentRole, NormalizedRect, PageContentType } from '../../../shared/contracts/comparison.ts'
 import { ComparisonFailure } from '../failure.ts'
-import { area, clamp01 } from '../geometry.ts'
+import { area, clamp01, rotateRect } from '../geometry.ts'
 import type { ComparisonLimits } from '../limits.ts'
 import { openPdf } from './load.ts'
 import { readPageObjects, type PageObjects } from './page-objects.ts'
@@ -301,9 +301,15 @@ async function analyzePage(
   const page = await pdf.getPage(pageNumber)
   try {
     const viewport = page.getViewport({ scale: 1 })
+    // O texto é lido na página sem a rotação declarada (onde as linhas são horizontais) e os
+    // retângulos são girados depois para a orientação exibida, que é a do visualizador.
+    const upright = page.getViewport({ scale: 1, rotation: 0 })
     const content = await page.getTextContent()
-    const rawLines = linesOf(content, viewport.transform, viewport.width, viewport.height)
+    const rawLines = linesOf(content, upright.transform, upright.width, upright.height)
     const ordered = readingOrder(rawLines)
+    if (page.rotate % 360 !== 0) {
+      for (const line of ordered.lines) for (const word of line.words) word.region = rotateRect(word.region, page.rotate)
+    }
     const objects: PageObjects = options.objects
       ? await readPageObjects(page, viewport.transform, viewport.width, viewport.height, Object.keys(content.styles))
       : { images: [], vectorPaths: 0, fonts: new Map() }

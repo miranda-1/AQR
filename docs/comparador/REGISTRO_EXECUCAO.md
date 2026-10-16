@@ -51,7 +51,7 @@ sensíveis: só decisões, estado e comandos.
 | 1. Contrato e confiabilidade | feito | ver git log |
 | 3–7. Motores (texto, estrutura, visual, OCR, consolidação) | primeira versão integrada | ver git log |
 | 8. Frontend (modos, filtros, situação, exportação) | primeira versão integrada | ver git log |
-| 2. Corpus com gabarito e avaliação | em andamento | — |
+| 2. Corpus com gabarito e avaliação | feito: 47 casos (os 40 pedidos + OCR e páginas), 47/47 | ver git log |
 | 9. Desempenho | pendente | — |
 | 10. Segurança | pendente | — |
 | Relatório final | pendente | — |
@@ -63,3 +63,27 @@ cd /home/miranda/codigos/AQR
 git status && git log --oneline | head
 npm run lint && npm run typecheck && npm test && npm run build
 ```
+
+## Rodadas do corpus (15/10/2026)
+
+1. Primeira rodada: 37/47. Falhas e causas:
+   - página girada: palavras posicionadas como se o texto fosse horizontal → extração sem rotação e
+     retângulos girados para a orientação exibida (defeito real);
+   - documento extenso e pontuação: gabarito apontava a primeira ocorrência da palavra na página e o
+     critério de região penalizava a folga de altura → `wordsBox` com recorte e critério por eixo
+     (defeito do gabarito, não do comparador);
+   - PDF gerado palavra a palavra: bordas deslocadas por fração de pixel → teste de faixa de tons na
+     vizinhança 3×3 em vez de "existe vizinho de mesma cor" (raio 2 foi testado e escondeu um dígito
+     trocado numa digitalização; descartado);
+   - página repetida removida tratada como refluxo → refluxo só pelo excedente de palavras;
+   - carimbo sobre o texto virava "cor alterada" → cor pelo miolo dos traços e comparação pixel a
+     pixel onde as duas versões têm tinta;
+   - OCR: rabisco lido como texto, ruído, texto ilegível desalinhando páginas, dígito em 8 pt
+     descartado por falta de confirmação visual → palavras de OCR abaixo de 45 descartadas, leitura
+     incerta sobre mudança visual vira diferença visual (com a leitura anotada), leitura confiável sem
+     confirmação fica "conferir", semelhança de páginas com OCR usa a aparência, resolução visual
+     dobrada em páginas digitalizadas, deslocamento descontado o global.
+2. Ruído de digitalização: 46 regiões toleradas no caso com ruído → limiares escalados pela
+   resolução e manchas menores que ~1 mm descartadas em páginas digitalizadas → 0; a tolerância de
+   ruído foi retirada do gabarito desse caso.
+3. Resultado: 47/47, sem falsas diferenças fora das toleradas e justificadas no gabarito.

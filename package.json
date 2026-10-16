@@ -21,7 +21,9 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:corpus": "vitest run --project corpus",
+    "avaliar:corpus": "tsx server/comparison/evaluation/report-cli.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.3",
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@pdf-lib/fontkit": "1.1.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",

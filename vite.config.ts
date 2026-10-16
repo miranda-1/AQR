@@ -35,6 +35,16 @@ export default defineConfig({
           name: 'servidor',
           environment: 'node',
           include: ['server/**/*.test.ts', 'shared/**/*.test.ts'],
+          exclude: ['server/comparison/evaluation/**'],
+        },
+      },
+      {
+        // Corpus sintético com gabarito (texto, imagens, estrutura, aparência, digitalizados).
+        extends: true,
+        test: {
+          name: 'corpus',
+          environment: 'node',
+          include: ['server/comparison/evaluation/**/*.test.ts'],
         },
       },
       {

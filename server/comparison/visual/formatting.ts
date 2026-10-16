@@ -4,7 +4,7 @@ import type { FontDescriptor } from '../pdf/page-objects.ts'
 import type { Raster } from '../pdf/render.ts'
 import { lineRects } from '../regions.ts'
 import { joinTokens, type Token, type TokenPiece } from '../text/tokenize.ts'
-import { inkColor, type VisualRegion } from './raster-diff.ts'
+import { inkColor, inkColorChangedInPlace, type VisualRegion } from './raster-diff.ts'
 
 /**
  * Formatação do texto que não mudou de conteúdo. Para cada palavra igual nos dois documentos
@@ -56,6 +56,8 @@ type Change = 'font' | 'font-size' | 'color' | 'text-position'
 interface Observation {
   pair: EqualPair
   changes: Set<Change>
+  /** Mudanças que não dá para medir nesta palavra (pontuação, pouca tinta): não interrompem um trecho. */
+  unknown: Set<Change>
   shift: { dx: number; dy: number }
   colors?: { original: [number, number, number]; updated: [number, number, number] }
 }
@@ -82,12 +84,13 @@ function touchesVisualChange(region: NormalizedRect, regions: readonly VisualReg
 
 function observe(input: FormattingInput, pair: EqualPair): Observation {
   const changes = new Set<Change>()
+  const unknown = new Set<Change>()
   const a = pair.original
   const b = pair.updated
   const pieceA = firstPiece(a)
   const pieceB = firstPiece(b)
   const shift = { dx: (pieceB?.region.x ?? 0) - (pieceA?.region.x ?? 0), dy: (pieceB?.region.y ?? 0) - (pieceA?.region.y ?? 0) }
-  const observation: Observation = { pair, changes, shift }
+  const observation: Observation = { pair, changes, unknown, shift }
   if (!pieceA || !pieceB) return observation
   const textLayer = a.style.source === 'text-layer' && b.style.source === 'text-layer'
 
@@ -101,15 +104,24 @@ function observe(input: FormattingInput, pair: EqualPair): Observation {
     if (!pair.reflowed && (Math.abs(shift.dx) > POSITION_TOLERANCE || Math.abs(shift.dy) > POSITION_TOLERANCE)) changes.add('text-position')
   }
 
+  const measurable = /[\p{L}\p{N}]/u.test(a.text)
+  if (!measurable) unknown.add('color')
   if (
     input.rasters &&
+    measurable &&
     (touchesVisualChange(pieceA.region, input.visualRegions, 'original') || touchesVisualChange(pieceB.region, input.visualRegions, 'updated'))
   ) {
     const colorA = inkColor(input.rasters.original, pieceA.region)
     const colorB = inkColor(input.rasters.updated, pieceB.region)
+    if (!colorA || !colorB) unknown.add('color')
     if (colorA && colorB) {
       const distance = Math.max(...colorA.map((value, index) => Math.abs(value - (colorB[index] ?? 0))))
-      if (distance > COLOR_TOLERANCE) {
+      // No mesmo lugar, a comparação pixel a pixel separa mudança de cor de um traço que cruza a palavra.
+      const inPlace = Math.abs(shift.dx) < 0.002 && Math.abs(shift.dy) < 0.002
+      const confirmed = inPlace
+        ? inkColorChangedInPlace(input.rasters.original, pieceA.region, input.rasters.updated, pieceB.region, COLOR_TOLERANCE)
+        : true
+      if (distance > COLOR_TOLERANCE && confirmed === true) {
         changes.add('color')
         observation.colors = { original: colorA, updated: colorB }
       }
@@ -165,13 +177,19 @@ export function compareFormatting(input: FormattingInput): FormattingEvent[] {
   for (const change of ['font', 'font-size', 'color', 'text-position'] as const) {
     const runs: Observation[][] = []
     let current: Observation[] = []
+    /** Palavras sem medida (pontuação) depois do trecho atual, que entram nele se ele continuar. */
+    let pending: Observation[] = []
     for (const observation of observations) {
       const last = current[current.length - 1]
       if (observation.changes.has(change) && (!last || sameRun(last, observation, change))) {
-        current.push(observation)
+        current.push(...pending, observation)
+        pending = []
+      } else if (observation.unknown.has(change) && current.length > 0) {
+        pending.push(observation)
       } else {
         if (current.length > 0) runs.push(current)
         current = observation.changes.has(change) ? [observation] : []
+        pending = []
       }
     }
     if (current.length > 0) runs.push(current)

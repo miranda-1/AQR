@@ -29,6 +29,8 @@ export interface ComparisonLimits {
   ocrMaxPages: number
   /** Palavra de OCR com confiança abaixo disto (0–100) torna a diferença "conferir". */
   ocrLowConfidence: number
+  /** Palavra de OCR com confiança abaixo disto é descartada como ilegível (ruído, rabisco). */
+  ocrMinConfidence: number
   /** Pasta do modelo de português do OCR (`por.traineddata.gz`). Vazio = o do pacote instalado. */
   ocrLanguagePath: string
   /**
@@ -52,6 +54,7 @@ export const defaultComparisonLimits: ComparisonLimits = {
   ocr: true,
   ocrMaxPages: 30,
   ocrLowConfidence: 70,
+  ocrMinConfidence: 45,
   ocrLanguagePath: '',
   softBudgetMs: 90_000,
 }

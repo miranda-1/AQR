@@ -129,6 +129,35 @@ function visualDraft(region: VisualRegion, pages: Record<DocumentRole, number>, 
   return draft
 }
 
+/**
+ * Mudança visual onde o OCR leu algo diferente, mas com confiança baixa (rabisco, carimbo, sujeira):
+ * a diferença é visual; a leitura do OCR fica só como nota.
+ */
+function ocrVisualDraft(draft: Draft, regions: readonly VisualRegion[], pages: Record<DocumentRole, number>): Draft {
+  const original = regions.map((region) => region.original)
+  const updated = regions.map((region) => region.updated)
+  const inkOriginal = Math.max(...regions.map((region) => region.inkOriginal))
+  const inkUpdated = Math.max(...regions.map((region) => region.inkUpdated))
+  const kind = inkOriginal >= INK_PRESENT && inkUpdated < INK_PRESENT ? 'deletion' : inkOriginal < INK_PRESENT && inkUpdated >= INK_PRESENT ? 'addition' : 'modification'
+  const reading = [draft.original?.text, draft.updated?.text].filter(Boolean).join(' → ')
+  const visual = makeDraft({
+    kind,
+    category: 'visual',
+    subtype: 'graphic',
+    evidence: 'needs-review',
+    methods: ['visual', 'ocr'],
+    notes: [
+      'Aparência alterada numa página digitalizada.',
+      `O OCR leu esta área com confiança baixa${reading ? ` ("${reading}")` : ''}; a leitura não foi usada como texto.`,
+    ],
+  })
+  if (kind !== 'addition') visual.original = sideFromRects(pages.original, original)
+  if (kind !== 'deletion') visual.updated = sideFromRects(pages.updated, updated)
+  if (kind === 'addition') visual.anchors = { original: { pageNumber: pages.original, region: original[0] ?? { x: 0, y: 0, width: 0, height: 0 } } }
+  if (kind === 'deletion') visual.anchors = { updated: { pageNumber: pages.updated, region: updated[0] ?? { x: 0, y: 0, width: 0, height: 0 } } }
+  return visual
+}
+
 /** Consolida as evidências de um par de páginas com os rascunhos de texto que tocam essas páginas. */
 export function consolidatePagePair(evidence: PagePairEvidence, textDrafts: readonly Draft[]): PagePairOutcome {
   const { pages, regions } = evidence
@@ -139,15 +168,26 @@ export function consolidatePagePair(evidence: PagePairEvidence, textDrafts: read
   )
   const remaining = new Set(regions)
 
-  // 1. Texto.
+  // 1. Texto. Leitura do OCR com confiança baixa: só a mudança visual é evidência firme; sem ela,
+  // é ruído de reconhecimento. Leitura confiável sem confirmação visual continua, para conferir.
   for (const draft of onPages) {
     const matching = regions.filter((region) => regionTouchesDraft(region, draft, pages))
-    if (matching.length > 0) {
+    const unsureOcr = draft.ocrOnly === true && draft.evidence === 'needs-review'
+    if (matching.length > 0 && unsureOcr) {
+      for (const region of matching) remaining.delete(region)
+      discarded.add(draft)
+      drafts.push(ocrVisualDraft(draft, matching, pages))
+    } else if (matching.length > 0) {
       draft.methods.add('visual')
       if (draft.evidence === 'direct') draft.evidence = 'corroborated'
       for (const region of matching) remaining.delete(region)
     } else if (draft.ocrOnly && evidence.visualAnalyzed) {
-      discarded.add(draft)
+      if (unsureOcr) {
+        discarded.add(draft)
+      } else {
+        draft.evidence = 'needs-review'
+        draft.notes.push('Lida por OCR; a comparação visual não confirmou a mudança. Confira no documento.')
+      }
     }
   }
 

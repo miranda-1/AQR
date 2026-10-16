@@ -33,7 +33,7 @@ import { classifyTextChange, type TextSide } from './text/classify.ts'
 import { joinTokens, tokenize, type Token, type TokenizedDocument } from './text/tokenize.ts'
 import { compareFormatting, POSITION_TOLERANCE, type EqualPair } from './visual/formatting.ts'
 import { compareImages } from './visual/images.ts'
-import { diffRasters, type VisualRegion } from './visual/raster-diff.ts'
+import { diffRasters, MIN_REGION_PIXELS, type VisualRegion } from './visual/raster-diff.ts'
 
 export interface SourceDocument {
   fileName: string
@@ -68,8 +68,17 @@ function needsOcr(page: AnalyzedPage): boolean {
   return page.content === 'scanned' || page.content === 'insufficient-text' || page.content === 'mixed'
 }
 
-/** Junta as palavras do OCR às da camada de texto, sem duplicar o que o PDF já tem como texto. */
-export function mergeOcr(page: AnalyzedPage, ocr: OcrPage): ExtractedLine[] {
+/** Palavra de OCR que é só ruído: confiança abaixo do mínimo, ou um sinal solto pouco confiável. */
+function isOcrNoise(text: string, confidence: number, minConfidence: number): boolean {
+  if (confidence < minConfidence) return true
+  return !/[\p{L}\p{N}]/u.test(text) && confidence < 80
+}
+
+/**
+ * Junta as palavras do OCR às da camada de texto, sem duplicar o que o PDF já tem como texto e
+ * sem as leituras que são ruído (pontos de sujeira, rabiscos lidos como letras).
+ */
+export function mergeOcr(page: AnalyzedPage, ocr: OcrPage, minConfidence = 0): ExtractedLine[] {
   const textWords = page.lines.flatMap((line) => line.words)
   const images = page.objects.images.map((image) => image.region)
   const overlapsText = (region: NormalizedRect) =>
@@ -77,6 +86,7 @@ export function mergeOcr(page: AnalyzedPage, ocr: OcrPage): ExtractedLine[] {
   const ocrLines: ExtractedLine[] = []
   for (const line of ocr.lines) {
     const words = line.words
+      .filter((word) => !isOcrNoise(word.text, word.confidence, minConfidence))
       .filter((word) => !overlapsText(word.region))
       .filter((word) => page.content !== 'mixed' || images.some((image) => coveredFraction(word.region, image) > 0.6))
       .map((word) => ({ text: word.text, region: word.region, source: 'ocr' as const, confidence: word.confidence }))
@@ -128,7 +138,7 @@ async function runOcr(
         const pdfPage = await documents[role].pdf.getPage(page.pageNumber)
         try {
           const ocr = await engine.recognize(pdfPage)
-          page.lines = mergeOcr(page, ocr)
+          page.lines = mergeOcr(page, ocr, limits.ocrMinConfidence)
           outcomes[role].set(page.pageNumber, { status: 'done', confidence: ocr.confidence })
         } finally {
           pdfPage.cleanup()
@@ -161,6 +171,7 @@ function pageFeatures(document: AnalyzedDocument, tokenized: TokenizedDocument):
       pageNumber: page.pageNumber,
       words: words.get(page.pageNumber) ?? new Map(),
       wordCount: counts.get(page.pageNumber) ?? 0,
+      ocr: page.lines.some((line) => line.words.some((word) => word.source === 'ocr')),
     }
     if (page.preview) {
       features.previewHash = page.preview.hash
@@ -431,7 +442,10 @@ async function renderPair(
   limits: ComparisonLimits,
   rotation: number | undefined,
 ): Promise<ByRole<Raster>> {
-  const scale = limits.visualWidth / Math.max(pages.original.width, pages.updated.width, 1)
+  // Páginas digitalizadas (ou com imagens grandes) são comparadas com o dobro da resolução: um dígito
+  // trocado num texto pequeno ocupa poucos pixels a 120 dpi.
+  const detailed = [pages.original, pages.updated].some((page) => page.content === 'scanned' || page.content === 'mixed' || page.content === 'insufficient-text')
+  const scale = (limits.visualWidth * (detailed ? 2 : 1)) / Math.max(pages.original.width, pages.updated.width, 1)
   const rasters: Partial<ByRole<Raster>> = {}
   for (const role of roles) {
     const pdfPage = await documents[role].pdf.getPage(pages[role].pageNumber)
@@ -473,7 +487,14 @@ async function comparePagePairVisually(
 
   const rotationMismatch = pages.original.rotation !== pages.updated.rotation
   const rasters = await renderPair(documents, pages, limits, rotationMismatch ? 0 : undefined)
-  const diff = diffRasters(rasters.original, rasters.updated)
+  const scanned = [pages.original, pages.updated].some((page) => page.content === 'scanned' || page.content === 'insufficient-text')
+  // Em digitalizações, manchas menores que ~1 mm (3 pt) de lado são sujeira, não conteúdo; e o mínimo
+  // de pixels escala com a resolução, para valer a mesma área física da comparação normal.
+  const pixelsPerPoint = rasters.original.width / pages.original.width
+  const baseScale = limits.visualWidth / Math.max(pages.original.width, 1)
+  const minRegionSide = scanned ? Math.round(3 * pixelsPerPoint) : 0
+  const minRegionPixels = Math.round(MIN_REGION_PIXELS * (pixelsPerPoint / baseScale) ** 2)
+  const diff = diffRasters(rasters.original, rasters.updated, undefined, { minRegionSide, minRegionPixels })
   let regions: VisualRegion[] = diff.regions
   if (rotationMismatch) {
     // Comparadas sem a rotação declarada; as regiões voltam para a orientação exibida de cada página.
@@ -496,10 +517,15 @@ async function comparePagePairVisually(
     rasters,
     visualRegions: regions,
   })
+  // Palavras iguais que mudaram de lugar (descontado o deslocamento da página inteira, como numa
+  // folha escaneada um pouco mais para o lado) explicam a mudança visual em volta delas.
+  const globalX = diff.shift.dx / rasters.updated.width
+  const globalY = diff.shift.dy / rasters.updated.height
   const displacedPairs = equalPairs.filter((pair) => {
     const a = pair.original.pieces[0]?.region
     const b = pair.updated.pieces[0]?.region
-    return a && b && (Math.abs(a.x - b.x) > POSITION_TOLERANCE / 2 || Math.abs(a.y - b.y) > POSITION_TOLERANCE / 2)
+    const tolerance = POSITION_TOLERANCE / 2
+    return a && b && (Math.abs(b.x - a.x - globalX) > tolerance || Math.abs(b.y - a.y - globalY) > tolerance)
   })
   return {
     status: 'analyzed',

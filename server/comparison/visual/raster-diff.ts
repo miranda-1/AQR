@@ -7,13 +7,16 @@ import type { Raster } from '../pdf/render.ts'
  * 1. Alinhamento: estima um deslocamento global (dx, dy) comparando os perfis de tinta das linhas
  *    e colunas, para que uma página inteira deslocada não vire uma página inteira "diferente".
  * 2. Máscara: um pixel difere se a maior diferença entre os canais RGB passa de `COLOR_TOLERANCE`
- *    e a cor de um dos lados não aparece a até `NEIGHBOR_RADIUS` pixel no outro documento — o que
- *    absorve serrilhado (antialiasing) e arredondamentos de rasterização sem esconder traços novos.
+ *    e o tom de um dos lados fica fora da faixa de tons da vizinhança (raio `NEIGHBOR_RADIUS`) do
+ *    outro documento — o que absorve serrilhado (antialiasing) e bordas deslocadas por fração de
+ *    pixel sem esconder traços novos.
  * 3. Ruído: a máscara é reduzida a células de `CELL` × `CELL` pixels; célula com menos de
  *    `MIN_CELL_PIXELS` pixels diferentes é descartada (pontos soltos, compressão).
  * 4. Regiões: células próximas (até `MERGE_CELLS` células) se juntam por componentes conexos;
  *    componentes com menos de `MIN_REGION_PIXELS` pixels são descartados. Cada componente vira um
  *    retângulo nos dois documentos (o do atualizado já com o deslocamento global).
+ * 5. Realinhamento local: uma região pequena que desaparece com um deslocamento de até
+ *    `LOCAL_SHIFT` pixels é diferença de posicionamento imperceptível e é descartada.
  *
  * Tolerâncias medidas no corpus sintético (`server/comparison/evaluation/`): ver
  * `docs/comparador/algoritmos.md`.
@@ -25,6 +28,14 @@ export const CELL = 4
 export const MIN_CELL_PIXELS = 2
 export const MERGE_CELLS = 2
 export const MIN_REGION_PIXELS = 12
+/**
+ * Deslocamento local tolerado (pixels; 2 px ≈ 0,4 mm a 120 dpi): uma região pequena que fica igual
+ * ao deslocar um dos lados em até tanto é diferença de posicionamento imperceptível (geradores
+ * diferentes arredondam a posição das palavras de modo diferente), não mudança de aparência.
+ */
+export const LOCAL_SHIFT = 2
+/** Regiões maiores que isto (pixels) não passam pelo realinhamento local (custo). */
+const LOCAL_SHIFT_MAX_AREA = 60_000
 /** Deslocamento global máximo procurado, em fração da largura. */
 export const MAX_SHIFT_FRACTION = 0.04
 const INK_LEVEL = 200
@@ -47,7 +58,7 @@ export interface RasterDiff {
   changedFraction: number
 }
 
-function grayAt(raster: Raster, x: number, y: number): number {
+export function grayAt(raster: Raster, x: number, y: number): number {
   if (x < 0 || y < 0 || x >= raster.width || y >= raster.height) return 255
   const index = (y * raster.width + x) * 4
   const { data } = raster
@@ -111,14 +122,32 @@ function channelDistance(a: Raster, ax: number, ay: number, b: Raster, bx: numbe
   return max
 }
 
-/** O pixel (x, y) de `a` tem um vizinho de mesma cor em `b` (com o deslocamento)? */
+/**
+ * O pixel (x, y) de `a` cabe na faixa de tons da vizinhança correspondente de `b` (com o
+ * deslocamento), canal a canal, com folga de `COLOR_TOLERANCE`? Uma borda deslocada por fração de
+ * pixel produz tons intermediários entre os vizinhos, que ficam dentro da faixa; um traço novo sobre
+ * fundo branco, não.
+ */
 function hasMatchingNeighbor(a: Raster, x: number, y: number, b: Raster, dx: number, dy: number): boolean {
-  for (let oy = -NEIGHBOR_RADIUS; oy <= NEIGHBOR_RADIUS; oy += 1) {
-    for (let ox = -NEIGHBOR_RADIUS; ox <= NEIGHBOR_RADIUS; ox += 1) {
-      if (channelDistance(a, x, y, b, x + dx + ox, y + dy + oy) <= COLOR_TOLERANCE) return true
+  const outsideA = x < 0 || y < 0 || x >= a.width || y >= a.height
+  const ia = (y * a.width + x) * 4
+  for (let channel = 0; channel < 3; channel += 1) {
+    const value = outsideA ? 255 : (a.data[ia + channel] ?? 255)
+    let min = 255
+    let max = 0
+    for (let oy = -NEIGHBOR_RADIUS; oy <= NEIGHBOR_RADIUS; oy += 1) {
+      for (let ox = -NEIGHBOR_RADIUS; ox <= NEIGHBOR_RADIUS; ox += 1) {
+        const bx = x + dx + ox
+        const by = y + dy + oy
+        const inside = bx >= 0 && by >= 0 && bx < b.width && by < b.height
+        const other = inside ? (b.data[(by * b.width + bx) * 4 + channel] ?? 255) : 255
+        if (other < min) min = other
+        if (other > max) max = other
+      }
     }
+    if (value < min - COLOR_TOLERANCE || value > max + COLOR_TOLERANCE) return false
   }
-  return false
+  return true
 }
 
 function inkFraction(raster: Raster, left: number, top: number, right: number, bottom: number): number {
@@ -144,8 +173,45 @@ function normalized(left: number, top: number, right: number, bottom: number, ra
   }
 }
 
+/** Pixels diferentes numa caixa de `a` comparada com `b` deslocado de (dx, dy). */
+function mismatches(a: Raster, b: Raster, left: number, top: number, right: number, bottom: number, dx: number, dy: number): number {
+  let count = 0
+  for (let y = top; y < bottom; y += 1) {
+    for (let x = left; x < right; x += 1) {
+      if (channelDistance(a, x, y, b, x + dx, y + dy) <= COLOR_TOLERANCE) continue
+      if (hasMatchingNeighbor(a, x, y, b, dx, dy) && hasMatchingNeighbor(b, x + dx, y + dy, a, -dx, -dy)) continue
+      count += 1
+    }
+  }
+  return count
+}
+
+/** A região some com um pequeno deslocamento local? */
+function vanishesWithLocalShift(a: Raster, b: Raster, left: number, top: number, right: number, bottom: number, shift: { dx: number; dy: number }): boolean {
+  if ((right - left) * (bottom - top) > LOCAL_SHIFT_MAX_AREA) return false
+  const margin = LOCAL_SHIFT + 1
+  const box = [Math.max(0, left - margin), Math.max(0, top - margin), Math.min(a.width, right + margin), Math.min(a.height, bottom + margin)] as const
+  for (let oy = -LOCAL_SHIFT; oy <= LOCAL_SHIFT; oy += 1) {
+    for (let ox = -LOCAL_SHIFT; ox <= LOCAL_SHIFT; ox += 1) {
+      if (ox === 0 && oy === 0) continue
+      if (mismatches(a, b, box[0], box[1], box[2], box[3], shift.dx + ox, shift.dy + oy) < MIN_REGION_PIXELS) return true
+    }
+  }
+  return false
+}
+
+export interface DiffOptions {
+  /**
+   * Lado mínimo (pixels) de uma região. Em páginas digitalizadas, pontos de sujeira menores que
+   * isto, isolados, são ruído de digitalização (padrão: 0, sem filtro).
+   */
+  minRegionSide?: number
+  /** Pixels diferentes mínimos de uma região (padrão: `MIN_REGION_PIXELS`). */
+  minRegionPixels?: number
+}
+
 /** Compara duas páginas renderizadas (mesma largura) e devolve as regiões que mudaram. */
-export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b)): RasterDiff {
+export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b), options: DiffOptions = {}): RasterDiff {
   const { dx, dy } = shift
   const width = Math.max(a.width, b.width)
   const height = Math.max(a.height, b.height - dy, a.height)
@@ -202,11 +268,14 @@ export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b)): 
       }
     }
     component += 1
-    if (pixels < MIN_REGION_PIXELS) continue
+    if (pixels < (options.minRegionPixels ?? MIN_REGION_PIXELS)) continue
     const left = minX * CELL
     const top = minY * CELL
     const right = (maxX + 1) * CELL
     const bottom = (maxY + 1) * CELL
+    const side = options.minRegionSide ?? 0
+    if (right - left < side && bottom - top < side) continue
+    if (vanishesWithLocalShift(a, b, left, top, right, bottom, shift)) continue
     regions.push({
       original: normalized(left, top, right, bottom, a),
       updated: normalized(left + dx, top + dy, right + dx, bottom + dy, b),
@@ -218,28 +287,66 @@ export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b)): 
   return { regions, shift, changedFraction: changed / Math.max(1, width * height) }
 }
 
-/** Cor média da tinta (pixels mais escuros que o fundo) dentro de uma região, ou `undefined` se não houver tinta. */
+function median(values: number[]): number {
+  values.sort((a, b) => a - b)
+  return values[Math.floor(values.length / 2)] ?? 0
+}
+
+/**
+ * Cor da tinta (pixels bem mais escuros que o fundo) dentro de uma região: mediana de cada canal,
+ * para que um traço de outra cor cruzando a palavra (carimbo, sublinhado) não mude o resultado.
+ * `undefined` se não houver tinta.
+ */
 export function inkColor(raster: Raster, region: NormalizedRect): [number, number, number] | undefined {
   const left = Math.floor(region.x * raster.width)
   const top = Math.floor(region.y * raster.height)
   const right = Math.ceil((region.x + region.width) * raster.width)
   const bottom = Math.ceil((region.y + region.height) * raster.height)
-  let r = 0
-  let g = 0
-  let b = 0
-  let count = 0
+  const pixels: { gray: number; index: number }[] = []
   for (let y = Math.max(0, top); y < Math.min(raster.height, bottom); y += 1) {
     for (let x = Math.max(0, left); x < Math.min(raster.width, right); x += 1) {
-      // Só o miolo dos traços (bem escuro em relação ao fundo branco), sem o serrilhado.
-      if (grayAt(raster, x, y) > 150) continue
-      const index = (y * raster.width + x) * 4
-      r += raster.data[index] ?? 0
-      g += raster.data[index + 1] ?? 0
-      b += raster.data[index + 2] ?? 0
-      count += 1
+      const gray = grayAt(raster, x, y)
+      if (gray <= 150) pixels.push({ gray, index: (y * raster.width + x) * 4 })
     }
   }
-  return count >= 3 ? [r / count, g / count, b / count] : undefined
+  if (pixels.length < MIN_INK_PIXELS) return undefined
+  // Só o miolo dos traços (o terço mais escuro): a espessura do traço e o serrilhado não mudam a cor.
+  pixels.sort((a, b) => a.gray - b.gray)
+  const core = pixels.slice(0, Math.max(MIN_INK_PIXELS / 2, Math.ceil(pixels.length / 3)))
+  const channel = (offset: number) => median(core.map((pixel) => raster.data[pixel.index + offset] ?? 0))
+  return [channel(0), channel(1), channel(2)]
+}
+
+/** Pixels de tinta mínimos para medir a cor de um trecho (um ponto final tem menos). */
+export const MIN_INK_PIXELS = 12
+
+/**
+ * A cor da tinta mudou num trecho que ficou no mesmo lugar? Compara só os pixels que têm tinta nas
+ * duas versões (o desenho das letras): numa mudança de cor, quase todos diferem; num traço de outra
+ * cor cruzando a palavra (carimbo, sublinhado), só uma parte.
+ */
+export function inkColorChangedInPlace(a: Raster, regionA: NormalizedRect, b: Raster, regionB: NormalizedRect, tolerance: number): boolean | undefined {
+  const left = Math.floor(regionA.x * a.width)
+  const top = Math.floor(regionA.y * a.height)
+  const width = Math.ceil(regionA.width * a.width)
+  const height = Math.ceil(regionA.height * a.height)
+  const scaleX = (regionB.width * b.width) / Math.max(1, regionA.width * a.width)
+  const scaleY = (regionB.height * b.height) / Math.max(1, regionA.height * a.height)
+  let both = 0
+  let changed = 0
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const ax = left + x
+      const ay = top + y
+      const bx = Math.round(regionB.x * b.width + x * scaleX)
+      const by = Math.round(regionB.y * b.height + y * scaleY)
+      if (grayAt(a, ax, ay) > 110 || grayAt(b, bx, by) > 110) continue
+      both += 1
+      if (channelDistance(a, ax, ay, b, bx, by) > tolerance) changed += 1
+    }
+  }
+  if (both < MIN_INK_PIXELS) return undefined
+  return changed / both >= 0.6
 }
 
 /** Grade de cinzas (size × size) de uma região, para comparar imagens independentemente da escala. */
