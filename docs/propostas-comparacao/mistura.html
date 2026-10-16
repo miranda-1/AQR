@@ -1,0 +1,299 @@
+<title>Comparação: barra única e foco</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: controles da demonstração no topo; abaixo, uma "tela" de 1440 × 900 em escala real (tudo dentro dela mede em em, 1em = 16 px da tela simulada), seguida da ficha da proposta. Cores e marcas do AQR. */
+:root {
+  --bg: #e9ebf2;
+  --page-bg: #f4f5f9;
+  --surface: #ffffff;
+  --sunken: #f4f5f9;
+  --canvas: #e9ebf2;
+  --ink: #1b2040;
+  --muted: #4a5072;
+  --line: #dadde8;
+  --brand: #283587;
+  --brand-50: #eef0f8;
+  --yellow: #ffcc00;
+  --add: #11663a; --add-bg: #e2f3e8; --add-line: #2e9a5a;
+  --del: #a31f1a; --del-bg: #fbe7e5; --del-line: #d1453d;
+  --mod: #864300; --mod-bg: #fdf0d9; --mod-line: #d48a1a;
+  --ok-bg: #e2f3e8;
+  --surface-ui: #ffffff;
+  --metric: #283587;
+  --shadow: 0 1px 2px rgba(27,32,64,.1), 0 2px 10px -4px rgba(27,32,64,.16);
+  --f-ui: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-doc: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12152b; --page-bg: #181c38; --surface-ui: #23284a; --ink: #e8eaf6; --muted: #a9aecb; --brand-50: #262c55; --metric: #c4ccff; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12152b; --page-bg: #181c38; --surface-ui: #23284a; --ink: #e8eaf6; --muted: #a9aecb; --brand-50: #262c55; --metric: #c4ccff; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--f-ui); }
+.outer { max-width: 1500px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; }
+h1 { margin: 0; font-size: 1.5rem; font-weight: 800; text-wrap: balance; }
+.intro { color: var(--muted); max-width: 80ch; margin: 0; }
+.picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.picker button { font: 600 .9rem var(--f-ui); color: var(--ink); background: var(--page-bg); border: 1px solid transparent; border-radius: 10px; padding: 8px 14px; cursor: pointer; display: grid; text-align: left; }
+.picker button small { font-weight: 500; color: var(--muted); font-size: .75rem; }
+.picker button[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: var(--brand-50); color: var(--ink); }
+button:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+/* ---------- A tela simulada ---------- */
+.screen-frame { border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px -10px rgba(27,32,64,.35); container-type: inline-size; }
+.screen { width: 100%; aspect-ratio: 1440 / 900; font-size: calc(100cqw / 90); background: var(--surface); color: #1b2040; display: flex; flex-direction: column; overflow: hidden; position: relative; font-family: var(--f-ui); line-height: 1.4; color-scheme: light; }
+.screen * { min-width: 0; }
+.s-top { height: 3.5em; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5em; background: #fff; flex: none; }
+.s-logo { font-weight: 800; color: #283587; font-size: 1.2em; display: flex; gap: .4em; align-items: center; }
+.s-logo i { width: 1.1em; height: 1.1em; border: .2em solid #283587; border-radius: 50%; position: relative; }
+.s-logo i::after { content: ""; position: absolute; left: .05em; right: .05em; top: .3em; height: .18em; background: #ffcc00; }
+.s-logo span { font-weight: 500; font-size: .7em; color: #4a5072; }
+.s-account { display: flex; gap: .6em; align-items: center; font-size: .85em; font-weight: 600; }
+.s-account b { color: #283587; font-style: italic; font-weight: 800; border: .12em solid #283587; padding: .1em .5em; border-radius: .3em; }
+.s-sub { height: 3em; background: #eef0f8; display: flex; align-items: center; gap: 1.6em; padding: 0 1.5em; font-size: .85em; font-weight: 600; color: #4a5072; flex: none; }
+.s-sub .on { color: #283587; font-weight: 800; box-shadow: inset 0 -.2em 0 #283587; height: 100%; display: flex; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: .4em; border: .07em solid #8d92ab; background: #fff; border-radius: .4em; padding: .45em .8em; font-size: .82em; font-weight: 600; color: #1b2040; white-space: nowrap; cursor: pointer; }
+.btn.primary { background: #283587; color: #fff; border-color: #283587; }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.small { padding: .3em .55em; font-size: .75em; }
+.seg { display: inline-flex; border: .07em solid #8d92ab; border-radius: .4em; overflow: hidden; font-size: .8em; font-weight: 600; }
+.seg span { padding: .45em .8em; cursor: pointer; white-space: nowrap; }
+.seg span.on { background: #283587; color: #fff; }
+.chip { display: inline-flex; align-items: center; gap: .35em; border: .07em solid #dadde8; border-radius: .4em; padding: .3em .6em; font-size: .78em; font-weight: 600; background: #fff; white-space: nowrap; }
+.chip b { font-size: 1.15em; }
+.k { display: inline-flex; align-items: center; justify-content: center; width: 1.3em; height: 1.3em; border-radius: .25em; border: .07em solid; font-weight: 800; font-size: .85em; }
+.k.add { color: var(--add); background: var(--add-bg); border-color: var(--add-line); }
+.k.del { color: var(--del); background: var(--del-bg); border-color: var(--del-line); }
+.k.mod { color: var(--mod); background: var(--mod-bg); border-color: var(--mod-line); }
+.banner { background: var(--ok-bg); font-size: .82em; padding: .55em 1.5em; display: flex; gap: .5em; align-items: center; flex: none; }
+.banner b { font-weight: 800; }
+.banner .more { margin-left: auto; color: #283587; font-weight: 700; }
+
+/* Corpo comum */
+.body { flex: 1; display: flex; min-height: 0; background: #e9ebf2; }
+.panes { flex: 1; display: grid; gap: .75em; min-height: 0; padding: .75em; }
+.pane { background: #fff; border-radius: .5em; box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.pane-head { display: flex; align-items: center; gap: .5em; padding: .45em .75em; font-size: .78em; flex: none; }
+.pane-head .tag { background: #f4f5f9; font-weight: 800; padding: .1em .45em; border-radius: .25em; font-size: .9em; }
+.pane-head .tag.up { background: #283587; color: #fff; }
+.pane-head .pg { margin-left: auto; color: #4a5072; }
+.scroll { flex: 1; overflow: auto; background: #f4f5f9; padding: 1em; display: flex; flex-direction: column; align-items: center; gap: 1em; scrollbar-width: thin; }
+
+/* Página de PDF simulada */
+.pdf { background: #fff; box-shadow: 0 .05em .15em rgba(27,32,64,.15), 0 0 0 .05em rgba(27,32,64,.06); aspect-ratio: 210/297; position: relative; flex: none; container-type: inline-size; }
+.pdf-in { position: absolute; inset: 0; padding: 11% 11%; font-family: var(--f-doc); color: #1b2040; font-size: 2.05cqw; line-height: 1.55; }
+.pdf-in h4 { font: 700 1.25em var(--f-ui); margin: 0 0 1em; letter-spacing: .01em; }
+.pdf-in p { margin: 0 0 .8em; }
+.mk { border-radius: .1em; padding: 0 .1em; cursor: pointer; position: relative; }
+.mk.mod { background: var(--mod-bg); box-shadow: inset 0 -.12em 0 var(--mod-line); }
+.mk.add { background: var(--add-bg); box-shadow: inset 0 -.12em 0 var(--add-line); }
+.mk.del { background: var(--del-bg); text-decoration: line-through; text-decoration-color: var(--del); }
+.mk.on { outline: .15em solid #283587; outline-offset: .1em; }
+.mk .n { position: absolute; left: -.1em; bottom: 100%; font: 800 .62em var(--f-ui); background: var(--mod-bg); color: var(--mod); border: .1em solid var(--mod-line); border-radius: .25em; padding: 0 .3em; line-height: 1.3; white-space: nowrap; }
+.mk.add .n { background: var(--add-bg); color: var(--add); border-color: var(--add-line); }
+.mk.del .n { background: var(--del-bg); color: var(--del); border-color: var(--del-line); }
+.img-ph { height: 18%; margin-top: .6em; background: linear-gradient(#9cc3e8, #f4f8ff); border-radius: .15em; position: relative; }
+.img-ph::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: #6a9a4a; clip-path: polygon(0 60%, 20% 20%, 40% 55%, 65% 10%, 85% 45%, 100% 25%, 100% 100%, 0 100%); }
+
+/* Lista */
+.list { background: #fff; display: flex; flex-direction: column; min-height: 0; flex: none; }
+.list-head { padding: .7em 1em .4em; font-weight: 800; font-size: .9em; display: flex; justify-content: space-between; align-items: center; }
+.items { overflow: auto; padding: .3em .5em .8em; display: grid; gap: .3em; align-content: start; scrollbar-width: thin; }
+.item { border-radius: .4em; padding: .55em .7em; display: grid; gap: .2em; font-size: .78em; cursor: pointer; position: relative; }
+.item.on { background: #eef0f8; box-shadow: inset .25em 0 0 #283587; }
+.item .t { font-weight: 700; }
+.item .ctx { color: #4a5072; font-size: .92em; }
+.item .ov { font-family: var(--f-doc); background: #f4f5f9; border-radius: .2em; padding: .1em .35em; }
+.item .nv { font-family: var(--f-doc); background: var(--mod-bg); border-radius: .2em; padding: .1em .35em; }
+.row { display: flex; gap: .4em; align-items: center; flex-wrap: wrap; }
+
+.measure { position: absolute; right: 1em; bottom: 1em; background: rgba(27,32,64,.88); color: #fff; font: 600 .8em var(--f-ui); padding: .4em .7em; border-radius: .4em; pointer-events: none; z-index: 5; }
+.measure b { color: #ffcc00; }
+
+/* Ficha */
+.sheet { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; }
+.card { background: var(--page-bg); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.card h2 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+.card h3 { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--brand); }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.card p { margin: 0; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.metric { background: var(--surface-ui); border-radius: 8px; padding: 8px 10px; display: grid; }
+.metric b { font-size: 1.25rem; font-variant-numeric: tabular-nums; color: var(--metric); }
+.metric span { font-size: .78rem; color: var(--muted); }
+@media (max-width: 860px) { .sheet { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr 1fr 1fr; } }
+</style>
+<style>
+/* Números das diferenças: só ao passar o mouse (ou com o foco do teclado), a menos que "Números sempre" esteja ligado. */
+.screen:not(.numbers) .mk .n, .screen:not(.numbers) .box-n { opacity: 0; transition: opacity .12s; }
+.screen:not(.numbers) .mk:hover .n, .screen:not(.numbers) .mk:focus-visible .n, .screen:not(.numbers) .img-wrap:hover .box-n { opacity: 1; }
+.mk:focus-visible { outline: .15em solid #283587; }
+.toggle { display: inline-flex; align-items: center; gap: .4em; border: .07em solid #8d92ab; border-radius: .4em; padding: .3em .6em; font-size: .75em; font-weight: 600; cursor: pointer; background: #fff; white-space: nowrap; }
+.toggle .sw { width: 2em; height: 1.1em; border-radius: 1em; background: #c5c9da; position: relative; transition: background .15s; }
+.toggle .sw::after { content: ""; position: absolute; top: .15em; left: .15em; width: .8em; height: .8em; border-radius: 50%; background: #fff; transition: transform .15s; }
+.toggle[aria-pressed="true"] { border-color: #283587; color: #283587; background: #eef0f8; }
+.toggle[aria-pressed="true"] .sw { background: #283587; }
+.toggle[aria-pressed="true"] .sw::after { transform: translateX(.9em); }
+.tab-min { width: 2.6em; background: #fff; border-radius: .5em; box-shadow: var(--shadow); margin: .6em 0 .6em .6em; display: flex; flex-direction: column; align-items: center; gap: .5em; padding: .6em 0; cursor: pointer; flex: none; }
+.tab-min span.v { writing-mode: vertical-rl; transform: rotate(180deg); font-size: .78em; font-weight: 700; color: #283587; }
+.img-wrap { position: relative; }
+.box-n { position: absolute; left: 0; top: -1.1em; font: 800 .62em var(--f-ui); background: var(--mod-bg); color: var(--mod); border: .1em solid var(--mod-line); border-radius: .25em; padding: 0 .3em; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls button { font: 600 .88rem var(--f-ui); color: var(--ink); background: var(--page-bg); border: 1px solid transparent; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+.controls button[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: var(--brand-50); }
+.kbd { font: 600 .78rem var(--f-ui); color: var(--muted); }
+</style>
+
+<div class="outer">
+  <h1>A mistura: barra única, modo foco e números discretos</h1>
+  <p class="intro">Tela simulada de 1440 × 900 em escala real. É a disposição "Barra única" como padrão, com o botão <b>Focar</b> da proposta 5, a lista de diferenças que se minimiza e os números das diferenças aparecendo só quando o mouse passa por cima. Use os controles dentro da tela (ou os atalhos de cima) e veja a etiqueta do canto medir a página.</p>
+  <div class="controls" role="group" aria-label="Atalhos da demonstração">
+    <button id="c-focus" aria-pressed="false">Modo foco <span class="kbd">F</span></button>
+    <button id="c-list" aria-pressed="false">Lista minimizada <span class="kbd">L</span></button>
+    <button id="c-num" aria-pressed="false">Números sempre <span class="kbd">N</span></button>
+  </div>
+  <div class="screen-frame"><div class="screen" id="screen" aria-label="Tela simulada"></div></div>
+  <div class="sheet">
+    <div class="card"><h3>Como funciona</h3><h2>O que muda em relação à tela de hoje</h2>
+      <ul>
+        <li><b>Barra única:</b> título, situação da análise (selo clicável), modo, categoria, contadores, anterior/próxima, zoom, exportar e nova comparação numa só linha. A legenda vai para o botão "?".</li>
+        <li><b>Focar</b> (ou tecla F): esconde a barra do AQR, a sub-barra e a barra única; sobra uma barra flutuante e a faixa de diferenças embaixo. Esc ou "Sair do foco" volta.</li>
+        <li><b>Minimizar a lista</b> (botão ⇤ ou tecla L): na tela normal, a lista vira uma aba fina "Diferenças (5)"; no foco, a faixa de baixo encolhe para uma linha. Clicar na aba reabre.</li>
+        <li><b>Números:</b> por padrão, o número de cada diferença aparece só quando o mouse passa sobre o destaque (ou quando ele recebe o foco pelo teclado). O interruptor <b>Números sempre</b>, na barra, deixa todos visíveis como hoje.</li>
+        <li>O destaque colorido continua sempre visível; o leitor de tela continua anunciando o número de cada diferença.</li>
+        <li>As três escolhas (foco, lista minimizada, números sempre) ficam guardadas durante a comparação, junto com o resto do estado da tela.</li>
+      </ul>
+    </div>
+    <div class="card"><div class="metrics" id="metrics"></div>
+      <h3>Para decidir</h3>
+      <ul>
+        <li>No foco, a lista começa aberta ou minimizada?</li>
+        <li>O interruptor "Números sempre" fica na barra (como aqui) ou dentro do menu "?"/opções?</li>
+        <li>A escolha de "Números sempre" deve valer também para as próximas comparações (lembrada no navegador) ou só para esta?</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const DIFFS = [
+  { n: 1, k: 'mod', t: 'Valor monetário alterado.', ctx: 'Art. 3º', o: 'R$ 15.000,00', u: 'R$ 18.000,00', page: 1 },
+  { n: 2, k: 'add', t: 'Texto incluído.', ctx: 'Art. 4º', u: 'por meio eletrônico', page: 1 },
+  { n: 3, k: 'del', t: 'Texto excluído.', ctx: 'Art. 5º', o: 'acompanhada de cópia autenticada', page: 1 },
+  { n: 4, k: 'mod', t: 'Data alterada.', ctx: 'Art. 6º', o: '10/03/2026', u: '02/06/2026', page: 1 },
+  { n: 5, k: 'mod', t: 'Imagem trocada ou modificada.', ctx: 'Página 2', o: '6,4 × 4,2 cm', u: '6,4 × 4,2 cm', page: 2 },
+]
+const kindIcon = { add: '+', del: '−', mod: '≠' }
+const st = { active: 1, focus: false, listMin: false, numbers: false, mode: 'Completo' }
+
+const mark = (n, kind, text) => `<span class="mk ${kind}${st.active === n ? ' on' : ''}" data-n="${n}" tabindex="0" role="button" aria-label="${kind === 'add' ? 'Adição' : kind === 'del' ? 'Exclusão' : 'Modificação'} ${n}: ${text}"><span class="n" aria-hidden="true">${kindIcon[kind]}${n}</span>${text}</span>`
+function page(role, num) {
+  const up = role === 'updated'
+  if (num === 1) return `<div class="pdf"><div class="pdf-in">
+    <h4>REQUERIMENTO DE LICENÇA AMBIENTAL</h4>
+    <p>Art. 1º Fica autorizada a licença ambiental de operação para a atividade descrita neste requerimento, nas condições abaixo.</p>
+    <p>Art. 2º O requerente deverá apresentar a documentação complementar no prazo de 30 dias corridos, contados do protocolo.</p>
+    <p>Art. 3º A taxa de análise corresponde ao valor de ${mark(1, 'mod', up ? 'R$ 18.000,00' : 'R$ 15.000,00')} conforme a tabela vigente.</p>
+    <p>Art. 4º O pedido poderá ser apresentado ${up ? mark(2, 'add', 'por meio eletrônico') + ' ' : ''}na Central de Atendimento.</p>
+    <p>Art. 5º A documentação será recebida ${up ? '' : mark(3, 'del', 'acompanhada de cópia autenticada') + ' '}pela equipe técnica responsável.</p>
+    <p>Art. 6º A vistoria técnica será realizada em ${mark(4, 'mod', up ? '02/06/2026' : '10/03/2026')} pela equipe da secretaria.</p>
+    <p>Art. 7º Os casos omissos serão resolvidos pela autoridade competente.</p>
+  </div></div>`
+  return `<div class="pdf"><div class="pdf-in">
+    <h4>ANEXO I</h4>
+    <p>Relação de documentos exigidos para o pedido de renovação da licença.</p>
+    <p>Comprovante de inscrição municipal atualizado e certidão negativa de débitos.</p>
+    <div class="img-wrap" data-n="5"><span class="box-n" aria-hidden="true">≠5</span><div class="img-ph" style="outline:${st.active === 5 ? '.18em solid #283587' : '.12em dashed #d48a1a'};outline-offset:.2em;${up ? 'filter:hue-rotate(160deg)' : ''}"></div></div>
+    <p style="margin-top:1em">Planta de situação do empreendimento com coordenadas geográficas.</p>
+  </div></div>`
+}
+const pages = (role) => `<div class="scroll">${[1, 2].map((n) => `<div style="width:100%">${page(role, n)}</div>`).join('')}</div>`
+const panes = (pad) => `<div class="panes" style="grid-template-columns:1fr 1fr;padding:${pad}">
+  <div class="pane"><div class="pane-head"><span class="tag">Original</span>requerimento-v1.pdf<span class="pg">1 de 2</span></div>${pages('original')}</div>
+  <div class="pane"><div class="pane-head"><span class="tag up">Atualizado</span>requerimento-v2.pdf<span class="pg">1 de 2</span></div>${pages('updated')}</div></div>`
+const items = () => DIFFS.map((d) => `<div class="item${st.active === d.n ? ' on' : ''}" data-n="${d.n}">
+  <div class="row"><span class="k ${d.k}">${kindIcon[d.k]}</span><b>${d.n}</b><span style="margin-left:auto;color:#4a5072">p. ${d.page}</span></div>
+  <span class="t">${d.t}</span>${d.o ? `<span class="ov">${d.o}</span>` : ''}${d.u ? `<span class="nv">${d.u}</span>` : ''}</div>`).join('')
+const modes = () => `<span class="seg">${['Completo', 'Conteúdo', 'Visual'].map((m) => `<span class="${st.mode === m ? 'on' : ''}" data-mode="${m}">${m}</span>`).join('')}</span>`
+const stepper = () => `<span class="btn small" data-step="-1" title="Anterior (Alt+↑)">▲</span><span style="font-size:.8em;font-weight:700;white-space:nowrap">${st.active} de 5</span><span class="btn small" data-step="1" title="Próxima (Alt+↓)">▼</span>`
+const numToggle = () => `<span class="toggle" role="switch" aria-pressed="${st.numbers}" data-act="numbers"><span class="sw" aria-hidden="true"></span>Números sempre</span>`
+const counts = `<span class="chip"><b>5</b> alterações</span><span class="chip"><span class="k add">+</span><b>1</b></span><span class="chip"><span class="k del">−</span><b>1</b></span><span class="chip"><span class="k mod">≠</span><b>3</b></span>`
+const topBar = `<div class="s-top"><div class="s-logo"><i></i>AQR <span>Análise e Qualificação de Requerimentos</span></div><div class="s-account"><b>PREFCG</b>Revisora</div></div>`
+const sub = `<div class="s-sub"><span>Início</span><span class="on">Comparar PDFs</span><span>Triagem documental</span></div>`
+
+function normal() {
+  const list = st.listMin
+    ? `<div class="tab-min" data-act="list" title="Mostrar a lista"><span class="btn small" style="padding:.25em .4em">⇥</span><span class="v">Diferenças (5)</span></div>`
+    : `<div class="list" style="width:17em;margin:.6em 0 .6em .6em;border-radius:.5em;box-shadow:var(--shadow)"><div class="list-head">Diferenças (5)<span class="btn ghost small" data-act="list" title="Minimizar a lista">⇤ Minimizar</span></div><div class="items">${items()}</div></div>`
+  return `${topBar}${sub}
+    <div style="background:#fff;padding:.5em 1em;display:flex;gap:.55em;align-items:center;flex:none;box-shadow:var(--shadow)">
+      <b style="font-size:.95em;white-space:nowrap">Resultado</b>
+      <span class="chip" style="background:var(--ok-bg);border-color:transparent">🛡 Análise concluída ▾</span>
+      ${modes()}<span class="btn small">Categoria ▾</span>
+      <span class="row" style="gap:.3em;flex-wrap:nowrap">${counts}</span>
+      ${numToggle()}
+      <span style="margin-left:auto;flex-wrap:nowrap" class="row">${stepper()}</span>
+      <span class="btn small">− 100% +</span><span class="btn small">?</span>
+      <span class="btn small primary" data-act="focus" title="Tecla F">⛶ Focar</span>
+      <span class="btn small">Exportar ▾</span><span class="btn small">+ Nova</span>
+    </div>
+    <div class="body">${list}${panes('.6em')}</div>`
+}
+function focus() {
+  const strip = st.listMin
+    ? `<div style="position:absolute;left:0;right:0;bottom:0;height:2.6em;background:#fff;box-shadow:0 -.2em .8em -.3em rgba(27,32,64,.25);display:flex;align-items:center;gap:.6em;padding:0 .8em;font-size:.85em"><b>Diferenças (5)</b><span style="color:#4a5072">${st.active}. ${DIFFS[st.active - 1].t}</span><span class="btn small" style="margin-left:auto" data-act="list">▴ Mostrar</span></div>`
+    : `<div style="position:absolute;left:0;right:0;bottom:0;height:5.6em;background:#fff;box-shadow:0 -.2em .8em -.3em rgba(27,32,64,.25);display:flex;flex-direction:column">
+        <div class="row" style="padding:.3em .8em 0;font-size:.8em"><b>Diferenças (5)</b><span class="btn ghost small" style="margin-left:auto" data-act="list">▾ Minimizar</span></div>
+        <div style="display:flex;gap:.5em;overflow-x:auto;padding:.2em .8em .5em">${DIFFS.map((d) => `<div class="item${st.active === d.n ? ' on' : ''}" data-n="${d.n}" style="min-width:13em;background:${st.active === d.n ? '#eef0f8' : '#f4f5f9'}"><div class="row"><span class="k ${d.k}">${kindIcon[d.k]}</span><b>${d.n}</b><span>${d.t}</span></div></div>`).join('')}</div></div>`
+  return `<div class="body" style="position:relative">
+      <div style="position:absolute;top:.6em;left:50%;transform:translateX(-50%);z-index:4;background:rgba(255,255,255,.97);border-radius:.6em;box-shadow:0 .3em 1em -.2em rgba(27,32,64,.35);padding:.35em .5em;display:flex;gap:.5em;align-items:center">
+        <span class="chip" style="background:var(--ok-bg);border-color:transparent">🛡 Concluída</span>${modes()}${stepper()}${numToggle()}<span class="btn small">− 100% +</span><span class="btn small" data-act="focus">✕ Sair do foco (Esc)</span>
+      </div>
+      ${panes(`3.4em .6em ${st.listMin ? '3.2em' : '6.2em'}`)}${strip}</div>`
+}
+function render() {
+  const screen = document.getElementById('screen')
+  screen.classList.toggle('numbers', st.numbers)
+  screen.innerHTML = (st.focus ? focus() : normal()) + '<div class="measure" id="measure"></div>'
+  screen.querySelectorAll('[data-n]').forEach((el) => {
+    el.addEventListener('click', () => { st.active = Number(el.getAttribute('data-n')); render() })
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); st.active = Number(el.getAttribute('data-n')); render() } })
+  })
+  screen.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', () => act(el.getAttribute('data-act'))))
+  screen.querySelectorAll('[data-mode]').forEach((el) => el.addEventListener('click', () => { st.mode = el.getAttribute('data-mode'); render() }))
+  screen.querySelectorAll('[data-step]').forEach((el) => el.addEventListener('click', () => { st.active = Math.min(5, Math.max(1, st.active + Number(el.getAttribute('data-step')))); render() }))
+  document.getElementById('c-focus').setAttribute('aria-pressed', String(st.focus))
+  document.getElementById('c-list').setAttribute('aria-pressed', String(st.listMin))
+  document.getElementById('c-num').setAttribute('aria-pressed', String(st.numbers))
+  requestAnimationFrame(() => {
+    const s = screen.getBoundingClientRect()
+    const k = 1440 / s.width
+    const p = screen.querySelector('.pdf').getBoundingClientRect()
+    const w = Math.round((p.width * k) / 5) * 5
+    const t = Math.round(((p.top - s.top) * k) / 5) * 5
+    document.getElementById('measure').innerHTML = `Página: <b>≈ ${w} px</b> de largura · PDF começa a <b>≈ ${t} px</b> do topo`
+    document.getElementById('metrics').innerHTML = `<div class="metric"><b>≈ ${w} px</b><span>largura de cada página agora</span></div><div class="metric"><b>≈ ${t} px</b><span>do topo até o PDF</span></div><div class="metric"><b>440 px</b><span>largura na tela atual</span></div>`
+  })
+}
+function act(what) {
+  if (what === 'focus') st.focus = !st.focus
+  if (what === 'list') st.listMin = !st.listMin
+  if (what === 'numbers') st.numbers = !st.numbers
+  render()
+}
+document.getElementById('c-focus').onclick = () => act('focus')
+document.getElementById('c-list').onclick = () => act('list')
+document.getElementById('c-num').onclick = () => act('numbers')
+document.addEventListener('keydown', (e) => {
+  if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea')) return
+  if (e.key === 'f' || e.key === 'F') act('focus')
+  else if (e.key === 'l' || e.key === 'L') act('list')
+  else if (e.key === 'n' || e.key === 'N') act('numbers')
+  else if (e.key === 'Escape' && st.focus) act('focus')
+})
+window.addEventListener('resize', render)
+render()
+</script>
