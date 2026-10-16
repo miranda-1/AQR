@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, List, Maximize, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, List, Maximize, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
@@ -178,7 +178,6 @@ export function ComparisonWorkspace({ result, documents, initialView = {}, onVie
   }
 
   const paneProps = { activeId, numbers, visibleIds, differences: result.differences, onSelect: navigation.select, pageMatches: result.analysis.pageMatches }
-  const activeDifference = navigation.active
   const showOriginal = viewMode !== 'updated'
   const showUpdated = viewMode !== 'original'
 
@@ -252,25 +251,11 @@ export function ComparisonWorkspace({ result, documents, initialView = {}, onVie
             <h2 className="text-sm font-bold text-ink">
               Diferenças <span className="tabular font-semibold text-muted-foreground">({navigation.visible.length})</span>
             </h2>
-            {listCollapsed && activeDifference && (
-              <span className="min-w-0 truncate text-sm text-muted-foreground">
-                {numbers.get(activeDifference.id)}. {describeDifference(activeDifference)}
-              </span>
-            )}
-            <Button variant="ghost" size="sm" className="ml-auto" aria-expanded={!listCollapsed} onClick={() => setListCollapsed((value) => !value)}>
-              {listCollapsed ? <ChevronUp aria-hidden /> : <ChevronDown aria-hidden />}
-              {listCollapsed ? 'Mostrar diferenças' : 'Minimizar'}
-            </Button>
           </div>
           <div className="flex items-center gap-2 px-3 pt-1 pb-2">
             <Button variant="outline" size="icon" onClick={navigation.previous} disabled={!navigation.hasPrevious} aria-label="Diferença anterior">
               <ChevronLeft aria-hidden />
             </Button>
-            {listCollapsed ? (
-              <span className="tabular text-sm font-semibold text-ink" aria-live="polite">
-                {navigation.visible.length === 0 ? '0 de 0' : `${navigation.activeIndex + 1} de ${navigation.visible.length}`}
-              </span>
-            ) : (
               <ol aria-label="Diferenças encontradas" className="flex min-w-0 flex-1 gap-2 overflow-x-auto py-0.5">
                 {navigation.visible.map((difference) => {
                   const meta = differenceKindMeta[difference.kind]
@@ -294,8 +279,7 @@ export function ComparisonWorkspace({ result, documents, initialView = {}, onVie
                   )
                 })}
               </ol>
-            )}
-            <Button variant="outline" size="icon" onClick={navigation.next} disabled={!navigation.hasNext} aria-label="Próxima diferença" className={cn(listCollapsed && 'mr-auto')}>
+            <Button variant="outline" size="icon" onClick={navigation.next} disabled={!navigation.hasNext} aria-label="Próxima diferença">
               <ChevronRight aria-hidden />
             </Button>
           </div>

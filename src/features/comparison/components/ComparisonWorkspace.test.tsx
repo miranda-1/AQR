@@ -84,7 +84,7 @@ describe('ComparisonWorkspace', () => {
     expect(screen.getByRole('region', { name: 'Documento atualizado' })).toBeInTheDocument()
   })
 
-  it('modo foco: tela cheia, setas na faixa de diferenças e Esc para sair', async () => {
+  it('modo foco: tela cheia, faixa de diferenças sempre visível com setas e Esc para sair', async () => {
     const user = userEvent.setup()
     renderWorkspace()
     await user.click(screen.getByRole('button', { name: /Focar/ }))
@@ -97,10 +97,8 @@ describe('ComparisonWorkspace', () => {
     expect(within(strip).getAllByRole('button')[1]).toHaveAttribute('aria-current', 'true')
     await user.click(defined(within(focusRegion).getAllByRole('button', { name: 'Diferença anterior' })[1]))
     expect(within(strip).getAllByRole('button')[0]).toHaveAttribute('aria-current', 'true')
-    // Minimizar a faixa deixa só as setas e a posição.
-    await user.click(within(focusRegion).getByRole('button', { name: 'Minimizar' }))
-    expect(within(focusRegion).queryByRole('list', { name: 'Diferenças encontradas' })).not.toBeInTheDocument()
-    expect(within(focusRegion).getAllByText(`1 de ${total}`, { selector: 'span[aria-live]' })).toHaveLength(2)
+    // No foco, as diferenças ficam sempre à vista: não há como minimizar a faixa.
+    expect(within(focusRegion).queryByRole('button', { name: /Minimizar/ })).not.toBeInTheDocument()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('region', { name: /Modo foco/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Focar/ })).toHaveFocus()
