@@ -42,11 +42,13 @@ Variáveis de ambiente: veja `.env.example`.
 ## O que funciona
 
 - Seleção de PDFs por clique ou arrastar e soltar, com validação local (extensão, tipo, 50 MB, assinatura `%PDF-`).
-- Comparação real do **texto** dos dois PDFs no servidor: adições, exclusões e modificações, com página, posição e contexto (artigo, parágrafo, cláusula ou título). Alterações só visuais não contam; PDFs digitalizados (sem texto) são recusados com uma mensagem clara, sem OCR.
+- Comparação **híbrida** dos dois PDFs no servidor: texto (adições, exclusões, modificações e trechos movidos, com números, datas, valores e identificadores reconhecidos), estrutura (páginas incluídas, excluídas, movidas, repetidas, tamanho e orientação), aparência (imagens, desenhos, fonte, tamanho, cor, posição e diagramação) e documentos digitalizados (OCR local, sem rede). As evidências dos métodos são consolidadas: uma alteração vista pelo texto e pelos pixels aparece uma vez, como confirmada.
+- Cada resultado diz **o que foi e o que não foi analisado** (página a página) e a situação: completa, com ressalvas ou parcial. "Nenhuma diferença" nunca é apresentada como prova de que os documentos são iguais.
+- Modos Completo, Conteúdo e Visual; filtros por tipo e por categoria; exportação em HTML (com ou sem trechos dos documentos) e JSON, gerada no navegador.
 - Visualizador com as páginas reais e os destaques, filtros, lista, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.
 - Os PDFs não são gravados: ficam na memória durante a comparação, e o resultado é descartado assim que chega à tela de quem comparou (ou 5 minutos depois de pronto, se ninguém o buscar). No login real, cada comparação só é vista por quem a enviou e o registro guarda só quem comparou, quando e o resultado.
 
-A exportação de relatório ainda está indisponível (sinalizada na interface). Critérios de precisão e limitações: [docs/criterios-comparacao.md](docs/criterios-comparacao.md).
+Critérios de precisão e limitações: [docs/criterios-comparacao.md](docs/criterios-comparacao.md). Algoritmos: [docs/comparador/algoritmos.md](docs/comparador/algoritmos.md). Avaliação no corpus sintético: `npm run test:corpus` e `npm run avaliar:corpus` ([resultado](docs/comparador/avaliacao-corpus.md)); desempenho: `npm run medir:desempenho` ([resultado](docs/comparador/desempenho.md)).
 
 No modo demonstrativo, os estados podem ser revisados por `/comparacao/resultado?cenario=` com `concluida`, `sem-diferencas`, `erro`, `incompativel` ou `sem-texto`.
 
@@ -56,6 +58,8 @@ No modo demonstrativo, os estados podem ser revisados por `/comparacao/resultado
 - [Arquitetura e contratos](docs/arquitetura.md)
 - [Plano do backend](docs/plano-backend.md)
 - [Critérios de precisão da comparação](docs/criterios-comparacao.md)
+- [Algoritmos do comparador](docs/comparador/algoritmos.md)
+- [Relatório final da evolução do comparador](AQR_COMPARADOR_IMPLEMENTACAO_FINAL.md)
 - [Identidade visual: decisões e pontos para validação institucional](docs/identidade-visual.md)
 - [Acessibilidade](docs/acessibilidade.md)
 - [Procedência da marca](src/assets/brand/README.md)

@@ -4,7 +4,7 @@ import type { ComparisonLimits } from '../limits.ts'
 import type { TokenizedDocument } from '../text/tokenize.ts'
 import { hunksFromChanges, mergeCloseHunks, type Hunk } from './hunks.ts'
 
-export type AlignmentLevel = 'palavras' | 'linhas'
+export type AlignmentLevel = 'palavras' | 'linhas' | 'paginas'
 
 export interface Alignment {
   hunks: Hunk[]
@@ -114,16 +114,19 @@ function slide(
 
 /**
  * Compara os dois documentos palavra a palavra (jsdiff, algoritmo de Myers), atravessando linhas
- * e páginas, de modo que o mesmo texto em outra diagramação não gera diferença. Se os documentos
- * forem grandes ou diferentes demais para isso, compara linha a linha; se nem assim couber nos
- * limites, recusa com `ComparisonFailure`.
+ * e páginas, de modo que o mesmo texto em outra diagramação não gera diferença. Documentos acima do
+ * limite de palavras também tentam esse nível, com pouco tempo. Se não couber, compara linha a linha;
+ * se nem assim couber nos limites, `ComparisonFailure` (quem chama ainda pode comparar página a página).
  */
 export function alignDocuments(original: TokenizedDocument, updated: TokenizedDocument, limits: DiffLimits): Alignment {
-  if (original.tokens.length + updated.tokens.length <= limits.maxDiffTokens) {
+  // Acima do limite de palavras, ainda vale tentar palavra a palavra com pouco tempo: documentos
+  // longos com poucas mudanças (ou só com outra diagramação) se resolvem rápido nesse nível.
+  const large = original.tokens.length + updated.tokens.length > limits.maxDiffTokens
+  {
     const changes = diffArrays(
       original.tokens.map((token) => token.key),
       updated.tokens.map((token) => token.key),
-      { maxEditLength: limits.maxEditLength, timeout: limits.diffTimeoutMs },
+      { maxEditLength: large ? Math.min(limits.maxEditLength, 5_000) : limits.maxEditLength, timeout: large ? Math.round(limits.diffTimeoutMs / 4) : limits.diffTimeoutMs },
     )
     if (changes) {
       const hunks = slideToLineStart(hunksFromChanges(changes), original, updated)

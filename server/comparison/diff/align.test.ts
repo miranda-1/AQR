@@ -83,10 +83,19 @@ describe('alignDocuments', () => {
     ])
   })
 
-  it('cai para a comparação por linhas quando a de palavras passa do limite', () => {
+  it('documento acima do limite de palavras com poucas mudanças continua palavra a palavra', () => {
+    const original = doc(['linha igual', 'linha antiga', 'outra linha igual'])
+    const updated = doc(['linha igual', 'linha nova', 'outra linha igual'])
+    const alignment = alignDocuments(original, updated, { ...defaultComparisonLimits, maxDiffTokens: 5 })
+    expect(alignment.level).toBe('palavras')
+    expect(alignment.hunks).toHaveLength(1)
+  })
+
+  it('cai para a comparação por linhas quando a de palavras não cabe nos limites', () => {
     const original = doc(['linha igual', 'linha antiga a b c d', 'outra linha igual'])
     const updated = doc(['linha igual', 'linha nova e f g h', 'outra linha igual'])
-    const limits = { ...defaultComparisonLimits, maxDiffTokens: 5 }
+    // Palavra a palavra seriam 10 edições; por linhas, 2.
+    const limits = { ...defaultComparisonLimits, maxDiffTokens: 5, maxEditLength: 4 }
     const alignment = alignDocuments(original, updated, limits)
     expect(alignment.level).toBe('linhas')
     expect(describeHunks(original, updated, limits)).toEqual([

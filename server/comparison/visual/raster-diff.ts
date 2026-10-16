@@ -34,8 +34,8 @@ export const MIN_REGION_PIXELS = 12
  * diferentes arredondam a posição das palavras de modo diferente), não mudança de aparência.
  */
 export const LOCAL_SHIFT = 2
-/** Regiões maiores que isto (pixels) não passam pelo realinhamento local (custo). */
-const LOCAL_SHIFT_MAX_AREA = 60_000
+/** Só regiões do tamanho de palavras passam pelo realinhamento local (custo). */
+const LOCAL_SHIFT_MAX_AREA = 12_000
 /** Deslocamento global máximo procurado, em fração da largura. */
 export const MAX_SHIFT_FRACTION = 0.04
 const INK_LEVEL = 200
@@ -123,31 +123,104 @@ function channelDistance(a: Raster, ax: number, ay: number, b: Raster, bx: numbe
 }
 
 /**
+ * Menor e maior tom de cada canal na vizinhança (raio `NEIGHBOR_RADIUS`) de cada pixel, calculados
+ * uma vez por imagem (filtros separáveis de mínimo e máximo). O teste de faixa vira uma consulta.
+ */
+interface NeighborRange {
+  width: number
+  height: number
+  /** RGB intercalado, 3 bytes por pixel. */
+  min: Uint8Array
+  max: Uint8Array
+}
+
+function neighborRange(raster: Raster): NeighborRange {
+  const { width, height, data } = raster
+  const size = width * height * 3
+  const rowMin = new Uint8Array(size)
+  const rowMax = new Uint8Array(size)
+  // Raio 1, na horizontal: fora da página conta como papel branco (máximo 255 nas bordas).
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width
+    for (let x = 0; x < width; x += 1) {
+      const center = (row + x) * 4
+      const left = x > 0 ? center - 4 : center
+      const right = x < width - 1 ? center + 4 : center
+      const edge = x === 0 || x === width - 1
+      const out = (row + x) * 3
+      for (let channel = 0; channel < 3; channel += 1) {
+        const v0 = data[left + channel] as number
+        const v1 = data[center + channel] as number
+        const v2 = data[right + channel] as number
+        rowMin[out + channel] = v0 < v1 ? (v0 < v2 ? v0 : v2) : v1 < v2 ? v1 : v2
+        rowMax[out + channel] = edge ? 255 : v0 > v1 ? (v0 > v2 ? v0 : v2) : v1 > v2 ? v1 : v2
+      }
+    }
+  }
+  const min = new Uint8Array(size)
+  const max = new Uint8Array(size)
+  const stride = width * 3
+  for (let y = 0; y < height; y += 1) {
+    const edge = y === 0 || y === height - 1
+    const up = y > 0 ? -stride : 0
+    const down = y < height - 1 ? stride : 0
+    const base = y * stride
+    for (let index = base; index < base + stride; index += 1) {
+      const a0 = rowMin[index + up] as number
+      const a1 = rowMin[index] as number
+      const a2 = rowMin[index + down] as number
+      min[index] = a0 < a1 ? (a0 < a2 ? a0 : a2) : a1 < a2 ? a1 : a2
+      const b0 = rowMax[index + up] as number
+      const b1 = rowMax[index] as number
+      const b2 = rowMax[index + down] as number
+      max[index] = edge ? 255 : b0 > b1 ? (b0 > b2 ? b0 : b2) : b1 > b2 ? b1 : b2
+    }
+  }
+  return { width, height, min, max }
+}
+
+/**
  * O pixel (x, y) de `a` cabe na faixa de tons da vizinhança correspondente de `b` (com o
  * deslocamento), canal a canal, com folga de `COLOR_TOLERANCE`? Uma borda deslocada por fração de
  * pixel produz tons intermediários entre os vizinhos, que ficam dentro da faixa; um traço novo sobre
  * fundo branco, não.
  */
-function hasMatchingNeighbor(a: Raster, x: number, y: number, b: Raster, dx: number, dy: number): boolean {
+function fitsRange(a: Raster, x: number, y: number, range: NeighborRange, bx: number, by: number): boolean {
   const outsideA = x < 0 || y < 0 || x >= a.width || y >= a.height
+  const outsideB = bx < 0 || by < 0 || bx >= range.width || by >= range.height
   const ia = (y * a.width + x) * 4
+  const ib = (by * range.width + bx) * 3
   for (let channel = 0; channel < 3; channel += 1) {
     const value = outsideA ? 255 : (a.data[ia + channel] ?? 255)
-    let min = 255
-    let max = 0
-    for (let oy = -NEIGHBOR_RADIUS; oy <= NEIGHBOR_RADIUS; oy += 1) {
-      for (let ox = -NEIGHBOR_RADIUS; ox <= NEIGHBOR_RADIUS; ox += 1) {
-        const bx = x + dx + ox
-        const by = y + dy + oy
-        const inside = bx >= 0 && by >= 0 && bx < b.width && by < b.height
-        const other = inside ? (b.data[(by * b.width + bx) * 4 + channel] ?? 255) : 255
-        if (other < min) min = other
-        if (other > max) max = other
-      }
-    }
-    if (value < min - COLOR_TOLERANCE || value > max + COLOR_TOLERANCE) return false
+    const low = outsideB ? 255 : (range.min[ib + channel] ?? 255)
+    const high = outsideB ? 255 : (range.max[ib + channel] ?? 255)
+    if (value < low - COLOR_TOLERANCE || value > high + COLOR_TOLERANCE) return false
   }
   return true
+}
+
+interface Ranges {
+  a: NeighborRange
+  b: NeighborRange
+}
+
+/** O pixel (x, y) de `a` e o correspondente de `b` são iguais, a menos de serrilhado? */
+function samePixel(a: Raster, b: Raster, ranges: Ranges, x: number, y: number, dx: number, dy: number): boolean {
+  const bx = x + dx
+  const by = y + dy
+  if (x >= 0 && y >= 0 && x < a.width && y < a.height && bx >= 0 && by >= 0 && bx < b.width && by < b.height) {
+    const ia = (y * a.width + x) * 4
+    const ib = (by * b.width + bx) * 4
+    const da = a.data
+    const db = b.data
+    const d0 = (da[ia] as number) - (db[ib] as number)
+    const d1 = (da[ia + 1] as number) - (db[ib + 1] as number)
+    const d2 = (da[ia + 2] as number) - (db[ib + 2] as number)
+    if (d0 <= COLOR_TOLERANCE && d0 >= -COLOR_TOLERANCE && d1 <= COLOR_TOLERANCE && d1 >= -COLOR_TOLERANCE && d2 <= COLOR_TOLERANCE && d2 >= -COLOR_TOLERANCE) return true
+  } else if (channelDistance(a, x, y, b, bx, by) <= COLOR_TOLERANCE) {
+    return true
+  }
+  return fitsRange(a, x, y, ranges.b, x + dx, y + dy) && fitsRange(b, x + dx, y + dy, ranges.a, x, y)
 }
 
 function inkFraction(raster: Raster, left: number, top: number, right: number, bottom: number): number {
@@ -174,27 +247,35 @@ function normalized(left: number, top: number, right: number, bottom: number, ra
 }
 
 /** Pixels diferentes numa caixa de `a` comparada com `b` deslocado de (dx, dy). */
-function mismatches(a: Raster, b: Raster, left: number, top: number, right: number, bottom: number, dx: number, dy: number): number {
+function mismatches(a: Raster, b: Raster, ranges: Ranges, left: number, top: number, right: number, bottom: number, dx: number, dy: number): number {
   let count = 0
   for (let y = top; y < bottom; y += 1) {
     for (let x = left; x < right; x += 1) {
-      if (channelDistance(a, x, y, b, x + dx, y + dy) <= COLOR_TOLERANCE) continue
-      if (hasMatchingNeighbor(a, x, y, b, dx, dy) && hasMatchingNeighbor(b, x + dx, y + dy, a, -dx, -dy)) continue
-      count += 1
+      // Só interessa saber se fica abaixo do mínimo de uma região: para de contar ao passar dele.
+      if (!samePixel(a, b, ranges, x, y, dx, dy) && ++count >= MIN_REGION_PIXELS) return count
     }
   }
   return count
 }
 
 /** A região some com um pequeno deslocamento local? */
-function vanishesWithLocalShift(a: Raster, b: Raster, left: number, top: number, right: number, bottom: number, shift: { dx: number; dy: number }): boolean {
+function vanishesWithLocalShift(
+  a: Raster,
+  b: Raster,
+  ranges: Ranges,
+  left: number,
+  top: number,
+  right: number,
+  bottom: number,
+  shift: { dx: number; dy: number },
+): boolean {
   if ((right - left) * (bottom - top) > LOCAL_SHIFT_MAX_AREA) return false
   const margin = LOCAL_SHIFT + 1
   const box = [Math.max(0, left - margin), Math.max(0, top - margin), Math.min(a.width, right + margin), Math.min(a.height, bottom + margin)] as const
   for (let oy = -LOCAL_SHIFT; oy <= LOCAL_SHIFT; oy += 1) {
     for (let ox = -LOCAL_SHIFT; ox <= LOCAL_SHIFT; ox += 1) {
       if (ox === 0 && oy === 0) continue
-      if (mismatches(a, b, box[0], box[1], box[2], box[3], shift.dx + ox, shift.dy + oy) < MIN_REGION_PIXELS) return true
+      if (mismatches(a, b, ranges, box[0], box[1], box[2], box[3], shift.dx + ox, shift.dy + oy) < MIN_REGION_PIXELS) return true
     }
   }
   return false
@@ -218,14 +299,14 @@ export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b), o
   const columns = Math.ceil(width / CELL)
   const rows = Math.ceil(height / CELL)
   const cells = new Uint16Array(columns * rows)
+  const ranges: Ranges = { a: neighborRange(a), b: neighborRange(b) }
   let changed = 0
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      if (channelDistance(a, x, y, b, x + dx, y + dy) <= COLOR_TOLERANCE) continue
-      // Igual só se cada lado achar a sua cor na vizinhança do outro (serrilhado, meio pixel de
-      // deslocamento); basta um lado sem correspondente para o pixel contar como diferente.
-      if (hasMatchingNeighbor(a, x, y, b, dx, dy) && hasMatchingNeighbor(b, x + dx, y + dy, a, -dx, -dy)) continue
+      // Igual só se cada lado couber na faixa de tons do outro (serrilhado, fração de pixel de
+      // deslocamento); basta um lado fora da faixa para o pixel contar como diferente.
+      if (samePixel(a, b, ranges, x, y, dx, dy)) continue
       changed += 1
       const cell = Math.floor(y / CELL) * columns + Math.floor(x / CELL)
       cells[cell] = (cells[cell] ?? 0) + 1
@@ -275,7 +356,7 @@ export function diffRasters(a: Raster, b: Raster, shift = estimateShift(a, b), o
     const bottom = (maxY + 1) * CELL
     const side = options.minRegionSide ?? 0
     if (right - left < side && bottom - top < side) continue
-    if (vanishesWithLocalShift(a, b, left, top, right, bottom, shift)) continue
+    if (vanishesWithLocalShift(a, b, ranges, left, top, right, bottom, shift)) continue
     regions.push({
       original: normalized(left, top, right, bottom, a),
       updated: normalized(left + dx, top + dy, right + dx, bottom + dy, b),

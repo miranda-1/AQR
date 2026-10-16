@@ -141,8 +141,9 @@ function toWords(chars: readonly PositionedChar[], pageWidth: number, pageHeight
     const first = current[0]
     const last = current[current.length - 1]
     if (first && last) {
-      const top = Math.min(...current.map((char) => char.top))
-      const bottom = Math.max(...current.map((char) => char.bottom))
+      // Laço em vez de Math.min(...lista): uma "palavra" sem espaços pode ser enorme.
+      const top = current.reduce((low, char) => Math.min(low, char.top), Infinity)
+      const bottom = current.reduce((high, char) => Math.max(high, char.bottom), -Infinity)
       const x = clamp01(first.x0 / pageWidth)
       const y = clamp01(top / pageHeight)
       words.push({

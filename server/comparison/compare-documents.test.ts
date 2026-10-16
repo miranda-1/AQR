@@ -1,3 +1,4 @@
+import { PDFDocument, StandardFonts } from 'pdf-lib'
 import type { ComparisonStage, Difference, DocumentRole, NormalizedRect } from '../../shared/contracts/comparison.ts'
 import { defined } from '../test/defined.ts'
 import { failureOf } from '../test/failure.ts'
@@ -228,6 +229,17 @@ describe('compareDocuments: entradas problemáticas', () => {
     const locked = { bytes: await makePasswordProtectedPdf(), words: [] }
     const failure = await failureOf(compare(valid, locked))
     expect(failure.toComparisonError()).toEqual({ code: 'INCOMPATIBLE_DOCUMENT', document: 'updated' })
+  })
+})
+
+describe('compareDocuments: escala', () => {
+  it('palavra enorme sem espaços (200 mil caracteres) não estoura a pilha', { timeout: 60_000 }, async () => {
+    const doc = await PDFDocument.create()
+    const font = await doc.embedFont(StandardFonts.Helvetica)
+    doc.addPage([595, 842]).drawText('A'.repeat(200_000), { x: 10, y: 800, size: 4, font })
+    const bytes = await doc.save()
+    const result = await compareDocuments({ original: { fileName: 'a.pdf', bytes }, updated: { fileName: 'b.pdf', bytes } })
+    expect(result.differences).toEqual([])
   })
 })
 

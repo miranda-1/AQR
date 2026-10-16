@@ -46,7 +46,11 @@ export interface CompareDocumentsOptions {
   onProgress?: (progress: ComparisonProgress) => void
   /** Motor de OCR já criado (testes); sem ele, um é criado se houver páginas que precisem. */
   ocrEngine?: OcrEngine
+  /** Recebe o tempo (ms) de cada etapa interna, para medição de desempenho. Não vai para o resultado. */
+  onTiming?: (stage: TimingStage, ms: number) => void
 }
+
+export type TimingStage = 'exame' | 'ocr' | 'correspondencia' | 'texto' | 'visual' | 'organizacao'
 
 const roles = ['original', 'updated'] as const
 type ByRole<T> = Record<DocumentRole, T>
@@ -192,8 +196,9 @@ function sideText(tokens: readonly Token[], all: readonly Token[], start: number
   return {
     text: joinTokens(slice),
     surroundings: joinTokens(all.slice(Math.max(0, start - 3), Math.min(all.length, end + 3))),
-    top: Math.min(...regions.map((region) => region.y)),
-    bottom: Math.max(...regions.map((region) => region.y + region.height)),
+    // Laço em vez de Math.min(...lista): um trecho pode ter centenas de milhares de palavras.
+    top: regions.reduce((low, region) => Math.min(low, region.y), 1),
+    bottom: regions.reduce((high, region) => Math.max(high, region.y + region.height), 0),
   }
 }
 
@@ -227,6 +232,7 @@ function textDraft(hunk: Hunk, documents: ByRole<TokenizedDocument>, limits: Com
   if (subtypeNote) notes.push(subtypeNote)
   if (methods.includes('ocr')) notes.push(lowConfidence ? 'Texto reconhecido por OCR com confiança baixa.' : 'Texto reconhecido por OCR.')
   if (level === 'linhas') notes.push('Documentos muito diferentes: comparados linha a linha.')
+  if (level === 'paginas') notes.push('Documentos grandes demais para a comparação contínua: comparados página a página.')
   const draft = makeDraft({
     kind,
     category: 'text',
@@ -318,11 +324,68 @@ function compareText(documents: ByRole<TokenizedDocument>, limits: ComparisonLim
   return { drafts: pairMoves(drafts, keysOf), equalPairs, level }
 }
 
+/**
+ * Último recurso, quando nem a comparação por linhas cabe nos limites: cada par de páginas
+ * correspondentes é comparado separadamente (o texto que mudou de página aparece como exclusão numa
+ * e inclusão na outra). As páginas sem par entram inteiras.
+ */
+function compareTextByPages(
+  subset: ByRole<AnalyzedDocument>,
+  pairs: readonly { original: number; updated: number }[],
+  limits: ComparisonLimits,
+): TextComparison {
+  const drafts: Draft[] = []
+  const equalPairs: EqualPair[] = []
+  const present = { original: new Set(subset.original.pages.map((page) => page.pageNumber)), updated: new Set(subset.updated.pages.map((page) => page.pageNumber)) }
+  const paired = { original: new Set<number>(), updated: new Set<number>() }
+  const groups: { original: number[]; updated: number[] }[] = []
+  for (const pair of pairs) {
+    if (!present.original.has(pair.original) || !present.updated.has(pair.updated)) continue
+    groups.push({ original: [pair.original], updated: [pair.updated] })
+    paired.original.add(pair.original)
+    paired.updated.add(pair.updated)
+  }
+  const loneOriginal = [...present.original].filter((page) => !paired.original.has(page))
+  const loneUpdated = [...present.updated].filter((page) => !paired.updated.has(page))
+  for (const page of loneOriginal) groups.push({ original: [page], updated: [] })
+  for (const page of loneUpdated) groups.push({ original: [], updated: [page] })
+  for (const group of groups) {
+    const documents = {
+      original: tokenize(withPages(subset.original, (page) => group.original.includes(page))),
+      updated: tokenize(withPages(subset.updated, (page) => group.updated.includes(page))),
+    }
+    let comparison: TextComparison
+    try {
+      comparison = compareText(documents, { ...limits, diffTimeoutMs: Math.min(limits.diffTimeoutMs, 2_000) })
+    } catch {
+      // Página impossível de alinhar dentro dos limites: entra inteira como alterada.
+      const hunk: Hunk = { original: { start: 0, end: documents.original.tokens.length }, updated: { start: 0, end: documents.updated.tokens.length } }
+      comparison = { drafts: [textDraft(hunk, documents, limits, 'paginas')], equalPairs: [], level: 'paginas' }
+    }
+    for (const draft of comparison.drafts) drafts.push(draft)
+    for (const pair of comparison.equalPairs) equalPairs.push(pair)
+  }
+  return { drafts, equalPairs, level: 'paginas' }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Estrutura
 
-function pageText(tokenized: TokenizedDocument, pageNumber: number): string {
-  const tokens = tokenized.tokens.filter((token) => token.pieces[0]?.pageNumber === pageNumber)
+/** Palavras de cada página (uma palavra hifenizada entre páginas aparece nas duas). */
+function tokensByPage(tokens: readonly Token[]): Map<number, Token[]> {
+  const byPage = new Map<number, Token[]>()
+  for (const token of tokens) {
+    for (const pageNumber of new Set(token.pieces.map((piece) => piece.pageNumber))) {
+      const list = byPage.get(pageNumber) ?? []
+      list.push(token)
+      byPage.set(pageNumber, list)
+    }
+  }
+  return byPage
+}
+
+function pageText(byPage: ReadonlyMap<number, readonly Token[]>, pageNumber: number): string {
+  const tokens = (byPage.get(pageNumber) ?? []).filter((token) => token.pieces[0]?.pageNumber === pageNumber)
   const text = joinTokens(tokens)
   return text.length > PAGE_EXCERPT ? `${text.slice(0, PAGE_EXCERPT - 1).trimEnd()}…` : text
 }
@@ -336,7 +399,7 @@ function sizeLabel(page: AnalyzedPage): string {
 function structureDrafts(
   matches: readonly PageMatch[],
   documents: ByRole<AnalyzedDocument>,
-  tokenized: ByRole<TokenizedDocument>,
+  tokenized: ByRole<ReadonlyMap<number, readonly Token[]>>,
 ): Draft[] {
   const drafts: Draft[] = []
   const page = (role: DocumentRole, pageNumber: number) => documents[role].pages[pageNumber - 1]
@@ -634,8 +697,14 @@ export async function compareDocuments(
   input: Record<DocumentRole, SourceDocument>,
   options: CompareDocumentsOptions = {},
 ): Promise<ComparisonResult> {
-  const { limits = defaultComparisonLimits, signal, onProgress } = options
+  const { limits = defaultComparisonLimits, signal, onProgress, onTiming } = options
   const budgetEnd = Date.now() + limits.softBudgetMs
+  let lap = performance.now()
+  const timing = (stage: TimingStage) => {
+    const now = performance.now()
+    onTiming?.(stage, Math.round(now - lap))
+    lap = now
+  }
 
   onProgress?.({ stage: 'validating' })
   for (const role of roles) assertPdfBytes(input[role].bytes, role, limits)
@@ -651,11 +720,13 @@ export async function compareDocuments(
     throw error
   }
   const documents: ByRole<AnalyzedDocument> = { original, updated }
+  timing('exame')
 
   try {
     signal?.throwIfAborted()
     const ocr = await runOcr(documents, limits, budgetEnd, signal, options.ocrEngine)
     signal?.throwIfAborted()
+    timing('ocr')
 
     // Sem texto (nem por OCR) e sem comparação visual, não há como comparar o documento.
     if (!limits.visual) {
@@ -669,6 +740,7 @@ export async function compareDocuments(
     const tokenizedAll: ByRole<TokenizedDocument> = { original: tokenize(original), updated: tokenize(updated) }
     const { matches } = matchPages(pageFeatures(original, tokenizedAll.original), pageFeatures(updated, tokenizedAll.updated))
     signal?.throwIfAborted()
+    timing('correspondencia')
 
     const pairedRelations = new Set(['matched', 'ambiguous', 'moved'])
     const pairs = matches.filter(
@@ -697,7 +769,13 @@ export async function compareDocuments(
     const runText = (subset: ByRole<AnalyzedDocument>) => {
       const tokenized = { original: tokenize(subset.original), updated: tokenize(subset.updated) }
       // Primeiro, conta os pares iguais por par de páginas; depois decide se cada página está intacta.
-      const comparison = compareText(tokenized, limits)
+      let comparison: TextComparison
+      try {
+        comparison = compareText(tokenized, limits)
+      } catch (error) {
+        if (!(error instanceof ComparisonFailure) || error.reason !== 'comparacao-excedeu-limites') throw error
+        comparison = compareTextByPages(subset, pairs, limits)
+      }
       const equalPerPair = new Map<string, number>()
       for (const pair of comparison.equalPairs) {
         const key = pairKey(pair.original.pieces[0]?.pageNumber ?? 0, pair.updated.pieces[0]?.pageNumber ?? 0)
@@ -709,8 +787,9 @@ export async function compareDocuments(
         const equal = equalPerPair.get(pairKey(a, b)) ?? 0
         pair.reflowed = !(equal === pageTokenCounts.original.get(a) && equal === pageTokenCounts.updated.get(b))
       }
-      textDrafts.push(...comparison.drafts)
-      equalPairs.push(...comparison.equalPairs)
+      // Sem push(...lista): com documentos longos a lista estoura a pilha de chamadas.
+      for (const draft of comparison.drafts) textDrafts.push(draft)
+      for (const pair of comparison.equalPairs) equalPairs.push(pair)
       levels.add(comparison.level)
     }
     runText({
@@ -725,7 +804,19 @@ export async function compareDocuments(
     }
     signal?.throwIfAborted()
 
-    const structural = structureDrafts(matches, documents, tokenizedAll)
+    const pageTokens = { original: tokensByPage(tokenizedAll.original.tokens), updated: tokensByPage(tokenizedAll.updated.tokens) }
+    const structural = structureDrafts(matches, documents, pageTokens)
+    timing('texto')
+
+    // Pares iguais agrupados por par de páginas uma vez só (filtrar a lista inteira a cada par de
+    // páginas é quadrático e pesa em documentos longos).
+    const equalByPair = new Map<string, EqualPair[]>()
+    for (const item of equalPairs) {
+      const key = pairKey(item.original.pieces[0]?.pageNumber ?? 0, item.updated.pieces[0]?.pageNumber ?? 0)
+      const list = equalByPair.get(key) ?? []
+      list.push(item)
+      equalByPair.set(key, list)
+    }
 
     // Comparação visual, imagens e formatação, par a par.
     const visualStatus: ByRole<Map<number, MethodCoverage>> = { original: new Map(), updated: new Map() }
@@ -752,13 +843,8 @@ export async function compareDocuments(
         visualStatus.updated.set(pair.updated, 'not-analyzed')
         continue
       }
-      const pairTokens = {
-        original: tokenizedAll.original.tokens.filter((token) => token.pieces.some((piece) => piece.pageNumber === pair.original)),
-        updated: tokenizedAll.updated.tokens.filter((token) => token.pieces.some((piece) => piece.pageNumber === pair.updated)),
-      }
-      const pairEqual = equalPairs.filter(
-        (item) => item.original.pieces[0]?.pageNumber === pair.original && item.updated.pieces[0]?.pageNumber === pair.updated,
-      )
+      const pairTokens = { original: pageTokens.original.get(pair.original) ?? [], updated: pageTokens.updated.get(pair.updated) ?? [] }
+      const pairEqual = equalByPair.get(pairKey(pair.original, pair.updated)) ?? []
       let result: VisualPairResult
       try {
         result = await comparePagePairVisually(documents, { original: pages.original, updated: pages.updated }, pairTokens, pairEqual, limits)
@@ -770,7 +856,7 @@ export async function compareDocuments(
       visualStatus.updated.set(pair.updated, result.status)
       if (result.evidence) {
         const outcome = consolidatePagePair(result.evidence, textDrafts)
-        extraDrafts.push(...outcome.drafts)
+        for (const draft of outcome.drafts) extraDrafts.push(draft)
         for (const draft of outcome.discarded) discarded.add(draft)
       }
     }
@@ -782,6 +868,7 @@ export async function compareDocuments(
       }
     }
 
+    timing('visual')
     onProgress?.({ stage: 'organizing' })
     const drafts = [...textDrafts.filter((draft) => !discarded.has(draft)), ...structural, ...extraDrafts]
     const labels = { original: contextLabels(tokenizedAll.original.lines), updated: contextLabels(tokenizedAll.updated.lines) }
@@ -940,7 +1027,14 @@ export async function compareDocuments(
         message: `As páginas ${pagesOf(list)} do documento atualizado se repetem; a correspondência com o original é a mais provável pela ordem, não uma certeza.`,
       })
     }
-    if (levels.has('linhas')) {
+    if (levels.has('paginas')) {
+      warnings.push({
+        code: 'TEXT_ALIGNED_BY_LINES',
+        severity: 'caveat',
+        message:
+          'Os documentos são grandes ou diferentes demais para a comparação contínua do texto; ele foi comparado página a página, e texto que mudou de página aparece como exclusão numa página e inclusão na outra.',
+      })
+    } else if (levels.has('linhas')) {
       warnings.push({
         code: 'TEXT_ALIGNED_BY_LINES',
         severity: 'caveat',
@@ -964,6 +1058,7 @@ export async function compareDocuments(
       }
     }
 
+    timing('organizacao')
     return {
       formatVersion: COMPARISON_FORMAT_VERSION,
       id: randomUUID(),

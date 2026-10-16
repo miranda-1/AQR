@@ -90,16 +90,32 @@ server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs 
   (variáveis validadas com Zod; valor inválido impede a inicialização) e `GET /api/health`.
   O servidor usa `module: NodeNext` com imports `.ts` reescritos para `.js` no build (`tsconfig.server.build.json` → `dist-server/`);
   no desenvolvimento roda com `tsx watch`. Os testes do Vitest ficam em dois projetos: `frontend` (jsdom) e `servidor` (Node).
-- Núcleo da comparação (ainda sem rotas): `compareDocuments` (`server/comparison/compare-documents.ts`) recebe os bytes
-  dos dois PDFs e devolve o `ComparisonResult` do contrato, relatando as etapas.
+- Núcleo da comparação: `compareDocuments` (`server/comparison/compare-documents.ts`) recebe os bytes dos dois PDFs e
+  devolve o `ComparisonResult` (formato 2), relatando as etapas. Comparação híbrida (texto, estrutura, aparência, OCR):
 
 ```
-bytes ─ assertPdfBytes ─ extractDocument (pdf.js: palavras + caixas; erros → ComparisonFailure)
-      ─ tokenize (normalização, pontuação, hifenização) ─ alignDocuments (jsdiff palavras → linhas → erro)
-      ─ toDifference (tipo, textos, região, âncora, contexto) ─ ComparisonResult
+bytes ─ assertPdfBytes
+  ├─ analyzeDocument (pdf/extract.ts), por página:
+  │    texto com posição, fonte e tamanho (pdf.js, lido sem a rotação e girado para a orientação exibida)
+  │    ordem de leitura com colunas e tabelas (pdf/reading-order.ts)
+  │    imagens e desenhos pela lista de operadores (pdf/page-objects.ts)
+  │    prévia renderizada de 300 px (pdf/render.ts, @napi-rs/canvas) → resumo exato, grade de cinzas, tinta
+  │    tipo de conteúdo: texto, digitalizada, mista, em branco, desenhos, pouco texto, não examinada
+  ├─ OCR local onde falta texto (ocr/ocr-engine.ts: tesseract.js + modelo "por" do npm, sem rede nem cache)
+  ├─ correspondência de páginas (structure/page-matching.ts): incluídas, excluídas, movidas, repetidas, refluxo
+  ├─ texto: tokenize → alignDocuments (jsdiff) nas páginas em ordem + páginas movidas, uma a uma;
+  │    trechos movidos, números/datas/valores/identificadores (text/classify.ts), destaques por linha (regions.ts)
+  ├─ estrutura: páginas incluídas/excluídas/movidas, tamanho e rotação
+  ├─ por par de páginas (com orçamento de tempo): renderização a 1000 px (2000 px nas digitalizadas)
+  │    → visual/raster-diff.ts (alinhamento global, faixa de tons, células, componentes, realinhamento local)
+  │    → visual/images.ts (incluída, excluída, trocada, movida, redimensionada)
+  │    → visual/formatting.ts (fonte, tamanho, cor, posição, diagramação)
+  │    → consolidate.ts (região explicada por texto, imagem, formatação ou refluxo; o resto vira visual)
+  └─ cobertura por página, ressalvas e situação (complete | with-caveats | partial) ─ ComparisonResult
 ```
 
-  Critérios de precisão e limitações: `docs/criterios-comparacao.md`.
+  Algoritmos e tolerâncias: `docs/comparador/algoritmos.md`. Critérios de precisão e limitações: `docs/criterios-comparacao.md`.
+  Avaliação no corpus sintético com gabarito: `server/comparison/evaluation/` (`npm run test:corpus`, `npm run avaliar:corpus`).
 - API de comparação (`server/comparison/routes.ts`):
 
 ```
