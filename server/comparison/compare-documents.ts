@@ -33,7 +33,7 @@ import { classifyTextChange, type TextSide } from './text/classify.ts'
 import { joinTokens, tokenize, type Token, type TokenizedDocument } from './text/tokenize.ts'
 import { compareFormatting, POSITION_TOLERANCE, type EqualPair } from './visual/formatting.ts'
 import { compareImages } from './visual/images.ts'
-import { diffRasters, MIN_REGION_PIXELS, type VisualRegion } from './visual/raster-diff.ts'
+import { cropRaster, diffRasters, MIN_REGION_PIXELS, type VisualRegion } from './visual/raster-diff.ts'
 
 export interface SourceDocument {
   fileName: string
@@ -607,6 +607,46 @@ async function comparePagePairVisually(
   }
 }
 
+/** Folga (pixels) em volta de cada trecho na reconferência. */
+const CONFIRM_PADDING = 6
+
+/**
+ * Segunda passada, em resolução dobrada (≈ 240 dpi), só nos recortes das diferenças de texto deste
+ * par de páginas que a comparação visual ainda não confirmou: um dígito trocado por outro de desenho
+ * parecido muda poucos pixels a 120 dpi. O recorte do original é comparado com o do atualizado,
+ * alinhados pelo canto; qualquer região que mude confirma a diferença.
+ */
+async function confirmAtHigherResolution(
+  documents: ByRole<AnalyzedDocument>,
+  pages: ByRole<AnalyzedPage>,
+  textDrafts: readonly Draft[],
+  discarded: ReadonlySet<Draft>,
+  limits: ComparisonLimits,
+): Promise<void> {
+  const pending = textDrafts.filter(
+    (draft) =>
+      !discarded.has(draft) &&
+      !draft.methods.has('visual') &&
+      draft.original?.location.pageNumber === pages.original.pageNumber &&
+      draft.updated?.location.pageNumber === pages.updated.pageNumber &&
+      draft.original.location.region &&
+      draft.updated.location.region,
+  )
+  if (pending.length === 0) return
+  const rasters = await renderPair(documents, pages, { ...limits, visualWidth: limits.visualWidth * 2 }, undefined)
+  for (const draft of pending) {
+    const originalRegion = draft.original?.location.region
+    const updatedRegion = draft.updated?.location.region
+    if (!originalRegion || !updatedRegion) continue
+    const a = cropRaster(rasters.original, originalRegion, CONFIRM_PADDING)
+    const b = cropRaster(rasters.updated, updatedRegion, CONFIRM_PADDING)
+    if (diffRasters(a, b, { dx: 0, dy: 0 }).regions.length > 0) {
+      draft.methods.add('visual')
+      if (draft.evidence === 'direct') draft.evidence = 'corroborated'
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Contexto e ordem
 
@@ -858,6 +898,9 @@ export async function compareDocuments(
         const outcome = consolidatePagePair(result.evidence, textDrafts)
         for (const draft of outcome.drafts) extraDrafts.push(draft)
         for (const draft of outcome.discarded) discarded.add(draft)
+        if (pages.original.rotation === pages.updated.rotation && Date.now() <= budgetEnd) {
+          await confirmAtHigherResolution(documents, { original: pages.original, updated: pages.updated }, textDrafts, discarded, limits)
+        }
       }
     }
     // Texto de OCR em páginas que não foram comparadas visualmente continua, mas pede conferência.

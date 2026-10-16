@@ -464,3 +464,27 @@ export function signatureDistance(a: Uint8Array, b: Uint8Array): number {
   for (let index = 0; index < a.length; index += 1) total += Math.abs((a[index] ?? 0) - (b[index] ?? 0))
   return total / a.length
 }
+
+/** Recorte de uma imagem (região normalizada, com folga em pixels), fora da página = branco. */
+export function cropRaster(raster: Raster, region: NormalizedRect, padding: number): Raster {
+  const left = Math.floor(region.x * raster.width) - padding
+  const top = Math.floor(region.y * raster.height) - padding
+  const width = Math.max(1, Math.ceil(region.width * raster.width) + 2 * padding)
+  const height = Math.max(1, Math.ceil(region.height * raster.height) + 2 * padding)
+  const data = new Uint8ClampedArray(width * height * 4).fill(255)
+  for (let y = 0; y < height; y += 1) {
+    const sy = top + y
+    if (sy < 0 || sy >= raster.height) continue
+    for (let x = 0; x < width; x += 1) {
+      const sx = left + x
+      if (sx < 0 || sx >= raster.width) continue
+      const from = (sy * raster.width + sx) * 4
+      const to = (y * width + x) * 4
+      data[to] = raster.data[from] ?? 255
+      data[to + 1] = raster.data[from + 1] ?? 255
+      data[to + 2] = raster.data[from + 2] ?? 255
+      data[to + 3] = 255
+    }
+  }
+  return { width, height, data }
+}

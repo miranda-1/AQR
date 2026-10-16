@@ -88,7 +88,7 @@ const byText = (tag: string, value: string) => `[...document.querySelectorAll('$
 await send('Page.enable')
 await send('Runtime.enable')
 await send('DOM.enable')
-await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads }).catch(() => undefined)
+await send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads })
 await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
 
 async function compareCase(caseId: string, captureName: string) {
@@ -137,7 +137,8 @@ try {
   await click(`[...document.querySelectorAll('[role=radio]')].find((el) => el.textContent.trim().startsWith('Completo'))`)
 
   // 3. Exportação: relatório HTML gerado no navegador.
-  await click(byText('button', 'Exportar relatório'))
+  // O menu (Radix) abre com "pointerdown", não com "click".
+  await evaluate(`(() => { const el = ${byText('button', 'Exportar relatório')}; el?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' })); return true })()`)
   await sleep(500)
   await click(`[...document.querySelectorAll('[role=menuitem]')].find((el) => el.textContent.includes('Relatório para leitura'))`)
   await sleep(1500)

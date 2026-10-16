@@ -85,14 +85,21 @@
   outline: 1px dashed var(--diff-modification-line);
 }
 
-.pdf-diff-box[aria-current='true'],
+/* O destaque ativo mantém o "multiply": o fundo tinge o texto sem cobri-lo. */
+.pdf-diff-box[aria-current='true'] {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
 .pdf-diff-anchor[aria-current='true'] {
   outline: 2px solid var(--brand-blue);
   outline-offset: 2px;
   mix-blend-mode: normal;
 }
 
-.pdf-diff-box:focus-visible,
+.pdf-diff-box:focus-visible {
+  outline: 3px solid var(--brand-blue);
+  outline-offset: 2px;
+}
 .pdf-diff-anchor:focus-visible {
   outline: 3px solid var(--brand-blue);
   outline-offset: 2px;
