@@ -12,6 +12,7 @@ import '../login.css'
  * - entrada: depois de navegar, a logo voa da tela de entrada até o cabeçalho ([data-entry-target]);
  * - saída: a logo sai do cabeçalho, vai ao centro, se desfaz em pontinhos que voltam aos anéis,
  *   e a sessão é encerrada; o login aparece por baixo, com o mesmo fundo.
+ * No fundo "Névoa" a logo é sempre azul: nada troca de cor durante o voo.
  */
 interface HandoffStart {
   /** Posição da logo na tela de entrada. */
@@ -34,16 +35,6 @@ const easing = 'cubic-bezier(.65, 0, .35, 1)'
 
 function canAnimate(): boolean {
   return typeof Element.prototype.animate === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
-/** Logo branca e azul sobrepostas; a passagem troca uma pela outra durante o voo. */
-function FlyingLogo({ size }: { size: number }) {
-  return (
-    <>
-      <AqrLogo size={size} tone="negative" />
-      <AqrLogo size={size} className="absolute top-0 left-0 opacity-0" />
-    </>
-  )
 }
 
 function EntryHandoff({ from, size, onDone }: HandoffStart & { onDone: () => void }) {
@@ -78,11 +69,6 @@ function EntryHandoff({ from, size, onDone }: HandoffStart & { onDone: () => voi
             timing,
           ),
         )
-        const [negative, color] = Array.from(flyer.children)
-        if (negative && color) {
-          animations.push(negative.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0, offset: 0.8 }], timing))
-          animations.push(color.animate([{ opacity: 0 }, { opacity: 0, offset: 0.35 }, { opacity: 1, offset: 0.8 }], timing))
-        }
       } else {
         animations.push(flyer.animate([{ opacity: 1 }, { opacity: 0 }], timing))
       }
@@ -99,11 +85,11 @@ function EntryHandoff({ from, size, onDone }: HandoffStart & { onDone: () => voi
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[100]">
-      <div ref={layerRef} className="login-night absolute inset-0 overflow-hidden">
+      <div ref={layerRef} className="login-mist absolute inset-0 overflow-hidden">
         <DottedRings dimmed glow={false} />
       </div>
       <div ref={flyerRef} className="absolute origin-top-left" style={{ left: from.left, top: from.top }}>
-        <FlyingLogo size={size} />
+        <AqrLogo size={size} />
       </div>
     </div>
   )
@@ -135,7 +121,7 @@ function ExitToLogin({ onSignOut, onDone }: { onSignOut: () => void; onDone: () 
       const to = centerLogo.getBoundingClientRect()
       const timing: KeyframeAnimationOptions = { duration: FLIGHT_MS, easing, fill: 'forwards' }
 
-      // 1) A logo sai do cabeçalho e vai ao centro, de azul para branco, enquanto o fundo do login volta.
+      // 1) A logo sai do cabeçalho e vai ao centro, enquanto o fundo do login volta.
       source.style.visibility = 'hidden'
       flyer.style.left = `${to.left}px`
       flyer.style.top = `${to.top}px`
@@ -146,11 +132,6 @@ function ExitToLogin({ onSignOut, onDone }: { onSignOut: () => void; onDone: () 
           timing,
         ),
       ]
-      const [negative, color] = Array.from(flyer.children)
-      if (negative && color) {
-        flight.push(negative.animate([{ opacity: 0 }, { opacity: 0, offset: 0.2 }, { opacity: 1, offset: 0.65 }], timing))
-        flight.push(color.animate([{ opacity: 1 }, { opacity: 1, offset: 0.2 }, { opacity: 0, offset: 0.65 }], timing))
-      }
       signal.addEventListener('abort', () => flight.forEach((animation) => animation.cancel()), { once: true })
       await Promise.all(flight.map((animation) => animation.finished))
 
@@ -187,15 +168,15 @@ function ExitToLogin({ onSignOut, onDone }: { onSignOut: () => void; onDone: () 
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[100]">
-      <div ref={layerRef} className="login-night absolute inset-0 overflow-hidden opacity-0">
+      <div ref={layerRef} className="login-mist absolute inset-0 overflow-hidden opacity-0">
         <DottedRings glow={false} />
       </div>
       <div ref={centerRef} className="invisible absolute inset-0 flex items-center justify-center">
-        <AqrLogo size={size} tone="negative" />
+        <AqrLogo size={size} />
       </div>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <div ref={flyerRef} className="absolute origin-top-left">
-        <FlyingLogo size={size} />
+        <AqrLogo size={size} />
       </div>
     </div>
   )

@@ -4,13 +4,14 @@ import { AqrLogo } from '@/components/layout/AqrLogo'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { appConfig } from '@/config/app'
 import { useAuthSession } from '@/features/auth/auth-session'
-import { ComparedSheet } from '@/features/auth/components/ComparedSheet'
-import { DottedRings, ringRadii } from '@/features/auth/components/DottedRings'
+import { ComparedSheet, DifferenceChip, sheetDifferences } from '@/features/auth/components/ComparedSheet'
+import { DottedRings } from '@/features/auth/components/DottedRings'
 import { KeycloakLogin } from '@/features/auth/components/KeycloakLogin'
 import { LoginForm } from '@/features/auth/components/LoginForm'
-import { drawDots, sampleLogo, scatterFromRings } from '@/features/auth/entry/dot-logo'
 import { useEntryHandoff } from '@/features/auth/entry/entry-handoff'
-import { easeInOutCubic, isAbortError, sleep, tween } from '@/features/auth/entry/timing'
+import { greetingFor } from '@/features/auth/entry/greeting'
+import { playScanEntry } from '@/features/auth/entry/scan-entry'
+import { isAbortError } from '@/features/auth/entry/timing'
 import { destinationAfterLogin } from '@/features/auth/RequireAuth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/use-media-query'
@@ -18,9 +19,6 @@ import { cn } from '@/lib/utils'
 import '@/features/auth/login.css'
 
 type Phase = 'form' | 'entering'
-
-/** Nome da fonte da interface, para esperar que esteja carregada antes de amostrar a logo. */
-const LOGO_FONT = '800 80px "Plus Jakarta Sans Variable"'
 
 export function LoginPage() {
   useDocumentTitle('Entrar')
@@ -34,10 +32,17 @@ export function LoginPage() {
 
   const [phase, setPhase] = useState<Phase>('form')
   const [pulse, setPulse] = useState(0)
-  const [nameVisible, setNameVisible] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [greeting, setGreeting] = useState('')
+  const stackRef = useRef<HTMLDivElement>(null)
+  const docsLayerRef = useRef<HTMLDivElement>(null)
+  const copiesRef = useRef<HTMLDivElement>(null)
+  const listTitleRef = useRef<HTMLParagraphElement>(null)
+  const scanRef = useRef<HTMLDivElement>(null)
+  const greetingLayerRef = useRef<HTMLDivElement>(null)
+  const greetingTextRef = useRef<HTMLParagraphElement>(null)
+  const logoLayerRef = useRef<HTMLDivElement>(null)
   const logoRef = useRef<HTMLDivElement>(null)
-  const sweepRef = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLParagraphElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => () => abortRef.current?.abort(), [])
@@ -54,64 +59,40 @@ export function LoginPage() {
     [destination, handoff, logoSize, navigate, signIn],
   )
 
-  const playEntry = useCallback(async (userName: string) => {
-    const canvas = canvasRef.current
-    const logoWrap = logoRef.current
-    const logo = logoWrap?.firstElementChild
-    const sweep = sweepRef.current
-    const ctx = canvas?.getContext('2d')
-    // Sem animação (movimento reduzido ou navegador sem canvas): entra direto.
-    if (reducedMotion || !canvas || !ctx || !logoWrap || !(logo instanceof HTMLElement) || !sweep) return goToSite(userName, false)
+  const playEntry = useCallback(
+    async (userName: string) => {
+      setGreeting(greetingFor(userName))
+      const stack = stackRef.current
+      const docsLayer = docsLayerRef.current
+      const copies = copiesRef.current
+      const listTitle = listTitleRef.current
+      const scan = scanRef.current
+      const greetingLayer = greetingLayerRef.current
+      const greetingText = greetingTextRef.current
+      const logoLayer = logoLayerRef.current
+      const logo = logoRef.current
+      const name = nameRef.current
+      const ready = stack && docsLayer && copies && listTitle && scan && greetingLayer && greetingText && logoLayer && logo && name
+      // Sem animação (movimento reduzido ou navegador sem Web Animations): entra direto.
+      if (reducedMotion || !ready || typeof Element.prototype.animate !== 'function') return goToSite(userName, false)
 
-    const controller = new AbortController()
-    abortRef.current = controller
-    const { signal } = controller
-    try {
-      setPhase('entering')
-      await Promise.race([document.fonts?.load(LOGO_FONT), sleep(600, signal)])
-
-      // 1) Os pontos saem dos anéis e formam o AQR.
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.width = Math.round(window.innerWidth * dpr)
-      canvas.height = Math.round(window.innerHeight * dpr)
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-      const dots = scatterFromRings(sampleLogo(logo), center, ringRadii)
-      await sleep(250, signal)
-      await tween(1500, (p) => drawDots(ctx, dots, p), signal)
-      await sleep(400, signal)
-
-      // 2) Varredura: uma linha amarela troca os pontos pela logo sólida.
-      const box = logo.getBoundingClientRect()
-      const startX = box.left - 20
-      const endX = box.right + 20
-      sweep.style.top = `${box.top - 24}px`
-      sweep.style.height = `${box.height + 48}px`
-      sweep.style.opacity = '1'
-      logoWrap.style.visibility = 'visible'
-      await tween(
-        950,
-        (p) => {
-          const x = startX + (endX - startX) * easeInOutCubic(p)
-          sweep.style.transform = `translateX(${x}px)`
-          if (p > 0.9) sweep.style.opacity = String((1 - p) * 10)
-          logoWrap.style.clipPath = `inset(-20% ${Math.max(0, 100 - ((x - box.left) / box.width) * 100)}% -20% 0)`
-          drawDots(ctx, dots, 1, x)
-        },
-        signal,
-      )
-      logoWrap.style.clipPath = ''
-      sweep.style.opacity = '0'
-      drawDots(ctx, [], 1)
-      setNameVisible(true)
-      await sleep(1400, signal)
-
-      // 3) A logo voa para o cabeçalho do site (EntryHandoff).
-      goToSite(userName, true)
-    } catch (error) {
-      if (!isAbortError(error)) goToSite(userName, false)
-    }
-  }, [goToSite, reducedMotion])
+      const controller = new AbortController()
+      abortRef.current = controller
+      try {
+        setPhase('entering')
+        // Espera o React escrever a saudação antes de medi-la.
+        await new Promise((resolve) => requestAnimationFrame(resolve))
+        const chips = Array.from(docsLayer.querySelectorAll<HTMLElement>('.login-chip'))
+        const elements = { stack, docsLayer, copies, listTitle, chips, scan, greetingLayer, greetingText, logoLayer, logo, name }
+        await playScanEntry(elements, controller.signal)
+        // A logo voa para o cabeçalho do site (EntryHandoff).
+        goToSite(userName, true)
+      } catch (error) {
+        if (!isAbortError(error)) goToSite(userName, false)
+      }
+    },
+    [goToSite, reducedMotion],
+  )
 
   // Já com sessão (inclusive logo depois de entrar), o login leva ao destino.
   if (isAuthenticated) return <Navigate to={destination} replace />
@@ -122,12 +103,12 @@ export function LoginPage() {
   return (
     // overflow-x-clip: as folhas inclinadas do leque não podem criar rolagem lateral no celular.
     <div className="relative min-h-dvh overflow-x-clip">
-      <div aria-hidden className="login-night fixed inset-0 overflow-hidden">
+      <div aria-hidden className="login-mist fixed inset-0 overflow-hidden">
         <DottedRings dimmed={entering} pulseKey={pulse} />
       </div>
 
       <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-12">
-        <div className={cn('login-stack', entering && 'is-leaving')}>
+        <div ref={stackRef} className={cn('login-stack', entering && 'is-leaving')}>
           <ComparedSheet version="updated" className="is-back" />
           <ComparedSheet version="original" className="is-front" />
           <div className="login-card px-[22px] pt-8 pb-7 sm:px-10 sm:pt-10 sm:pb-9">
@@ -169,19 +150,35 @@ export function LoginPage() {
         </div>
       </main>
 
-      {/* Entrada: pontos, varredura e logo, sobre o mesmo fundo. Decorativo; o status abaixo informa leitores de tela. */}
+      {/* Entrada (decorativa; o status abaixo informa leitores de tela). Abaixo do cartão: cópias das folhas e a lista. */}
+      <div ref={docsLayerRef} aria-hidden className="pointer-events-none fixed inset-0 z-[5]">
+        <div ref={copiesRef} />
+        <p ref={listTitleRef} className="login-list-title">
+          Diferenças
+        </p>
+        {sheetDifferences.map(({ row, kind }) => (
+          <DifferenceChip key={row} row={row} kind={kind} />
+        ))}
+      </div>
+      {/* Acima do cartão: a saudação e a logo, que a linha amarela revela. */}
       <div aria-hidden className="pointer-events-none fixed inset-0 z-20">
-        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
-          <div ref={logoRef} className="invisible">
-            <AqrLogo size={logoSize} tone="negative" />
-          </div>
-          <p className={cn('login-entry-name text-base text-white/85', nameVisible && 'is-visible')}>{appConfig.fullName}</p>
+        <div ref={greetingLayerRef} className="login-reveal absolute inset-0 flex items-center justify-center px-4">
+          <p ref={greetingTextRef} className="text-center text-[2.5rem] leading-tight font-extrabold tracking-[-0.03em] text-brand md:text-[4rem]">
+            {greeting}
+          </p>
         </div>
-        <div ref={sweepRef} className="absolute top-0 left-0 w-[3px] rounded-full bg-brand-yellow opacity-0" />
+        <div ref={logoLayerRef} className="login-reveal absolute inset-0 flex flex-col items-center justify-center gap-5">
+          <div ref={logoRef}>
+            <AqrLogo size={logoSize} />
+          </div>
+          <p ref={nameRef} className="text-base text-muted-foreground">
+            {appConfig.fullName}
+          </p>
+        </div>
+        <div ref={scanRef} className="login-scan" />
       </div>
       <p role="status" className="sr-only">
-        {entering ? 'Entrando no AQR…' : ''}
+        {entering ? `${greeting}. Entrando no AQR…` : ''}
       </p>
     </div>
   )

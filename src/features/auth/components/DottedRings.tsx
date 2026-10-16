@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
-/** Anéis pontilhados do login "Noite": [raio, espessura do ponto, espaço entre pontos], num viewBox de 1400. */
+/** Anéis pontilhados do login "Névoa": [raio, espessura do ponto, espaço entre pontos], num viewBox de 1400. */
 const RINGS = [
   [170, 4, 14],
   [250, 3, 18],
@@ -13,7 +13,8 @@ const RINGS = [
 
 /** O terceiro anel é amarelo (decorativo). */
 const YELLOW_RING = 2
-const BASE_OPACITY = [0.2, 0.15, 0.13, 0.11, 0.09, 0.07] as const
+/** No fundo claro, os pontos são azuis; o amarelo fica mais forte para não sumir. */
+const BASE_OPACITY = [0.2, 0.16, 0.14, 0.12, 0.1, 0.08] as const
 
 /** Raios dos anéis em px (o SVG é desenhado em escala 1:1), usados como origem dos pontos da entrada. */
 export const ringRadii: readonly number[] = RINGS.map(([radius]) => radius)
@@ -29,8 +30,8 @@ function Rings({ className, glow }: { className: string; glow: boolean }) {
             cx="700"
             cy="700"
             r={radius}
-            stroke={yellow ? 'var(--brand-yellow)' : 'var(--brand-white)'}
-            strokeOpacity={glow ? (yellow ? 0.95 : 0.75) : yellow ? 0.38 : BASE_OPACITY[index]}
+            stroke={yellow ? 'var(--brand-yellow)' : 'var(--brand-blue)'}
+            strokeOpacity={glow ? (yellow ? 1 : 0.55) : yellow ? 0.75 : BASE_OPACITY[index]}
             strokeWidth={dot}
             strokeDasharray={`0 ${gap}`}
           />

@@ -1,19 +1,14 @@
 /*
- * Login "Noite" e entrada animada (decisões do responsável em 09/10/2026; propostas em docs/propostas-login/).
+ * Login "Névoa" e entrada animada (decisões do responsável em 09 e 15/10/2026; propostas em docs/propostas-login/,
+ * versão final em login-entrada-final.html).
  * Cores só por tokens. O amarelo institucional é decorativo (anel, faixa da lente, linha da varredura).
- * Animações usam só transform, opacity e máscaras. Com prefers-reduced-motion, a regra global de
+ * Animações usam só transform, opacity e recortes. Com prefers-reduced-motion, a regra global de
  * globals.css encurta tudo, e a entrada é pulada no código.
  */
 
-/* ---------- Fundo "Noite" ---------- */
-.login-night {
-  background: radial-gradient(
-    circle at 50% 46%,
-    var(--login-night-center) 0,
-    var(--brand-blue) 30%,
-    var(--brand-blue-800) 68%,
-    var(--login-night-edge) 100%
-  );
+/* ---------- Fundo "Névoa": claro azulado; a logo azul aparece direto, sem placa ---------- */
+.login-mist {
+  background: radial-gradient(circle at 50% 46%, var(--brand-white) 0, var(--login-mist-mid) 38%, var(--brand-blue-100) 100%);
 }
 
 /* ---------- Anéis pontilhados ---------- */
@@ -74,9 +69,12 @@
   position: relative;
   width: 100%;
   max-width: 440px;
+}
+/* Ao entrar, só o cartão sai: as folhas viram cópias soltas que a entrada move (scan-entry.ts). */
+.login-card {
   transition: opacity 0.45s ease, transform 0.45s ease;
 }
-.login-stack.is-leaving {
+.login-stack.is-leaving .login-card {
   opacity: 0;
   transform: translateY(-8px) scale(0.97);
   pointer-events: none;
@@ -94,7 +92,7 @@
   overflow: hidden;
   border-radius: 16px;
   background: var(--brand-white);
-  box-shadow: 0 10px 28px -10px rgb(5 10 40 / 0.5);
+  box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--text-default) 28%, transparent);
   transform-origin: 50% 100%;
 }
 .login-sheet.is-back {
@@ -149,7 +147,7 @@
   position: relative;
   border-radius: 16px;
   background: var(--brand-white);
-  box-shadow: 0 30px 60px -20px rgb(5 10 40 / 0.55);
+  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--text-default) 30%, transparent);
 }
 .login-enter > * {
   animation: login-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -201,13 +199,121 @@
   to { transform: scaleX(1); }
 }
 
-/* ---------- Entrada: logo em pontinhos e varredura ---------- */
-.login-entry-name {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+/* ---------- Entrada: varredura, lista, saudação e logo (scan-entry.ts) ---------- */
+/* Cópia solta de uma folha: posição e tamanho vêm do código. */
+.login-sheet.is-copy {
+  inset: auto;
 }
-.login-entry-name.is-visible {
+/* Ícone da diferença: só nas cópias, quando a varredura encontra a linha. */
+.login-doc-badge {
+  display: none;
+}
+.login-sheet.is-scanning .login-doc-badge {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  display: grid;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--brand-white);
+  transform: scale(0);
+  transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.login-sheet.is-scanning[data-version='updated'] .login-doc-badge {
+  right: calc(100% + 10px);
+  left: auto;
+}
+.login-doc-line[data-kind='addition'] .login-doc-badge { background: var(--diff-addition-line); }
+.login-doc-line[data-kind='deletion'] .login-doc-badge { background: var(--diff-deletion-line); }
+.login-doc-line[data-kind='modification'] .login-doc-badge { background: var(--diff-modification-line); }
+.login-sheet.is-scanning .login-doc-line.is-found .login-doc-badge {
+  transform: scale(1);
+}
+/* Nas cópias, os destaques se apagam e voltam um a um, quando a linha passa. */
+.login-sheet.is-scanning .login-doc-line[data-kind]::after {
+  opacity: 0;
+  transform: scaleX(0.4);
+  transform-origin: left;
+  transition: opacity 0.3s, transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.login-sheet.is-scanning[data-version='updated'] .login-doc-line[data-kind]::after {
+  transform-origin: right;
+}
+.login-sheet.is-scanning .login-doc-line.is-found::after {
   opacity: 1;
   transform: none;
+}
+.login-sheet.is-scanning .login-doc-line {
+  transition: background 0.3s;
+}
+.login-sheet.is-scanning .login-doc-line.is-read:not(.is-title) {
+  background: color-mix(in srgb, var(--brand-blue) 42%, transparent);
+}
+/* Exclusão também é riscada: a cor nunca é o único indicador. */
+.login-sheet.is-scanning .login-doc-line.is-found[data-kind='deletion']::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -2px;
+  left: -2px;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: var(--diff-deletion-line);
+}
+
+/* Lista de diferenças entre as folhas. */
+.login-list-title {
+  position: absolute;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateX(-50%);
+}
+.login-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--brand-white);
+  color: var(--text-default);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--text-default) 45%, transparent);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+.login-chip-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--brand-white);
+}
+.login-chip-icon[data-kind='addition'] { background: var(--diff-addition-line); }
+.login-chip-icon[data-kind='deletion'] { background: var(--diff-deletion-line); }
+.login-chip-icon[data-kind='modification'] { background: var(--diff-modification-line); }
+
+/* Linha amarela da varredura, com um contorno azul fino para não sumir no fundo claro. */
+.login-scan {
+  position: absolute;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brand-yellow);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand-blue) 30%, transparent),
+    0 0 14px 2px color-mix(in srgb, var(--brand-yellow) 55%, transparent);
+  opacity: 0;
+}
+/* Saudação e logo começam escondidas; a linha as revela (clip-path no código). */
+.login-reveal {
+  clip-path: inset(0 0 100% 0);
 }

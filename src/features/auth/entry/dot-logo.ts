@@ -90,10 +90,11 @@ export function scatterFromRings(targets: DotTarget[], center: { x: number; y: n
   })
 }
 
+/** Cores dos pontos no fundo "Névoa": a logo é azul, e o "branco" da amostra vira o azul institucional. */
 const fills: Record<DotTone, (q: number) => string> = {
   yellow: () => 'rgba(255, 204, 0, 0.95)',
-  faint: (q) => `rgba(255, 255, 255, ${0.25 + 0.25 * q})`,
-  white: (q) => `rgba(255, 255, 255, ${0.35 + 0.6 * q})`,
+  faint: (q) => `rgba(40, 53, 135, ${0.2 + 0.2 * q})`,
+  white: (q) => `rgba(40, 53, 135, ${0.35 + 0.6 * q})`,
 }
 
 /**

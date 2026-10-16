@@ -56,9 +56,8 @@
   --status-warning: #864300;
   --status-warning-bg: #fdf0d9;
 
-  /* Login "Noite": centro e borda do fundo, derivados do azul institucional (apoio) */
-  --login-night-center: #33419a;
-  --login-night-edge: #151b4d;
+  /* Login "Névoa": tom intermediário do fundo claro (centro branco, borda brand-blue-100) */
+  --login-mist-mid: #f2f4fa;
 
   /* Layout */
   --header-height: 3.5rem;
