@@ -23,6 +23,13 @@ const environmentSchema = z.object({
   COMPARISON_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(120_000),
   COMPARISON_RESULT_TTL_MS: z.coerce.number().int().min(10_000).max(3_600_000).default(5 * 60_000),
   COMPARISON_WORKER_MEMORY_MB: z.coerce.number().int().min(128).max(4096).default(768),
+  /** Comparação visual das páginas (imagens, desenhos, formatação). */
+  COMPARISON_VISUAL: z.enum(['on', 'off']).default('on'),
+  /** OCR local (Tesseract) das páginas sem texto extraível. */
+  COMPARISON_OCR: z.enum(['on', 'off']).default('on'),
+  COMPARISON_OCR_MAX_PAGES: z.coerce.number().int().min(0).max(1000).default(30),
+  /** Pasta com `por.traineddata.gz`; vazio = o modelo do pacote `@tesseract.js-data/por`. */
+  COMPARISON_OCR_LANG_PATH: z.string().default(''),
   DATABASE_PATH: z.string().min(1).default('data/aqr.sqlite'),
   ADMIN_API_MODE: z.enum(['disabled', 'dev']).default('disabled'),
   /** "keycloak": login real; exige as variáveis KEYCLOAK_* e APP_BASE_URL e liga a administração. */
@@ -54,6 +61,14 @@ export interface ComparisonSettings {
   workerMemoryMb: number
   /** Tamanho máximo de cada PDF recebido. */
   maxFileSizeBytes: number
+  /** Comparação visual ligada. */
+  visual: boolean
+  /** OCR ligado. */
+  ocr: boolean
+  /** Páginas com OCR por documento. */
+  ocrMaxPages: number
+  /** Pasta do modelo de português do OCR (vazio = o do pacote instalado). */
+  ocrLanguagePath: string
 }
 
 export interface ServerConfig {
@@ -164,6 +179,10 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       resultTtlMs: data.COMPARISON_RESULT_TTL_MS,
       workerMemoryMb: data.COMPARISON_WORKER_MEMORY_MB,
       maxFileSizeBytes: defaultComparisonLimits.maxFileSizeBytes,
+      visual: data.COMPARISON_VISUAL === 'on',
+      ocr: data.COMPARISON_OCR === 'on',
+      ocrMaxPages: data.COMPARISON_OCR_MAX_PAGES,
+      ocrLanguagePath: data.COMPARISON_OCR_LANG_PATH,
     },
     databasePath: data.DATABASE_PATH,
     adminMode: data.ADMIN_API_MODE,

@@ -4,6 +4,7 @@ import { failureOf } from '../test/failure.ts'
 import { intersectionOverUnion, unionOf } from '../test/geometry.ts'
 import { makeImageOnlyPdf, makePasswordProtectedPdf, makePdf, type PdfLayout, type SyntheticPdf } from '../test/make-pdf.ts'
 import { compareDocuments } from './compare-documents.ts'
+import { defaultComparisonLimits } from './limits.ts'
 import { REGION_PADDING } from './regions.ts'
 
 /**
@@ -76,18 +77,26 @@ describe('compareDocuments: precisão', () => {
   it('documentos idênticos: nenhuma diferença', async () => {
     const result = await compare(await makePdf(BASE), await makePdf(BASE))
     expect(result.differences).toEqual([])
-    expect(result.summary).toEqual({ total: 0, additions: 0, deletions: 0, modifications: 0 })
+    expect(result.summary).toMatchObject({ total: 0, additions: 0, deletions: 0, modifications: 0, moves: 0 })
     expect(result.isDemonstration).toBe(false)
+    expect(result.formatVersion).toBe(2)
+    // Nenhuma diferença, com tudo analisado: texto e aparência de todas as páginas.
+    expect(result.analysis.status).toBe('complete')
+    expect(result.analysis.pages.original.every((page) => page.text === 'analyzed' && page.visual === 'analyzed')).toBe(true)
+    expect(result.analysis.pageMatches.map((match) => match.relation)).toEqual(['matched', 'matched', 'matched'])
     expect(result.documents.original).toMatchObject({ role: 'original', fileName: 'original.pdf', pageCount: 3 })
     expect(result.documents.updated).toMatchObject({ role: 'updated', fileName: 'atualizado.pdf', pageCount: 3 })
   })
 
-  it('mesmo texto em outra diagramação (fonte, margem, quebras de linha): nenhuma diferença', async () => {
+  it('mesmo texto em outra diagramação (fonte, margem, quebras de linha): nenhuma diferença de conteúdo', async () => {
     const paragraphs: Pages = [BASE.flat()]
     const narrow: PdfLayout = { fontSize: 12, margin: 72, wrapWidth: 260 }
     const wide: PdfLayout = { fontSize: 10, margin: 50, wrapWidth: 480, lineHeight: 1.3 }
     const result = await compare(await makePdf(paragraphs, narrow), await makePdf(paragraphs, wide))
-    expect(result.differences).toEqual([])
+    // O texto é o mesmo: nada de texto. A aparência mudou de verdade (fonte 12 → 10 e outra
+    // diagramação): só diferenças de formatação, agrupadas por página.
+    expect(result.differences.filter((difference) => difference.category !== 'formatting')).toEqual([])
+    expect(result.differences.map((difference) => difference.subtype).sort()).toEqual(['font-size', 'layout'])
   })
 
   it('texto alterado: uma modificação, com os dois textos, contexto e posição', async () => {
@@ -148,7 +157,7 @@ describe('compareDocuments: precisão', () => {
     expect(result.differences.map((difference) => difference.kind)).toEqual(['modification', 'deletion', 'addition'])
     expect(result.differences.map((difference) => difference.context)).toEqual(['Art. 3º', 'Art. 6º', 'Art. 9º'])
     expect(result.differences.map((difference) => difference.id)).toEqual(['d-001', 'd-002', 'd-003'])
-    expect(result.summary).toEqual({ total: 3, additions: 1, deletions: 1, modifications: 1 })
+    expect(result.summary).toMatchObject({ total: 3, additions: 1, deletions: 1, modifications: 1 })
 
     const [modification, deletion, addition] = result.differences.map((difference) => defined(difference))
     expectLocated(defined(modification), 'original', original, 1, ['cem'])
@@ -194,11 +203,24 @@ describe('compareDocuments: entradas problemáticas', () => {
     expect(failure.toComparisonError()).toEqual({ code: 'INCOMPATIBLE_DOCUMENT', document: 'original' })
   })
 
-  it('PDF sem texto (digitalizado): erro próprio, sem OCR', async () => {
+  it('PDF sem texto e sem comparação visual: erro próprio (nenhum método consegue ler)', async () => {
     const valid = await makePdf(BASE)
-    const scanned = { bytes: await makeImageOnlyPdf(3), words: [] }
-    const failure = await failureOf(compare(scanned, valid))
+    const scanned = await makeImageOnlyPdf(3)
+    const failure = await failureOf(
+      compareDocuments(
+        { original: { fileName: 'a.pdf', bytes: scanned }, updated: { fileName: 'b.pdf', bytes: valid.bytes } },
+        { limits: { ...defaultComparisonLimits, visual: false } },
+      ),
+    )
     expect(failure.toComparisonError()).toEqual({ code: 'NO_EXTRACTABLE_TEXT', document: 'original' })
+  })
+
+  it('PDF sem texto com a comparação visual ligada: compara e marca as páginas sem texto', async () => {
+    const valid = await makePdf(BASE)
+    const drawings = { bytes: await makeImageOnlyPdf(3), words: [] }
+    const result = await compare(drawings, valid)
+    expect(result.analysis.pages.original.map((page) => page.content)).toEqual(['graphics', 'graphics', 'graphics'])
+    expect(result.analysis.pages.original.every((page) => page.textSource === 'none')).toBe(true)
   })
 
   it('PDF protegido por senha: documento incompatível', async () => {
@@ -231,6 +253,7 @@ describe('compareDocuments: desempenho', () => {
 
     expect(result.documents.original.pageCount).toBe(100)
     expect(result.summary).toMatchObject({ total: 4, additions: 4 })
+    expect(result.differences.every((difference) => difference.category === 'text')).toBe(true)
     expect(elapsed).toBeLessThan(10_000)
   })
 })

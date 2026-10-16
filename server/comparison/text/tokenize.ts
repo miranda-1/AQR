@@ -1,11 +1,22 @@
 import type { NormalizedRect } from '../../../shared/contracts/comparison.ts'
-import type { ExtractedDocument } from '../pdf/extract.ts'
+import type { ExtractedDocument, ExtractedWord } from '../pdf/extract.ts'
 import { endsWithLineBreakHyphen, normalizeWord, startsWithLowercase } from './normalize.ts'
 
 /** Pedaço visível de uma palavra (uma palavra hifenizada entre linhas tem dois). */
 export interface TokenPiece {
   pageNumber: number
   region: NormalizedRect
+}
+
+/** Como a palavra foi lida e com que aparência. */
+export interface TokenStyle {
+  source: 'text-layer' | 'ocr'
+  /** Confiança do OCR (0–100). */
+  confidence?: number
+  /** Fonte (id do pdf.js na página). */
+  font?: string
+  /** Altura da fonte, em pontos. */
+  fontSize?: number
 }
 
 export interface Token {
@@ -18,12 +29,15 @@ export interface Token {
   /** Colado ao anterior, sem espaço (pontuação separada da palavra). */
   joinsPrevious: boolean
   pieces: TokenPiece[]
+  style: TokenStyle
 }
 
 export interface TokenLine {
   pageNumber: number
   /** Texto da linha como aparece no documento. */
   text: string
+  /** Topo da linha na página (normalizado), para situar diferenças que não são de texto. */
+  top: number
 }
 
 export interface TokenizedDocument {
@@ -58,6 +72,14 @@ function splitPunctuation(text: string, region: NormalizedRect): { text: string;
     })
 }
 
+function styleOf(word: ExtractedWord): TokenStyle {
+  const style: TokenStyle = { source: word.source }
+  if (word.confidence !== undefined) style.confidence = word.confidence
+  if (word.font !== undefined) style.font = word.font
+  if (word.fontSize !== undefined) style.fontSize = word.fontSize
+  return style
+}
+
 /** Reconstrói o texto de uma sequência de palavras, sem espaço antes da pontuação separada. */
 export function joinTokens(tokens: readonly Token[]): string {
   return tokens.map((token, index) => (index > 0 && !token.joinsPrevious ? ` ${token.text}` : token.text)).join('')
@@ -73,9 +95,11 @@ export function tokenize(document: ExtractedDocument): TokenizedDocument {
   for (const page of document.pages) {
     for (const line of page.lines) {
       const lineIndex = lines.length
-      lines.push({ pageNumber: page.pageNumber, text: line.words.map((word) => word.text).join(' ') })
+      lines.push({ pageNumber: page.pageNumber, text: line.words.map((word) => word.text).join(' '), top: line.words[0]?.region.y ?? 0 })
 
-      const parts = line.words.flatMap((word) => splitPunctuation(word.text, word.region))
+      const parts = line.words.flatMap((word) =>
+        splitPunctuation(word.text, word.region).map((part) => ({ ...part, style: styleOf(word) })),
+      )
       parts.forEach((part, index) => {
         const key = normalizeWord(part.text)
         if (!key) return
@@ -85,12 +109,22 @@ export function tokenize(document: ExtractedDocument): TokenizedDocument {
           pending.key = pending.key.slice(0, -1) + key
           pending.text = pending.text.slice(0, -1) + part.text
           pending.pieces.push(piece)
+          if (part.style.confidence !== undefined) {
+            pending.style.confidence = Math.min(pending.style.confidence ?? 100, part.style.confidence)
+          }
           pending = undefined
           return
         }
         pending = undefined
 
-        const token: Token = { key, text: part.text, lineIndex, joinsPrevious: part.joinsPrevious, pieces: [piece] }
+        const token: Token = {
+          key,
+          text: part.text,
+          lineIndex,
+          joinsPrevious: part.joinsPrevious,
+          pieces: [piece],
+          style: part.style,
+        }
         tokens.push(token)
         if (index === parts.length - 1 && endsWithLineBreakHyphen(key)) pending = token
       })

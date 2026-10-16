@@ -22,6 +22,8 @@ export interface PdfPageHandle extends PdfPageSize {
   render: (canvas: HTMLCanvasElement, scale: number) => PdfRenderTask
   /** Monta a camada de texto selecionável (e legível por leitores de tela) no contêiner. */
   renderText: (container: HTMLElement, scale: number) => PdfRenderTask
+  /** Libera o que o pdf.js guardou para desenhar a página (chamado quando ela sai da tela). */
+  release: () => void
 }
 
 export interface PdfDocumentHandle {
@@ -65,6 +67,9 @@ export async function loadPdf(file: File): Promise<PdfDocumentHandle> {
             viewport: page.getViewport({ scale }),
           })
           return { promise: layer.render().then(() => undefined), cancel: () => layer.cancel() }
+        },
+        release() {
+          page.cleanup()
         },
       }
     },

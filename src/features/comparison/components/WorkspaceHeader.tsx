@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, CircleCheck, Download, FlaskConical, Info, LoaderCircle, Plus, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Braces, ChevronDown, CircleCheck, Download, FileText, FlaskConical, Info, LoaderCircle, Plus, TriangleAlert } from 'lucide-react'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { downloadFile, exportFileName, exportHtml, exportJson } from '../export/report'
 import type { ComparisonRunState } from '../model/comparison-run'
-import type { DocumentRole, DocumentSummary } from '../model/types'
+import type { ComparisonResult, DocumentRole, DocumentSummary } from '../model/types'
 import { demoScenarios, isDemoScenario, type DemoScenario } from '../services/mock-comparison-service'
 
 const statusDisplay: Record<ComparisonRunState['phase'], { label: string; icon: typeof CircleCheck; className: string }> = {
@@ -37,7 +38,41 @@ interface WorkspaceHeaderProps {
   documents?: Record<DocumentRole, Pick<DocumentSummary, 'fileName'>>
   /** Presente só no modo demonstrativo. */
   demo?: DemoControls
+  /** Resultado pronto (habilita a exportação). */
+  result?: ComparisonResult
   onNewComparison: () => void
+}
+
+type ExportKind = 'html' | 'html-sem-trechos' | 'json'
+
+function runExport(result: ComparisonResult, kind: ExportKind) {
+  const now = new Date()
+  if (kind === 'json') {
+    downloadFile(exportJson(result, { includeText: true, now }), exportFileName(result, 'json', now), 'application/json')
+    return
+  }
+  const includeText = kind === 'html'
+  downloadFile(exportHtml(result, { includeText, now }), exportFileName(result, 'html', now), 'text/html')
+}
+
+function ExportItems({ result }: { result: ComparisonResult }) {
+  return (
+    <>
+      <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">Gerado no seu navegador; nada é enviado.</DropdownMenuLabel>
+      <DropdownMenuItem className="min-h-10" onSelect={() => runExport(result, 'html')}>
+        <FileText aria-hidden />
+        Relatório para leitura (HTML)
+      </DropdownMenuItem>
+      <DropdownMenuItem className="min-h-10" onSelect={() => runExport(result, 'html-sem-trechos')}>
+        <FileText aria-hidden />
+        Relatório sem trechos dos documentos (HTML)
+      </DropdownMenuItem>
+      <DropdownMenuItem className="min-h-10" onSelect={() => runExport(result, 'json')}>
+        <Braces aria-hidden />
+        Dados da comparação (JSON)
+      </DropdownMenuItem>
+    </>
+  )
 }
 
 function ScenarioOptions({ scenario, onScenarioChange }: Pick<DemoControls, 'scenario' | 'onScenarioChange'>) {
@@ -62,7 +97,7 @@ function ScenarioOptions({ scenario, onScenarioChange }: Pick<DemoControls, 'sce
   )
 }
 
-export function WorkspaceHeader({ phase, documents, demo, onNewComparison }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({ phase, documents, demo, result, onNewComparison }: WorkspaceHeaderProps) {
   const status = statusDisplay[phase]
 
   return (
@@ -115,24 +150,31 @@ export function WorkspaceHeader({ phase, documents, demo, onNewComparison }: Wor
             </DropdownMenu>
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              {/* aria-disabled mantém o botão focável para que o motivo seja lido. */}
-              <Button
-                variant="outline"
-                aria-disabled="true"
-                onClick={(event) => event.preventDefault()}
-                className="text-muted-foreground"
-              >
-                <Download aria-hidden />
-                Exportar relatório
-                <span className="rounded-sm bg-surface-sunken px-1.5 py-0.5 text-xs font-semibold">
-                  <span className="sr-only">(</span>indisponível<span className="sr-only">{demo ? ' no protótipo)' : ')'}</span>
-                </span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>A exportação do relatório ainda não está disponível.</TooltipContent>
-          </Tooltip>
+          {result ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download aria-hidden />
+                  Exportar relatório
+                  <ChevronDown aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <ExportItems result={result} />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {/* aria-disabled mantém o botão focável para que o motivo seja lido. */}
+                <Button variant="outline" aria-disabled="true" onClick={(event) => event.preventDefault()} className="text-muted-foreground">
+                  <Download aria-hidden />
+                  Exportar relatório
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>A exportação fica disponível quando a comparação termina.</TooltipContent>
+            </Tooltip>
+          )}
 
           <Button onClick={onNewComparison}>
             <Plus aria-hidden />
@@ -150,10 +192,14 @@ export function WorkspaceHeader({ phase, documents, demo, onNewComparison }: Wor
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[min(18rem,calc(100vw-2rem))]">
-              <DropdownMenuItem disabled className="min-h-10">
-                <Download aria-hidden />
-                {demo ? 'Exportar relatório (indisponível no protótipo)' : 'Exportar relatório (indisponível)'}
-              </DropdownMenuItem>
+              {result ? (
+                <ExportItems result={result} />
+              ) : (
+                <DropdownMenuItem disabled className="min-h-10">
+                  <Download aria-hidden />
+                  Exportar relatório (quando a comparação terminar)
+                </DropdownMenuItem>
+              )}
               {demo && (
                 <>
                   <DropdownMenuSeparator />

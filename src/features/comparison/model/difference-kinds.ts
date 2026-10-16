@@ -1,4 +1,4 @@
-import { EqualNot, Minus, Plus, type LucideIcon } from 'lucide-react'
+import { ArrowRightLeft, EqualNot, Minus, Plus, type LucideIcon } from 'lucide-react'
 import type { DifferenceKind } from './types'
 
 interface DifferenceKindMeta {
@@ -36,6 +36,14 @@ export const differenceKindMeta: Record<DifferenceKind, DifferenceKindMeta> = {
     badgeClass: 'bg-modification-bg text-modification border-modification-line',
     markClass: 'diff-mark diff-mark--modification',
   },
+  move: {
+    label: 'Movimentação',
+    pluralLabel: 'Movimentações',
+    icon: ArrowRightLeft,
+    textClass: 'text-move',
+    badgeClass: 'bg-move-bg text-move border-move-line',
+    markClass: 'diff-mark diff-mark--move',
+  },
 }
 
-export const differenceKinds: readonly DifferenceKind[] = ['addition', 'deletion', 'modification']
+export const differenceKinds: readonly DifferenceKind[] = ['addition', 'deletion', 'modification', 'move']

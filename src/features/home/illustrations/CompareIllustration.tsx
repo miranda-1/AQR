@@ -18,6 +18,7 @@ const kindColors: Record<DifferenceKind, { bg: string; line: string; strong: str
     line: 'var(--diff-modification-line)',
     strong: 'var(--diff-modification-strong)',
   },
+  move: { bg: 'var(--diff-move-bg)', line: 'var(--diff-move-line)', strong: 'var(--diff-move-strong)' },
 }
 
 interface HighlightProps {

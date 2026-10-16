@@ -64,6 +64,7 @@ const placeholderText: Record<DifferenceKind, Record<DocumentRole, string>> = {
   addition: { original: 'incluído na versão atualizada', updated: '' },
   deletion: { original: '', updated: 'excluído desta versão' },
   modification: { original: '', updated: '' },
+  move: { original: '', updated: '' },
 }
 
 /** Indica a posição de um trecho que só existe no outro documento. */

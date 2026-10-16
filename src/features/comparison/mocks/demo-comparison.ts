@@ -4,7 +4,7 @@
  * Não representam nenhum processo administrativo real e não resultam de
  * processamento de arquivos. Servem apenas para demonstrar a interface.
  */
-import { summarize, type ComparisonResult, type Difference, type DocumentRole } from '../model/types'
+import { COMPARISON_FORMAT_VERSION, summarize, type ComparisonAnalysis, type ComparisonResult, type Difference, type DocumentRole, type PageAnalysis } from '../model/types'
 import type { DocumentSource } from '../viewer/document-source'
 import type { SimulatedDocument } from '../viewer/simulated-document'
 
@@ -229,7 +229,9 @@ export const demoUpdatedDocument: SimulatedDocument = {
   ],
 }
 
-const demoDifferences: Difference[] = [
+type DemoDifference = Omit<Difference, 'category' | 'subtype' | 'methods' | 'evidence'> & Partial<Pick<Difference, 'subtype'>>
+
+const rawDemoDifferences: DemoDifference[] = [
   {
     id: 'd1',
     kind: 'modification',
@@ -304,12 +306,42 @@ const demoDifferences: Difference[] = [
     id: 'd8',
     kind: 'modification',
     context: 'Data e assinatura',
+    subtype: 'date',
     original: { location: { pageNumber: 3 }, text: 'Campo Grande/MS, 10 de março de 2025.' },
     updated: { location: { pageNumber: 3 }, text: 'Campo Grande/MS, 2 de junho de 2025.' },
   },
 ]
 
+/** Todas as diferenças fictícias são de texto, lidas da camada de texto. */
+const demoDifferences: Difference[] = rawDemoDifferences.map((difference) => ({
+  ...difference,
+  category: 'text',
+  subtype: difference.subtype ?? 'words',
+  methods: ['text-layer'],
+  evidence: 'direct',
+}))
+
+const demoPage = (pageNumber: number): PageAnalysis => ({
+  pageNumber,
+  width: 595,
+  height: 842,
+  rotation: 0,
+  content: 'text',
+  textSource: 'text-layer',
+  text: 'analyzed',
+  visual: 'analyzed',
+})
+
+const demoAnalysis: ComparisonAnalysis = {
+  status: 'complete',
+  pages: { original: [1, 2, 3].map(demoPage), updated: [1, 2, 3].map(demoPage) },
+  pageMatches: [1, 2, 3].map((page) => ({ original: page, updated: page, relation: 'matched' as const })),
+  warnings: [],
+  methods: { textLayer: true, visual: true, ocr: true },
+}
+
 export const demoComparisonResult: ComparisonResult = {
+  formatVersion: COMPARISON_FORMAT_VERSION,
   id: 'demonstracao',
   isDemonstration: true,
   documents: {
@@ -318,6 +350,7 @@ export const demoComparisonResult: ComparisonResult = {
   },
   summary: summarize(demoDifferences),
   differences: demoDifferences,
+  analysis: demoAnalysis,
 }
 
 export const demoNoDifferencesResult: ComparisonResult = {

@@ -19,7 +19,11 @@ export function extractedFromText(pages: readonly (readonly string[])[], role: D
           .filter(Boolean)
           .map((text, wordIndex) => {
             characterCount += text.length
-            return { text, region: { x: 0.1 + wordIndex * 0.05, y: 0.1 + lineIndex * 0.03, width: 0.04, height: 0.02 } }
+            return {
+              text,
+              source: 'text-layer' as const,
+              region: { x: 0.1 + wordIndex * 0.05, y: 0.1 + lineIndex * 0.03, width: 0.04, height: 0.02 },
+            }
           }),
       })),
     })),

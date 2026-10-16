@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
-import { demoComparisonResult, demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
+import { demoComparisonResult, demoDocumentSources, demoNoDifferencesResult } from '@/features/comparison/mocks/demo-comparison'
 import { createInMemoryAccountService } from '@/features/admin/services/in-memory-account-service'
 import { sampleAccessEvents, sampleAccounts, sampleComparisonUsage } from '@/features/admin/test-data'
 import { renderApp } from './render'
@@ -68,7 +68,7 @@ describe('acessibilidade (axe)', () => {
       <MemoryRouter>
         <ProcessingPanel state={{ phase: 'processing', stage: 'comparing' }} isDemonstration={false} />
         <ErrorPanel error={{ code: 'INCOMPATIBLE_DOCUMENT', document: 'updated' }} onRetry={() => {}} />
-        <NoDifferencesPanel />
+        <NoDifferencesPanel result={demoNoDifferencesResult} />
       </MemoryRouter>,
     )
     expect(await violations(container)).toEqual([])

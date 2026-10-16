@@ -13,7 +13,7 @@ import { SessionStore } from './auth/session-store.ts'
 import { openDatabase, type Database } from './db/database.ts'
 import { migrate } from './db/migrate.ts'
 import { ComparisonJobStore } from './comparison/job-store.ts'
-import { defaultComparisonLimits } from './comparison/limits.ts'
+import { comparisonLimitsFor } from './comparison/limits.ts'
 import { registerComparisonRoutes } from './comparison/routes.ts'
 import { ComparisonWorkerPool } from './comparison/worker-pool.ts'
 import type { ServerConfig } from './config.ts'
@@ -123,10 +123,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   }
 
   const store = new ComparisonJobStore(config.comparison.resultTtlMs)
-  const pool = new ComparisonWorkerPool(config.comparison, {
-    ...defaultComparisonLimits,
-    maxFileSizeBytes: config.comparison.maxFileSizeBytes,
-  })
+  const pool = new ComparisonWorkerPool(config.comparison, comparisonLimitsFor(config.comparison))
   const purge = setInterval(() => store.purgeExpired(), 60_000)
   purge.unref()
   app.addHook('onClose', async () => {

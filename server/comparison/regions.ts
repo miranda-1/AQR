@@ -1,36 +1,71 @@
 import type { DocumentLocation, NormalizedRect } from '../../shared/contracts/comparison.ts'
-import type { Token } from './text/tokenize.ts'
+import { bottom, clamp01, right, unionRect } from './geometry.ts'
+import type { Token, TokenPiece } from './text/tokenize.ts'
 
 /** Folga em volta do destaque, para não cortar acentos e descendentes. */
 export const REGION_PADDING = 0.004
 
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value))
+/**
+ * Junta os pedaços de palavra de uma página em retângulos por linha: pedaços na mesma faixa
+ * vertical e próximos na horizontal formam um retângulo; uma diferença que ocupa várias linhas ou
+ * colunas vira vários retângulos precisos em vez de um bloco enorme.
+ */
+export function lineRects(pieces: readonly TokenPiece[]): NormalizedRect[] {
+  const sorted = [...pieces].sort((a, b) => a.region.y - b.region.y || a.region.x - b.region.x)
+  const rects: NormalizedRect[] = []
+  for (const piece of sorted) {
+    const region = piece.region
+    const target = rects.find((rect) => {
+      const overlap = Math.min(bottom(rect), bottom(region)) - Math.max(rect.y, region.y)
+      const sameBand = overlap >= 0.5 * Math.min(rect.height, region.height)
+      const gap = region.x > right(rect) ? region.x - right(rect) : rect.x > right(region) ? rect.x - right(region) : 0
+      return sameBand && gap <= 3 * Math.max(rect.height, region.height)
+    })
+    if (target) {
+      const merged = unionRect([target, region]) ?? target
+      Object.assign(target, merged)
+    } else {
+      rects.push({ ...region })
+    }
+  }
+  return rects.map((rect) => unionRect([rect], REGION_PADDING) ?? rect)
 }
 
-function union(regions: readonly NormalizedRect[]): NormalizedRect | undefined {
-  if (regions.length === 0) return undefined
-  const left = Math.min(...regions.map((region) => region.x))
-  const top = Math.min(...regions.map((region) => region.y))
-  const right = Math.max(...regions.map((region) => region.x + region.width))
-  const bottom = Math.max(...regions.map((region) => region.y + region.height))
-  const x = clamp01(left - REGION_PADDING)
-  const y = clamp01(top - REGION_PADDING)
-  return { x, y, width: clamp01(right + REGION_PADDING) - x, height: clamp01(bottom + REGION_PADDING) - y }
+/** Localização de um conjunto de pedaços numa página: retângulo total e, se houver mais de um, as partes. */
+function locationOnPage(pageNumber: number, pieces: readonly TokenPiece[]): DocumentLocation {
+  const rects = lineRects(pieces)
+  const region = unionRect(rects)
+  const location: DocumentLocation = { pageNumber }
+  if (region) location.region = region
+  if (rects.length > 1) location.regions = rects
+  return location
 }
 
 /**
- * Onde o trecho está: a página em que ele começa e o retângulo que cobre as palavras dele
- * nessa página. Um trecho que continua na página seguinte é localizado pelo início.
+ * Onde o trecho está: a página em que ele começa (com o retângulo total e as partes por linha) e,
+ * se ele continuar em outras páginas, a localização em cada uma delas.
  */
+export function locationsOf(tokens: readonly Token[]): { location: DocumentLocation; continuedOn: DocumentLocation[] } | undefined {
+  const byPage = new Map<number, TokenPiece[]>()
+  for (const token of tokens) {
+    for (const piece of token.pieces) {
+      const list = byPage.get(piece.pageNumber) ?? []
+      list.push(piece)
+      byPage.set(piece.pageNumber, list)
+    }
+  }
+  const pages = [...byPage.keys()]
+  const first = pages[0]
+  if (first === undefined) return undefined
+  return {
+    location: locationOnPage(first, byPage.get(first) ?? []),
+    continuedOn: pages.slice(1).map((page) => locationOnPage(page, byPage.get(page) ?? [])),
+  }
+}
+
+/** Compatibilidade: só a localização da primeira página. */
 export function locationOf(tokens: readonly Token[]): DocumentLocation | undefined {
-  const pageNumber = tokens[0]?.pieces[0]?.pageNumber
-  if (pageNumber === undefined) return undefined
-  const regions = tokens.flatMap((token) =>
-    token.pieces.filter((piece) => piece.pageNumber === pageNumber).map((piece) => piece.region),
-  )
-  const region = union(regions)
-  return region ? { pageNumber, region } : { pageNumber }
+  return locationsOf(tokens)?.location
 }
 
 /**

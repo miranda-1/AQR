@@ -41,18 +41,47 @@ describe('comparação de ponta a ponta', () => {
     expect(stages[0]).toBe('validating')
     expect(outcome.result.isDemonstration).toBe(false)
     expect(outcome.result.documents.original).toMatchObject({ fileName: 'Requerimento v1.pdf', pageCount: 2 })
-    expect(outcome.result.summary).toEqual({ total: 2, additions: 1, deletions: 0, modifications: 1 })
+    // O resultado real passou pela validação do frontend (formato 2) sem perder nada.
+    expect(outcome.result.formatVersion).toBe(2)
+    expect(outcome.result.summary).toMatchObject({ total: 2, additions: 1, deletions: 0, modifications: 1, moves: 0 })
+    expect(outcome.result.analysis.status).toBe('complete')
+    expect(outcome.result.analysis.pageMatches).toEqual([
+      { original: 1, updated: 1, relation: 'matched' },
+      { original: 2, updated: 2, relation: 'matched' },
+    ])
     const [modification, addition] = outcome.result.differences
-    expect(modification).toMatchObject({ kind: 'modification', context: 'Art. 1º', original: { text: 'dez' }, updated: { text: 'quinze' } })
+    expect(modification).toMatchObject({
+      kind: 'modification',
+      category: 'text',
+      context: 'Art. 1º',
+      original: { text: 'dez' },
+      updated: { text: 'quinze' },
+      evidence: 'corroborated',
+    })
     expect(addition).toMatchObject({ kind: 'addition', context: 'Art. 4º', anchors: { original: { pageNumber: 2 } } })
     expect(addition?.updated?.location.region?.width).toBeGreaterThan(0)
   })
 
-  it('PDF digitalizado: erro claro, apontando o documento', { timeout: 30_000 }, async () => {
-    const original = new File([(await makeImageOnlyPdf()).slice()], 'digitalizado.pdf', { type: 'application/pdf' })
+  it('PDF sem texto: comparado pela aparência, com a página marcada como sem texto', { timeout: 30_000 }, async () => {
+    const original = new File([(await makeImageOnlyPdf()).slice()], 'desenhos.pdf', { type: 'application/pdf' })
     const updated = await pdfFile('texto.pdf', [['Texto suficiente para ser comparado com outro documento.']])
     const outcome = await createHttpComparisonService({ baseUrl, pollIntervalMs: 50 }).compare({ original, updated })
-    expect(outcome).toEqual({ status: 'failed', error: { code: 'NO_EXTRACTABLE_TEXT', document: 'original' } })
+    if (outcome.status !== 'completed') throw new Error(`Esperava conclusão, veio ${JSON.stringify(outcome)}`)
+    expect(outcome.result.analysis.pages.original[0]).toMatchObject({ content: 'graphics', textSource: 'none' })
+  })
+
+  it('PDF sem texto num servidor sem comparação visual nem OCR: erro claro, apontando o documento', { timeout: 30_000 }, async () => {
+    const restricted = await buildTestApp({ comparison: { visual: false, ocr: false } })
+    await restricted.listen({ host: '127.0.0.1', port: 0 })
+    try {
+      const url = `http://127.0.0.1:${(restricted.server.address() as AddressInfo).port}`
+      const original = new File([(await makeImageOnlyPdf()).slice()], 'digitalizado.pdf', { type: 'application/pdf' })
+      const updated = await pdfFile('texto.pdf', [['Texto suficiente para ser comparado com outro documento.']])
+      const outcome = await createHttpComparisonService({ baseUrl: url, pollIntervalMs: 50 }).compare({ original, updated })
+      expect(outcome).toEqual({ status: 'failed', error: { code: 'NO_EXTRACTABLE_TEXT', document: 'original' } })
+    } finally {
+      await restricted.close()
+    }
   })
 
   it('arquivo que não é PDF: recusado no envio como documento incompatível', async () => {

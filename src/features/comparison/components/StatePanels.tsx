@@ -1,11 +1,12 @@
-import { Check, CircleCheck, FileWarning, FileX, LoaderCircle, RefreshCw, ScanText, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { Check, CircleCheck, FileWarning, FileX, LoaderCircle, RefreshCw, ScanText, ShieldAlert, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { routes } from '@/config/routes'
 import { cn } from '@/lib/utils'
 import { stageLabels, stageOrder, type ComparisonRunState } from '../model/comparison-run'
-import type { ComparisonError, ComparisonErrorCode, DocumentRole } from '../model/types'
+import type { ComparisonError, ComparisonErrorCode, ComparisonResult, DocumentRole } from '../model/types'
+import { AnalysisDetails } from './AnalysisSummary'
 
 function PanelFrame({ children, labelledBy }: { children: ReactNode; labelledBy: string }) {
   return (
@@ -97,7 +98,7 @@ const errorContent: Record<
     title: 'PDF sem texto para comparar',
     body: (doc) =>
       `O ${doc} parece ser uma digitalização: as páginas são imagens, sem texto selecionável. A comparação depende do texto do documento.`,
-    hint: 'Use a versão do documento gerada digitalmente. O reconhecimento de texto em imagens (OCR) ainda não está disponível.',
+    hint: 'O OCR e a comparação visual estão desligados neste servidor, então nenhum método consegue ler o documento. Use a versão gerada digitalmente ou peça ao administrador para ligá-los.',
   },
 }
 
@@ -135,27 +136,43 @@ export function ErrorPanel({ error, onRetry }: { error: ComparisonError; onRetry
   )
 }
 
-export function NoDifferencesPanel() {
+/**
+ * Nenhuma diferença detectada. Nunca afirma que os documentos são iguais: diz o que foi analisado
+ * e, se a análise foi parcial, o que ficou de fora.
+ */
+export function NoDifferencesPanel({ result }: { result: ComparisonResult }) {
+  const { status } = result.analysis
+  const partial = status === 'partial'
+  const Icon = partial ? TriangleAlert : status === 'with-caveats' ? ShieldAlert : CircleCheck
   return (
-    <PanelFrame labelledBy="sem-diferencas-titulo">
-      <div role="status">
-        <div className="flex items-start gap-3">
-          <CircleCheck aria-hidden className="mt-0.5 size-7 shrink-0 text-success" />
-          <h2 id="sem-diferencas-titulo" className="text-xl font-bold text-ink">
-            Nenhuma diferença encontrada
-          </h2>
+    <div className="flex flex-1 items-start justify-center overflow-auto bg-surface-sunken px-4 py-10">
+      <section aria-labelledby="sem-diferencas-titulo" className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-surface sm:p-8">
+        <div role="status">
+          <div className="flex items-start gap-3">
+            <Icon aria-hidden className={cn('mt-0.5 size-7 shrink-0', partial ? 'text-deletion' : status === 'with-caveats' ? 'text-warning' : 'text-success')} />
+            <h2 id="sem-diferencas-titulo" className="text-xl font-bold text-ink">
+              {partial ? 'Comparação parcial: nenhuma diferença nas áreas analisadas' : 'Nenhuma diferença detectada'}
+            </h2>
+          </div>
+          <p className="mt-3 text-[0.9375rem] text-ink">Nenhuma diferença foi detectada nas áreas analisadas.</p>
+          {partial && (
+            <p className="mt-2 text-[0.9375rem] font-semibold text-ink">
+              A comparação foi parcial. Existem páginas ou elementos que não puderam ser analisados.
+            </p>
+          )}
+          <p className="mt-2 text-[0.9375rem] text-muted-foreground">
+            Isso não comprova que os documentos são idênticos: veja abaixo o que foi comparado e com quais métodos.
+          </p>
         </div>
-        <p className="mt-3 text-[0.9375rem] text-ink">O texto dos dois documentos é idêntico.</p>
-        <p className="mt-2 text-[0.9375rem] text-muted-foreground">
-          A comparação considera o texto. Alterações apenas visuais, como imagens, carimbos ou formatação, não são
-          avaliadas.
-        </p>
-      </div>
-      <div className="mt-6">
-        <Button asChild variant="outline">
-          <Link to={routes.comparison} viewTransition>Comparar outros documentos</Link>
-        </Button>
-      </div>
-    </PanelFrame>
+        <div className="mt-5 rounded-md bg-surface-sunken p-4">
+          <AnalysisDetails result={result} />
+        </div>
+        <div className="mt-6">
+          <Button asChild variant="outline">
+            <Link to={routes.comparison} viewTransition>Comparar outros documentos</Link>
+          </Button>
+        </div>
+      </section>
+    </div>
   )
 }

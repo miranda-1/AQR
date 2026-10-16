@@ -52,6 +52,9 @@
   --color-modification: var(--diff-modification-strong);
   --color-modification-bg: var(--diff-modification-bg);
   --color-modification-line: var(--diff-modification-line);
+  --color-move: var(--diff-move-strong);
+  --color-move-bg: var(--diff-move-bg);
+  --color-move-line: var(--diff-move-line);
 
   --color-success: var(--status-success);
   --color-warning: var(--status-warning);
@@ -127,6 +130,12 @@
     text-decoration-line: underline;
     text-decoration-style: dashed;
     text-decoration-color: var(--diff-modification-line);
+  }
+  .diff-mark--move {
+    background: var(--diff-move-bg);
+    text-decoration-line: underline;
+    text-decoration-style: double;
+    text-decoration-color: var(--diff-move-line);
   }
   .diff-mark[aria-current='true'] {
     outline: 2px solid var(--brand-blue);

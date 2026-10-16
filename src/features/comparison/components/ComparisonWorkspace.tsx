@@ -10,7 +10,9 @@ import { differenceKindMeta, differenceKinds } from '../model/difference-kinds'
 import type { ComparisonResult, DocumentRole } from '../model/types'
 import { DocumentPane } from '../viewer/DocumentPane'
 import type { DocumentSource } from '../viewer/document-source'
+import { AnalysisBanner } from './AnalysisSummary'
 import { DifferenceList } from './DifferenceList'
+import { CategorySelect, ComparisonModeSwitch } from './ModeControls'
 import { SummaryFilter } from './SummaryFilter'
 import { DifferenceStepper, SyncScrollToggle, ViewModeSwitch, ZoomControls, type ViewMode } from './ViewerControls'
 
@@ -29,14 +31,20 @@ function scrollToDifference(container: HTMLElement | null, id: string, smooth: b
 
 function Legend() {
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-      <span className="sr-only">Legenda dos destaques:</span>
-      {differenceKinds.map((kind) => (
-        <span key={kind} className={cn(differenceKindMeta[kind].markClass, 'cursor-default font-document text-ink')}>
-          {differenceKindMeta[kind].label}
-        </span>
-      ))}
-    </p>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="sr-only">Legenda dos destaques:</span>
+        {differenceKinds.map((kind) => (
+          <span key={kind} className={cn(differenceKindMeta[kind].markClass, 'cursor-default font-document text-ink')}>
+            {differenceKindMeta[kind].label}
+          </span>
+        ))}
+      </p>
+      <p className="text-muted-foreground">
+        Texto: fundo colorido. Imagens e elementos visuais: contorno tracejado. Páginas: moldura. Formatação: sublinhado pontilhado.
+        Área hachurada: análise incompleta.
+      </p>
+    </div>
   )
 }
 
@@ -113,7 +121,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
     onNext: navigation.next,
   }
 
-  const paneProps = { activeId, numbers, visibleIds, differences: result.differences, onSelect: navigation.select }
+  const paneProps = { activeId, numbers, visibleIds, differences: result.differences, onSelect: navigation.select, pageMatches: result.analysis.pageMatches }
   const showOriginal = viewMode !== 'updated'
   const showUpdated = viewMode !== 'original'
 
@@ -123,19 +131,36 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
       activeId={activeId}
       numbers={numbers}
       onSelect={selectFromList}
+      emptyMessage={
+        result.differences.length > 0 && navigation.inCurrentMode.length === 0
+          ? 'Nenhuma diferença neste modo de comparação. Escolha o modo Completo para ver todas.'
+          : 'Nenhuma diferença deste tipo.'
+      }
     />
   )
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-white px-4 pt-1 pb-3 shadow-surface lg:px-6">
-        <SummaryFilter
-          summary={result.summary}
-          filter={navigation.filter}
-          onFilterChange={navigation.setFilter}
-          singleRow={isCompact}
-        />
-        {!isCompact && <DifferenceStepper {...stepper} />}
+      {!result.isDemonstration && <AnalysisBanner result={result} />}
+      <div className="relative z-10 flex flex-col gap-y-2 bg-white px-4 pt-2 pb-3 shadow-surface lg:px-6">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <ComparisonModeSwitch value={navigation.mode} onChange={navigation.setMode} className={cn(isCompact && 'w-full')} />
+          <CategorySelect
+            value={navigation.category}
+            onChange={navigation.setCategory}
+            differences={navigation.inCurrentMode}
+            className={cn(isCompact && 'w-full')}
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <SummaryFilter
+            differences={navigation.categoryScoped}
+            filter={navigation.filter}
+            onFilterChange={navigation.setFilter}
+            singleRow={isCompact}
+          />
+          {!isCompact && <DifferenceStepper {...stepper} />}
+        </div>
       </div>
 
       <div className={cn('flex min-h-0 flex-1 bg-canvas', isCompact ? 'gap-2 p-2' : 'gap-3 p-3')}>
@@ -194,6 +219,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
               <DocumentPane
                 summary={result.documents.original}
                 source={documents.original}
+                pages={result.analysis.pages.original}
                 scrollRef={originalRef}
                 onScroll={synced.onFirstScroll}
                 {...paneProps}
@@ -203,6 +229,7 @@ export function ComparisonWorkspace({ result, documents }: ComparisonWorkspacePr
               <DocumentPane
                 summary={result.documents.updated}
                 source={documents.updated}
+                pages={result.analysis.pages.updated}
                 scrollRef={updatedRef}
                 onScroll={synced.onSecondScroll}
                 {...paneProps}

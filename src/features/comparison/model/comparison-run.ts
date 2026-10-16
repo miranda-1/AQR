@@ -33,7 +33,7 @@ export const stageOrder: readonly ComparisonStage[] = ['validating', 'extracting
 
 export const stageLabels: Record<ComparisonStage, string> = {
   validating: 'Verificando os arquivos',
-  extracting: 'Extraindo o texto das páginas',
-  comparing: 'Comparando o conteúdo',
+  extracting: 'Lendo as páginas: texto, imagens e OCR quando preciso',
+  comparing: 'Comparando o texto, a estrutura e a aparência',
   organizing: 'Organizando as diferenças',
 }

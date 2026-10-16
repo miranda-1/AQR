@@ -60,19 +60,22 @@ describe('API de comparação', () => {
     expect(finished.result.isDemonstration).toBe(false)
     expect(finished.result.documents.original.fileName).toBe('original.pdf')
     expect(finished.result.documents.updated.fileName).toBe('atualizado.pdf')
-    expect(finished.result.summary).toEqual({ total: 1, additions: 0, deletions: 0, modifications: 1 })
-    expect(finished.result.differences[0]).toMatchObject({ kind: 'modification', context: 'Art. 1º' })
+    expect(finished.result.formatVersion).toBe(2)
+    expect(finished.result.summary).toMatchObject({ total: 1, additions: 0, deletions: 0, modifications: 1, moves: 0 })
+    expect(finished.result.differences[0]).toMatchObject({ kind: 'modification', category: 'text', context: 'Art. 1º' })
+    // Texto e aparência confirmam a mesma alteração: uma diferença só, com os dois métodos.
+    expect(finished.result.differences[0]?.methods).toEqual(['text-layer', 'visual'])
+    expect(finished.result.analysis.status).toBe('complete')
   })
 
-  it('termina com erro de domínio quando o PDF não tem texto', { timeout: 30_000 }, async () => {
+  it('compara PDF sem texto pela aparência e diz o que não pôde ler', { timeout: 30_000 }, async () => {
     const files = await pair()
-    files[0] = { field: 'original', name: 'digitalizado.pdf', bytes: await makeImageOnlyPdf() }
+    files[0] = { field: 'original', name: 'desenhos.pdf', bytes: await makeImageOnlyPdf() }
     const job = (await upload(app, files)).json<ComparisonJob>()
-    expect(await waitForEnd(app, job.id)).toEqual({
-      id: job.id,
-      status: 'failed',
-      error: { code: 'NO_EXTRACTABLE_TEXT', document: 'original' },
-    })
+    const finished = await waitForEnd(app, job.id)
+    if (finished.status !== 'completed') throw new Error(`Esperava conclusão, veio ${finished.status}`)
+    expect(finished.result.analysis.pages.original[0]).toMatchObject({ content: 'graphics', textSource: 'none' })
+    expect(finished.result.summary.total).toBeGreaterThan(0)
   })
 
   it('recusa envio sem multipart', async () => {

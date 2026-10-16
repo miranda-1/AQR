@@ -71,6 +71,7 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
       <WorkspaceHeader
         phase={state.phase}
         documents={documents}
+        result={state.phase === 'completed' ? state.result : undefined}
         demo={
           isDemo
             ? {
@@ -91,7 +92,7 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
       {state.phase === 'failed' && <ErrorPanel error={state.error} onRetry={retry} />}
       {state.phase === 'completed' &&
         (state.result.differences.length === 0 ? (
-          <NoDifferencesPanel />
+          <NoDifferencesPanel result={state.result} />
         ) : (
           sources && <ComparisonWorkspace key={state.result.id} result={state.result} documents={sources} />
         ))}

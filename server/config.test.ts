@@ -17,7 +17,17 @@ describe('loadConfig', () => {
       resultTtlMs: 300_000,
       workerMemoryMb: 768,
       maxFileSizeBytes: 50 * 1024 * 1024,
+      visual: true,
+      ocr: true,
+      ocrMaxPages: 30,
+      ocrLanguagePath: '',
     })
+  })
+
+  it('liga e desliga a comparação visual e o OCR', () => {
+    const config = loadConfig({ COMPARISON_VISUAL: 'off', COMPARISON_OCR: 'off', COMPARISON_OCR_MAX_PAGES: '5' })
+    expect(config.comparison).toMatchObject({ visual: false, ocr: false, ocrMaxPages: 5 })
+    expect(() => loadConfig({ COMPARISON_OCR: 'sim' })).toThrow(ConfigError)
   })
 
   it('confia só nos proxies informados, nunca em "todos"', () => {

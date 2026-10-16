@@ -1,8 +1,8 @@
 import { LoaderCircle } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type { Difference, DocumentRole } from '../../model/types'
+import type { Difference, DocumentRole, PageAnalysis, PageMatch } from '../../model/types'
 import { loadPdf, type PdfDocumentHandle, type PdfPageSize } from './load-pdf'
-import { marksByPage } from './page-marks'
+import { marksByPage, pageInfos } from './page-marks'
 import { PdfPageView } from './PdfPageView'
 
 interface PdfPagesProps {
@@ -13,6 +13,9 @@ interface PdfPagesProps {
   visibleIds: ReadonlySet<string>
   activeId: string | null
   onSelect: (id: string) => void
+  /** Páginas como o servidor as examinou (tamanho, cobertura); evita abrir todas para medir. */
+  pages?: readonly PageAnalysis[]
+  pageMatches?: readonly PageMatch[]
 }
 
 type LoadState =
@@ -21,7 +24,7 @@ type LoadState =
   | { status: 'failed' }
 
 /** Abre o PDF escolhido (só na memória do navegador) e mostra todas as páginas com os destaques. */
-export function PdfPages({ file, role, differences, numbers, visibleIds, activeId, onSelect }: PdfPagesProps) {
+export function PdfPages({ file, role, differences, numbers, visibleIds, activeId, onSelect, pages, pageMatches }: PdfPagesProps) {
   // O estado vale para um arquivo; trocar de arquivo volta a "carregando" sem setState no efeito.
   const [loaded, setLoaded] = useState<{ file: File; state: LoadState }>()
   const state: LoadState = loaded?.file === file ? loaded.state : { status: 'loading' }
@@ -33,12 +36,14 @@ export function PdfPages({ file, role, differences, numbers, visibleIds, activeI
     loadPdf(file)
       .then(async (pdf) => {
         opened = pdf
-        // Os tamanhos de todas as páginas vêm antes do desenho, para a rolagem não "pular".
-        const sizes = await Promise.all(
-          Array.from({ length: pdf.pageCount }, (_, index) =>
-            pdf.getPage(index + 1).then(({ width, height }) => ({ width, height })),
-          ),
-        )
+        // Os tamanhos de todas as páginas vêm antes do desenho, para a rolagem não "pular". Quando o
+        // servidor já os informou (mesma quantidade de páginas), não é preciso abrir cada página.
+        const known = pages && pages.length === pdf.pageCount ? pages.map(({ width, height }) => ({ width, height })) : undefined
+        const sizes =
+          known ??
+          (await Promise.all(
+            Array.from({ length: pdf.pageCount }, (_, index) => pdf.getPage(index + 1).then(({ width, height }) => ({ width, height }))),
+          ))
         if (!cancelled) setState({ status: 'ready', pdf, sizes })
       })
       .catch(() => {
@@ -48,9 +53,10 @@ export function PdfPages({ file, role, differences, numbers, visibleIds, activeI
       cancelled = true
       void opened?.destroy()
     }
-  }, [file])
+  }, [file, pages])
 
   const marks = useMemo(() => marksByPage(differences, role, numbers, visibleIds), [differences, role, numbers, visibleIds])
+  const infos = useMemo(() => pageInfos(role, pages, pageMatches), [role, pages, pageMatches])
 
   if (state.status === 'loading') {
     return (
@@ -81,6 +87,7 @@ export function PdfPages({ file, role, differences, numbers, visibleIds, activeI
           marks={marks.get(index + 1) ?? []}
           activeId={activeId}
           onSelect={onSelect}
+          info={infos.get(index + 1)}
         />
       ))}
     </>

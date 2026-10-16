@@ -1,6 +1,6 @@
 import { useCallback, useState, type Ref, type UIEvent } from 'react'
 import { cn } from '@/lib/utils'
-import type { Difference, DocumentRole, DocumentSummary } from '../model/types'
+import type { Difference, DocumentRole, DocumentSummary, PageAnalysis, PageMatch } from '../model/types'
 import type { DocumentSource } from './document-source'
 import { PdfPages } from './pdf/PdfPages'
 import { SimulatedPageView } from './SimulatedPageView'
@@ -22,6 +22,9 @@ interface DocumentPaneProps {
   scrollRef: Ref<HTMLDivElement>
   onScroll?: (event: UIEvent<HTMLDivElement>) => void
   className?: string
+  /** Análise das páginas deste documento e correspondência com o outro (resultado real). */
+  pages?: readonly PageAnalysis[]
+  pageMatches?: readonly PageMatch[]
 }
 
 /** Página que ocupa a faixa superior (30%) da área visível. */
@@ -46,6 +49,8 @@ export function DocumentPane({
   scrollRef,
   onScroll,
   className,
+  pages,
+  pageMatches,
 }: DocumentPaneProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const label = roleLabels[summary.role]
@@ -111,6 +116,8 @@ export function DocumentPane({
               visibleIds={visibleIds}
               activeId={activeId}
               onSelect={onSelect}
+              pages={pages}
+              pageMatches={pageMatches}
             />
           )}
         </div>

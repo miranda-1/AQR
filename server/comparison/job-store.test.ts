@@ -1,15 +1,7 @@
+import { emptyResult } from '../test/result.ts'
 import { CANCELLED_BY_REQUESTER, ComparisonJobStore, DELIVERY_GRACE_MS, SERVER_SHUTDOWN } from './job-store.ts'
 
-const result = {
-  id: 'r',
-  isDemonstration: false,
-  documents: {
-    original: { role: 'original' as const, fileName: 'a.pdf', sizeBytes: 1, pageCount: 1 },
-    updated: { role: 'updated' as const, fileName: 'b.pdf', sizeBytes: 1, pageCount: 1 },
-  },
-  summary: { total: 0, additions: 0, deletions: 0, modifications: 0 },
-  differences: [],
-}
+const result = emptyResult()
 
 describe('ComparisonJobStore', () => {
   it('acompanha a tarefa da fila ao resultado', () => {

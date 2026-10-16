@@ -1,6 +1,6 @@
 import { contextLabels } from './context.ts'
 
-const lines = (...texts: string[]) => texts.map((text) => ({ pageNumber: 1, text }))
+const lines = (...texts: string[]) => texts.map((text, index) => ({ pageNumber: 1, text, top: index * 0.02 }))
 
 describe('contextLabels', () => {
   it('usa artigo e parágrafo, reiniciando o parágrafo a cada artigo', () => {

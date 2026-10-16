@@ -115,3 +115,100 @@
   transform: translate(-2px, -10%);
   cursor: pointer;
 }
+
+.pdf-diff-box--move {
+  background: var(--diff-move-bg);
+  box-shadow: inset 0 -2px 0 var(--diff-move-line);
+  outline: 1px solid var(--diff-move-line);
+}
+
+/*
+ * Categoria muda o traço, não só a cor: imagem e elemento visual com contorno tracejado largo e
+ * fundo leve (não tingem a imagem); estrutura (página inteira) com moldura grossa; formatação com
+ * sublinhado pontilhado.
+ */
+.pdf-diff-box--cat-image,
+.pdf-diff-box--cat-visual {
+  background: transparent;
+  mix-blend-mode: normal;
+  box-shadow: none;
+  outline: 2px dashed currentColor;
+  outline-offset: 1px;
+}
+.pdf-diff-box--cat-image.pdf-diff-box--addition,
+.pdf-diff-box--cat-visual.pdf-diff-box--addition {
+  color: var(--diff-addition-line);
+  background: color-mix(in srgb, var(--diff-addition-bg) 35%, transparent);
+}
+.pdf-diff-box--cat-image.pdf-diff-box--deletion,
+.pdf-diff-box--cat-visual.pdf-diff-box--deletion {
+  color: var(--diff-deletion-line);
+  background: color-mix(in srgb, var(--diff-deletion-bg) 35%, transparent);
+}
+.pdf-diff-box--cat-image.pdf-diff-box--modification,
+.pdf-diff-box--cat-visual.pdf-diff-box--modification {
+  color: var(--diff-modification-line);
+  background: color-mix(in srgb, var(--diff-modification-bg) 35%, transparent);
+}
+.pdf-diff-box--cat-image.pdf-diff-box--move,
+.pdf-diff-box--cat-visual.pdf-diff-box--move {
+  color: var(--diff-move-line);
+  background: color-mix(in srgb, var(--diff-move-bg) 35%, transparent);
+}
+
+.pdf-diff-box--cat-structure {
+  background: transparent;
+  mix-blend-mode: normal;
+  box-shadow: inset 0 0 0 4px currentColor;
+  outline: none;
+  color: var(--diff-modification-line);
+}
+.pdf-diff-box--cat-structure.pdf-diff-box--addition {
+  color: var(--diff-addition-line);
+}
+.pdf-diff-box--cat-structure.pdf-diff-box--deletion {
+  color: var(--diff-deletion-line);
+}
+.pdf-diff-box--cat-structure.pdf-diff-box--move {
+  color: var(--diff-move-line);
+}
+
+.pdf-diff-box--cat-formatting {
+  background: color-mix(in srgb, var(--diff-modification-bg) 60%, transparent);
+  box-shadow: none;
+  outline: none;
+  border-bottom: 2px dotted var(--diff-modification-strong);
+}
+.pdf-diff-box--cat-formatting.pdf-diff-box--move {
+  background: color-mix(in srgb, var(--diff-move-bg) 60%, transparent);
+  border-bottom-color: var(--diff-move-strong);
+}
+
+/* Partes de um mesmo trecho: só desenho, sem receber o clique (o principal recebe). */
+.pdf-diff-box--part {
+  pointer-events: none;
+}
+.pdf-diff-box--active.pdf-diff-box--part {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+  mix-blend-mode: normal;
+}
+
+/* Correspondência e cobertura da página, no canto superior direito. */
+.pdf-page-info {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 4;
+  max-width: calc(100% - 0.5rem);
+}
+
+/* Página com algum método sem análise: hachura discreta por cima, além do aviso escrito. */
+.pdf-page--unanalyzed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(45deg, transparent 0 10px, color-mix(in srgb, var(--unanalyzed-line) 18%, transparent) 10px 12px);
+}

@@ -51,6 +51,13 @@
   --diff-modification-bg: #fdf0d9;
   --diff-modification-line: #d48a1a;
 
+  --diff-move-strong: #0b5c6b; /* 6.4:1 sobre diff-move-bg — azul-petróleo, distinto do azul institucional */
+  --diff-move-bg: #e0f1f4;
+  --diff-move-line: #2b8a9c;
+
+  /* Área não analisada (hachura neutra) */
+  --unanalyzed-line: #8d92ab;
+
   /* Estados */
   --status-success: #11663a;
   --status-warning: #864300;
