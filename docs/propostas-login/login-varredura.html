@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQR: varredura na entrada</title>
+<!--
+  Decisão do responsável (15/10/2026): seguir com a "varredura lado a lado" (login-entrada-comparacao.html#c1),
+  mas a logo não pode ser branca, porque a troca de branco para azul no voo até o cabeçalho fica estranha.
+  Correção: as folhas viram uma placa branca no centro e a logo já nasce azul sobre ela; a placa se abre e
+  vira o fundo do site. Três variações com um a mais, mantendo a varredura:
+  #v1 corrigida, #v2 + pontes entre as folhas, #v3 + ondas nos achados, #v4 + lista de diferenças.
+  Arquivo estático: abra no navegador a partir do repositório. Nada aqui autentica de verdade.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  :root {
+    --blue: #283587; --blue-50: #eef0f8; --blue-800: #1d2766;
+    --yellow: #ffcc00; --ink: #1b2040; --muted: #4a5072;
+    --sunken: #f4f5f9; --line-strong: #8d92ab; --subtle: #626886;
+    --add-bg: #e2f3e8; --add-line: #2e9a5a; --del-bg: #fbe7e5; --del-line: #d1453d; --mod-bg: #fdf0d9; --mod-line: #d48a1a;
+    --shadow-surface: 0 1px 2px rgba(27,32,64,.06), 0 2px 6px -2px rgba(27,32,64,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Jakarta', system-ui, sans-serif; color: var(--ink); background: var(--sunken); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  .switcher { position: fixed; z-index: 70; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px;
+    background: rgba(10,14,40,.85); border-radius: 999px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.4); max-width: calc(100vw - 16px); overflow-x: auto; }
+  .switcher a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .switcher a[aria-current='true'] { background: #fff; color: var(--ink); }
+  .caption { position: fixed; z-index: 70; left: 50%; bottom: 68px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px));
+    padding: 8px 14px; border-radius: 10px; background: rgba(10,14,40,.7); color: rgba(255,255,255,.9); font-size: 13px; line-height: 1.4; text-align: center; }
+
+  /* ---------- Palco "Noite" ---------- */
+  .stage { position: relative; z-index: 2; min-height: 100vh; overflow: hidden;
+    background: radial-gradient(circle at 50% 46%, #33419a 0, var(--blue) 30%, var(--blue-800) 68%, #151b4d 100%); }
+  .scene { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 48px 16px 120px; }
+
+  .rings { position: absolute; left: 50%; top: 50%; width: 1400px; height: 1400px; margin: -700px 0 0 -700px; pointer-events: none; transition: opacity 1s ease; }
+  .rings svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .rings circle { fill: none; stroke-linecap: round; }
+  .rings .glow { -webkit-mask-image: conic-gradient(from var(--a), transparent 0 290deg, rgba(0,0,0,.4) 330deg, #000 360deg);
+    mask-image: conic-gradient(from var(--a), transparent 0 290deg, rgba(0,0,0,.4) 330deg, #000 360deg); animation: sweep 7s linear infinite; }
+  .rings.pulse svg.base { animation: flash .45s ease-out; }
+  .rings.dim { opacity: .25; }
+  @keyframes sweep { to { --a: 360deg; } }
+  @keyframes flash { 0%, 100% { filter: none; } 30% { filter: brightness(1.8); } }
+
+  /* ---------- Cartão 2B com as folhas "Original" e "Atualizado" (como no site) ---------- */
+  .stack { position: relative; width: 100%; max-width: 440px; --fan-x: 60px; }
+  .stack .card { transition: opacity .45s ease, transform .45s ease; }
+  .stack.leaving .card { opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; }
+  .sheet { position: absolute; inset: 0; transform-origin: 50% 100%; }
+  .sheet.front { --fan: rotate(-7deg) translate(calc(-1 * var(--fan-x)), 12px); --sway: rotate(-5.8deg) translate(calc(-1 * var(--fan-x) + 5px), 10px);
+    animation: fan 1.1s .25s cubic-bezier(.2,.7,.2,1) both, sway 9s 1.4s ease-in-out infinite; }
+  .sheet.back { --fan: rotate(6deg) translate(var(--fan-x), 14px); --sway: rotate(4.8deg) translate(calc(var(--fan-x) - 5px), 12px);
+    animation: fan 1.1s .35s cubic-bezier(.2,.7,.2,1) both, sway 9s 1.5s ease-in-out infinite; }
+  @keyframes fan { from { transform: none; } to { transform: var(--fan); } }
+  @keyframes sway { 0%, 100% { transform: var(--fan); } 50% { transform: var(--sway); } }
+  @media (max-width: 640px) { .stack { --fan-x: 22px; } }
+
+  /* Página de documento: linhas de texto e destaques com as cores e marcações do visualizador. */
+  .page { position: absolute; inset: 0; overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 10px 28px -10px rgba(5,10,40,.5); padding: 26px 22px; }
+  .tagrow { display: flex; margin-bottom: 14px; }
+  .tagrow.end { justify-content: flex-end; }
+  .tag { border-radius: 5px; padding: 4px 8px; font-size: 12px; font-weight: 800; }
+  .tag.orig { background: var(--sunken); color: var(--ink); }
+  .tag.upd { background: var(--blue); color: #fff; }
+  .pg { display: none; position: absolute; bottom: 14px; font-size: 11px; font-weight: 700; color: var(--subtle); }
+  .pg.start { left: 22px; } .pg.end { right: 22px; }
+  .docs.paged .pg { display: block; }
+  .lines { isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: 11px; }
+  .lines.end { align-items: flex-end; }
+  .ln { position: relative; display: block; height: 7px; border-radius: 4px; background: rgba(98,104,134,.25); transition: background .3s; }
+  .ln.title { height: 10px; margin-bottom: 8px; background: rgba(27,32,64,.7); }
+  .ln.read:not(.title) { background: rgba(40,53,135,.42); }
+  .ln[data-kind]::after { content: ''; position: absolute; inset: -4px -5px; z-index: -1; border-radius: 3px; opacity: 0;
+    transform: scaleX(.4); transform-origin: left; transition: opacity .3s, transform .35s cubic-bezier(.2,.7,.2,1); }
+  .lines.end .ln[data-kind]::after { transform-origin: right; }
+  .ln.on[data-kind]::after { opacity: 1; transform: none; }
+  .ln[data-kind='add']::after { background: var(--add-bg); box-shadow: inset 0 -2px 0 var(--add-line); }
+  .ln[data-kind='del']::after { background: var(--del-bg); box-shadow: inset 0 -2px 0 var(--del-line); }
+  .ln[data-kind='mod']::after { background: var(--mod-bg); box-shadow: inset 0 -2px 0 var(--mod-line); }
+  /* Exclusão também é riscada: a cor nunca é o único indicador. */
+  .ln[data-kind='del']::before { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px;
+    background: var(--del-line); opacity: 0; transition: opacity .3s; }
+  .ln.on[data-kind='del']::before { opacity: 1; }
+  /* Ícone de cada diferença (+, −, ~), ao lado da linha; não aparece nas folhas paradas do login. */
+  .ln i { position: absolute; top: 50%; left: calc(100% + 10px); width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; display: grid; place-items: center;
+    color: #fff; font-style: normal; font-size: 12px; font-weight: 800; line-height: 1; transform: scale(0); transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+  .lines.end .ln i { left: auto; right: calc(100% + 10px); }
+  .ln.on i { transform: scale(1); }
+  .ln[data-kind='add'] i { background: var(--add-line); }
+  .ln[data-kind='del'] i { background: var(--del-line); }
+  .ln[data-kind='mod'] i { background: var(--mod-line); }
+  .page.static .ln i { display: none; }
+
+  .card { position: relative; background: #fff; border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(5,10,40,.55); padding: 40px 40px 34px; }
+  .prefcg { display: block; height: 34px; width: auto; margin: 0 auto; }
+  .aqr { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: -0.025em; line-height: 1; color: var(--blue); user-select: none; }
+  .system { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; }
+  .system small { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .accent { width: 40px; height: 4px; border-radius: 2px; background: var(--yellow); margin: 22px auto 0; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 20px; text-align: center; }
+  .lead { margin-top: 6px; font-size: 15px; color: var(--muted); text-align: center; }
+  form { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field { position: relative; }
+  input { width: 100%; height: 46px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,53,135,.22); }
+  .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .reveal:hover { background: var(--blue-50); }
+  .submit { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s; }
+  .submit:hover { background: var(--blue-800); }
+  .submit:active { transform: translateY(1px); }
+  .help { margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: center; }
+  .enter > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+  .enter > *:nth-child(2) { animation-delay: .08s; } .enter > *:nth-child(3) { animation-delay: .14s; }
+  .enter > *:nth-child(4) { animation-delay: .2s; } .enter > *:nth-child(5) { animation-delay: .26s; } .enter > *:nth-child(6) { animation-delay: .32s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Logo que se desenha (--delay adianta ou atrasa toda a sequência) ---------- */
+  .draw .ring { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw 1s calc(var(--delay, 0s) + .5s) ease-out forwards; }
+  .draw .handle { stroke-dasharray: 22; stroke-dashoffset: 22; animation: draw .4s calc(var(--delay, 0s) + 1.3s) ease-out forwards; }
+  .draw .bar { transform-box: fill-box; transform-origin: left; transform: scaleX(0); animation: grow .5s calc(var(--delay, 0s) + 1.5s) ease-out forwards; }
+  .draw .inner { transform-box: fill-box; transform-origin: left; transform: scaleX(0); animation: grow .4s calc(var(--delay, 0s) + 1.75s) ease-out forwards; }
+  .draw .inner.i2 { animation-delay: calc(var(--delay, 0s) + 1.9s); }
+  /* A faixa amarela já chegou (veio da varredura): só o resto se desenha. */
+  .draw.bar-ready .bar { transform: none; animation: none; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+
+  /* ---------- Entrada ---------- */
+  .docs { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .doc { position: absolute; transform-origin: 50% 100%; }
+  .scan { position: absolute; height: 3px; border-radius: 2px; background: var(--yellow); box-shadow: 0 0 14px 2px rgba(255,204,0,.55); }
+  .band { position: absolute; border-radius: 6px; background: rgba(150,165,240,.22); }
+  .mover { position: absolute; }
+  .mover svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  svg.links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  /* Placa branca onde a logo azul se desenha; depois ela se abre e vira o fundo do site. */
+  .plate { position: absolute; background: #fff; box-shadow: 0 30px 60px -20px rgba(5,10,40,.55); }
+  .chip { position: absolute; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 999px; background: #fff;
+    color: var(--ink); font-size: 12px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px -6px rgba(5,10,40,.5); transform: translate(-50%, -50%); }
+  .chip i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 12px; font-weight: 800; }
+  .chip i[data-kind='add'] { background: var(--add-line); } .chip i[data-kind='del'] { background: var(--del-line); } .chip i[data-kind='mod'] { background: var(--mod-line); }
+  .list-title { position: absolute; transform: translateX(-50%); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+  svg.links .cbadge { transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+  svg.links text { font: 800 12px Jakarta, system-ui, sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; }
+
+  .splash { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    pointer-events: none; opacity: 0; transition: opacity .35s ease; }
+  .splash.is-on { opacity: 1; }
+  /* A logo é montada antes (para medir a lente), mas só começa a se desenhar quando aparece. */
+  .splash:not(.is-on) svg * { animation-play-state: paused; }
+  .splash .aqr { position: relative; z-index: 2; font-size: 80px; color: var(--blue); }
+  .splash .letter { display: inline-block; opacity: 0; }
+  .splash.is-on .letter.a { animation: from-left .6s calc(var(--delay, 0s) + .35s) cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash.is-on .letter.r { animation: from-right .6s calc(var(--delay, 0s) + .35s) cubic-bezier(.2,.7,.2,1) forwards; }
+  .splash .name { position: relative; z-index: 2; font-size: 16px; color: var(--muted); opacity: 0; }
+  .splash.is-on .name { animation: rise .6s calc(var(--delay, 0s) + 1.6s) ease-out forwards; }
+  @keyframes from-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes from-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Site depois de entrar ---------- */
+  .site { position: fixed; inset: 0; z-index: 1; background: var(--sunken); overflow: auto; visibility: hidden; }
+  .site.is-on { visibility: visible; }
+  .site header { height: 56px; background: #fff; display: flex; align-items: center; gap: 16px; padding: 0 20px; box-shadow: 0 1px 3px rgba(27,32,64,.08), 0 4px 12px -6px rgba(27,32,64,.10); }
+  .site header .tools { font-size: 15px; font-weight: 600; }
+  .site header .prefcg { margin: 0 0 0 auto; height: 30px; }
+  .site main { max-width: 1100px; margin: 0 auto; padding: 56px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .site.is-on main > * { animation: rise .7s .45s cubic-bezier(.2,.7,.2,1) both; }
+  .site.is-on main > *:nth-child(2) { animation-delay: .55s; }
+  .site .eyebrow { font-size: 14px; font-weight: 600; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .site .eyebrow::before { content: ''; width: 24px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  .site h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 12px; }
+  .site .opt { margin-top: 16px; height: 108px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); }
+  .site .opt:first-of-type { margin-top: 32px; }
+  .site .panel { border-radius: 12px; background: #fff; box-shadow: var(--shadow-surface); min-height: 380px; }
+  .stage.gone { visibility: hidden; }
+  .flyer { position: fixed; z-index: 66; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; display: none; }
+  .flyer > span { position: absolute; left: 0; top: 0; display: inline-flex; font-size: 80px; font-weight: 800; letter-spacing: -0.025em; line-height: 1; align-items: center; white-space: nowrap; }
+  .flyer > span { color: var(--blue); }
+  .again { position: fixed; z-index: 61; right: 16px; top: 68px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-strong); background: #fff;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--blue); cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .card { padding: 30px 22px 26px; }
+    .site main { grid-template-columns: 1fr; }
+    .site .panel { min-height: 220px; }
+    .splash .aqr { font-size: 58px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .sheet { transform: var(--fan); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="switcher" aria-label="Animação depois de entrar">
+  <a href="#v1">Varredura (corrigida)</a>
+  <a href="#v2">+ Pontes</a>
+  <a href="#v3">+ Ondas</a>
+  <a href="#v4">+ Lista</a>
+</nav>
+<p class="caption" data-caption></p>
+
+<div class="stage" data-stage>
+  <div class="rings" aria-hidden="true" data-rings></div>
+  <div class="docs" aria-hidden="true" data-docs></div>
+  <div class="scene">
+    <div class="stack" data-stack>
+      <div class="sheet back" aria-hidden="true" data-sheet="updated"></div>
+      <div class="sheet front" aria-hidden="true" data-sheet="original"></div>
+      <div class="card"><div class="enter" data-form></div></div>
+    </div>
+  </div>
+  <div class="splash" data-splash role="status" aria-live="polite">
+    <span class="aqr" role="img" aria-label="AQR" data-splash-logo></span>
+    <span class="name">Análise e Qualificação de Requerimentos</span>
+  </div>
+</div>
+
+<div class="site" data-site aria-label="Prévia do site após entrar">
+  <header>
+    <span class="tools">Ferramentas</span>
+    <span class="aqr" role="img" aria-label="AQR" style="font-size:22px" data-site-logo></span>
+    <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande">
+  </header>
+  <main>
+    <div><p class="eyebrow">Ferramentas AQR</p><h2>Como podemos ajudar?</h2><div class="opt"></div><div class="opt"></div></div>
+    <div class="panel"></div>
+  </main>
+</div>
+<div class="flyer" aria-hidden="true" data-flyer><span data-flyer-logo></span></div>
+<button class="again" type="button" data-again hidden>Voltar ao login</button>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const ease = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+  const clamp = (v) => Math.max(0, Math.min(1, v))
+  const lerp = (a, b, t) => a + (b - a) * t
+  const $ = (s) => document.querySelector(s)
+
+  // ---------- Controle das animações: um "reset" cancela tudo o que estiver em andamento ----------
+  let gen = 0, timers = [], rafs = [], anims = []
+  const CANCEL = Symbol('cancel')
+  const guard = (g) => { if (g !== gen) throw CANCEL }
+  async function wait(ms) { const g = gen; await new Promise((r) => timers.push(setTimeout(r, ms))); guard(g) }
+  /** Chama step(p), com p de 0 a 1, a cada quadro, durante `ms`. */
+  async function tween(ms, step) {
+    const g = gen
+    await new Promise((resolve) => {
+      const t0 = performance.now()
+      const f = (now) => { if (g !== gen) return resolve(); const p = Math.min(1, (now - t0) / ms); step(p); if (p < 1) rafs.push(requestAnimationFrame(f)); else resolve() }
+      rafs.push(requestAnimationFrame(f))
+    })
+    guard(g)
+  }
+  async function play(el, frames, opts) {
+    const g = gen, a = el.animate(frames, { fill: 'forwards', easing: 'cubic-bezier(.6,0,.2,1)', ...opts })
+    anims.push(a)
+    try { await a.finished } catch { /* cancelada */ }
+    guard(g)
+  }
+
+  // ---------- Anéis "Noite" (parados; só o brilho gira) ----------
+  const RINGS = [[170, 4, 14], [250, 3, 18], [330, 5, 22], [420, 3, 16], [520, 4, 26], [630, 3, 20]]
+  const white = (a) => `rgba(255,255,255,${a})`
+  const ringsSVG = (color, cls) => `<svg class="${cls}" viewBox="0 0 1400 1400">${RINGS.map(([r, dot, gap], i) =>
+    `<circle cx="700" cy="700" r="${r}" stroke="${color(i)}" stroke-width="${dot}" stroke-dasharray="0 ${gap}"/>`).join('')}</svg>`
+  const ringsEl = $('[data-rings]')
+  ringsEl.innerHTML = ringsSVG((i) => (i === 2 ? 'rgba(255,204,0,.38)' : white([.20, .15, .13, .11, .09, .07][i])), 'base')
+    + ringsSVG((i) => (i === 2 ? 'rgba(255,204,0,.95)' : white(.75)), 'glow')
+
+  // ---------- Logo ----------
+  function lens(size, draw, tone = 'color', extra = '') {
+    const neg = tone === 'negative', s = size * 1.1, main = neg ? '#fff' : 'var(--blue)'
+    return `<svg class="${draw ? 'draw' : ''} ${extra}" viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true" style="flex-shrink:0;margin:0 ${size * 0.02}px 0 ${size * 0.04}px;transform:translateY(${size * 0.12}px)">
+      <path class="handle" d="M40.5 40.5 L55 55" stroke="${main}" stroke-width="9" stroke-linecap="round"/>
+      <circle class="ring" cx="27" cy="27" r="19" fill="${neg ? 'transparent' : '#fff'}" stroke="${main}" stroke-width="7"/>
+      <rect class="bar" x="14" y="19.5" width="26" height="8" rx="2" fill="var(--yellow)"/>
+      <rect class="inner" x="17" y="22" width="20" height="3.5" rx="1.75" fill="${neg ? '#fff' : 'var(--blue)'}"/>
+      <rect class="inner i2" x="17" y="30.5" width="13" height="3.5" rx="1.75" fill="${neg ? 'rgba(255,255,255,.45)' : 'rgba(40,53,135,.35)'}"/></svg>`
+  }
+  const logo = (size, draw, tone, extra) => `<span class="letter a" aria-hidden="true">A</span>${lens(size, draw, tone, extra)}<span class="letter r" aria-hidden="true">R</span>`
+  const plainLogo = (size, tone) => logo(size, false, tone).replaceAll('class="letter', 'class="')
+  $('[data-site-logo]').innerHTML = plainLogo(22)
+
+  // ---------- Documentos comparados ----------
+  const LINE_WIDTHS = [60, 92, 84, 96, 70, 88, 80, 94, 64, 90, 78, 86, 58, 92, 74, 88, 66, 90, 80]
+  const GLYPH = { add: '+', del: '−', mod: '~' }
+  const SHEETS = { original: { label: 'Original', tag: 'orig' }, updated: { label: 'Atualizado', tag: 'upd' } }
+  /** Diferenças de cada página (a 1 é a das folhas do login). Exclusões só no original; adições só no atualizado. */
+  const PAGES = [
+    { original: { 3: 'del', 7: 'mod', 12: 'del' }, updated: { 4: 'add', 7: 'mod', 10: 'add' } },
+    { original: { 2: 'del', 9: 'mod', 15: 'del' }, updated: { 5: 'add', 9: 'mod', 16: 'add' } },
+    { original: { 6: 'mod', 14: 'del' }, updated: { 6: 'mod', 11: 'add', 17: 'add' } },
+  ]
+  function pageHTML(version, page = 0, cls = '') {
+    const s = SHEETS[version], end = version === 'updated' ? 'end' : '', marks = PAGES[page][version]
+    const lines = LINE_WIDTHS.map((w, i) => {
+      const k = marks[i]
+      return `<span class="ln${i === 0 ? ' title' : ''}"${k ? ` data-kind="${k}"` : ''} style="width:${i === 0 ? 55 : w}%">${k ? `<i>${GLYPH[k]}</i>` : ''}</span>`
+    }).join('')
+    return `<div class="page ${cls}"><div class="tagrow ${end}"><span class="tag ${s.tag}">${s.label}</span></div>
+      <div class="lines ${end}">${lines}</div><span class="pg ${end || 'start'}">pág. ${page + 1} de 3</span></div>`
+  }
+  const sheetEls = { original: $('[data-sheet="original"]'), updated: $('[data-sheet="updated"]') }
+  function renderSheets() {
+    for (const [v, el] of Object.entries(sheetEls)) {
+      el.innerHTML = pageHTML(v, 0, 'static')
+      el.querySelectorAll('.ln[data-kind]').forEach((l) => l.classList.add('on'))
+    }
+  }
+
+  // ---------- Formulário ----------
+  const arrow = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  const wrap = $('[data-form]')
+  function renderForm() {
+    wrap.innerHTML = `
+      <img class="prefcg" src="../../src/assets/brand/prefcg-azul.svg" alt="Prefeitura de Campo Grande" height="34">
+      <div class="system"><span class="aqr" role="img" aria-label="AQR" style="font-size:24px">${plainLogo(24)}</span>
+        <small>Análise e Qualificação<br>de Requerimentos</small></div>
+      <div class="accent" aria-hidden="true"></div>
+      <div><h1>Entrar</h1><p class="lead">Use seu usuário e senha da SEMADES.</p></div>
+      <form data-login>
+        <div><label for="u">Usuário</label><input id="u" autocomplete="username"></div>
+        <div><label for="p">Senha</label><div class="field"><input id="p" type="password" autocomplete="current-password" style="padding-right:84px">
+          <button type="button" class="reveal" aria-pressed="false">Mostrar</button></div></div>
+        <button class="submit" type="submit">Entrar ${arrow}</button>
+      </form>
+      <p class="help">Esqueceu a senha? Procure o suporte da SEMADES.</p>`
+    wrap.querySelector('.reveal').addEventListener('click', (e) => {
+      const b = e.currentTarget, i = b.previousElementSibling, show = i.type === 'password'
+      i.type = show ? 'text' : 'password'; b.textContent = show ? 'Ocultar' : 'Mostrar'; b.setAttribute('aria-pressed', String(show))
+    })
+    wrap.querySelectorAll('input').forEach((input) => input.addEventListener('input', () => {
+      ringsEl.classList.remove('pulse'); void ringsEl.offsetWidth; ringsEl.classList.add('pulse')
+    }))
+    wrap.querySelector('[data-login]').addEventListener('submit', (e) => { e.preventDefault(); enterSite() })
+  }
+
+  // ---------- Peças da entrada ----------
+  const stage = $('[data-stage]'), stack = $('[data-stack]'), docsLayer = $('[data-docs]')
+  const splash = $('[data-splash]'), splashLogo = $('[data-splash-logo]')
+  const site = $('[data-site]'), again = $('[data-again]'), flyer = $('[data-flyer]'), siteLogo = $('[data-site-logo]')
+  let box = null
+
+  /** Troca as folhas do login por cópias soltas, na mesma posição, que a animação pode mover. */
+  function cloneDocs() {
+    const r = stack.getBoundingClientRect()
+    box = { l: r.left, t: r.top, w: r.width, h: r.height }
+    const out = {}
+    for (const v of ['updated', 'original']) {
+      const d = document.createElement('div')
+      d.className = 'doc'
+      Object.assign(d.style, { left: `${box.l}px`, top: `${box.t}px`, width: `${box.w}px`, height: `${box.h}px` })
+      // Começa igual à folha do login (destaques acesos, sem ícones); a comparação acende tudo de novo.
+      d.innerHTML = pageHTML(v, 0, 'static')
+      d.querySelectorAll('.ln[data-kind]').forEach((l) => l.classList.add('on'))
+      d.style.transform = getComputedStyle(sheetEls[v]).transform
+      docsLayer.appendChild(d)
+      sheetEls[v].style.visibility = 'hidden'
+      out[v] = d
+    }
+    return { o: out.original, u: out.updated }
+  }
+
+  /** Transformação que põe o centro da folha em (cx, cy), com escala s (a origem é o pé da folha). */
+  function at(cx, cy, s, rot = 0) {
+    const tx = cx - (box.l + box.w / 2), ty = cy - (box.t + box.h - (s * box.h) / 2)
+    return `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${s})`
+  }
+  function move(el, transform, ms, more = {}) {
+    const cs = getComputedStyle(el)
+    const from = { transform: cs.transform, opacity: cs.opacity }, to = { transform, opacity: 1 }
+    for (const [k, v] of Object.entries(more)) { from[k] = v[0] ?? cs[k]; to[k] = v[1] }
+    return play(el, [from, to], { duration: ms })
+  }
+  /** As duas folhas lado a lado, de pé, no centro da tela. */
+  function sideBySide(gap) {
+    const W = innerWidth, H = innerHeight
+    const s = Math.min(1, (H * .56) / box.h, ((W - gap - 48) / 2) / box.w)
+    const dx = (s * box.w + gap) / 2
+    return { s, L: [W / 2 - dx, H / 2 - 50], R: [W / 2 + dx, H / 2 - 50] }
+  }
+  const topPage = (d) => d.lastElementChild
+  /** Apaga os destaques da página de cima; daqui em diante, cada diferença acesa ganha o ícone. */
+  function unmark(...ds) {
+    for (const d of ds) {
+      topPage(d).classList.remove('static')
+      topPage(d).querySelectorAll('.ln.on, .ln.read').forEach((l) => l.classList.remove('on', 'read'))
+    }
+  }
+  /** Para animações que correm em paralelo, sem esperar por elas: o cancelamento não vira erro. */
+  const bg = (promise) => promise.catch((e) => { if (e !== CANCEL) throw e })
+  const lineOf = (d, i) => topPage(d).querySelectorAll('.ln')[i]
+  const centerY = (el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2 }
+  /** Marca como lidas as linhas acima de y e acende as diferenças; devolve quantas acenderam agora. */
+  function readUntil(ds, y, onFound, onRead) {
+    let found = 0
+    for (const d of ds) topPage(d).querySelectorAll('.ln').forEach((l, n) => {
+      if (n === 0 || centerY(l) > y) return
+      if (!l.classList.contains('read')) { l.classList.add('read'); onRead?.(n) }
+      if (l.dataset.kind && !l.classList.contains('on')) { l.classList.add('on'); found++; onFound?.(l, d, n) }
+    })
+    return found
+  }
+  function el(tag, cls, parent = docsLayer) { const e = document.createElement(tag); e.className = cls; parent.appendChild(e); return e }
+
+  /** Coloca a logo (ainda invisível) no centro e devolve a geometria da lente. */
+  function prepareSplash(draw, extra = '') {
+    splashLogo.innerHTML = logo(80, draw, 'color', extra)
+    const r = splashLogo.querySelector('svg').getBoundingClientRect(), k = r.width / 64
+    return { r, k, cx: r.left + 27 * k, cy: r.top + 27 * k, bar: { x: r.left + 14 * k, y: r.top + 19.5 * k, w: 26 * k, h: 8 * k } }
+  }
+  function showSplash(delay) { splash.style.setProperty('--delay', delay); splash.classList.add('is-on') }
+
+
+
+  // ---------- Base de todas: folhas lado a lado e a linha amarela descendo pelas duas ----------
+  /**
+   * `ready(ro, ru)` recebe a posição das folhas já no lugar; `found(linha, folha, n)` é chamado a cada
+   * diferença que acende; `read(n)` a cada linha lida.
+   */
+  async function sideScan({ o, u }, { gap = 40, ready, found, read } = {}) {
+    const lay = sideBySide(gap)
+    unmark(o, u)
+    await Promise.all([move(o, at(...lay.L, lay.s), 850), move(u, at(...lay.R, lay.s), 850)])
+    const ro = o.getBoundingClientRect(), ru = u.getBoundingClientRect()
+    ready?.(ro, ru)
+    const scan = el('div', 'scan'), x0 = ro.left - 18, x1 = ru.right + 18
+    const y0 = ro.top + 10, y1 = centerY(lineOf(o, LINE_WIDTHS.length - 1)) + 16
+    Object.assign(scan.style, { left: `${x0}px`, width: `${x1 - x0}px`, top: `${y0}px` })
+    await play(scan, [{ opacity: 0 }, { opacity: 1 }], { duration: 200 })
+    await tween(1900, (p) => { const y = lerp(y0, y1, p); scan.style.top = `${y}px`; readUntil([o, u], y, found, read) })
+    return { lay, scan, x0, x1, y1, ro, ru }
+  }
+
+  // ---------- Fim comum: placa branca com a logo azul, que vira o fundo do site ----------
+  /**
+   * As folhas deslizam uma sobre a outra e viram uma placa branca no centro; a linha amarela encolhe até a
+   * faixa da lente, e a logo se desenha em azul sobre a placa. Assim a logo nunca troca de cor no voo
+   * até o cabeçalho (que é branco). `gather(g)` recolhe os extras de cada variação para a lente.
+   */
+  async function endOnPlate({ o, u }, s, gather) {
+    const W = innerWidth, H = innerHeight
+    const g = prepareSplash(true, 'bar-ready')
+    const lr = splashLogo.getBoundingClientRect(), nr = splash.querySelector('.name').getBoundingClientRect()
+    const padX = Math.min(64, W * .08)
+    const to = { l: Math.min(lr.left, nr.left) - padX, t: lr.top - 48, w: 0, h: 0 }
+    to.w = Math.max(lr.right, nr.right) + padX - to.l; to.h = nr.bottom + 44 - to.t
+    gather?.(g)
+    // A linha vai até a faixa da lente enquanto as folhas se juntam e viram a placa.
+    const { scan, x0, x1, y1 } = s
+    const line = tween(1350, (p) => {
+      const q = ease(p)
+      Object.assign(scan.style, { left: `${lerp(x0, g.bar.x, q)}px`, width: `${lerp(x1 - x0, g.bar.w, q)}px`,
+        top: `${lerp(y1, g.bar.y, q)}px`, height: `${lerp(3, g.bar.h, q)}px`, boxShadow: `0 0 ${14 * (1 - q)}px ${2 * (1 - q)}px rgba(255,204,0,.55)` })
+    })
+    await Promise.all([move(o, at(W / 2, H / 2, s.lay.s), 650), move(u, at(W / 2, H / 2, s.lay.s), 650)])
+    const r = o.getBoundingClientRect(), from = { l: r.left, t: r.top, w: r.width, h: r.height }, r0 = 16 * s.lay.s
+    const plate = document.createElement('div'); plate.className = 'plate'; docsLayer.prepend(plate)
+    setBox(plate, from, r0)
+    bg(Promise.all([o, u].map((d) => play(d, [{ opacity: getComputedStyle(d).opacity }, { opacity: 0 }], { duration: 320 }))))
+    await tween(700, (p) => { const q = ease(p); setBox(plate, mix(from, to, q), lerp(r0, 24, q)) })
+    await line
+    showSplash('-0.5s')
+    await wait(360); scan.remove()
+    return plate
+  }
+  const mix = (a, b, q) => ({ l: lerp(a.l, b.l, q), t: lerp(a.t, b.t, q), w: lerp(a.w, b.w, q), h: lerp(a.h, b.h, q) })
+  function setBox(e, b, radius) {
+    Object.assign(e.style, { left: `${b.l}px`, top: `${b.t}px`, width: `${b.w}px`, height: `${b.h}px` })
+    if (radius !== undefined) e.style.borderRadius = `${radius}px`
+  }
+
+  /** A logo (sempre azul) voa até o cabeçalho, e a placa se abre até virar o fundo do site. */
+  async function finish(afterMs, plate) {
+    await wait(afterMs)
+    site.classList.add('is-on')
+    const from = splashLogo.getBoundingClientRect(), to = siteLogo.getBoundingClientRect()
+    $('[data-flyer-logo]').innerHTML = plainLogo(80)
+    flyer.style.display = 'block'; siteLogo.style.visibility = 'hidden'; splashLogo.style.visibility = 'hidden'
+    splash.classList.remove('is-on')
+    const k = to.width / from.width, pr = plate.getBoundingClientRect()
+    const pFrom = { l: pr.left, t: pr.top, w: pr.width, h: pr.height }, pTo = { l: 0, t: 0, w: innerWidth, h: innerHeight }
+    await tween(1000, (p) => {
+      const q = ease(p)
+      flyer.style.transform = `translate(${lerp(from.left, to.left, q)}px, ${lerp(from.top, to.top, q)}px) scale(${1 + (k - 1) * q})`
+      setBox(plate, mix(pFrom, pTo, clamp(q * 1.6)), lerp(24, 0, clamp(q * 1.6)))
+      // Do branco da placa para o cinza-claro do fundo do site.
+      plate.style.background = `rgb(${lerp(255, 244, q)}, ${lerp(255, 245, q)}, ${lerp(255, 249, q)})`
+      stage.style.opacity = String(1 - clamp((q - .6) / .4))
+    })
+    siteLogo.style.visibility = ''; flyer.style.display = 'none'
+    stage.classList.add('gone'); again.hidden = false
+  }
+
+  // ---------- Base e três variações com um a mais ----------
+  const KIND_LABEL = { add: 'Adição', del: 'Exclusão', mod: 'Modificação' }
+  const KIND_COLOR = { eq: 'rgba(255,255,255,.35)', add: 'var(--add-line)', del: 'var(--del-line)', mod: 'var(--mod-line)' }
+  const rowKind = (n) => {
+    const ko = PAGES[0].original[n], ku = PAGES[0].updated[n]
+    return ko === 'mod' ? 'mod' : ko === 'del' ? 'del' : ku === 'add' ? 'add' : 'eq'
+  }
+  const badgeCenter = (l) => { const r = l.querySelector('i').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2] }
+  function svgLayer() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'links'); docsLayer.appendChild(svg); return svg
+  }
+
+  const variations = {
+    v1: {
+      name: 'Varredura (corrigida)',
+      text: 'A escolhida, com a correção: as folhas se juntam numa placa branca, a linha amarela vira a faixa da lente e a logo já nasce azul. A placa se abre e vira o fundo do site, sem troca de cor no voo.',
+      async run(docs) {
+        const s = await sideScan(docs)
+        await wait(300)
+        const plate = await endOnPlate(docs, s)
+        await finish(1500, plate)
+      },
+    },
+
+    v2: {
+      name: 'Varredura + pontes',
+      text: 'Conforme a linha desce, cada linha do original se liga à do atualizado por um traço no meio. Iguais: traço fino. Exclusão e adição: traço sem par. Modificação: tracejado. No fim, os traços entram na lente.',
+      async run(docs) {
+        const { o } = docs
+        let svg = null, x1 = 0, x2 = 0, mid = 0
+        const links = [], done = new Set()
+        const draw = (n) => {
+          if (done.has(n) || n === 0) return
+          done.add(n)
+          const kind = rowKind(n), y = centerY(lineOf(o, n))
+          svg.insertAdjacentHTML('beforeend', `<line stroke="${KIND_COLOR[kind]}" stroke-width="${kind === 'eq' ? 1.5 : 2.5}" stroke-linecap="round" ${kind === 'mod' ? 'stroke-dasharray="5 4"' : ''}/>`)
+          const line = svg.lastElementChild, link = { line, y }
+          links.push(link)
+          let badge = null
+          if (kind !== 'eq') {
+            svg.insertAdjacentHTML('beforeend', `<g class="cbadge" style="transform:translate(${mid}px,${y}px) scale(0)"><circle r="9" fill="${KIND_COLOR[kind]}"/><text>${GLYPH[kind]}</text></g>`)
+            badge = svg.lastElementChild; link.badge = badge
+          }
+          const [a, b] = kind === 'add' ? [x2, mid] : kind === 'del' ? [x1, mid] : [x1, x2]
+          bg(tween(380, (p) => {
+            const e = ease(p)
+            line.setAttribute('x1', a); line.setAttribute('x2', lerp(a, b, e)); line.setAttribute('y1', y); line.setAttribute('y2', y)
+            if (p === 1 && badge) badge.style.transform = `translate(${mid}px,${y}px) scale(1)`
+          }))
+        }
+        const ready = (ro, ru) => { x1 = ro.right + 6; x2 = ru.left - 6; mid = (x1 + x2) / 2; svg = svgLayer() }
+        const s = await sideScan(docs, { gap: Math.min(130, innerWidth * .2), ready, read: draw })
+        await wait(400)
+        const plate = await endOnPlate(docs, s, (g) => {
+          links.forEach((l) => l.badge && (l.badge.style.opacity = '0'))
+          const start = links.map((l) => [+l.line.getAttribute('x1'), +l.line.getAttribute('x2')])
+          bg(tween(800, (p) => {
+            const q = ease(p)
+            links.forEach((l, n) => {
+              const ty = g.cy + ((n - links.length / 2) / links.length) * 18 * g.k
+              l.line.setAttribute('x1', lerp(start[n][0], g.cx - 11 * g.k, q)); l.line.setAttribute('x2', lerp(start[n][1], g.cx + 11 * g.k, q))
+              l.line.setAttribute('y1', lerp(l.y, ty, q)); l.line.setAttribute('y2', lerp(l.y, ty, q))
+            })
+          }).then(() => play(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 })))
+        })
+        await finish(1500, plate)
+      },
+    },
+
+    v3: {
+      name: 'Varredura + ondas',
+      text: 'Cada diferença encontrada solta uma onda pontilhada, como os anéis do login, na cor do tipo (adição, exclusão, modificação). Quando a lente se forma, uma onda amarela maior sai do centro.',
+      async run(docs) {
+        let svg = null
+        const ripple = (x, y, color, r1, ms, width = 3, gap = 8) => {
+          svg.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-dasharray="0 ${gap}"/>`)
+          const c = svg.lastElementChild
+          bg(tween(ms, (p) => { const q = 1 - Math.pow(1 - p, 3); c.setAttribute('r', 4 + (r1 - 4) * q); c.setAttribute('opacity', String(1 - p)) }).then(() => c.remove()))
+        }
+        const found = (l) => {
+          const [x, y] = badgeCenter(l), color = KIND_COLOR[l.dataset.kind]
+          ripple(x, y, color, 70, 900)
+          timers.push(setTimeout(() => ripple(x, y, color, 46, 800, 2.5, 7), 160))
+          ringsEl.classList.remove('pulse'); void ringsEl.offsetWidth; ringsEl.classList.add('pulse')
+        }
+        svg = svgLayer()
+        const s = await sideScan(docs, { found })
+        await wait(300)
+        const plate = await endOnPlate(docs, s, (g) => {
+          timers.push(setTimeout(() => {
+            ripple(g.cx, g.cy, 'rgba(255,204,0,.9)', Math.hypot(innerWidth, innerHeight) * .55, 1500, 5, 18)
+            timers.push(setTimeout(() => ripple(g.cx, g.cy, 'rgba(255,255,255,.7)', Math.hypot(innerWidth, innerHeight) * .45, 1400, 3.5, 14), 180))
+          }, 1350))
+        })
+        await finish(1500, plate)
+      },
+    },
+
+    v4: {
+      name: 'Varredura + lista',
+      text: 'Cada diferença encontrada vira uma etiqueta (Adição, Exclusão, Modificação) que voa até uma lista no meio, como a lista de diferenças do visualizador. No fim, a lista entra na lente.',
+      async run(docs) {
+        const gap = Math.min(200, innerWidth * .26)
+        const gx = innerWidth / 2, title = el('div', 'list-title')
+        let listTop = 0
+        const chips = [], rows = new Set()
+        const found = (l, d, n) => {
+          if (rows.has(n)) return
+          rows.add(n)
+          const kind = l.dataset.kind, [bx, by] = badgeCenter(l)
+          const chip = el('div', 'chip')
+          chip.innerHTML = `<i data-kind="${kind}">${GLYPH[kind]}</i>${KIND_LABEL[kind]}`
+          const x = gx, y = listTop + chips.length * 34
+          Object.assign(chip.style, { left: `${x}px`, top: `${y}px` })
+          chips.push(chip)
+          bg(play(chip, [{ transform: `translate(calc(-50% + ${bx - x}px), calc(-50% + ${by - y}px)) scale(.3)`, opacity: .4 },
+            { transform: 'translate(-50%, -50%)', opacity: 1 }], { duration: 650, easing: 'cubic-bezier(.3,1.3,.5,1)' }))
+        }
+        // A lista fica no vão entre as folhas, alinhada ao começo do texto.
+        const ready = (ro) => {
+          listTop = ro.top + 74 * (ro.height / box.h)
+          title.textContent = 'Diferenças'
+          Object.assign(title.style, { left: `${gx}px`, top: `${listTop - 34}px` })
+          bg(play(title, [{ opacity: 0 }, { opacity: 1 }], { duration: 400 }))
+        }
+        title.style.opacity = '0'
+        const s = await sideScan(docs, { gap, ready, found })
+        await wait(450)
+        const plate = await endOnPlate(docs, s, (g) => {
+          bg(play(title, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }))
+          chips.forEach((chip, n) => {
+            const r = chip.getBoundingClientRect(), dx = g.cx - (r.left + r.width / 2), dy = g.cy - (r.top + r.height / 2)
+            bg(play(chip, [{ transform: 'translate(-50%, -50%)', opacity: 1 }, { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.15)`, opacity: 0 }],
+              { duration: 700, delay: 300 + n * 70 }))
+          })
+        })
+        await finish(1500, plate)
+      },
+    },
+  }
+
+  // ---------- Entrar e voltar ----------
+  let mode = 'v1'
+  async function enterSite() {
+    if (reduced) { site.classList.add('is-on'); stage.classList.add('gone'); again.hidden = false; return }
+    const docs = cloneDocs()
+    stack.classList.add('leaving')
+    ringsEl.classList.add('dim')
+    try { await variations[mode].run(docs) } catch (e) { if (e !== CANCEL) throw e }
+  }
+
+  function reset() {
+    gen++
+    timers.forEach(clearTimeout); timers = []; rafs.forEach(cancelAnimationFrame); rafs = []
+    anims.forEach((a) => a.cancel()); anims = []
+    docsLayer.innerHTML = ''; docsLayer.classList.remove('paged')
+    site.classList.remove('is-on'); splash.classList.remove('is-on'); splash.style.removeProperty('--delay'); again.hidden = true
+    flyer.style.display = 'none'; siteLogo.style.visibility = ''; splashLogo.style.visibility = ''; splashLogo.innerHTML = ''
+    stage.classList.remove('gone'); stage.style.opacity = ''
+    ringsEl.classList.remove('dim', 'pulse')
+    stack.classList.remove('leaving')
+    for (const s of Object.values(sheetEls)) { s.style.visibility = ''; s.style.animation = 'none'; void s.offsetWidth; s.style.animation = '' }
+    renderSheets(); renderForm()
+  }
+  again.addEventListener('click', reset)
+
+  function show() {
+    mode = /^#v[1-4]$/.test(location.hash) ? location.hash.slice(1) : 'v1'
+    document.querySelectorAll('.switcher a').forEach((a) => a.setAttribute('aria-current', String(a.hash === '#' + mode)))
+    $('[data-caption]').textContent = `${variations[mode].name}: ${variations[mode].text} Clique em "Entrar" para ver.`
+    reset()
+  }
+  addEventListener('hashchange', show); show()
+</script>
+</body>
+</html>

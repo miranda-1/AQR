@@ -54,6 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 15/10/2026 | **Entrada depois do login: "varredura lado a lado"** (as folhas "Original" e "Atualizado" lado a lado, com uma linha amarela que desce acendendo as diferenças). **A logo da entrada não pode ser branca**, porque a troca de branco para azul no voo até o cabeçalho fica estranha: ela nasce azul sobre uma placa branca. Falta escolher entre a versão corrigida e as três com um a mais (`login-varredura.html`). |
 | 10/10/2026 | **Comparações não ficam guardadas:** depois de comparar, nada da comparação fica no servidor; só se registra quem comparou e quantas vezes (sem os nomes dos arquivos). Cada comparação só é vista por quem a enviou. A triagem documental poderá mudar isso no futuro. |
 | 10/10/2026 | **Sessão do login real:** cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login. |
 | 10/10/2026 | **Retenção do registro de comparações: 1 ano**, apagado automaticamente depois disso. |
@@ -166,6 +167,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 10/10/2026 | Segunda rodada de revisão (agente) confirmou os 8 itens fechados e apontou efeitos novos, corrigidos: cookie único `aqr_login` com até 5 logins em andamento (abas simultâneas sem acumular cookies); limite só ao iniciar login, por IPv4 ou bloco /64 do IPv6, com teto no mapa; aviso no log com `X-Forwarded-For` sem `TRUST_PROXY` (obrigatório atrás de proxy); desligar o servidor não registra comparações como canceladas; logins em andamento em `PendingLogins` com teste de teto e vencimento; testes fracos reescritos (conta inativa sem renovar sessão, "negado" com state real, duas abas concluindo de verdade). E2E real com 53 verificações OK | ver `git log` |
 | 10/10/2026 | Terceira rodada de revisão (agente) aprovou o último commit sem achados médios ou altos; acrescentado o teste de que desligar o servidor não registra cancelamento, texto do aviso de `TRUST_PROXY` mais preciso e as limitações restantes documentadas (limite por bloco IPv6, corrida rara entre duas abas, comparação sem desfecho = servidor interrompido). Resumo da sessão em `docs/sessoes/2026-10-10-login-completo.md` | ver `git log` |
 | 15/10/2026 | Cinco propostas para a animação depois do login, que lembram a comparação de PDFs (varredura lado a lado, lente percorre, sobreposição, linhas emparelhadas, folheando páginas), partindo das folhas "Original" e "Atualizado" do login e terminando na logo que voa até o cabeçalho, em `docs/propostas-login/login-entrada-comparacao.html`. Aguardando a escolha do responsável | ver `git log` |
+| 15/10/2026 | Escolhida a "varredura lado a lado". Correção da logo branca: as folhas viram uma placa branca no centro, a linha amarela vira a faixa da lente e a logo já nasce azul; a placa se abre e vira o fundo do site, sem troca de cor no voo até o cabeçalho. Com ela, três variações que mantêm a varredura (+ pontes, + ondas, + lista) em `docs/propostas-login/login-varredura.html`. Aguardando a escolha do responsável | ver `git log` |
 
 ## Pendências
 
