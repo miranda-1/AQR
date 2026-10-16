@@ -54,7 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
-| 15/10/2026 | **Entrada depois do login: "varredura lado a lado"** (as folhas "Original" e "Atualizado" lado a lado, com uma linha amarela que desce acendendo as diferenças). **A logo da entrada não pode ser branca**, porque a troca de branco para azul no voo até o cabeçalho fica estranha: ela nasce azul sobre uma placa branca. **Escolhida a "+ Lista"** (cada diferença vira uma etiqueta que voa até uma lista no meio). Falta escolher o fundo (`login-fundos.html`). |
+| 15/10/2026 | **Entrada depois do login: "varredura lado a lado"** (as folhas "Original" e "Atualizado" lado a lado, com uma linha amarela que desce acendendo as diferenças). **A logo da entrada não pode ser branca**, porque a troca de branco para azul no voo até o cabeçalho fica estranha: ela nasce azul sobre uma placa branca. **Escolhida a "+ Lista"** (cada diferença vira uma etiqueta que voa até uma lista no meio). **Fundo: continua o "Noite".** A placa branca retangular sob a logo não agradou (fica sobreposta ao fundo); falta escolher um dos cinco desfechos sem placa (`login-sem-placa.html`). |
 | 10/10/2026 | **Comparações não ficam guardadas:** depois de comparar, nada da comparação fica no servidor; só se registra quem comparou e quantas vezes (sem os nomes dos arquivos). Cada comparação só é vista por quem a enviou. A triagem documental poderá mudar isso no futuro. |
 | 10/10/2026 | **Sessão do login real:** cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login. |
 | 10/10/2026 | **Retenção do registro de comparações: 1 ano**, apagado automaticamente depois disso. |
@@ -169,6 +169,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 15/10/2026 | Cinco propostas para a animação depois do login, que lembram a comparação de PDFs (varredura lado a lado, lente percorre, sobreposição, linhas emparelhadas, folheando páginas), partindo das folhas "Original" e "Atualizado" do login e terminando na logo que voa até o cabeçalho, em `docs/propostas-login/login-entrada-comparacao.html`. Aguardando a escolha do responsável | ver `git log` |
 | 15/10/2026 | Escolhida a "varredura lado a lado". Correção da logo branca: as folhas viram uma placa branca no centro, a linha amarela vira a faixa da lente e a logo já nasce azul; a placa se abre e vira o fundo do site, sem troca de cor no voo até o cabeçalho. Com ela, três variações que mantêm a varredura (+ pontes, + ondas, + lista) em `docs/propostas-login/login-varredura.html`. Aguardando a escolha do responsável | ver `git log` |
 | 15/10/2026 | Escolhida a "+ Lista". Seis fundos para o palco do login e da entrada, pensados para a logo azul sobre a placa branca (noite atual como referência, névoa, planta, duas versões, pauta, cianotipia), em `docs/propostas-login/login-fundos.html`. Aguardando a escolha do responsável | ver `git log` |
+| 15/10/2026 | Mantido o fundo "Noite". Cinco desfechos da entrada "+ Lista" sem a placa branca, com a logo pousando azul no cabeçalho sem troca de cor no voo (foco de luz, lente se abre, varredura limpa, amanhecer, varredura troca a cor), em `docs/propostas-login/login-sem-placa.html`. Aguardando a escolha do responsável | ver `git log` |
 
 ## Pendências
 
