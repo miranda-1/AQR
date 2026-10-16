@@ -52,9 +52,11 @@ sensíveis: só decisões, estado e comandos.
 | 3–7. Motores (texto, estrutura, visual, OCR, consolidação) | primeira versão integrada | ver git log |
 | 8. Frontend (modos, filtros, situação, exportação) | primeira versão integrada | ver git log |
 | 2. Corpus com gabarito e avaliação | feito: 47 casos (os 40 pedidos + OCR e páginas), 47/47 | ver git log |
-| 9. Desempenho | pendente | — |
-| 10. Segurança | pendente | — |
-| Relatório final | pendente | — |
+| 9. Desempenho | feito: 10 a 1.000 páginas (`desempenho.md`) | ver git log |
+| 10. Segurança | feito: OCR sem rede comprovado, sem escrita em disco, sem persistência nova | ver git log |
+| Teste no navegador real | feito: 19/19 (`scripts/e2e-navegador.mts`) | ver git log |
+| Relatório final | feito: `AQR_COMPARADOR_IMPLEMENTACAO_FINAL.md` | ver git log |
+| Validação com documentos reais | **pendente**: depende de documentos da SEMADES | — |
 
 ## Retomada
 
