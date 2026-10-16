@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { inMode, type ComparisonMode } from '../model/modes'
+import { categoryOptions } from '../model/categories'
+import { comparisonModes, inMode, type ComparisonMode } from '../model/modes'
 import type { Difference, DifferenceCategory, DifferenceKind } from '../model/types'
 
 export type DifferenceFilter = DifferenceKind | 'all'
@@ -16,11 +17,26 @@ function matchesCategory(difference: Difference, category: CategoryFilter): bool
  * Navegação entre diferenças: modo de comparação, filtros por tipo e por categoria, seleção,
  * anterior e próxima. Não dá a volta ao chegar nas pontas, para o usuário saber que terminou.
  */
-export function useDifferenceNavigation(differences: readonly Difference[]) {
-  const [mode, setModeState] = useState<ComparisonMode>('complete')
-  const [filter, setFilterState] = useState<DifferenceFilter>('all')
-  const [category, setCategoryState] = useState<CategoryFilter>('all')
-  const [selectedId, setSelectedId] = useState<string | null>(differences[0]?.id ?? null)
+export interface NavigationStart {
+  mode?: string
+  filter?: string
+  category?: string
+  selectedId?: string | null
+}
+
+const filters: readonly DifferenceFilter[] = ['all', 'addition', 'deletion', 'modification', 'move']
+
+export function useDifferenceNavigation(differences: readonly Difference[], start: NavigationStart = {}) {
+  const [mode, setModeState] = useState<ComparisonMode>(
+    () => comparisonModes.find((item) => item.value === start.mode)?.value ?? 'complete',
+  )
+  const [filter, setFilterState] = useState<DifferenceFilter>(() => filters.find((item) => item === start.filter) ?? 'all')
+  const [category, setCategoryState] = useState<CategoryFilter>(
+    () => categoryOptions.find((option) => option.value === start.category)?.value ?? 'all',
+  )
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    start.selectedId && differences.some((difference) => difference.id === start.selectedId) ? start.selectedId : (differences[0]?.id ?? null),
+  )
 
   /** Diferenças do modo atual (base dos contadores). */
   const inCurrentMode = useMemo(() => differences.filter((difference) => inMode(difference, mode)), [differences, mode])

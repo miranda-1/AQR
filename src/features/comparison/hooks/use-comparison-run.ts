@@ -1,37 +1,31 @@
-import { useCallback, useEffect, useReducer, useState } from 'react'
-import { comparisonRunReducer, initialRunState } from '../model/comparison-run'
+import { useEffect } from 'react'
+import { initialRunState } from '../model/comparison-run'
 import type { ComparisonInput, ComparisonService } from '../model/types'
+import { fileIdentity, useComparisonSession } from '../session/comparison-session'
 
-/** Executa uma comparação e expõe o estado para a interface. */
-export function useComparisonRun(service: ComparisonService, input: ComparisonInput) {
-  const [state, dispatch] = useReducer(comparisonRunReducer, initialRunState)
-  const [attempt, setAttempt] = useState(0)
+/**
+ * Identifica a comparação: o tipo de serviço (estável entre montagens, ex.: "api", "demo:erro") e
+ * os dois arquivos escolhidos.
+ */
+export function comparisonKey(serviceKey: string, input: ComparisonInput): string {
+  const id = (file: File | null) => (file ? fileIdentity(file) : 0)
+  return `${serviceKey}:${id(input.original)}:${id(input.updated)}`
+}
+
+/**
+ * Executa a comparação dos arquivos (ou reaproveita a que já está aberta na sessão) e expõe o
+ * estado para a interface. A execução pertence à sessão: sair da tela não a cancela, e voltar
+ * mostra o mesmo andamento ou o mesmo resultado.
+ */
+export function useComparisonRun(service: ComparisonService, input: ComparisonInput, serviceKey: string) {
+  const { active, ensureComparison, retry, saveView } = useComparisonSession()
+  const key = comparisonKey(serviceKey, input)
+  const { original, updated } = input
 
   useEffect(() => {
-    const controller = new AbortController()
-    dispatch({ type: 'started' })
-    // O envio começa no próximo ciclo: uma montagem desfeita na hora (StrictMode, navegação imediata)
-    // é cancelada antes de os PDFs saírem, sem criar no servidor uma comparação que ninguém verá.
-    const start = setTimeout(() => {
-      service
-        .compare(input, {
-          signal: controller.signal,
-          onProgress: (progress) => dispatch({ type: 'progressed', stage: progress.stage }),
-        })
-        .then((outcome) => dispatch({ type: 'finished', outcome }))
-        .catch(() => {
-          if (!controller.signal.aborted) {
-            dispatch({ type: 'finished', outcome: { status: 'failed', error: { code: 'PROCESSING_FAILED' } } })
-          }
-        })
-    }, 0)
-    return () => {
-      clearTimeout(start)
-      controller.abort()
-    }
-  }, [service, input, attempt])
+    ensureComparison(key, service, { original, updated })
+  }, [key, service, original, updated, ensureComparison])
 
-  const retry = useCallback(() => setAttempt((value) => value + 1), [])
-
-  return { state, retry }
+  const current = active && active.key === key ? active : null
+  return { state: current?.state ?? initialRunState, view: current?.view ?? {}, retry, saveView }
 }

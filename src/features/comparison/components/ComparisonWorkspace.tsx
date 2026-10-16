@@ -8,6 +8,7 @@ import { useDifferenceNavigation } from '../hooks/use-difference-navigation'
 import { useSyncedScroll } from '../hooks/use-synced-scroll'
 import { differenceKindMeta, differenceKinds } from '../model/difference-kinds'
 import type { ComparisonResult, DocumentRole } from '../model/types'
+import type { WorkspaceViewState } from '../session/comparison-session'
 import { DocumentPane } from '../viewer/DocumentPane'
 import type { DocumentSource } from '../viewer/document-source'
 import { AnalysisBanner } from './AnalysisSummary'
@@ -19,7 +20,13 @@ import { DifferenceStepper, SyncScrollToggle, ViewModeSwitch, ZoomControls, type
 interface ComparisonWorkspaceProps {
   result: ComparisonResult
   documents: Record<DocumentRole, DocumentSource>
+  /** Como a pessoa deixou a tela da última vez (ao voltar de outra página). */
+  initialView?: WorkspaceViewState
+  /** Recebe o estado da tela a cada mudança, para ele sobreviver à troca de página. */
+  onViewChange?: (view: WorkspaceViewState) => void
 }
+
+const isViewMode = (value: unknown): value is ViewMode => value === 'side-by-side' || value === 'original' || value === 'updated'
 
 /** Rola um painel até o trecho da diferença, deixando-o no terço superior. */
 function scrollToDifference(container: HTMLElement | null, id: string, smooth: boolean) {
@@ -48,17 +55,24 @@ function Legend() {
   )
 }
 
-export function ComparisonWorkspace({ result, documents }: ComparisonWorkspaceProps) {
+export function ComparisonWorkspace({ result, documents, initialView = {}, onViewChange }: ComparisonWorkspaceProps) {
   const isWide = useMediaQuery('(min-width: 1280px)')
   const canSideBySide = useMediaQuery('(min-width: 1024px)')
   const isCompact = !useMediaQuery('(min-width: 768px)')
   const reducedMotion = usePrefersReducedMotion()
 
-  const navigation = useDifferenceNavigation(result.differences)
-  const [preferredMode, setPreferredMode] = useState<ViewMode>('side-by-side')
-  const [syncScroll, setSyncScroll] = useState(true)
-  const [zoom, setZoom] = useState(1)
-  const [listCollapsed, setListCollapsed] = useState(false)
+  const navigation = useDifferenceNavigation(result.differences, initialView)
+  const [preferredMode, setPreferredMode] = useState<ViewMode>(isViewMode(initialView.viewMode) ? initialView.viewMode : 'side-by-side')
+  const [syncScroll, setSyncScroll] = useState(initialView.syncScroll ?? true)
+  const [zoom, setZoom] = useState(initialView.zoom ?? 1)
+  const [listCollapsed, setListCollapsed] = useState(initialView.listCollapsed ?? false)
+
+  // Guarda o estado da tela a cada mudança: ao voltar de outra página, tudo está onde ficou.
+  const { mode, filter, category } = navigation
+  const selectedId = navigation.active?.id ?? null
+  useEffect(() => {
+    onViewChange?.({ mode, filter, category, selectedId, viewMode: preferredMode, zoom, syncScroll, listCollapsed })
+  }, [onViewChange, mode, filter, category, selectedId, preferredMode, zoom, syncScroll, listCollapsed])
   const [listSheetOpen, setListSheetOpen] = useState(false)
 
   const viewMode: ViewMode = !canSideBySide && preferredMode === 'side-by-side' ? 'updated' : preferredMode

@@ -1,11 +1,11 @@
 import { ArrowLeftRight, ChevronRight, Info } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { appConfig } from '@/config/app'
 import { comparisonConfig } from '@/config/comparison'
 import { routes } from '@/config/routes'
 import { FileSlot } from '@/features/comparison/components/FileSlot'
-import { useComparisonSession } from '@/features/comparison/session/comparison-session'
+import { hasOpenComparison, useComparisonSession } from '@/features/comparison/session/comparison-session'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { formatFileSize } from '@/lib/format'
 
@@ -50,7 +50,9 @@ function HowItWorks() {
 export function ComparisonSetupPage() {
   useDocumentTitle('Comparar documentos')
   const navigate = useNavigate()
-  const { files, swapFiles } = useComparisonSession()
+  const session = useComparisonSession()
+  const { files, swapFiles } = session
+  const comparisonOpen = hasOpenComparison(session)
   const hasOriginal = files.original !== null
   const hasUpdated = files.updated !== null
   const ready = hasOriginal && hasUpdated
@@ -69,6 +71,20 @@ export function ComparisonSetupPage() {
           </p>
         )}
       </header>
+
+      {comparisonOpen && (
+        <div role="status" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-brand-50 px-4 py-3">
+          <p className="text-[0.9375rem] text-ink">
+            A comparação de <strong className="font-semibold">{files.original?.name}</strong> com{' '}
+            <strong className="font-semibold">{files.updated?.name}</strong> continua aberta.
+          </p>
+          <Button asChild>
+            <Link to={routes.comparisonWorkspace} viewTransition>
+              Voltar ao resultado
+            </Link>
+          </Button>
+        </div>
+      )}
 
       <form
         className="mt-5"

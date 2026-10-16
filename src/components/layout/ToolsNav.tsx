@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router'
+import { routes } from '@/config/routes'
+import { hasOpenComparison, useComparisonSession } from '@/features/comparison/session/comparison-session'
 import { cn } from '@/lib/utils'
 import { isToolActive, toolItems } from './navigation'
 
@@ -10,6 +12,8 @@ import { isToolActive, toolItems } from './navigation'
  */
 export function ToolsNav() {
   const { pathname } = useLocation()
+  // Com uma comparação aberta, "Comparar PDFs" volta direto a ela (quem saiu sem querer não a perde).
+  const comparisonOpen = hasOpenComparison(useComparisonSession())
   const navRef = useRef<HTMLElement>(null)
   const indicatorRef = useRef<HTMLSpanElement>(null)
 
@@ -47,7 +51,7 @@ export function ToolsNav() {
         return (
           <Link
             key={item.to}
-            to={item.to}
+            to={item.to === routes.comparison && comparisonOpen ? routes.comparisonWorkspace : item.to}
             viewTransition
             aria-current={active ? 'page' : undefined}
             className={cn(

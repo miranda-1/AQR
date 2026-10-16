@@ -45,7 +45,8 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
     [injected, isDemo, scenario],
   )
   const input = useMemo(() => ({ original: files.original, updated: files.updated }), [files.original, files.updated])
-  const { state, retry } = useComparisonRun(service, input)
+  const serviceKey = injected ? 'injetado' : isDemo ? `demo:${scenario}` : 'api'
+  const { state, retry, view, saveView } = useComparisonRun(service, input, serviceKey)
 
   // Sem os arquivos (ex.: página recarregada), a comparação real não tem o que enviar.
   if (!isDemo && (!files.original || !files.updated)) return <Navigate to={routes.comparison} replace />
@@ -94,7 +95,9 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
         (state.result.differences.length === 0 ? (
           <NoDifferencesPanel result={state.result} />
         ) : (
-          sources && <ComparisonWorkspace key={state.result.id} result={state.result} documents={sources} />
+          sources && (
+            <ComparisonWorkspace key={state.result.id} result={state.result} documents={sources} initialView={view} onViewChange={saveView} />
+          )
         ))}
     </>
   )
