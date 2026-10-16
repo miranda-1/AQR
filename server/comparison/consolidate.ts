@@ -15,7 +15,9 @@ import type { VisualRegion } from './visual/raster-diff.ts'
  * 3. uma mudança de formatação (fonte, tamanho, cor, posição);
  * 4. palavras iguais que mudaram de lugar (refluxo do texto depois de uma inclusão ou exclusão) →
  *    explicada, sem diferença própria;
- * 5. nada disso: vira diferença visual. Sobre texto inalterado, "aparência alterada" (conferir); fora
+ * 5. linha fina (até 3 pt de região, com a quantização de 4 px) com até o dobro de tinta de um lado → variação de
+ *    rasterização entre geradores, sem diferença própria;
+ * 6. nada disso: vira diferença visual. Sobre texto inalterado, "aparência alterada" (conferir); fora
  *    do texto, elemento gráfico incluído, excluído ou alterado.
  *
  * Diferenças independentes nunca são fundidas só por estarem perto: só a região visual é absorvida.
@@ -30,6 +32,8 @@ const INK_PRESENT = 0.01
 
 export interface PagePairEvidence {
   pages: Record<DocumentRole, number>
+  /** Tamanho de 1 pt na página, em fração da largura e da altura (para limiares físicos). */
+  pointSize?: { x: number; y: number }
   /** A comparação visual rodou neste par (as regiões valem como evidência). */
   visualAnalyzed: boolean
   regions: readonly VisualRegion[]
@@ -158,6 +162,20 @@ function ocrVisualDraft(draft: Draft, regions: readonly VisualRegion[], pages: R
   return visual
 }
 
+/** Espessura máxima (pt) de uma linha fina e faixa de razão de tinta aceita como mesma linha. */
+const THIN_LINE_PT = 3
+const SAME_INK_RATIO = 2.1
+
+function isRenderingVariation(region: VisualRegion, pointSize: { x: number; y: number } | undefined): boolean {
+  if (!pointSize) return false
+  const thinX = region.original.width <= THIN_LINE_PT * pointSize.x
+  const thinY = region.original.height <= THIN_LINE_PT * pointSize.y
+  if (!thinX && !thinY) return false
+  if (region.inkOriginal < INK_PRESENT || region.inkUpdated < INK_PRESENT) return false
+  const ratio = region.inkOriginal / region.inkUpdated
+  return ratio <= SAME_INK_RATIO && ratio >= 1 / SAME_INK_RATIO
+}
+
 /** Consolida as evidências de um par de páginas com os rascunhos de texto que tocam essas páginas. */
 export function consolidatePagePair(evidence: PagePairEvidence, textDrafts: readonly Draft[]): PagePairOutcome {
   const { pages, regions } = evidence
@@ -218,7 +236,13 @@ export function consolidatePagePair(evidence: PagePairEvidence, textDrafts: read
     if (touches(evidence.displaced.original, region.original) || touches(evidence.displaced.updated, region.updated)) remaining.delete(region)
   }
 
-  // 5. O que sobrou é diferença visual.
+  // 5. Linha fina que só mudou de intensidade ou espessura de rasterização (mesmo traço, outro
+  // gerador): variação de renderização, não diferença.
+  for (const region of [...remaining]) {
+    if (isRenderingVariation(region, evidence.pointSize)) remaining.delete(region)
+  }
+
+  // 6. O que sobrou é diferença visual.
   for (const region of remaining) {
     const overText = touches(evidence.words.original, region.original) || touches(evidence.words.updated, region.updated)
     drafts.push(visualDraft(region, pages, overText))

@@ -9,8 +9,8 @@ import { inkColor, inkColorChangedInPlace, type VisualRegion } from './raster-di
 /**
  * Formatação do texto que não mudou de conteúdo. Para cada palavra igual nos dois documentos
  * (pareada pelo alinhamento do texto), na mesma página correspondente:
- * - fonte: assinatura da fonte diferente (`page-objects.ts`);
- * - tamanho: altura da fonte varia mais que `SIZE_TOLERANCE`;
+ * - fonte: assinatura da fonte diferente (`page-objects.ts`), onde a aparência mudou;
+ * - tamanho: altura da fonte varia mais que `SIZE_TOLERANCE`, onde a aparência mudou;
  * - cor: a cor média da tinta da palavra, medida nas páginas renderizadas, varia mais que
  *   `COLOR_TOLERANCE` (só onde a comparação visual achou mudança);
  * - posição: a palavra se deslocou mais que `POSITION_TOLERANCE`, sem que uma inclusão ou exclusão
@@ -94,14 +94,25 @@ function observe(input: FormattingInput, pair: EqualPair): Observation {
   if (!pieceA || !pieceB) return observation
   const textLayer = a.style.source === 'text-layer' && b.style.source === 'text-layer'
 
-  if (textLayer) {
+  // Com a comparação visual, fonte e tamanho só contam onde a aparência mudou: outro gerador pode
+  // reincorporar a mesma fonte com outra assinatura sem mudar nada do que se vê.
+  const looksChanged =
+    !input.rasters ||
+    touchesVisualChange(pieceA.region, input.visualRegions, 'original') ||
+    touchesVisualChange(pieceB.region, input.visualRegions, 'updated')
+  if (textLayer && looksChanged) {
     const fontA = a.style.font ? input.fonts.original.get(a.style.font) : undefined
     const fontB = b.style.font ? input.fonts.updated.get(b.style.font) : undefined
     if (fontA && fontB && fontA.signature !== fontB.signature) changes.add('font')
     const sizeA = a.style.fontSize
     const sizeB = b.style.fontSize
     if (sizeA && sizeB && Math.abs(sizeA - sizeB) / Math.max(sizeA, sizeB) > SIZE_TOLERANCE) changes.add('font-size')
-    if (!pair.reflowed && (Math.abs(shift.dx) > POSITION_TOLERANCE || Math.abs(shift.dy) > POSITION_TOLERANCE)) changes.add('text-position')
+  } else if (textLayer) {
+    unknown.add('font')
+    unknown.add('font-size')
+  }
+  if (textLayer && !pair.reflowed && (Math.abs(shift.dx) > POSITION_TOLERANCE || Math.abs(shift.dy) > POSITION_TOLERANCE)) {
+    changes.add('text-position')
   }
 
   const measurable = /[\p{L}\p{N}]/u.test(a.text)

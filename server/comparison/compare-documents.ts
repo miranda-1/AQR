@@ -474,6 +474,7 @@ async function comparePagePairVisually(
   const words = { original: wordRects(tokens.original, pageNumbers.original), updated: wordRects(tokens.updated, pageNumbers.updated) }
   const empty: PagePairEvidence = {
     pages: pageNumbers,
+    pointSize: { x: 1 / Math.max(1, pages.original.width), y: 1 / Math.max(1, pages.original.height) },
     visualAnalyzed: true,
     regions: [],
     images: [],
