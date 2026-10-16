@@ -26,7 +26,7 @@ function IndexChip({ kind, number }: { kind: DifferenceKind; number: number }) {
     <span
       aria-hidden
       className={cn(
-        'mr-1 inline-flex translate-y-[-0.1em] items-center gap-px rounded-[3px] border px-1 align-middle font-sans text-[0.6875em] leading-[1.35] font-bold',
+        'diff-index-chip mr-1 inline-flex translate-y-[-0.1em] items-center gap-px rounded-[3px] border px-1 align-middle font-sans text-[0.6875em] leading-[1.35] font-bold',
         meta.badgeClass,
       )}
     >
@@ -93,7 +93,7 @@ export function DiffPlaceholder({
     >
       <meta.icon aria-hidden className="size-[1.1em]" strokeWidth={3} />
       <span className="sr-only">{`${meta.label} ${number}: `}</span>
-      <span aria-hidden>{number}</span>
+      <span aria-hidden className="diff-number">{number}</span>
       <span>{placeholderText[kind][role]}</span>
     </span>
   )

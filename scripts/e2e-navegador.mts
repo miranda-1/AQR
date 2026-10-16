@@ -112,7 +112,7 @@ async function compareCase(caseId: string, captureName: string) {
   await send('DOM.setFileInputFiles', { nodeId: nodeIds[1], files: [updatedPath] })
   await sleep(300)
   await click(byText('button', 'Comparar documentos'))
-  const done = await waitFor(`document.querySelector('[aria-label="Situação da análise"]') || document.querySelector('#sem-diferencas-titulo') || document.querySelector('[role=alert]')`, 120_000)
+  const done = await waitFor(`document.querySelector('[aria-label="Filtrar diferenças por tipo"]') || document.querySelector('#sem-diferencas-titulo') || document.querySelector('[role=alert]')`, 120_000)
   check(`${caseId}: a comparação terminou na tela`, done)
   await sleep(1500)
   await screenshot(captureName)
@@ -126,6 +126,9 @@ try {
   check('lista mostra o antes e o depois do valor', body.includes('Original: 15.000,00') || body.includes('Original: R$ 15.000,00'), '')
   check('descrição do subtipo', body.includes('Valor monetário alterado.'))
   check('método e evidência na lista', body.includes('Confirmada por texto do PDF e comparação visual'))
+  const barHeight = await evaluate<number>(`document.querySelector('.result-bar')?.getBoundingClientRect().height ?? 0`)
+  const widths = await evaluate<string>(`[...document.querySelector('.result-bar').children].flatMap((el) => el.classList.contains('ml-auto') ? [...el.children] : [el]).map((el) => (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 18) + '=' + Math.round(el.getBoundingClientRect().width)).join(' | ')`)
+  check('barra única numa linha só (1440 px)', barHeight > 0 && barHeight < 60, `${Math.round(barHeight)} px de altura · ${widths}`)
   const marks = await evaluate<number>(`document.querySelectorAll('[data-diff-id]').length`)
   check('destaques sobre as páginas reais', marks >= 2, `${marks} destaques`)
 
@@ -138,7 +141,7 @@ try {
 
   // 3. Exportação: relatório HTML gerado no navegador.
   // O menu (Radix) abre com "pointerdown", não com "click".
-  await evaluate(`(() => { const el = ${byText('button', 'Exportar relatório')}; el?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' })); return true })()`)
+  await evaluate(`(() => { const el = ${byText('button', 'Ações')}; el?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' })); return true })()`)
   await sleep(500)
   await click(`[...document.querySelectorAll('[role=menuitem]')].find((el) => el.textContent.includes('Relatório para leitura'))`)
   await sleep(1500)
@@ -149,6 +152,18 @@ try {
     check('relatório traz a situação e o valor alterado', html.includes('Análise concluída') && html.includes('18.000,00'))
   }
 
+  // 3b. Modo foco: tela cheia, setas na faixa e Esc para sair.
+  await click(byText('button', 'Focar'))
+  await sleep(600)
+  check('modo foco abre em tela cheia', await evaluate<boolean>(`Boolean(document.querySelector('[aria-label^="Modo foco"]'))`))
+  check('números escondidos por padrão', await evaluate<boolean>(`Boolean(document.querySelector('.diff-numbers-hover'))`))
+  await screenshot('06-modo-foco')
+  await click(`document.querySelector('[aria-label^="Modo foco"] [aria-label="Próxima diferença"]:last-of-type')`)
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await sleep(400)
+  check('Esc sai do modo foco', !(await evaluate<boolean>(`Boolean(document.querySelector('[aria-label^="Modo foco"]'))`)))
+
   // 4. Imagem trocada e página incluída: categorias e correspondência de páginas.
   body = await compareCase('13-imagem-substituida', '02-imagem-substituida')
   check('imagem trocada na lista', body.includes('Imagem trocada ou modificada.'))
@@ -158,7 +173,7 @@ try {
 
   // 5. Digitalizado: OCR e ressalvas.
   body = await compareCase('26-digitalizado', '04-digitalizado-ocr')
-  check('ressalva do OCR visível', body.includes('com ressalvas'))
+  check('ressalva do OCR visível', body.includes('Com ressalvas'))
   check('página marcada como lida por OCR', body.includes('Texto lido por OCR'))
 
   // 6. Idênticos: mensagem honesta.

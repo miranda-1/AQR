@@ -74,13 +74,54 @@ describe('ComparisonWorkspace', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(deletions)
   })
 
-  it('alterna o modo de visualização', async () => {
+  it('alterna o modo de visualização pelo menu', async () => {
     const user = userEvent.setup()
     renderWorkspace()
     expect(screen.getByRole('region', { name: 'Documento original' })).toBeInTheDocument()
-    await user.click(screen.getByRole('radio', { name: 'Atualizado' }))
+    await user.click(screen.getByRole('button', { name: /Lado a lado/ }))
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Só o atualizado' }))
     expect(screen.queryByRole('region', { name: 'Documento original' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Documento atualizado' })).toBeInTheDocument()
+  })
+
+  it('modo foco: tela cheia, setas na faixa de diferenças e Esc para sair', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+    await user.click(screen.getByRole('button', { name: /Focar/ }))
+    const focusRegion = screen.getByRole('region', { name: /Modo foco/ })
+    expect(within(focusRegion).getByRole('button', { name: /Sair do foco/ })).toHaveFocus()
+    const strip = within(focusRegion).getByRole('list', { name: 'Diferenças encontradas' })
+    expect(within(strip).getAllByRole('listitem')).toHaveLength(total)
+    const [, next] = within(focusRegion).getAllByRole('button', { name: 'Próxima diferença' })
+    await user.click(defined(next))
+    expect(within(strip).getAllByRole('button')[1]).toHaveAttribute('aria-current', 'true')
+    await user.click(defined(within(focusRegion).getAllByRole('button', { name: 'Diferença anterior' })[1]))
+    expect(within(strip).getAllByRole('button')[0]).toHaveAttribute('aria-current', 'true')
+    // Minimizar a faixa deixa só as setas e a posição.
+    await user.click(within(focusRegion).getByRole('button', { name: 'Minimizar' }))
+    expect(within(focusRegion).queryByRole('list', { name: 'Diferenças encontradas' })).not.toBeInTheDocument()
+    expect(within(focusRegion).getAllByText(`1 de ${total}`, { selector: 'span[aria-live]' })).toHaveLength(2)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('region', { name: /Modo foco/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Focar/ })).toHaveFocus()
+  })
+
+  it('a tecla F liga o modo foco', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+    await user.keyboard('f')
+    expect(screen.getByRole('region', { name: /Modo foco/ })).toBeInTheDocument()
+  })
+
+  it('números das diferenças só ao passar o mouse, até ligar "Números sempre"', async () => {
+    const user = userEvent.setup()
+    const { container } = renderWorkspace()
+    expect(container.querySelector('.diff-numbers-hover')).not.toBeNull()
+    const toggle = screen.getByRole('switch', { name: /Números/ })
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-checked', 'true')
+    expect(container.querySelector('.diff-numbers-hover')).toBeNull()
   })
 })
 

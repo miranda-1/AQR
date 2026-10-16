@@ -15,6 +15,10 @@ export interface WorkspaceViewState {
   zoom?: number
   syncScroll?: boolean
   listCollapsed?: boolean
+  /** Modo foco (tela cheia) ligado. */
+  focus?: boolean
+  /** Números das diferenças sempre visíveis (padrão: só ao passar o mouse). */
+  numbersAlways?: boolean
 }
 
 /** A comparação em andamento ou concluída, guardada enquanto a pessoa navega pelo site. */

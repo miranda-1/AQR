@@ -58,7 +58,7 @@ function runExport(result: ComparisonResult, kind: ExportKind) {
 function ExportItems({ result }: { result: ComparisonResult }) {
   return (
     <>
-      <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">Gerado no seu navegador; nada é enviado.</DropdownMenuLabel>
+      <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">Exportar (gerado no seu navegador; nada é enviado)</DropdownMenuLabel>
       <DropdownMenuItem className="min-h-10" onSelect={() => runExport(result, 'html')}>
         <FileText aria-hidden />
         Relatório para leitura (HTML)
@@ -72,6 +72,46 @@ function ExportItems({ result }: { result: ComparisonResult }) {
         Dados da comparação (JSON)
       </DropdownMenuItem>
     </>
+  )
+}
+
+/** Botão "Exportar relatório" com as três opções (usado no cabeçalho e na barra do resultado). */
+export function ExportMenu({ result, label = 'Exportar relatório', size }: { result: ComparisonResult; label?: string; size?: 'sm' }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size={size}>
+          <Download aria-hidden />
+          {label}
+          <ChevronDown aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <ExportItems result={result} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** "Ações ▾" da barra do resultado: exportar (três formatos) e nova comparação. */
+export function ResultActionsMenu({ result, onNewComparison }: { result: ComparisonResult; onNewComparison: () => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm">
+          Ações
+          <ChevronDown aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <ExportItems result={result} />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="min-h-10" onSelect={onNewComparison}>
+          <Plus aria-hidden />
+          Nova comparação
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -151,18 +191,7 @@ export function WorkspaceHeader({ phase, documents, demo, result, onNewCompariso
           )}
 
           {result ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Download aria-hidden />
-                  Exportar relatório
-                  <ChevronDown aria-hidden />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <ExportItems result={result} />
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ExportMenu result={result} />
           ) : (
             <Tooltip>
               <TooltipTrigger asChild>

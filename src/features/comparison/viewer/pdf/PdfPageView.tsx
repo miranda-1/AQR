@@ -73,7 +73,7 @@ function Mark({ mark, role, active, onSelect }: { mark: PageMark; role: Document
   const chip = (
     <>
       <meta.icon aria-hidden className="size-[1em]" strokeWidth={3} />
-      <span aria-hidden>{mark.number}</span>
+      <span aria-hidden className="diff-number">{mark.number}</span>
     </>
   )
 

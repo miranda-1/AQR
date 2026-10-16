@@ -160,7 +160,7 @@ button:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
     <div class="card"><h3>Como funciona</h3><h2>O que muda em relação à tela de hoje</h2>
       <ul>
         <li><b>Barra única:</b> título, situação da análise (selo clicável), modo, categoria, contadores, anterior/próxima, zoom, exportar e nova comparação numa só linha. A legenda vai para o botão "?".</li>
-        <li><b>Focar</b> (ou tecla F): esconde a barra do AQR, a sub-barra e a barra única; sobra uma barra flutuante e a faixa de diferenças embaixo. Esc ou "Sair do foco" volta.</li>
+        <li><b>Focar</b> (ou tecla F): esconde a barra do AQR, a sub-barra e a barra única; sobra uma barra flutuante e a faixa de diferenças embaixo, com setas ◀ ▶ para ir de uma diferença à outra. Esc ou "Sair do foco" volta.</li>
         <li><b>Minimizar a lista</b> (botão ⇤ ou tecla L): na tela normal, a lista vira uma aba fina "Diferenças (5)"; no foco, a faixa de baixo encolhe para uma linha. Clicar na aba reabre.</li>
         <li><b>Números:</b> por padrão, o número de cada diferença aparece só quando o mouse passa sobre o destaque (ou quando ele recebe o foco pelo teclado). O interruptor <b>Números sempre</b>, na barra, deixa todos visíveis como hoje.</li>
         <li>O destaque colorido continua sempre visível; o leitor de tela continua anunciando o número de cada diferença.</li>
@@ -244,10 +244,14 @@ function normal() {
 }
 function focus() {
   const strip = st.listMin
-    ? `<div style="position:absolute;left:0;right:0;bottom:0;height:2.6em;background:#fff;box-shadow:0 -.2em .8em -.3em rgba(27,32,64,.25);display:flex;align-items:center;gap:.6em;padding:0 .8em;font-size:.85em"><b>Diferenças (5)</b><span style="color:#4a5072">${st.active}. ${DIFFS[st.active - 1].t}</span><span class="btn small" style="margin-left:auto" data-act="list">▴ Mostrar</span></div>`
+    ? `<div style="position:absolute;left:0;right:0;bottom:0;height:2.6em;background:#fff;box-shadow:0 -.2em .8em -.3em rgba(27,32,64,.25);display:flex;align-items:center;gap:.6em;padding:0 .8em;font-size:.85em"><span class="btn small" data-step="-1" title="Anterior">◀</span><b>${st.active} de 5</b><span class="btn small" data-step="1" title="Próxima">▶</span><span style="color:#4a5072">${DIFFS[st.active - 1].t}</span><span class="btn small" style="margin-left:auto" data-act="list">▴ Mostrar</span></div>`
     : `<div style="position:absolute;left:0;right:0;bottom:0;height:5.6em;background:#fff;box-shadow:0 -.2em .8em -.3em rgba(27,32,64,.25);display:flex;flex-direction:column">
         <div class="row" style="padding:.3em .8em 0;font-size:.8em"><b>Diferenças (5)</b><span class="btn ghost small" style="margin-left:auto" data-act="list">▾ Minimizar</span></div>
-        <div style="display:flex;gap:.5em;overflow-x:auto;padding:.2em .8em .5em">${DIFFS.map((d) => `<div class="item${st.active === d.n ? ' on' : ''}" data-n="${d.n}" style="min-width:13em;background:${st.active === d.n ? '#eef0f8' : '#f4f5f9'}"><div class="row"><span class="k ${d.k}">${kindIcon[d.k]}</span><b>${d.n}</b><span>${d.t}</span></div></div>`).join('')}</div></div>`
+        <div style="display:flex;gap:.5em;align-items:center;padding:.2em .8em .5em">
+          <span class="btn" data-step="-1" title="Anterior (Alt+↑)" style="flex:none;padding:.7em .5em">◀</span>
+          <div style="display:flex;gap:.5em;overflow-x:auto;flex:1">${DIFFS.map((d) => `<div class="item${st.active === d.n ? ' on' : ''}" data-n="${d.n}" style="min-width:13em;background:${st.active === d.n ? '#eef0f8' : '#f4f5f9'}"><div class="row"><span class="k ${d.k}">${kindIcon[d.k]}</span><b>${d.n}</b><span>${d.t}</span></div></div>`).join('')}</div>
+          <span class="btn" data-step="1" title="Próxima (Alt+↓)" style="flex:none;padding:.7em .5em">▶</span>
+        </div></div>`
   return `<div class="body" style="position:relative">
       <div style="position:absolute;top:.6em;left:50%;transform:translateX(-50%);z-index:4;background:rgba(255,255,255,.97);border-radius:.6em;box-shadow:0 .3em 1em -.2em rgba(27,32,64,.35);padding:.35em .5em;display:flex;gap:.5em;align-items:center">
         <span class="chip" style="background:var(--ok-bg);border-color:transparent">🛡 Concluída</span>${modes()}${stepper()}${numToggle()}<span class="btn small">− 100% +</span><span class="btn small" data-act="focus">✕ Sair do foco (Esc)</span>

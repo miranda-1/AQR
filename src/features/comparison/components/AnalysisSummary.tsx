@@ -1,5 +1,4 @@
 import { ChevronDown, Info, ShieldAlert, ShieldCheck, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { contentLabels, coverageLabels, relationLabels, statusLabels } from '../model/describe'
 import type { AnalysisStatus, AnalysisWarning, ComparisonResult, DocumentRole, PageAnalysis, PageMatch } from '../model/types'
@@ -182,38 +181,66 @@ export function AnalysisDetails({ result }: { result: ComparisonResult }) {
   )
 }
 
+const shortStatus: Record<AnalysisStatus, string> = {
+  complete: 'Concluída',
+  'with-caveats': 'Com ressalvas',
+  partial: 'Parcial',
+}
+
 /**
- * Situação da análise, sempre visível no topo do resultado. Os detalhes abrem sozinhos quando a
- * comparação é parcial, para que nenhuma limitação fique escondida.
+ * Selo da situação da análise, na barra do resultado. Abre e fecha o painel de detalhes
+ * (`AnalysisPanel`). A cor acompanha a situação; o texto diz a situação, então a cor não é o único sinal.
  */
-export function AnalysisBanner({ result, className }: { result: ComparisonResult; className?: string }) {
+export function AnalysisStatusButton({
+  result,
+  expanded,
+  onToggle,
+  controls,
+}: {
+  result: ComparisonResult
+  expanded: boolean
+  onToggle: () => void
+  controls: string
+}) {
   const { status, warnings } = result.analysis
   const display = statusDisplay[status]
-  const [open, setOpen] = useState(status === 'partial')
-  const detailsId = useId()
   const relevant = warnings.filter((warning) => warning.severity !== 'info').length
-
   return (
-    <section aria-label="Situação da análise" className={cn('px-4 py-2 lg:px-6', display.className, className)}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <display.icon data-icon aria-hidden className="size-5 shrink-0" />
-        <p className="min-w-0 flex-1 text-[0.9375rem]">
+    <button
+      type="button"
+      aria-expanded={expanded}
+      aria-controls={controls}
+      onClick={onToggle}
+      title={`${statusLabels[status]}. ${display.message}`}
+      className={cn('inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold whitespace-nowrap', display.className)}
+    >
+      <display.icon data-icon aria-hidden className="size-4" />
+      <span className="sr-only">Situação da análise: </span>
+      <span aria-hidden>{shortStatus[status]}</span>
+      <span className="sr-only">{statusLabels[status]}</span>
+      {relevant > 0 && <span className="tabular font-bold">({relevant})</span>}
+      <span className="sr-only">. {expanded ? 'Ocultar' : 'Ver'} detalhes da análise</span>
+      <ChevronDown aria-hidden className={cn('size-4 transition-transform', expanded && 'rotate-180')} />
+    </button>
+  )
+}
+
+/** Detalhes da situação da análise, abaixo da barra (abertos sozinhos quando a comparação é parcial). */
+export function AnalysisPanel({ result, id }: { result: ComparisonResult; id: string }) {
+  const { status, warnings } = result.analysis
+  const display = statusDisplay[status]
+  const relevant = warnings.filter((warning) => warning.severity !== 'info').length
+  return (
+    <section id={id} aria-label="Situação da análise" className={cn('px-4 py-3 lg:px-6', display.className)}>
+      <p className="flex items-start gap-2 text-[0.9375rem]">
+        <display.icon data-icon aria-hidden className="mt-0.5 size-5 shrink-0" />
+        <span>
           <strong className="font-bold">{statusLabels[status]}.</strong> {display.message}
           {relevant > 0 && ` (${relevant} ${relevant === 1 ? 'ressalva' : 'ressalvas'})`}
-        </p>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={detailsId}
-          onClick={() => setOpen((value) => !value)}
-          className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-sm font-semibold text-brand hover:bg-white/60"
-        >
-          {open ? 'Ocultar detalhes da análise' : 'Ver detalhes da análise'}
-          <ChevronDown aria-hidden className={cn('size-4 transition-transform', open && 'rotate-180')} />
-        </button>
-      </div>
-      <div id={detailsId} hidden={!open} className="mt-2 rounded-md bg-white/70 p-3">
-        {open && <AnalysisDetails result={result} />}
+        </span>
+      </p>
+      <div className="mt-2 rounded-md bg-white/70 p-3">
+        <AnalysisDetails result={result} />
       </div>
     </section>
   )

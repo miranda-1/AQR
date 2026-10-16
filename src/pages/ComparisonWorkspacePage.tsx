@@ -4,7 +4,7 @@ import { comparisonConfig } from '@/config/comparison'
 import { routes } from '@/config/routes'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
-import { WorkspaceHeader } from '@/features/comparison/components/WorkspaceHeader'
+import { ResultActionsMenu, WorkspaceHeader } from '@/features/comparison/components/WorkspaceHeader'
 import { useComparisonRun } from '@/features/comparison/hooks/use-comparison-run'
 import { demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
 import type { ComparisonService, DocumentRole } from '@/features/comparison/model/types'
@@ -67,9 +67,17 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
         ? { original: { kind: 'pdf', file: files.original }, updated: { kind: 'pdf', file: files.updated } }
         : undefined
 
+  const startNew = () => {
+    reset()
+    navigate(routes.comparison, { viewTransition: true })
+  }
+  // Com resultado e diferenças (fora do modo demonstrativo), a barra única do resultado substitui o
+  // cabeçalho: título, exportar e nova comparação ficam nela, e os PDFs ganham a altura.
+  const singleBar = !isDemo && state.phase === 'completed' && state.result.differences.length > 0 && sources !== undefined
+
   return (
     <>
-      <WorkspaceHeader
+      {!singleBar && <WorkspaceHeader
         phase={state.phase}
         documents={documents}
         result={state.phase === 'completed' ? state.result : undefined}
@@ -82,11 +90,8 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
               }
             : undefined
         }
-        onNewComparison={() => {
-          reset()
-          navigate(routes.comparison, { viewTransition: true })
-        }}
-      />
+        onNewComparison={startNew}
+      />}
       {(state.phase === 'preparing' || state.phase === 'processing') && (
         <ProcessingPanel state={state} isDemonstration={isDemo} />
       )}
@@ -96,7 +101,16 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
           <NoDifferencesPanel result={state.result} />
         ) : (
           sources && (
-            <ComparisonWorkspace key={state.result.id} result={state.result} documents={sources} initialView={view} onViewChange={saveView} />
+            <ComparisonWorkspace
+              key={state.result.id}
+              result={state.result}
+              documents={sources}
+              initialView={view}
+              onViewChange={saveView}
+              actions={
+                singleBar ? <ResultActionsMenu result={state.result} onNewComparison={startNew} /> : undefined
+              }
+            />
           )
         ))}
     </>

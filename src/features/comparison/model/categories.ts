@@ -18,7 +18,7 @@ export interface CategoryOption {
 }
 
 export const categoryOptions: readonly CategoryOption[] = [
-  { value: 'all', label: 'Todas as categorias' },
+  { value: 'all', label: 'Todas' },
   ...differenceCategories.map((category) => ({ value: category, label: categoryLabels[category].plural, icon: categoryIcons[category] })),
   { value: 'needs-review', label: 'Para conferir', icon: CircleAlert },
 ]

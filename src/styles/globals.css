@@ -137,6 +137,19 @@
     text-decoration-style: double;
     text-decoration-color: var(--diff-move-line);
   }
+  /*
+   * Números das diferenças só ao passar o mouse (ou com o foco do teclado), a menos que
+   * "Números sempre" esteja ligado. O leitor de tela continua lendo o número (rótulo próprio).
+   */
+  .diff-numbers-hover .diff-index-chip,
+  .diff-numbers-hover .pdf-diff-chip,
+  .diff-numbers-hover .diff-number {
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .diff-numbers-hover :is(.diff-mark, .pdf-diff-box, .pdf-diff-anchor):is(:hover, :focus-visible) :is(.diff-index-chip, .pdf-diff-chip, .diff-number) {
+    opacity: 1;
+  }
   .diff-mark[aria-current='true'] {
     outline: 2px solid var(--brand-blue);
     outline-offset: 2px;
