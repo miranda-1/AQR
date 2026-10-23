@@ -26,6 +26,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.0
+    mem_limit: 2g
     command: start-dev --import-realm
     depends_on:
       postgres:
