@@ -32,7 +32,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ## Repositório
 
-- GitHub (**privado**): https://github.com/miranda-1/AQR, branch `master`.
+- GitHub (**privado**): https://github.com/miranda-1/AQR. Branches: **`dev`** (esta: tudo, onde o desenvolvimento continua) e `master` (versão hospedada: só a comparação, sem triagem, login fictício `admin`/`admin`, preparada para a Cloudflare). O que for para o ar é levado da `dev` à `master` sem a triagem, a administração e o login real.
 - O remoto usa HTTPS, com autenticação pelo GitHub CLI (`gh`, conta miranda-1). A chave SSH não está configurada neste computador. Para enviar:
   ```bash
   git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push
@@ -54,6 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 22/10/2026 | **Projeto dividido em branches:** `master` só com a comparação de PDFs (a triagem some por completo), para hospedar; `dev` com tudo. **Na `master`, login fictício `admin`/`admin`** (a tela de login aprovada continua igual, sem o login do servidor). **Hospedagem na Cloudflare** (Workers para o site + Containers para o servidor de comparação; guia em `docs/hospedagem-cloudflare.md` na `master`). |
 | 16/10/2026 | **Tela de comparação: barra única + modo foco + lista minimizável + números só ao passar o mouse** (com interruptor "Números" para deixá-los sempre visíveis). No foco, a faixa de diferenças fica sempre visível (sem minimizar), com setas para ir de uma à outra. Referência: `docs/propostas-comparacao/mistura.html`. |
 | 16/10/2026 | **A comparação continua aberta** quando a pessoa visita outra página do site e volta por "Comparar PDFs" (pedido do responsável). Só em memória: recarregar, sair da conta ou "Nova comparação" a descartam. |
 | 15/10/2026 | **Comparador híbrido** (missão "evolução completa do sistema de comparação de PDFs"): **substitui a D3** ("só o texto, sem OCR"). O comparador passa a comparar texto, aparência (renderização), imagens, estrutura de páginas e documentos digitalizados (OCR local), com consolidação das evidências, modos Completo/Conteúdo/Visual, exportação e cobertura da análise explícita. Nada de LLM nem de APIs externas: OCR local (Tesseract). Sem push, deploy ou mudança em serviços institucionais. Registro em `docs/comparador/REGISTRO_EXECUCAO.md`. |
@@ -193,6 +194,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 16/10/2026 | Relatório final da evolução do comparador (`AQR_COMPARADOR_IMPLEMENTACAO_FINAL.md`) | ver `git log` |
 | 16/10/2026 | Teste no navegador real (`node --import tsx scripts/e2e-navegador.mts`, Chromium pelo protocolo DevTools, 19 verificações; capturas em `docs/comparador/capturas/`). Corrigidos: destaque selecionado cobria o texto da página; troca de dígito parecido ("15" → "18") ficava sem confirmação visual a 120 dpi → reconferência a 240 dpi só nos recortes das diferenças de texto não confirmadas. 1.000 páginas pela thread real (768 MB, 120 s): concluída em 90 s, parcial | ver `git log` |
 | 15/10/2026 | Entrada definitiva no site: fundo "Névoa" (token `--login-mist-mid`; saem `--login-night-*`), anéis e pontinhos da saída em azul, folhas com ícone de diferença (mesmos ícones do visualizador), varredura com lista, corte limpo com a saudação pelo horário (`greeting.ts`, com testes) e voo da logo sempre azul. Conferido no Chromium: entrar, chegar ao início e sair | ver `git log` |
+| 22/10/2026 | Criada a branch `dev` com o projeto completo; a `master` virou a versão para hospedar (só a comparação, login fictício, Cloudflare) | ver `git log` |
 
 ## Pendências
 
