@@ -1,6 +1,6 @@
 # AQR: instruções para agentes
 
-Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui, e servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. Etapa atual: **backend segundo `docs/plano-backend.md`** (comparação real de PDFs e administração de contas). Sem IA, autenticação real ou deploy. O login (`/entrar`) é apenas visual: qualquer usuário e senha preenchidos entram; **não redesenhar nem substituir a tela de login**.
+Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui, e servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. **Branches:** `master` é a versão para hospedar (só a comparação de PDFs, sem triagem; login fictício `admin`/`admin`, sem login no servidor; hospedagem na Cloudflare em `docs/hospedagem-cloudflare.md`). `dev` tem tudo (triagem, administração, login real) e é onde o desenvolvimento continua. Sem IA. **Não redesenhar nem substituir a tela de login**.
 
 ## Antes de começar
 Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter sem pedir), histórico e pendências.

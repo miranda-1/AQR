@@ -1,4 +1,4 @@
-import { FileSearch, Files, House, type LucideIcon } from 'lucide-react'
+import { Files, House, type LucideIcon } from 'lucide-react'
 import { routes } from '@/config/routes'
 
 export interface ToolItem {
@@ -14,7 +14,6 @@ export interface ToolItem {
 export const toolItems: readonly ToolItem[] = [
   { label: 'Início', to: routes.home, icon: House, exact: true },
   { label: 'Comparar PDFs', to: routes.comparison, icon: Files },
-  { label: 'Triagem documental', to: routes.triage, icon: FileSearch, status: 'in-development' },
 ]
 
 /** Uma ferramenta fica ativa na própria rota e em suas sub-rotas (ex.: /comparacao/resultado). */

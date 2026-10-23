@@ -1,111 +1,45 @@
 import { render, screen } from '@testing-library/react'
-import { act } from 'react'
+import userEvent from '@testing-library/user-event'
 import { AuthSessionProvider, useAuthSession } from './auth-session'
-import { announceSessionEnded } from './session-events'
+import { checkDemoCredentials } from './demo-login'
 
 function Probe() {
-  const { mode, isAuthenticated } = useAuthSession()
-  return <p>{`${mode}:${isAuthenticated ? 'dentro' : 'fora'}`}</p>
+  const { isAuthenticated, userName, signIn, signOut } = useAuthSession()
+  return (
+    <>
+      <p>{isAuthenticated ? `dentro:${userName ?? ''}` : 'fora'}</p>
+      <button type="button" onClick={() => signIn(' admin ')}>Entrar</button>
+      <button type="button" onClick={signOut}>Sair</button>
+    </>
+  )
 }
 
-function respondWith(handler: (url: string) => Response | Promise<Response>) {
-  vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => Promise.resolve(handler(String(input)))))
-}
+afterEach(() => sessionStorage.clear())
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.unstubAllEnvs()
-})
+describe('AuthSessionProvider (login fictício, só no navegador)', () => {
+  it('guarda a sessão na aba e a apaga ao sair', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
+    expect(screen.getByText('fora')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(screen.getByText('dentro:admin')).toBeInTheDocument()
 
-describe('AuthSessionProvider (consulta ao servidor)', () => {
-  it('em produção, servidor fora do ar NÃO cai no login visual', async () => {
-    vi.stubEnv('PROD', true)
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('offline'))))
+    // Recarregar a página na mesma aba mantém a sessão.
+    unmount()
     render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
-    expect(await screen.findByText('unavailable:fora')).toBeInTheDocument()
-  })
-
-  it('em produção, nem um servidor que anuncie o modo visual libera o login fictício', async () => {
-    vi.stubEnv('PROD', true)
-    respondWith(() => Response.json({ mode: 'visual' }))
-    render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
-    expect(await screen.findByText('unavailable:fora')).toBeInTheDocument()
-  })
-
-  it('em desenvolvimento, o modo visual segue valendo', async () => {
-    respondWith(() => Response.json({ mode: 'visual' }))
-    render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
-    expect(await screen.findByText('visual:fora')).toBeInTheDocument()
-  })
-
-  it('no modo Keycloak, quem está conectado vem do servidor', async () => {
-    respondWith((url) =>
-      url.endsWith('/api/auth/status') ? Response.json({ mode: 'keycloak' }) : Response.json({ nome: 'Ana', usuario: 'ana', papel: 'analista' }),
-    )
-    render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
-    expect(await screen.findByText('keycloak:dentro')).toBeInTheDocument()
-  })
-
-  it('no modo Keycloak sem sessão (401), fica fora', async () => {
-    respondWith((url) => (url.endsWith('/api/auth/status') ? Response.json({ mode: 'keycloak' }) : new Response(null, { status: 401 })))
-    render(<AuthSessionProvider><Probe /></AuthSessionProvider>)
-    expect(await screen.findByText('keycloak:fora')).toBeInTheDocument()
+    expect(screen.getByText('dentro:admin')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Sair' }))
+    expect(screen.getByText('fora')).toBeInTheDocument()
+    expect(sessionStorage.length).toBe(0)
   })
 })
 
-describe('AuthSessionProvider (sessão por inatividade no login real)', () => {
-  function Expired() {
-    const { isAuthenticated, sessionExpired } = useAuthSession()
-    return <p>{`${isAuthenticated ? 'dentro' : 'fora'}:${sessionExpired ? 'expirou' : 'valendo'}`}</p>
-  }
-
-  afterEach(() => vi.useRealTimers())
-
-  it('a atividade da pessoa avisa o servidor no máximo a cada minuto; quando o relógio diz 401, a sessão termina', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    let alive = true
-    const calls: string[] = []
-    respondWith((url) => {
-      calls.push(url)
-      if (url.endsWith('/api/auth/status')) return Response.json({ mode: 'keycloak' })
-      if (!alive) return new Response(null, { status: 401 })
-      if (url.endsWith('/api/auth/sessao')) return Response.json({ expiraEm: new Date().toISOString() })
-      return Response.json({ nome: 'Ana', usuario: 'ana', papel: 'analista' })
-    })
-    render(<AuthSessionProvider><Expired /></AuthSessionProvider>)
-    expect(await screen.findByText('dentro:valendo')).toBeInTheDocument()
-    const meCalls = () => calls.filter((url) => url.endsWith('/api/auth/me')).length
-    const before = meCalls()
-
-    // Atividade logo depois de entrar não gera pedido; depois de um minuto, gera um só.
-    window.dispatchEvent(new Event('keydown'))
-    expect(meCalls()).toBe(before)
-    await vi.advanceTimersByTimeAsync(61_000)
-    window.dispatchEvent(new Event('pointerdown'))
-    window.dispatchEvent(new Event('keydown'))
-    expect(meCalls()).toBe(before + 1)
-    // A conferência periódica usa o relógio, que não conta como uso.
-    expect(calls.some((url) => url.endsWith('/api/auth/sessao'))).toBe(true)
-
-    alive = false
-    await vi.advanceTimersByTimeAsync(61_000)
-    expect(await screen.findByText('fora:expirou')).toBeInTheDocument()
-  })
-
-  it('um 401 em qualquer pedido (comparação, administração) encerra na hora', async () => {
-    respondWith((url) =>
-      url.endsWith('/api/auth/status') ? Response.json({ mode: 'keycloak' }) : Response.json({ nome: 'Ana', usuario: 'ana', papel: 'analista' }),
-    )
-    render(<AuthSessionProvider><Expired /></AuthSessionProvider>)
-    expect(await screen.findByText('dentro:valendo')).toBeInTheDocument()
-    act(() => announceSessionEnded())
-    expect(await screen.findByText('fora:expirou')).toBeInTheDocument()
-  })
-
-  it('no modo visual, o aviso de 401 não derruba ninguém', async () => {
-    respondWith(() => Response.json({ mode: 'visual' }))
-    render(<AuthSessionProvider initialAuthenticated><Expired /></AuthSessionProvider>)
-    act(() => announceSessionEnded())
-    expect(screen.getByText('dentro:valendo')).toBeInTheDocument()
+describe('checkDemoCredentials', () => {
+  it('aceita só admin/admin (o usuário sem diferenciar maiúsculas e espaços)', () => {
+    expect(checkDemoCredentials('admin', 'admin')).toBe(true)
+    expect(checkDemoCredentials(' Admin ', 'admin')).toBe(true)
+    expect(checkDemoCredentials('admin', 'Admin')).toBe(false)
+    expect(checkDemoCredentials('servidor', 'admin')).toBe(false)
+    expect(checkDemoCredentials('admin', '')).toBe(false)
   })
 })

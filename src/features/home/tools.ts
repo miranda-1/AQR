@@ -1,11 +1,11 @@
-import { FileSearch, Files, type LucideIcon } from 'lucide-react'
+import { Files, type LucideIcon } from 'lucide-react'
 import type { ToolItem } from '@/components/layout/navigation'
 import { routes } from '@/config/routes'
 
-export type HomeToolId = 'comparison' | 'triage'
+export type HomeToolId = 'comparison'
 
 /** Ilustração animada exibida na demonstração da ferramenta. */
-export type ToolIllustrationKind = 'comparison' | 'triage'
+export type ToolIllustrationKind = 'comparison'
 
 export interface HomeTool {
   id: HomeToolId
@@ -32,18 +32,6 @@ export const homeTools: readonly HomeTool[] = [
     to: routes.comparison,
     icon: Files,
     illustration: 'comparison',
-  },
-  {
-    id: 'triage',
-    title: 'Triagem documental',
-    description:
-      'Analise os documentos de um processo, identifique cada tipo e verifique se todos os itens obrigatórios foram apresentados.',
-    explanation:
-      'A triagem vai reconhecer cada documento do processo, classificá-lo por tipo e conferir a lista de itens obrigatórios.',
-    to: routes.triage,
-    icon: FileSearch,
-    illustration: 'triage',
-    status: 'in-development',
   },
 ]
 

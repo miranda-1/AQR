@@ -13,6 +13,8 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ## Estado atual
 
+> **Branches (22/10/2026):** `master` é a **versão para hospedar**: só a comparação de PDFs, login fictício `admin`/`admin` conferido no navegador, servidor só com a comparação (sem Keycloak, administração nem banco) e a preparação para a Cloudflare (`docs/hospedagem-cloudflare.md`). A **triagem, a administração e o login real ficam só na branch `dev`**, onde o desenvolvimento continua. O texto abaixo descreve o projeto completo (a `dev`); na `master`, o que vale é este aviso.
+
 **Etapa 1, protótipo de frontend:** concluída. **Entrega 1 da etapa 2 (comparação real):** concluída; o site usa a comparação real por padrão.
 
 - Há servidor (`server/`) e comparação real de PDFs. Ainda não há autenticação real nem deploy; IA, autenticação real e deploy continuam dependendo de pedido explícito.
@@ -32,7 +34,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ## Repositório
 
-- GitHub (**privado**): https://github.com/miranda-1/AQR, branch `master`.
+- GitHub (**privado**): https://github.com/miranda-1/AQR. Branches: `master` (versão hospedada: só a comparação, login fictício) e `dev` (tudo: triagem, administração, login real). Mudanças novas entram na `dev`; o que for para o ar é levado à `master`.
 - O remoto usa HTTPS, com autenticação pelo GitHub CLI (`gh`, conta miranda-1). A chave SSH não está configurada neste computador. Para enviar:
   ```bash
   git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push
@@ -54,6 +56,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 22/10/2026 | **Projeto dividido em branches:** `master` só com a comparação de PDFs (a triagem some por completo), para hospedar; `dev` com tudo. **Na `master`, login fictício `admin`/`admin`** (a tela de login aprovada continua igual, sem o login do servidor). **Hospedagem na Cloudflare** (Workers para o site + Containers para o servidor de comparação). |
 | 16/10/2026 | **Tela de comparação: barra única + modo foco + lista minimizável + números só ao passar o mouse** (com interruptor "Números" para deixá-los sempre visíveis). No foco, a faixa de diferenças fica sempre visível (sem minimizar), com setas para ir de uma à outra. Referência: `docs/propostas-comparacao/mistura.html`. |
 | 16/10/2026 | **A comparação continua aberta** quando a pessoa visita outra página do site e volta por "Comparar PDFs" (pedido do responsável). Só em memória: recarregar, sair da conta ou "Nova comparação" a descartam. |
 | 15/10/2026 | **Comparador híbrido** (missão "evolução completa do sistema de comparação de PDFs"): **substitui a D3** ("só o texto, sem OCR"). O comparador passa a comparar texto, aparência (renderização), imagens, estrutura de páginas e documentos digitalizados (OCR local), com consolidação das evidências, modos Completo/Conteúdo/Visual, exportação e cobertura da análise explícita. Nada de LLM nem de APIs externas: OCR local (Tesseract). Sem push, deploy ou mudança em serviços institucionais. Registro em `docs/comparador/REGISTRO_EXECUCAO.md`. |
@@ -193,9 +196,11 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 16/10/2026 | Relatório final da evolução do comparador (`AQR_COMPARADOR_IMPLEMENTACAO_FINAL.md`) | ver `git log` |
 | 16/10/2026 | Teste no navegador real (`node --import tsx scripts/e2e-navegador.mts`, Chromium pelo protocolo DevTools, 19 verificações; capturas em `docs/comparador/capturas/`). Corrigidos: destaque selecionado cobria o texto da página; troca de dígito parecido ("15" → "18") ficava sem confirmação visual a 120 dpi → reconferência a 240 dpi só nos recortes das diferenças de texto não confirmadas. 1.000 páginas pela thread real (768 MB, 120 s): concluída em 90 s, parcial | ver `git log` |
 | 15/10/2026 | Entrada definitiva no site: fundo "Névoa" (token `--login-mist-mid`; saem `--login-night-*`), anéis e pontinhos da saída em azul, folhas com ícone de diferença (mesmos ícones do visualizador), varredura com lista, corte limpo com a saudação pelo horário (`greeting.ts`, com testes) e voo da logo sempre azul. Conferido no Chromium: entrar, chegar ao início e sair | ver `git log` |
+| 22/10/2026 | Divisão em branches: `dev` guarda tudo (inclusive a memória do Keycloak limitada no compose); na `master` saem a triagem (página, opção do início, sub-barra, ilustração), a administração de contas e o login real (servidor: `server/auth`, `server/admin`, `server/db`, auditoria das comparações, `openid-client`, `docker/`); o servidor passa a rodar em produção sem login; login fictício `admin`/`admin` (`src/features/auth/demo-login.ts`). Preparada a hospedagem na Cloudflare: `Dockerfile`, `cloudflare/` (Worker com arquivos estáticos e contêiner do comparador) e `docs/hospedagem-cloudflare.md`. Conferido: imagem Docker comparando PDFs reais e `wrangler dev` servindo o site e a API pelo Worker | ver `git log` |
 
 ## Pendências
 
+- **Publicar na Cloudflare:** falta o plano Workers Paid, o `wrangler login` e o `npm run deploy` em `cloudflare/` (passos em `docs/hospedagem-cloudflare.md`). Se o acesso precisar ser restrito de verdade, ligar o Cloudflare Access no domínio.
 - **Login real (Keycloak) em produção:** depende de domínio, HTTPS, SMTP real e Keycloak institucional ou próprio em modo `start`; sem isso só roda local (compose com Mailpit). Falta a validação visual da tela de registros (capturas em `docs/capturas-login/`), um tema do Keycloak com a identidade da PREFCG (hoje o tema padrão, em português), e definir a retenção dos registros de acesso (`access_events`, com IP; hoje sem prazo). Ver `docs/login-keycloak.md`.
 
 - **Fontes padrão no visualizador:** o pdf.js avisa no console (`standardFontDataUrl`) ao abrir PDFs com fontes padrão não incorporadas; o desenho sai com fonte substituta. Se atrapalhar o alinhamento dos destaques, servir `pdfjs-dist/standard_fonts` e informar `standardFontDataUrl` em `load-pdf.ts`.

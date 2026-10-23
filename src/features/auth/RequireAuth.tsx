@@ -10,16 +10,12 @@ export interface LoginRedirectState {
 
 /** Sem sessão, qualquer página leva ao login; depois de entrar, a pessoa volta para onde ia. */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated, mode, sessionExpired } = useAuthSession()
+  const { isAuthenticated } = useAuthSession()
   const location = useLocation()
-
-  // Enquanto o servidor não diz quem está conectado, não decide nada (evita piscar a tela de login).
-  if (mode === 'loading') return null
 
   if (!isAuthenticated) {
     const state: LoginRedirectState = { from: `${location.pathname}${location.search}` }
-    // Sessão que terminou sozinha: o login explica o motivo e, depois de entrar, volta para cá.
-    return <Navigate to={sessionExpired ? `${routes.login}?erro=sessao_expirada` : routes.login} replace state={state} />
+    return <Navigate to={routes.login} replace state={state} />
   }
   return children
 }

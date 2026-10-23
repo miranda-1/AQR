@@ -2,7 +2,7 @@ import { isToolActive, toolItems } from '@/components/layout/navigation'
 import { routes } from '@/config/routes'
 
 /**
- * Posição de uma página na ordem da sub-barra (Início, Comparar PDFs, Triagem documental).
+ * Posição de uma página na ordem da sub-barra (Início, Comparar PDFs).
  * A transição "deslizar" anda no mesmo sentido do traço: para a direita, a página nova entra pela direita.
  * O resultado da comparação fica logo depois da seleção.
  */

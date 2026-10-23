@@ -46,25 +46,38 @@ describe('Login', () => {
     expect(screen.getByRole('button', { name: 'Ocultar senha' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('ao entrar, leva à página que a pessoa tinha pedido', async () => {
+  it('recusa usuário ou senha diferentes do login fictício (admin/admin)', async () => {
     const user = userEvent.setup()
-    const { router } = await renderLogin('/triagem')
-    await user.type(screen.getByLabelText('Usuário'), 'servidor')
+    const { router } = await renderLogin()
+    await user.type(screen.getByLabelText('Usuário'), 'maria.souza')
     await user.type(screen.getByLabelText('Senha'), 'qualquer')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Triagem documental' })).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/triagem')
+    expect(screen.getByRole('alert')).toHaveTextContent('Usuário ou senha incorretos. Confira os dados e tente de novo.')
+    expect(router.state.location.pathname).toBe('/entrar')
+    // Voltar a digitar limpa o aviso.
+    await user.type(screen.getByLabelText('Senha'), 'x')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('ao entrar, leva à página que a pessoa tinha pedido', async () => {
+    const user = userEvent.setup()
+    const { router } = await renderLogin('/comparacao')
+    await user.type(screen.getByLabelText('Usuário'), 'admin')
+    await user.type(screen.getByLabelText('Senha'), 'admin')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/comparacao')
   })
 
   it('sem página pedida, entra no início', async () => {
     const user = userEvent.setup()
     await renderLogin('/entrar')
-    await user.type(screen.getByLabelText('Usuário'), 'maria.souza')
-    await user.type(screen.getByLabelText('Senha'), 'qualquer')
+    await user.type(screen.getByLabelText('Usuário'), 'admin')
+    await user.type(screen.getByLabelText('Senha'), 'admin')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })).toBeInTheDocument()
     // O nome digitado aparece no botão de conta.
-    expect(screen.getByRole('button', { name: 'Conta de maria.souza' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Conta de admin' })).toBeInTheDocument()
   })
 
   it('com sessão, o endereço do login leva ao início', async () => {

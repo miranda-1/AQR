@@ -1,0 +1,19 @@
+{
+  "name": "aqr-cloudflare",
+  "private": true,
+  "description": "Hospedagem do AQR na Cloudflare: o site (arquivos estáticos) e o servidor de comparação (contêiner).",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "npm --prefix .. run build && wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "0.3.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261006.1",
+    "typescript": "~6.0.3",
+    "wrangler": "4.150.0"
+  }
+}

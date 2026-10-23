@@ -1,7 +1,4 @@
-import { ChevronDown, LogOut, Users } from 'lucide-react'
-import { Link } from 'react-router'
-import { routes } from '@/config/routes'
-import { useAdminSession } from '@/features/admin/session/admin-session'
+import { ChevronDown, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,7 +15,6 @@ import { useEntryHandoff } from '@/features/auth/entry/entry-handoff'
 export function AccountMenu() {
   const { userName } = useAuthSession()
   const { exit } = useEntryHandoff()
-  const { availability } = useAdminSession()
   const name = userName || 'Usuário'
   const initial = name.charAt(0).toUpperCase()
 
@@ -43,17 +39,6 @@ export function AccountMenu() {
           <span className="text-sm text-muted-foreground">{appConfig.organization.short}</span>
         </DropdownMenuLabel>
         {/* Separado por espaço, sem linha divisória. */}
-        {availability === 'available' && (
-          <DropdownMenuItem
-            asChild
-            className="mt-1 min-h-11 cursor-pointer gap-2.5 px-3 py-2 text-[0.9375rem] text-muted-foreground focus:bg-secondary focus:text-ink"
-          >
-            <Link to={routes.adminAccounts} viewTransition>
-              <Users aria-hidden className="size-[1.125rem]" />
-              Administração de contas
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem
           onSelect={exit}
           className="mt-1 min-h-11 cursor-pointer gap-2.5 px-3 py-2 text-[0.9375rem] text-muted-foreground focus:bg-secondary focus:text-ink"

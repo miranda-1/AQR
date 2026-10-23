@@ -1,9 +1,8 @@
-import type { FastifyInstance, FastifyRequest } from 'fastify'
+import type { FastifyInstance } from 'fastify'
 import type { ComparisonJob, DocumentRole } from '../../shared/contracts/comparison.ts'
 import { ApiError } from '../http/errors.ts'
 import { sanitizeFileName } from '../http/file-name.ts'
-import type { ComparisonAudit, ComparisonRequester } from './audit.ts'
-import { CANCELLED_BY_REQUESTER, type ComparisonJobStore } from './job-store.ts'
+import type { ComparisonJobStore } from './job-store.ts'
 import type { ComparisonWorkerPool } from './worker-pool.ts'
 
 const ACCEPTED_TYPES = new Set(['application/pdf', 'application/x-pdf'])
@@ -16,13 +15,6 @@ interface ComparisonRoutesOptions {
   store: ComparisonJobStore
   pool: ComparisonWorkerPool
   maxFileSizeBytes: number
-  /** Auditoria das comparações (login real); ausente no modo de desenvolvimento. */
-  audit?: ComparisonAudit
-  /**
-   * Quem está pedindo (login real). Com ele, cada comparação só é vista e cancelada por quem a
-   * enviou. Ausente no modo de desenvolvimento, sem autenticação.
-   */
-  identify?: (request: FastifyRequest) => Promise<ComparisonRequester | null>
 }
 
 function isRole(value: string): value is DocumentRole {
@@ -42,8 +34,7 @@ function notFound(): ApiError {
 }
 
 export function registerComparisonRoutes(app: FastifyInstance, options: ComparisonRoutesOptions): void {
-  const { store, pool, maxFileSizeBytes, audit, identify } = options
-  const requesterOf = async (request: FastifyRequest): Promise<ComparisonRequester | null> => (identify ? identify(request) : null)
+  const { store, pool, maxFileSizeBytes } = options
 
   app.post('/api/comparisons', async (request, reply) => {
     if (!request.isMultipart()) {
@@ -81,10 +72,8 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
       throw queueFull()
     }
 
-    const requester = await requesterOf(request)
-    if (identify && !requester) throw new ApiError(401, 'UNAUTHENTICATED', 'Sua sessão terminou. Entre de novo para continuar.')
-    const { id, signal } = store.create(requester?.accountId ?? null)
-    if (requester) audit?.submitted(id, requester)
+    // Sem login no servidor: o id da tarefa (UUID aleatório) é o que dá acesso ao resultado.
+    const { id, signal } = store.create()
     const started = Date.now()
     pool
       .run(
@@ -97,23 +86,16 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
       )
       .then((outcome) => {
         store.finish({ id, ...outcome })
-        if (outcome.status === 'completed') audit?.finished(id, { status: 'completed', differences: outcome.result.summary.total })
-        else audit?.finished(id, { status: 'failed', reason: outcome.error.code })
         request.log.info(
           { comparison: id, status: outcome.status, ms: Date.now() - started, bytes: original.bytes.byteLength + updated.bytes.byteLength },
           'comparação terminada',
         )
       })
       .catch((error: unknown) => {
-        if (signal.aborted) {
-          // Cancelada por quem enviou (saiu da tela ou desistiu): fica registrada como tal no resumo.
-          // Interrompida pelo desligamento do servidor: não é escolha de ninguém e o banco já pode estar fechado.
-          if (signal.reason === CANCELLED_BY_REQUESTER) audit?.finished(id, { status: 'failed', reason: 'CANCELLED' })
-          return
-        }
+        // Cancelada por quem enviou ou interrompida pelo desligamento do servidor.
+        if (signal.aborted) return
         // Fila cheia entre a checagem e a execução, ou falha ao iniciar a thread.
         store.finish({ id, status: 'failed', error: { code: 'PROCESSING_FAILED' } })
-        audit?.finished(id, { status: 'failed', reason: 'PROCESSING_FAILED' })
         request.log.warn({ comparison: id, err: error instanceof Error ? error.name : 'desconhecido' }, 'comparação não iniciada')
       })
 
@@ -123,8 +105,7 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
 
   app.get<{ Params: { id: string } }>('/api/comparisons/:id', async (request, reply) => {
     const { id } = request.params
-    const requester = await requesterOf(request)
-    const job = UUID.test(id) ? store.get(id, requester?.accountId ?? null) : undefined
+    const job = UUID.test(id) ? store.get(id) : undefined
     if (!job) throw notFound()
     // Entregue o resultado (ou o erro), ele é descartado: nada da comparação fica no servidor.
     if (job.status === 'completed' || job.status === 'failed') store.delivered(id)
@@ -133,8 +114,7 @@ export function registerComparisonRoutes(app: FastifyInstance, options: Comparis
 
   app.delete<{ Params: { id: string } }>('/api/comparisons/:id', async (request, reply) => {
     const { id } = request.params
-    const requester = await requesterOf(request)
-    if (UUID.test(id)) store.remove(id, requester?.accountId ?? null)
+    if (UUID.test(id)) store.remove(id)
     return reply.status(204).send()
   })
 }

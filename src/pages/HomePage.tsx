@@ -7,7 +7,7 @@ import { useDocumentTitle } from '@/hooks/use-document-title'
 export function HomePage() {
   useDocumentTitle('Início')
   const [activeId, setActiveId] = useState<HomeToolId>(defaultHomeToolId)
-  const [runs, setRuns] = useState<Record<HomeToolId, number>>({ comparison: 0, triage: 0 })
+  const [runs, setRuns] = useState<Record<HomeToolId, number>>({ comparison: 0 })
 
   const active = homeTools.find((tool) => tool.id === activeId) ?? homeTools[0]
 

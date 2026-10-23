@@ -1,4 +1,3 @@
-import { announceSessionEnded } from '@/features/auth/session-events'
 import { apiErrorSchema, parseComparisonJob } from '../model/api-schema'
 import type { ComparisonError, ComparisonJob, ComparisonOutcome, ComparisonService, ComparisonStage, CompareOptions } from '../model/types'
 
@@ -66,7 +65,6 @@ export function createHttpComparisonService(options: HttpComparisonServiceOption
         if (signal?.aborted) throw error
         return processingFailed()
       }
-      if (response.status === 401) announceSessionEnded()
       if (!response.ok) return outcomeFromErrorResponse(response)
 
       let job = parseComparisonJob(await response.json().catch(() => undefined))
@@ -93,7 +91,6 @@ export function createHttpComparisonService(options: HttpComparisonServiceOption
           await wait(pollIntervalMs, signal)
           try {
             const poll = await fetchFn(jobUrl, { signal, cache: 'no-store' })
-            if (poll.status === 401) announceSessionEnded()
             if (!poll.ok) return processingFailed()
             const next = parseComparisonJob(await poll.json().catch(() => undefined))
             if (!next) return processingFailed()

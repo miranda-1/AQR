@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-server
+data
+coverage
+docs
+.git
+.claude
+cloudflare/node_modules
+cloudflare/.wrangler
+.env*

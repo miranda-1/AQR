@@ -1,17 +1,5 @@
 import multipart from '@fastify/multipart'
-import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify'
-import { registerAdminRoutes } from './admin/routes.ts'
-import type { AuthStatus } from '../shared/contracts/auth.ts'
-import type { AuthProvider } from './auth/auth-provider.ts'
-import { createComparisonAudit, purgeOldComparisonEvents } from './comparison/audit.ts'
-import { IdentityProvisioner } from './admin/identity-sync.ts'
-import { KeycloakIdentityProvider, type IdentityProvider } from './auth/identity-provider.ts'
-import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
-import { createKeycloakAuthProvider, registerKeycloakAuthRoutes } from './auth/keycloak-auth.ts'
-import { KeycloakClient } from './auth/keycloak-client.ts'
-import { SessionStore } from './auth/session-store.ts'
-import { openDatabase, type Database } from './db/database.ts'
-import { migrate } from './db/migrate.ts'
+import Fastify, { type FastifyInstance } from 'fastify'
 import { ComparisonJobStore } from './comparison/job-store.ts'
 import { comparisonLimitsFor } from './comparison/limits.ts'
 import { registerComparisonRoutes } from './comparison/routes.ts'
@@ -22,33 +10,10 @@ import { registerErrorHandling } from './http/errors.ts'
 /** JSON da API é pequeno; os PDFs chegam por multipart, com limites próprios. */
 const JSON_BODY_LIMIT = 64 * 1024
 
-export interface AppDependencies {
-  /** Banco já aberto (testes). Sem ele, a administração abre `config.databasePath`. */
-  db?: Database
-  /** Cliente do Keycloak (testes trocam por um servidor OIDC falso). */
-  keycloakClient?: KeycloakClient
-  /** Provedor de identidades (testes trocam por um falso). */
-  identityProvider?: IdentityProvider
-}
-
-/** Sessão: cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login (decisão do responsável). */
-const SESSION_LIMITS = { maxAgeMs: 8 * 3600_000, idleMs: 30 * 60_000 }
-
-/** No login real: cada comparação pertence a quem a enviou e fica registrada (sem conteúdo nem nomes). */
-function comparisonAccess(auth: AuthProvider, db: Database, log: (message: string, error: unknown) => void) {
-  return {
-    audit: createComparisonAudit(db, log),
-    identify: async (request: FastifyRequest) => {
-      const principal = await auth.resolvePrincipal(request)
-      return principal ? { accountId: principal.accountId, usuario: principal.usuario } : null
-    },
-  }
-}
-
 /**
  * Monta o servidor sem abrir porta, para os testes usarem `app.inject()`.
  */
-export async function buildApp(config: ServerConfig, deps: AppDependencies = {}): Promise<FastifyInstance> {
+export async function buildApp(config: ServerConfig): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
     // Só os proxies informados em TRUST_PROXY podem dizer o IP de quem acessa (X-Forwarded-For).
@@ -80,48 +45,6 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     })
   }
 
-  // Login real: precisa vir antes das demais rotas, porque registra os ganchos que as protegem.
-  let realAuth: AuthProvider | null = null
-  let realDb: Database | null = null
-  let realIdentity: IdentityProvider | null = null
-  if (config.keycloak) {
-    const db = deps.db ?? openDatabase(config.databasePath)
-    migrate(db)
-    if (!deps.db) app.addHook('onClose', async () => db.close())
-    const sessions = new SessionStore(db, SESSION_LIMITS)
-    // Limpeza periódica: sessões vencidas (a cada minuto) e registro de comparações com mais de 1 ano (a cada hora).
-    let minutes = 0
-    const housekeeping = () => {
-      try {
-        sessions.purgeExpired()
-        if (minutes++ % 60 === 0) purgeOldComparisonEvents(db)
-      } catch (error) {
-        // Banco já fechado durante o desligamento.
-        if (db.isOpen) app.log.error({ err: error }, 'Falha na limpeza periódica do banco')
-      }
-    }
-    housekeeping()
-    const sweep = setInterval(housekeeping, 60_000)
-    sweep.unref()
-    app.addHook('onClose', async () => clearInterval(sweep))
-    const provider = createKeycloakAuthProvider({ sessions, db })
-    const client = deps.keycloakClient ?? new KeycloakClient(config.keycloak)
-    realIdentity =
-      deps.identityProvider ??
-      new KeycloakIdentityProvider({
-        issuer: config.keycloak.issuer,
-        adminClientId: config.keycloak.adminClientId,
-        adminClientSecret: config.keycloak.adminClientSecret,
-        appClientId: config.keycloak.clientId,
-        appBaseUrl: config.keycloak.appBaseUrl,
-      })
-    registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl, identity: realIdentity, loginAttemptsPerMinute: config.keycloak.loginAttemptsPerMinute }, provider)
-    realAuth = provider
-    realDb = db
-  } else {
-    app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'visual' }))
-  }
-
   const store = new ComparisonJobStore(config.comparison.resultTtlMs)
   const pool = new ComparisonWorkerPool(config.comparison, comparisonLimitsFor(config.comparison))
   const purge = setInterval(() => store.purgeExpired(), 60_000)
@@ -135,21 +58,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     store,
     pool,
     maxFileSizeBytes: config.comparison.maxFileSizeBytes,
-    ...(realAuth && realDb ? comparisonAccess(realAuth, realDb, (message, error) => app.log.error({ err: error }, message)) : {}),
   })
-
-  // Administração: o banco só é aberto quando ela está ligada.
-  if (realAuth && realDb && realIdentity) {
-    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(realIdentity, realDb) })
-  } else if (config.adminMode === 'dev') {
-    const db = deps.db ?? openDatabase(config.databasePath)
-    migrate(db)
-    if (!deps.db) app.addHook('onClose', async () => db.close())
-    app.log.warn('Administração em modo de desenvolvimento: sem autenticação real, só para este computador.')
-    registerAdminRoutes(app, { mode: 'dev', auth: createDevAuthProvider(db), db })
-  } else {
-    registerAdminRoutes(app, { mode: 'disabled' })
-  }
 
   return app
 }

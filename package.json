@@ -2,7 +2,7 @@
   "name": "aqr",
   "private": true,
   "version": "0.0.0",
-  "description": "AQR — Análise e Qualificação de Requerimentos (SEMADES · Prefeitura de Campo Grande). Protótipo de frontend.",
+  "description": "AQR — Análise e Qualificação de Requerimentos (SEMADES · Prefeitura de Campo Grande). Comparação de PDFs.",
   "type": "module",
   "engines": {
     "node": ">=22.13"
@@ -14,9 +14,6 @@
     "build": "tsc -b && vite build && npm run build:server",
     "build:server": "tsc -p tsconfig.server.build.json",
     "start:server": "node dist-server/server/main.js",
-    "db:migrar": "tsx server/db/cli-migrar.ts",
-    "admin:criar": "tsx server/scripts/criar-admin.ts",
-    "admin:vincular": "tsx server/scripts/vincular-identidade.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
@@ -36,7 +33,6 @@
     "diff": "^9.0.0",
     "fastify": "^5.12.5",
     "lucide-react": "^1.53.0",
-    "openid-client": "^6.8.8",
     "pdfjs-dist": "^6.4.299",
     "radix-ui": "^1.7.0",
     "react": "^19.3.0",

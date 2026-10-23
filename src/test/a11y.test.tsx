@@ -7,8 +7,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
 import { demoComparisonResult, demoDocumentSources, demoNoDifferencesResult } from '@/features/comparison/mocks/demo-comparison'
-import { createInMemoryAccountService } from '@/features/admin/services/in-memory-account-service'
-import { sampleAccessEvents, sampleAccounts, sampleComparisonUsage } from '@/features/admin/test-data'
 import { renderApp } from './render'
 
 /**
@@ -27,7 +25,6 @@ describe('acessibilidade (axe)', () => {
   it.each([
     ['página inicial', '/', 'Como podemos ajudar?'],
     ['seleção de arquivos', '/comparacao', 'Comparar documentos'],
-    ['triagem', '/triagem', 'Triagem documental'],
   ])('%s não tem violações', async (_, path, heading) => {
     const { container } = renderApp(path)
     await screen.findByRole('heading', { level: 1, name: heading })
@@ -71,68 +68,6 @@ describe('acessibilidade (axe)', () => {
         <NoDifferencesPanel result={demoNoDifferencesResult} />
       </MemoryRouter>,
     )
-    expect(await violations(container)).toEqual([])
-  })
-})
-
-describe('acessibilidade da administração (axe)', () => {
-  it('lista de contas não tem violações', async () => {
-    const { container } = renderApp('/administracao/contas', {
-      accountService: createInMemoryAccountService({ accounts: sampleAccounts }),
-    })
-    await screen.findByRole('table', { name: 'Contas do AQR' })
-    expect(await violations(container)).toEqual([])
-  })
-})
-
-describe('acessibilidade dos formulários de contas (axe)', () => {
-  it.each([
-    ['nova conta', '/administracao/contas/nova', 'Nova conta'],
-    ['editar conta', '/administracao/contas/u2', 'Editar conta'],
-  ])('%s não tem violações', async (_, path, heading) => {
-    const { container } = renderApp(path, { accountService: createInMemoryAccountService({ accounts: sampleAccounts }) })
-    await screen.findByRole('heading', { level: 1, name: heading })
-    expect(await violations(container)).toEqual([])
-  })
-
-  it('formulário com erros e diálogo de confirmação não têm violações', async () => {
-    const user = userEvent.setup()
-    const service = createInMemoryAccountService({ accounts: sampleAccounts })
-    const { container } = renderApp('/administracao/contas/nova', { accountService: service })
-    await user.click(await screen.findByRole('button', { name: 'Criar conta' }))
-    expect(await violations(container)).toEqual([])
-  })
-
-  it('diálogo de desativação não tem violações', async () => {
-    const user = userEvent.setup()
-    renderApp('/administracao/contas/u2', { accountService: createInMemoryAccountService({ accounts: sampleAccounts }) })
-    await user.click(await screen.findByRole('button', { name: 'Desativar conta' }))
-    await screen.findByRole('alertdialog')
-    expect(await violations(document.body)).toEqual([])
-  })
-})
-
-describe('acessibilidade da auditoria (axe)', () => {
-  it('auditoria geral e histórico da conta não têm violações', async () => {
-    const service = createInMemoryAccountService({ accounts: sampleAccounts })
-    await service.updateAccount('u2', { nome: 'Bruno Reis Filho', email: null, papel: 'analista', versao: 1 })
-    const general = renderApp('/administracao/auditoria', { accountService: service })
-    await screen.findByText('1 evento registrado.')
-    expect(await violations(general.container)).toEqual([])
-    general.unmount()
-    const detail = renderApp('/administracao/contas/u2', { accountService: service })
-    await screen.findByRole('region', { name: 'Histórico da conta' })
-    await screen.findByText('1 evento registrado.')
-    expect(await violations(detail.container)).toEqual([])
-  })
-})
-
-describe('acessibilidade dos registros (axe)', () => {
-  it('registros de uso e acesso não têm violações', async () => {
-    const service = createInMemoryAccountService({ accounts: sampleAccounts, mode: 'real', accessEvents: sampleAccessEvents, comparisonUsage: sampleComparisonUsage })
-    const { container } = renderApp('/administracao/registros', { accountService: service })
-    await screen.findByText('3 registros encontrados.')
-    await screen.findByText('2 pessoas usaram a comparação.')
     expect(await violations(container)).toEqual([])
   })
 })
