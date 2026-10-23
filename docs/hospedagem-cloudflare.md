@@ -2,6 +2,8 @@
 
 Guia para publicar a branch `master`: só o frontend, com a comparação demonstrativa e o login fictício `admin`/`admin`.
 
+**No ar:** https://aqr.joaovictor10-miranda.workers.dev (publicado em 22/10/2026 pelo terminal, opção 2).
+
 ## Como fica
 
 A `master` não tem servidor. O site é um conjunto de arquivos estáticos (`dist/`, gerado por `npm run build`), e a Cloudflare serve esses arquivos no **plano gratuito**, sem Worker e sem contêiner. Endereços como `/comparacao` devolvem o `index.html`, e o roteamento acontece no navegador (configurado em `wrangler.jsonc`, na raiz).
