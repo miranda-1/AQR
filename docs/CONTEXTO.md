@@ -32,7 +32,7 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 
 ## Repositório
 
-- GitHub (**privado**): https://github.com/miranda-1/AQR. Branches: **`dev`** (esta: tudo, onde o desenvolvimento continua) e `master` (versão hospedada: só a comparação, sem triagem, login fictício `admin`/`admin`, preparada para a Cloudflare). O que for para o ar é levado da `dev` à `master` sem a triagem, a administração e o login real.
+- GitHub (**privado**): https://github.com/miranda-1/AQR. Branches: **`dev`** (esta: tudo, onde o desenvolvimento continua) e `master` (versão hospedada, **só frontend**: comparação demonstrativa, sem triagem, login fictício `admin`/`admin`, hospedagem gratuita na Cloudflare como arquivos estáticos). O que for para o ar é levado da `dev` à `master` sem a triagem, a administração e o login real.
 - O remoto usa HTTPS, com autenticação pelo GitHub CLI (`gh`, conta miranda-1). A chave SSH não está configurada neste computador. Para enviar:
   ```bash
   git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push
@@ -54,6 +54,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 22/10/2026 | **A `master` fica só com o frontend** e a comparação demonstrativa, para hospedar de graça; o servidor fica só aqui na `dev`. Substitui a ideia de hospedar o servidor no Cloudflare Containers (pago). Hospedar a comparação real fica para depois (opções: Containers pago, VM gratuita da Oracle ou comparação no navegador). |
 | 22/10/2026 | **Projeto dividido em branches:** `master` só com a comparação de PDFs (a triagem some por completo), para hospedar; `dev` com tudo. **Na `master`, login fictício `admin`/`admin`** (a tela de login aprovada continua igual, sem o login do servidor). **Hospedagem na Cloudflare** (Workers para o site + Containers para o servidor de comparação; guia em `docs/hospedagem-cloudflare.md` na `master`). |
 | 16/10/2026 | **Tela de comparação: barra única + modo foco + lista minimizável + números só ao passar o mouse** (com interruptor "Números" para deixá-los sempre visíveis). No foco, a faixa de diferenças fica sempre visível (sem minimizar), com setas para ir de uma à outra. Referência: `docs/propostas-comparacao/mistura.html`. |
 | 16/10/2026 | **A comparação continua aberta** quando a pessoa visita outra página do site e volta por "Comparar PDFs" (pedido do responsável). Só em memória: recarregar, sair da conta ou "Nova comparação" a descartam. |
