@@ -1,5 +1,3 @@
-import { comparisonConfig } from './comparison'
-
 /** Configurações gerais da aplicação. Valores institucionais não devem ser inventados aqui. */
 export const appConfig = {
   name: 'AQR',
@@ -10,8 +8,8 @@ export const appConfig = {
     municipality: 'Prefeitura Municipal de Campo Grande',
   },
   /**
-   * true só no modo demonstrativo (`VITE_COMPARISON_SERVICE=demo`): a interface exibe avisos de
-   * protótipo e usa dados fictícios. Com a comparação real, os avisos somem.
+   * Nesta branch (`master`, só frontend) a comparação é sempre demonstrativa: a interface exibe os
+   * avisos de protótipo e usa dados fictícios. A comparação real fica na branch `dev`.
    */
-  isPrototype: comparisonConfig.serviceMode === 'demo',
+  isPrototype: true,
 } as const

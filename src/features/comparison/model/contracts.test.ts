@@ -1,4 +1,4 @@
-import { analysisStatusOf, summarize, type Difference, type PageAnalysis } from './comparison.ts'
+import { analysisStatusOf, summarize, type Difference, type PageAnalysis } from './contracts'
 
 const text: Pick<Difference, 'category' | 'subtype' | 'methods' | 'evidence'> = { category: 'text', subtype: 'words', methods: ['text-layer'], evidence: 'direct' }
 

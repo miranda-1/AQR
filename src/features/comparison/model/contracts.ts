@@ -1,5 +1,5 @@
 /**
- * Tipos de dados da comparação de PDFs, compartilhados pelo frontend e pelo servidor.
+ * Tipos de dados da comparação de PDFs (na branch `dev`, compartilhados com o servidor).
  *
  * Só dados puros: nada de DOM nem de Node. O frontend os importa por
  * `src/features/comparison/model/types.ts`, que também define `ComparisonService`.

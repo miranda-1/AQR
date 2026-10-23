@@ -1,6 +1,6 @@
 # AQR: instruções para agentes
 
-Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui, e servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. **Branches:** `master` é a versão para hospedar (só a comparação de PDFs, sem triagem; login fictício `admin`/`admin`, sem login no servidor; hospedagem na Cloudflare em `docs/hospedagem-cloudflare.md`). `dev` tem tudo (triagem, administração, login real) e é onde o desenvolvimento continua. Sem IA. **Não redesenhar nem substituir a tela de login**.
+Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui. Na branch `dev`, também o servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. **Branches:** `master` é a versão para hospedar, **só frontend** (sem `server/`): comparação sempre demonstrativa, sem triagem, login fictício `admin`/`admin`; hospedagem gratuita na Cloudflare em `docs/hospedagem-cloudflare.md`. `dev` tem tudo (servidor com a comparação real, triagem, administração, login real) e é onde o desenvolvimento continua. Sem IA. **Não redesenhar nem substituir a tela de login**.
 
 ## Antes de começar
 Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter sem pedir), histórico e pendências.
@@ -13,7 +13,7 @@ Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter 
 Repositório remoto: `miranda-1/AQR` (GitHub, privado). Comando de envio em `docs/CONTEXTO.md` → Repositório.
 
 ## Comandos
-`npm run dev` · `npm run dev:server` · `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`. Rode os quatro últimos antes de concluir qualquer mudança.
+`npm run dev` · `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`. Rode os quatro últimos antes de concluir qualquer mudança.
 
 ## Regras do projeto
 - **Marca:** PREFCG via `<BrandMark />` (`prefcg-azul.svg`). No rodapé (`AppFooter`) entram também SEMADES e o slogan, na versão azul (`semades-azul.svg`, `slogan-azul.svg`). Nunca redesenhar, recolorir, distorcer ou reconstruir as marcas ou o brasão. Ver `src/assets/brand/README.md`.

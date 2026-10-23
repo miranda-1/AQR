@@ -1,60 +1,44 @@
-# Hospedagem na Cloudflare
+# Hospedagem na Cloudflare (grátis)
 
-Guia para publicar a branch `master` (só a comparação de PDFs, login fictício `admin`/`admin`).
+Guia para publicar a branch `master`: só o frontend, com a comparação demonstrativa e o login fictício `admin`/`admin`.
 
 ## Como fica
 
-```
-navegador ──► Cloudflare (Worker "aqr")
-                ├─ /, /comparacao, …  → arquivos estáticos do site (dist/, gerado por npm run build)
-                └─ /api/*             → contêiner com o servidor de comparação (Dockerfile da raiz)
-```
+A `master` não tem servidor. O site é um conjunto de arquivos estáticos (`dist/`, gerado por `npm run build`), e a Cloudflare serve esses arquivos no **plano gratuito**, sem Worker e sem contêiner. Endereços como `/comparacao` devolvem o `index.html`, e o roteamento acontece no navegador (configurado em `wrangler.jsonc`, na raiz).
 
-- **Site:** servido direto pelos arquivos estáticos da Cloudflare (sem custo por pedido). Endereços como `/comparacao` devolvem o `index.html` (SPA).
-- **Comparação:** o servidor Node.js (Fastify, pdf.js, canvas, OCR local) precisa de um processo de verdade, então roda em **Cloudflare Containers**, a partir do `Dockerfile` da raiz. Ele não cabe num Worker comum nem no Cloudflare Pages.
-- **Uma instância só** (`max_instances: 1`): as tarefas de comparação ficam na memória do servidor, então o envio e as consultas ao andamento precisam chegar ao mesmo contêiner.
-- **Dorme sem uso:** depois de 15 min sem pedidos, o contêiner para (e para de custar). A primeira comparação depois disso espera alguns segundos a mais, enquanto ele acorda.
-- Arquivos: `cloudflare/wrangler.jsonc` (configuração), `cloudflare/src/index.ts` (Worker e contêiner), `Dockerfile` e `.dockerignore`.
+Ao comparar, os PDFs escolhidos não saem do navegador: o resultado é o demonstrativo, com documentos e diferenças fictícios e o aviso "Demonstração com dados fictícios". A comparação real (servidor Node.js) fica na branch `dev` e não está hospedada.
 
-## Antes de publicar
+## Opção 1: publicar pelo GitHub (recomendada)
 
-1. **Plano pago dos Workers** (Workers Paid, US$ 5/mês): o Containers não existe no plano gratuito. O uso do contêiner (CPU, memória e tempo ligado) é cobrado à parte, por consumo. A instância escolhida é a `standard-1` (4 GiB), para duas comparações ao mesmo tempo, de até 768 MB cada.
-2. **Docker** instalado e aberto no computador que publica: o `wrangler` constrói a imagem localmente e envia para a Cloudflare.
-3. Conta na Cloudflare e login no `wrangler` (abre o navegador):
-   ```bash
-   cd cloudflare
-   npm install
-   npx wrangler login
-   ```
+Cada `git push` na `master` publica o site sozinho.
 
-## Publicar
+1. Painel da Cloudflare → **Workers & Pages** → **Create** → **Import a repository**.
+2. Conecte o GitHub e escolha o repositório `miranda-1/AQR` (privado; a Cloudflare pede acesso a ele).
+3. Configure:
+   - **Branch de produção:** `master`
+   - **Comando de build:** `npm run build`
+   - **Comando de deploy:** `npx wrangler deploy` (lê o `wrangler.jsonc` da raiz)
+4. Salve. O primeiro deploy começa na hora; o endereço fica no formato `https://aqr.<sua-conta>.workers.dev`.
+
+## Opção 2: publicar do seu computador
 
 ```bash
-cd cloudflare
-npm run deploy      # gera o site (npm run build na raiz), constrói a imagem e publica
+npm run build
+npx wrangler login      # abre o navegador para entrar na conta da Cloudflare
+npx wrangler deploy
 ```
 
-O endereço sai no fim do comando (`https://aqr.<sua-conta>.workers.dev`). Na primeira vez, o contêiner leva alguns minutos para ficar disponível. Domínio próprio: painel da Cloudflare → Workers → `aqr` → Settings → Domains & Routes.
+O endereço aparece no fim do comando. Para publicar de novo, repita `npm run build` e `npx wrangler deploy`.
 
-Testar no computador antes de publicar (precisa do Docker):
+## Domínio e acesso
 
-```bash
-npm run build       # na raiz
-cd cloudflare && npm run dev    # http://localhost:8787
-```
+- **Domínio próprio:** painel → Workers & Pages → `aqr` → Settings → Domains & Routes.
+- **Restringir quem vê:** o `admin`/`admin` não protege nada (os valores estão no código do site). Para liberar só para pessoas escolhidas, use o **Cloudflare Access** (Zero Trust, gratuito até 50 pessoas): painel → Zero Trust → Access → Applications → proteger o endereço do AQR, liberando os e-mails escolhidos.
 
-## Limites e cuidados
+## Limites do plano gratuito
 
-- **Tamanho do envio:** a Cloudflare aceita até 100 MB por pedido nos planos Free e Pro. O AQR aceita até 50 MB por PDF, então dois PDFs no limite (100 MB juntos) podem ser recusados pela Cloudflare. Na prática, requerimentos ficam bem abaixo disso.
-- **O login não protege nada:** `admin`/`admin` é conferido no navegador e está no código do site. A API de comparação fica aberta para quem souber o endereço. Para restringir o acesso de verdade sem mexer no código, use o **Cloudflare Access** (Zero Trust, gratuito até 50 pessoas): painel → Zero Trust → Access → Applications → proteger o domínio do AQR, liberando só os e-mails escolhidos.
-- **Nada fica guardado:** os PDFs e os resultados vivem só na memória do contêiner e são descartados depois de entregues (ou 5 min depois de prontos). Reiniciar ou adormecer o contêiner apaga as comparações em andamento.
-- **Login real e administração** (Keycloak, banco SQLite) estão só na branch `dev`. Quando forem para produção, vão precisar de outro desenho de hospedagem (banco persistente e o Keycloak); ver `docs/login-keycloak.md` na `dev`.
+Sem servidor, nada aqui consome os limites de pedidos dos Workers: arquivos estáticos são servidos sem custo e sem limite de acessos. O limite que importa é de 20.000 arquivos e 25 MiB por arquivo, e o AQR tem 16 arquivos.
 
-## Outra hospedagem para o servidor
+## Quando a comparação real for para o ar
 
-O `Dockerfile` serve em qualquer lugar que rode contêineres (VPS, Fly.io, Render…). Nesse caso, o site pode ficar no Cloudflare Pages ou Workers (pasta `dist/`), mas os pedidos a `/api/*` precisam chegar ao servidor **pela mesma origem** do site (por um proxy ou uma rota), porque o servidor não libera CORS.
-
-```bash
-docker build -t aqr-comparador .
-docker run -p 3000:3000 aqr-comparador     # http://localhost:3000/api/health
-```
+O servidor de comparação (branch `dev`) precisa de um processo Node.js com cerca de 1,5 GB de memória, o que não cabe no plano gratuito da Cloudflare. Opções levantadas em 22/10/2026: Cloudflare Containers (pago), uma VM gratuita da Oracle Cloud ou levar a comparação para o próprio navegador. Ver `docs/CONTEXTO.md` → Pendências.

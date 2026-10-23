@@ -2,16 +2,16 @@
  * Contratos da comparação de PDFs.
  *
  * Estes tipos descrevem o que o frontend espera receber de um serviço de
- * comparação. Hoje são preenchidos por dados demonstrativos
- * (services/mock-comparison-service.ts); no futuro, pelo backend.
+ * comparação. Nesta branch (`master`, só frontend) são preenchidos por dados demonstrativos
+ * (services/mock-comparison-service.ts); na `dev`, pelo servidor.
  *
- * Os tipos de dados ficam em `shared/contracts/comparison.ts`, para o servidor usar
- * os mesmos; aqui são reexportados junto com o contrato do serviço, que é só do frontend.
+ * Os tipos de dados ficam em `contracts.ts` (na `dev`, em `shared/contracts/comparison.ts`, para o
+ * servidor usar os mesmos); aqui são reexportados junto com o contrato do serviço.
  */
 
-import type { ComparisonOutcome, ComparisonProgress } from '../../../../shared/contracts/comparison'
+import type { ComparisonOutcome, ComparisonProgress } from './contracts'
 
-export * from '../../../../shared/contracts/comparison'
+export * from './contracts'
 
 export interface ComparisonInput {
   original: File | null

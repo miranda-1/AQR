@@ -1,0 +1,12 @@
+{
+  // Hospedagem do AQR (branch master, só frontend) na Cloudflare, no plano gratuito: só arquivos
+  // estáticos, sem Worker e sem servidor. Guia: docs/hospedagem-cloudflare.md
+  "name": "aqr",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // Gerado por `npm run build`.
+    "directory": "./dist",
+    // Endereços como /comparacao devolvem o index.html: o roteamento é feito no navegador (SPA).
+    "not_found_handling": "single-page-application"
+  }
+}
