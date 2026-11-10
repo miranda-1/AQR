@@ -28,7 +28,8 @@
     "test:watch": "vitest",
     "test:corpus": "vitest run --project corpus",
     "avaliar:corpus": "tsx server/comparison/evaluation/report-cli.ts",
-    "medir:desempenho": "tsx server/comparison/evaluation/perf-cli.ts"
+    "medir:desempenho": "tsx server/comparison/evaluation/perf-cli.ts",
+    "triagem:corpus": "tsx server/triage/corpus/cli.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.3",

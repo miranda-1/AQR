@@ -93,6 +93,8 @@ export interface ScanBlock {
   /** Assinatura manuscrita desenhada na posição indicada. */
   signature?: { x: number; y: number; width: number; height: number; seed: number }
   dpi?: number
+  /** Formato da imagem gerada (padrão JPEG; PNG só para imagens avulsas da triagem). */
+  encoding?: 'jpeg' | 'png'
 }
 
 export type Block = TextBlock | ImageBlock | ShapeBlock | ScanBlock
@@ -222,7 +224,8 @@ function drawSignature(context: SKRSContext2D, scale: number, signature: NonNull
   context.stroke()
 }
 
-function scanBytes(block: ScanBlock, pageSize: readonly [number, number]): Buffer {
+/** Imagem da página digitalizada (também usada avulsa, como JPG ou PNG, pelo corpus da triagem). */
+export function scanBytes(block: ScanBlock, pageSize: readonly [number, number]): Buffer {
   const dpi = block.dpi ?? 150
   const scale = dpi / 72
   const width = Math.round(pageSize[0] * scale)
@@ -287,7 +290,7 @@ function scanBytes(block: ScanBlock, pageSize: readonly [number, number]): Buffe
     }
     context.putImageData(image, 0, 0)
   }
-  return canvas.toBuffer('image/jpeg', block.quality ?? 85)
+  return block.encoding === 'png' ? canvas.toBuffer('image/png') : canvas.toBuffer('image/jpeg', block.quality ?? 85)
 }
 
 function wrap(text: string, measure: (value: string) => number, maxWidth: number | undefined): string[] {
@@ -398,7 +401,7 @@ export async function buildPdf(pages: readonly PageSpec[], options: { objectStre
         page.drawImage(image, { x: block.x, y: size[1] - block.y - block.height, width: block.width, height: block.height })
         region = normalized(block.x, block.y, block.width, block.height, size, rotate)
       } else if (block.kind === 'scan') {
-        const image = await doc.embedJpg(scanBytes(block, size))
+        const image = await doc.embedJpg(scanBytes({ ...block, encoding: 'jpeg' }, size))
         page.drawImage(image, { x: 0, y: 0, width: size[0], height: size[1] })
         const signature = block.signature
         region = signature
