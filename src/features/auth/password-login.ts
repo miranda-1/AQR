@@ -1,6 +1,6 @@
 /**
  * Login real pela tela do AQR: envia usuário e senha ao servidor (`POST /api/auth/entrar`), que os
- * confere no Keycloak e devolve só um cookie de sessão HttpOnly. A senha não fica guardada em lugar nenhum.
+ * confere no sistema de login (Keycloak, escondido) e devolve só um cookie de sessão HttpOnly. A senha não fica guardada em lugar nenhum.
  */
 export type PasswordLoginResult = { ok: true; nome: string } | { ok: false; message: string }
 

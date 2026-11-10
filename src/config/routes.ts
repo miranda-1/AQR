@@ -3,6 +3,10 @@ export const routes = {
   home: '/',
   /** Login (visual, sem autenticação real nesta etapa). */
   login: '/entrar',
+  /** Pedir o link de nova senha por e-mail (login real; páginas públicas, fora do AppShell). */
+  forgotPassword: '/esqueci-senha',
+  /** Definir a senha pelo link do e-mail (o código vem depois do `#`). */
+  setPassword: '/definir-senha',
   comparison: '/comparacao',
   comparisonWorkspace: '/comparacao/resultado',
   triage: '/triagem',

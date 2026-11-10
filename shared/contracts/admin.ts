@@ -130,11 +130,13 @@ export const accessEventTypes = [
   'identidade.sincronizada',
   'identidade.vinculada',
   'identidade.falha',
+  'senha.recuperacao_pedida',
+  'senha.definida',
 ] as const
 
 export type AccessEventType = (typeof accessEventTypes)[number]
 
-/** Registro de acesso (login, logout, identidade no Keycloak). Só leitura, só administradores. */
+/** Registro de acesso (login, logout, senha e acesso no sistema de login). Só leitura, só administradores. */
 export interface AccessEvent {
   id: string
   ocorridoEm: string

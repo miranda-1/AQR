@@ -74,8 +74,10 @@ describe('loadConfig', () => {
       KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
       KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
       KEYCLOAK_CLIENT_SECRET: 'P9w-outro-segredo-do-cliente-web-77',
+      SMTP_HOST: 'smtp.exemplo.gov.br', SMTP_FROM: 'AQR <nao-responda@exemplo.gov.br>',
     }
     expect(loadConfig(prod).keycloak?.adminClientId).toBe('aqr-admin')
+    expect(() => loadConfig({ ...prod, SMTP_SECURITY: 'nenhuma' })).toThrow(/SMTP_SECURITY=nenhuma não é permitido em produção/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_CLIENT_SECRET: 'aqr-web-dev-secret' })).toThrow(/KEYCLOAK_CLIENT_SECRET é um segredo de desenvolvimento/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_CLIENT_SECRET: 'curto' })).toThrow(/KEYCLOAK_CLIENT_SECRET .*curto demais/)
     expect(() => loadConfig({ ...prod, KEYCLOAK_ADMIN_CLIENT_SECRET: 'aqr-admin-dev-secret' })).toThrow(/segredo de desenvolvimento/)
@@ -90,6 +92,7 @@ describe('loadConfig', () => {
       KEYCLOAK_CLIENT_ID: 'aqr-web', APP_BASE_URL: 'https://aqr.exemplo.gov.br',
       KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'x7Kq-segredo-gerado-no-keycloak-42',
       KEYCLOAK_CLIENT_SECRET: 'P9w-outro-segredo-do-cliente-web-77',
+      SMTP_HOST: 'smtp.exemplo.gov.br', SMTP_FROM: 'AQR <nao-responda@exemplo.gov.br>',
     }
     expect(() => loadConfig({ ...ok, KEYCLOAK_CLIENT_SECRET: undefined })).toThrow(/KEYCLOAK_CLIENT_SECRET \(cliente confidencial/)
     expect(loadConfig({ NODE_ENV: 'production', ...ok }).keycloak).toMatchObject({ issuer: 'https://login.exemplo.gov.br/realms/aqr', clientId: 'aqr-web' })
@@ -99,6 +102,10 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ ...ok, KEYCLOAK_ISSUER: 'http://login.exemplo.gov.br/realms/aqr' })).toThrow(/HTTPS/)
     expect(() => loadConfig({ ...ok, APP_BASE_URL: 'http://aqr.exemplo.gov.br' })).toThrow(/HTTPS/)
     expect(() => loadConfig({ ...ok, ADMIN_API_MODE: 'dev' })).toThrow(/não pode ser usado com AUTH_MODE=keycloak/)
+    // Os e-mails de senha saem pelo AQR: sem SMTP, o login real não inicia.
+    expect(() => loadConfig({ ...ok, SMTP_HOST: undefined })).toThrow(/exige SMTP_HOST e SMTP_FROM/)
+    expect(() => loadConfig({ ...ok, SMTP_USER: 'aqr' })).toThrow(/SMTP_USER foi definido sem SMTP_PASSWORD/)
+    expect(loadConfig({ ...ok, SMTP_PORT: '465', SMTP_SECURITY: 'tls' }).keycloak?.smtp).toMatchObject({ host: 'smtp.exemplo.gov.br', port: 465, seguranca: 'tls', usuario: null })
     expect(loadConfig({ ...ok, KEYCLOAK_ISSUER: 'http://localhost:8080/realms/aqr', APP_BASE_URL: 'http://localhost:5173' }).keycloak?.appBaseUrl).toBe('http://localhost:5173')
   })
 

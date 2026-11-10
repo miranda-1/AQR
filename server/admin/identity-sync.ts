@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import type { Account } from '../../shared/contracts/admin.ts'
 import { IdentityError, type IdentityProfile, type IdentityProvider } from '../auth/identity-provider.ts'
+import type { Mailer } from '../auth/mailer.ts'
+import { passwordEmail, type LinkPurpose, type PasswordLinks } from '../auth/password-links.ts'
 import type { Database } from '../db/database.ts'
 import { ApiError } from '../http/errors.ts'
 
@@ -14,24 +16,28 @@ type IdentityEvent =
   | 'identidade.vinculada'
   | 'identidade.falha'
 
-/** Conta devolvida pela API, com um aviso quando a parte do Keycloak não pôde ser concluída. */
+/** Conta devolvida pela API, com um aviso quando a parte do sistema de login não pôde ser concluída. */
 export type AccountWithNotice = Account & { aviso?: string }
 
-const NOT_IN_KEYCLOAK = 'Esta conta ainda não está vinculada a um usuário do Keycloak. Use "Sincronizar com o Keycloak" para criar ou vincular o acesso.'
+const NOT_LINKED = 'Esta conta ainda não tem acesso ao sistema de login. Use "Sincronizar acesso" para criá-lo.'
 
 /**
  * Mantém a identidade da pessoa no Keycloak alinhada com a conta do AQR. A conta do AQR é a
- * fonte da verdade (papel e situação); o Keycloak só autentica. Nenhuma senha passa por aqui: a
- * pessoa define a própria senha pelo link que o Keycloak envia por e-mail.
+ * fonte da verdade (papel e situação); o Keycloak só autentica e fica escondido: os e-mails e a
+ * página para definir a senha são do próprio AQR, e nenhuma mensagem para a pessoa cita o Keycloak.
  */
 export class IdentityProvisioner {
   private readonly provider: IdentityProvider
   private readonly insertEvent: ReturnType<Database['prepare']>
   private readonly db: Database
+  private readonly mailer: Mailer
+  private readonly links: PasswordLinks
 
-  constructor(provider: IdentityProvider, db: Database) {
+  constructor(provider: IdentityProvider, db: Database, mail: { mailer: Mailer; links: PasswordLinks }) {
     this.provider = provider
     this.db = db
+    this.mailer = mail.mailer
+    this.links = mail.links
     this.insertEvent = db.prepare(
       'INSERT INTO access_events (id, ocorrido_em, evento, usuario, conta_id, ator_id, detalhe) VALUES (?, ?, ?, ?, ?, ?, ?)',
     )
@@ -39,6 +45,14 @@ export class IdentityProvisioner {
 
   private record(evento: IdentityEvent, account: Pick<Account, 'id' | 'usuario'>, actorId: string | null, detalhe: string | null = null): void {
     this.insertEvent.run(randomUUID(), new Date().toISOString(), evento, account.usuario, account.id, actorId, detalhe)
+  }
+
+  /** Emite o link do AQR e envia o e-mail. Devolve o endereço (o terminal do operador pode mostrá-lo). */
+  async sendLink(account: Account, finalidade: LinkPurpose): Promise<string> {
+    if (!account.email) throw new Error('conta sem e-mail')
+    const url = this.links.issue(account.id, finalidade)
+    await this.mailer.send({ para: account.email, ...passwordEmail(finalidade, account.nome, url) })
+    return url
   }
 
   /**
@@ -50,12 +64,12 @@ export class IdentityProvisioner {
     try {
       changes = this.db.prepare('UPDATE accounts SET keycloak_sub = ? WHERE id = ? AND keycloak_sub IS NULL').run(sub, account.id).changes
     } catch {
-      throw new ApiError(409, 'VINCULO_DIVERGENTE', 'Esta identidade do Keycloak já está vinculada a outra conta do AQR.')
+      throw new ApiError(409, 'VINCULO_DIVERGENTE', 'Este acesso do sistema de login já está vinculado a outra conta do AQR.')
     }
     if (Number(changes) === 0) {
       const current = this.db.prepare('SELECT keycloak_sub FROM accounts WHERE id = ?').get(account.id)
       if (current?.keycloak_sub !== sub) {
-        throw new ApiError(409, 'VINCULO_DIVERGENTE', 'A conta já está vinculada a outra identidade do Keycloak. O vínculo não pode ser trocado.')
+        throw new ApiError(409, 'VINCULO_DIVERGENTE', 'A conta já está vinculada a outro acesso do sistema de login. O vínculo não pode ser trocado.')
       }
       return
     }
@@ -66,24 +80,24 @@ export class IdentityProvisioner {
    * Vincula uma conta antiga ao usuário que já existe no Keycloak. A identidade é conferida pelo
    * e-mail: o do Keycloak precisa ser o da conta e estar confirmado (senão a própria pessoa poderia
    * trocar o e-mail no Keycloak para o de outra conta e ganhar o vínculo). `allowWithoutEmail` é só para o operador no
-   * servidor (`npm run admin:vincular`), para contas criadas sem e-mail (ex.: o primeiro administrador).
+   * servidor (`npm run admin:vincular`), para contas criadas sem e-mail.
    */
   async linkExisting(account: Account, actorId: string | null, options: { allowWithoutEmail?: boolean } = {}): Promise<string> {
     const found = await this.provider.findUser(account.usuario)
-    if (!found) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
+    if (!found) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_LINKED)
     const sameEmail = account.email !== null && found.email !== null && account.email.toLowerCase() === found.email.toLowerCase()
     if (sameEmail && !found.emailVerified) {
       throw new ApiError(
         409,
         'EMAIL_NAO_CONFIRMADO',
-        'O e-mail do usuário no Keycloak ainda não foi confirmado. Confirme-o no Keycloak (ou peça à pessoa para confirmar) antes de vincular: o vínculo não pode ser desfeito.',
+        'Já existe um acesso com este usuário no sistema de login, mas o e-mail dele ainda não foi confirmado. Por segurança, o vínculo não foi feito; fale com o suporte.',
       )
     }
     if (!sameEmail && !(options.allowWithoutEmail && account.email === null)) {
       throw new ApiError(
         409,
         'EMAIL_DIVERGENTE',
-        'O e-mail do usuário no Keycloak não é o da conta do AQR. Corrija um dos dois antes de vincular: o vínculo não pode ser desfeito.',
+        'Já existe um acesso com este usuário no sistema de login, com outro e-mail. Por segurança, o vínculo não foi feito; confira o e-mail da conta ou fale com o suporte.',
       )
     }
     this.bind(account, found.id, actorId)
@@ -107,11 +121,11 @@ export class IdentityProvisioner {
       return await this.provider.createUser(profile)
     } catch (error) {
       if (error instanceof IdentityError && error.status === 409) {
-        throw new ApiError(409, 'USERNAME_TAKEN', 'Este usuário ou e-mail já existe no Keycloak.', {
-          fields: { usuario: 'Este usuário ou e-mail já existe no Keycloak.' },
+        throw new ApiError(409, 'USERNAME_TAKEN', 'Este usuário ou e-mail já está em uso no sistema de login.', {
+          fields: { usuario: 'Este usuário ou e-mail já está em uso no sistema de login.' },
         })
       }
-      throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'Não foi possível criar o acesso no Keycloak. Nenhuma conta foi criada; tente de novo em instantes.')
+      throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'O sistema de login não respondeu. Nenhuma conta foi criada; tente de novo em instantes.')
     }
   }
 
@@ -124,7 +138,7 @@ export class IdentityProvisioner {
     this.bind(account, keycloakId, actorId)
     this.record('identidade.criada', account, actorId)
     try {
-      await this.provider.sendPasswordEmail(keycloakId)
+      await this.sendLink(account, 'convite')
       this.record('identidade.convite_enviado', account, actorId)
       return account
     } catch (error) {
@@ -137,12 +151,15 @@ export class IdentityProvisioner {
 
   async afterStatusChange(account: Account, actorId: string): Promise<AccountWithNotice> {
     const active = account.situacao === 'ativa'
-    // Desativada, a conta perde na hora as sessões abertas no AQR: nem um cookie antigo volta a
-    // valer se ela for reativada depois.
-    if (!active) this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
+    // Desativada, a conta perde na hora as sessões abertas no AQR e os links de senha ainda não
+    // usados: nem um cookie nem um link antigos voltam a valer se ela for reativada depois.
+    if (!active) {
+      this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
+      this.links.revokeAll(account.id)
+    }
     try {
       const id = this.boundSub(account.id)
-      if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_IN_KEYCLOAK) }
+      if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_LINKED) }
       await this.provider.setEnabled(id, active)
       if (!active) await this.provider.logoutUser(id)
       this.record(active ? 'identidade.reativada' : 'identidade.bloqueada', account, actorId)
@@ -154,7 +171,7 @@ export class IdentityProvisioner {
           account,
           actorId,
           error,
-          `Situação alterada no AQR${active ? '' : ' (o acesso já está bloqueado)'}, mas o Keycloak não foi atualizado. Use "Sincronizar com o Keycloak" para concluir.`,
+          `Situação alterada no AQR${active ? '' : ' (o acesso já está bloqueado)'}, mas o sistema de login não foi atualizado. Use "Sincronizar acesso" para concluir.`,
         ),
       }
     }
@@ -164,15 +181,15 @@ export class IdentityProvisioner {
     if (!account.email) return account
     try {
       const id = this.boundSub(account.id)
-      if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_IN_KEYCLOAK) }
+      if (!id) return { ...account, aviso: this.fail(account, actorId, new Error('usuário ausente'), NOT_LINKED) }
       await this.provider.updateProfile(id, { usuario: account.usuario, nome: account.nome, email: account.email })
       return account
     } catch (error) {
-      return { ...account, aviso: this.fail(account, actorId, error, 'Conta salva no AQR, mas nome e e-mail não foram atualizados no Keycloak. Use "Sincronizar com o Keycloak".') }
+      return { ...account, aviso: this.fail(account, actorId, error, 'Conta salva no AQR, mas nome e e-mail não foram atualizados no sistema de login. Use "Sincronizar acesso".') }
     }
   }
 
-  /** Reenvia o e-mail para a pessoa definir (ou redefinir) a senha. Recusa conta inativa ou sem e-mail. */
+  /** Envia o link para definir (ou redefinir) a senha. Recusa conta inativa ou sem e-mail. */
   async sendPasswordEmail(account: Account, actorId: string): Promise<void> {
     if (account.situacao !== 'ativa') {
       throw new ApiError(422, 'ACCOUNT_INACTIVE', 'A conta está desativada. Reative-a antes de enviar o link de senha.')
@@ -180,23 +197,23 @@ export class IdentityProvisioner {
     if (!account.email) {
       throw new ApiError(422, 'EMAIL_REQUIRED', 'A conta não tem e-mail. Edite a conta e informe o e-mail antes de enviar o link.')
     }
+    const id = this.boundSub(account.id)
+    if (!id) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_LINKED)
+    // Redefinir senha costuma ser resposta a um acesso indevido: encerra já as sessões da conta no
+    // AQR e, se possível, as do Keycloak, antes mesmo de o e-mail sair. A senha atual continua
+    // valendo até a pessoa usar o link.
+    this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
+    await this.provider.logoutUser(id).catch(() => undefined)
     try {
-      const id = this.boundSub(account.id)
-      if (!id) throw new ApiError(409, 'NOT_IN_KEYCLOAK', NOT_IN_KEYCLOAK)
-      // Redefinir senha costuma ser resposta a um acesso indevido: encerra já as sessões da conta no
-      // AQR (valem em seguida) e, se possível, as do Keycloak, antes mesmo de o e-mail sair.
-      this.db.prepare('DELETE FROM sessions WHERE account_id = ?').run(account.id)
-      await this.provider.logoutUser(id).catch(() => undefined)
-      await this.provider.sendPasswordEmail(id)
+      await this.sendLink(account, 'recuperacao')
       this.record('identidade.senha_redefinicao_enviada', account, actorId, 'sessoes_encerradas')
     } catch (error) {
-      if (error instanceof ApiError) throw error
       this.record('identidade.falha', account, actorId, error instanceof Error ? error.message : 'erro')
-      throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'Não foi possível enviar o e-mail agora. Tente de novo em instantes.')
+      throw new ApiError(502, 'MAIL_UNAVAILABLE', 'Não foi possível enviar o e-mail agora. Tente de novo em instantes.')
     }
   }
 
-  /** Alinha o Keycloak com a conta: cria o usuário (e envia o convite) se faltar; senão, situação e dados. */
+  /** Alinha o Keycloak com a conta: cria o acesso (e envia o convite) se faltar; senão, situação e dados. */
   async sync(account: Account, actorId: string): Promise<AccountWithNotice> {
     if (!account.email) {
       throw new ApiError(422, 'EMAIL_REQUIRED', 'A conta não tem e-mail. Edite a conta e informe o e-mail antes de sincronizar.')
@@ -211,7 +228,7 @@ export class IdentityProvisioner {
         if (account.situacao === 'inativa') await this.provider.setEnabled(id, false)
         this.record('identidade.criada', account, actorId)
         if (account.situacao === 'ativa') {
-          await this.provider.sendPasswordEmail(id)
+          await this.sendLink(account, 'convite')
           this.record('identidade.convite_enviado', account, actorId)
         }
         return account
@@ -225,7 +242,7 @@ export class IdentityProvisioner {
     } catch (error) {
       if (error instanceof ApiError) throw error
       this.record('identidade.falha', account, actorId, error instanceof Error ? error.message : 'erro')
-      throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'Não foi possível sincronizar com o Keycloak agora. Tente de novo em instantes.')
+      throw new ApiError(502, 'IDENTITY_UNAVAILABLE', 'Não foi possível sincronizar o acesso agora. Tente de novo em instantes.')
     }
   }
 }

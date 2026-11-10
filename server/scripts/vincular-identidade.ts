@@ -1,11 +1,10 @@
 import { parseArgs } from 'node:util'
 import { rowToAccount } from '../admin/account-repository.ts'
-import { IdentityProvisioner } from '../admin/identity-sync.ts'
-import { KeycloakIdentityProvider } from '../auth/identity-provider.ts'
 import { loadConfig } from '../config.ts'
 import { openDatabase } from '../db/database.ts'
 import { migrate } from '../db/migrate.ts'
 import { ApiError } from '../http/errors.ts'
+import { createProvisioner } from './provisioner.ts'
 
 /**
  * `npm run admin:vincular -- --usuario x` (ou `--todos`): vincula contas antigas ao `sub` do usuário
@@ -35,16 +34,7 @@ const db = openDatabase(config.databasePath)
 let failures = 0
 try {
   migrate(db)
-  const provisioner = new IdentityProvisioner(
-    new KeycloakIdentityProvider({
-      issuer: config.keycloak.issuer,
-      adminClientId: config.keycloak.adminClientId,
-      adminClientSecret: config.keycloak.adminClientSecret,
-      appClientId: config.keycloak.clientId,
-      appBaseUrl: config.keycloak.appBaseUrl,
-    }),
-    db,
-  )
+  const { provisioner } = createProvisioner(config.keycloak, db)
   const rows = values.todos
     ? db.prepare('SELECT * FROM accounts WHERE keycloak_sub IS NULL ORDER BY usuario').all()
     : db.prepare('SELECT * FROM accounts WHERE usuario = ? COLLATE NOCASE AND keycloak_sub IS NULL').all(values.usuario ?? '')
@@ -56,7 +46,7 @@ try {
       console.log(`Vinculada: ${account.usuario} → ${sub}`)
     } catch (error) {
       failures += 1
-      console.error(`Não vinculada: ${account.usuario}: ${error instanceof ApiError ? error.message : 'falha ao falar com o Keycloak.'}`)
+      console.error(`Não vinculada: ${account.usuario}: ${error instanceof ApiError ? error.message : 'falha ao falar com o sistema de login.'}`)
     }
   }
 } finally {

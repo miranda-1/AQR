@@ -3,14 +3,21 @@ import { buildApp } from '../app.ts'
 import { loadConfig, type ComparisonSettings, type ServerConfig } from '../config.ts'
 import type { IdentityProvider } from '../auth/identity-provider.ts'
 import type { Database } from '../db/database.ts'
+import type { Mailer } from '../auth/mailer.ts'
+import { FakeMailer } from './fake-mailer.ts'
 
 /** Servidor de teste (sem porta, sem log), com ajustes opcionais na configuração. */
 export async function buildTestApp(
-  overrides: { comparison?: Partial<ComparisonSettings>; env?: Record<string, string>; db?: Database; identityProvider?: IdentityProvider } = {},
+  overrides: { comparison?: Partial<ComparisonSettings>; env?: Record<string, string>; db?: Database; identityProvider?: IdentityProvider; mailer?: Mailer } = {},
 ): Promise<FastifyInstance> {
-  const base = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', DATABASE_PATH: ':memory:', ...overrides.env })
+  // SMTP fictício: nos testes o e-mail vai sempre para uma caixa em memória, nunca para a rede.
+  const base = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', DATABASE_PATH: ':memory:', SMTP_HOST: 'smtp.teste', SMTP_FROM: 'AQR <aqr@teste>', ...overrides.env })
   const config: ServerConfig = { ...base, comparison: { ...base.comparison, ...overrides.comparison } }
-  return buildApp(config, { db: overrides.db, ...(overrides.identityProvider ? { identityProvider: overrides.identityProvider } : {}) })
+  return buildApp(config, {
+    db: overrides.db,
+    mailer: overrides.mailer ?? new FakeMailer(),
+    ...(overrides.identityProvider ? { identityProvider: overrides.identityProvider } : {}),
+  })
 }
 
 export interface UploadFile {

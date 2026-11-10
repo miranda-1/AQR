@@ -8,6 +8,7 @@ import { openDatabase, type Database } from '../db/database.ts'
 import { migrate } from '../db/migrate.ts'
 import { seedAccount } from '../test/accounts.ts'
 import { FakeIdentityProvider } from '../test/fake-identity.ts'
+import { FakeMailer } from '../test/fake-mailer.ts'
 import { buildTestApp, multipartBody } from '../test/build-test-app.ts'
 import { rateLimitKey } from './keycloak-auth.ts'
 import { makePdf } from '../test/make-pdf.ts'
@@ -102,6 +103,7 @@ describe('login real com Keycloak', () => {
   let app: FastifyInstance
   let db: Database
   const identity = new FakeIdentityProvider()
+  const mailer = new FakeMailer()
   beforeAll(async () => {
     db = openDatabase(':memory:')
     migrate(db)
@@ -115,6 +117,7 @@ describe('login real com Keycloak', () => {
       db,
       env: { AUTH_MODE: 'keycloak', KEYCLOAK_ISSUER: issuer, KEYCLOAK_CLIENT_ID: CLIENT_ID, APP_BASE_URL: APP, KEYCLOAK_ADMIN_CLIENT_ID: 'aqr-admin', KEYCLOAK_ADMIN_CLIENT_SECRET: 'segredo', KEYCLOAK_CLIENT_SECRET: CLIENT_SECRET, AUTH_LOGIN_ATTEMPTS_PER_MINUTE: '100000' },
       identityProvider: identity,
+      mailer,
     })
   })
   afterAll(async () => {
@@ -215,10 +218,9 @@ describe('login real com Keycloak', () => {
     expect(result).toMatchObject({ status: 403, code: 'SEM_CONTA', session: undefined })
   })
 
-  it('status informa o modo e o link de "Esqueceu a senha?" do Keycloak', async () => {
-    const status = (await get('/api/auth/status', {})).json<{ mode: string; recuperarSenhaUrl: string }>()
-    expect(status.mode).toBe('keycloak')
-    expect(status.recuperarSenhaUrl).toBe(`${issuer}/login-actions/reset-credentials?client_id=${CLIENT_ID}`)
+  it('status informa só o modo, sem endereço do Keycloak', async () => {
+    const status = await get('/api/auth/status', {})
+    expect(status.json()).toEqual({ mode: 'keycloak' })
   })
 
   it('limite de tentativas agrupa o IPv6 por bloco /64', () => {
@@ -407,7 +409,11 @@ describe('login real com Keycloak', () => {
       expect(ok.json<Account>().aviso).toBeUndefined()
       const kc = identity.byName('carla')
       expect(kc).toMatchObject({ email: 'carla@x.gov.br', nome: 'Carla Lima', enabled: true })
-      expect(identity.emails).toContain(kc?.id)
+      // O convite sai pelo AQR, com link para a página do AQR (nada do Keycloak no e-mail).
+      const invite = mailer.lastTo('carla@x.gov.br')
+      expect(invite?.assunto).toBe('Seu acesso ao AQR')
+      expect(invite?.texto).toContain(`${APP}/definir-senha#`)
+      expect(invite?.texto).not.toMatch(/keycloak/i)
       expect(ok.body).not.toMatch(/senha|password/i)
     })
 
@@ -428,15 +434,15 @@ describe('login real com Keycloak', () => {
       expect(down.statusCode).toBe(502)
       expect(db.prepare("SELECT 1 FROM accounts WHERE usuario = 'duda'").get()).toBeUndefined()
 
-      identity.mailDown = true
+      mailer.down = true
       const noMail = await post(admin.headers, '/api/admin/accounts', { usuario: 'duda', nome: 'Duda Reis', email: 'duda@x.gov.br', papel: 'analista' })
-      identity.mailDown = false
+      mailer.down = false
       expect(noMail.statusCode).toBe(201)
       expect(noMail.json<Account>().aviso).toMatch(/e-mail de convite não foi enviado/)
       // O convite pode ser reenviado depois.
       const resend = await post(admin.headers, `/api/admin/accounts/${noMail.json<Account>().id}/redefinir-senha`)
       expect(resend.statusCode).toBe(204)
-      expect(identity.emails).toContain(identity.byName('duda')?.id)
+      expect(mailer.lastTo('duda@x.gov.br')?.assunto).toBe('Nova senha do AQR')
     })
 
     it('bloquear e reativar refletem no Keycloak; redefinir exige conta ativa; sincronizar cria contas antigas', async () => {

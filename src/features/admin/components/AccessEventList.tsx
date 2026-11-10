@@ -31,24 +31,34 @@ export const accessEventMeta: Record<AccessEventType, { label: string; Icon: Ico
   'login.vinculo_pendente': { label: 'Login recusado: vínculo pendente', Icon: ShieldX, alert: true },
   'login.vinculo_divergente': { label: 'Login recusado: vínculo diferente', Icon: ShieldX, alert: true },
   logout: { label: 'Saiu do AQR', Icon: LogOut },
-  'identidade.criada': { label: 'Acesso criado no Keycloak', Icon: UserPlus },
+  'identidade.criada': { label: 'Acesso criado', Icon: UserPlus },
   'identidade.convite_enviado': { label: 'Convite enviado por e-mail', Icon: Mail },
   'identidade.senha_redefinicao_enviada': { label: 'Link de nova senha enviado', Icon: KeyRound },
-  'identidade.bloqueada': { label: 'Acesso bloqueado no Keycloak', Icon: Lock },
-  'identidade.reativada': { label: 'Acesso reativado no Keycloak', Icon: LockOpen },
-  'identidade.sincronizada': { label: 'Sincronizado com o Keycloak', Icon: RefreshCw },
-  'identidade.vinculada': { label: 'Conta vinculada ao Keycloak', Icon: Link2 },
-  'identidade.falha': { label: 'Falha no Keycloak', Icon: CircleAlert, alert: true },
+  'identidade.bloqueada': { label: 'Acesso bloqueado', Icon: Lock },
+  'identidade.reativada': { label: 'Acesso reativado', Icon: LockOpen },
+  'identidade.sincronizada': { label: 'Acesso sincronizado', Icon: RefreshCw },
+  'identidade.vinculada': { label: 'Conta vinculada ao acesso', Icon: Link2 },
+  'identidade.falha': { label: 'Falha no sistema de login', Icon: CircleAlert, alert: true },
+  'senha.recuperacao_pedida': { label: 'Pediu link de nova senha', Icon: Mail },
+  'senha.definida': { label: 'Definiu a senha', Icon: KeyRound },
 }
 
 const detailLabels: Record<string, string> = {
   sessoes_encerradas: 'As sessões abertas da conta foram encerradas.',
-  keycloak_nao_encerrado: 'O AQR encerrou a sessão, mas não conseguiu encerrar a do Keycloak.',
+  keycloak_nao_encerrado: 'O AQR encerrou a sessão, mas não conseguiu encerrar a do sistema de login.',
+  enviado: 'O link foi enviado por e-mail.',
+  falha_email: 'O e-mail não pôde ser enviado.',
+  sem_conta: 'Não há conta com esse usuário ou e-mail; nada foi enviado.',
+  conta_inativa: 'A conta está desativada; nada foi enviado.',
+  sem_email: 'A conta não tem e-mail; nada foi enviado.',
+  sem_acesso: 'A conta ainda não tem acesso; nada foi enviado.',
+  convite: 'Pelo link do convite.',
+  recuperacao: 'Pelo link de nova senha.',
 }
 
 function detailOf(detalhe: string): string {
   if (detailLabels[detalhe]) return detailLabels[detalhe]
-  if (detalhe.startsWith('sub=')) return `Identificador no Keycloak: ${detalhe.slice(4)}`
+  if (detalhe.startsWith('sub=')) return `Identificador do acesso: ${detalhe.slice(4)}`
   return `Detalhe: ${detalhe}`
 }
 

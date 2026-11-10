@@ -3,8 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 
-const RESET_URL = 'http://localhost:8080/realms/aqr/login-actions/reset-credentials?client_id=aqr-web'
-
 /** Servidor falso: login real, ninguém conectado; `entrar` responde conforme a senha. */
 function fakeServer() {
   const sent: { url: string; body: unknown }[] = []
@@ -13,7 +11,7 @@ function fakeServer() {
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.endsWith('/api/auth/status')) return Response.json({ mode: 'keycloak', recuperarSenhaUrl: RESET_URL })
+      if (url.endsWith('/api/auth/status')) return Response.json({ mode: 'keycloak' })
       if (url.endsWith('/api/auth/me')) return connected ? Response.json({ usuario: 'ana', nome: 'Ana Lima', papel: 'analista' }) : new Response(null, { status: 401 })
       if (url.endsWith('/api/auth/entrar')) {
         const body: unknown = JSON.parse(String(init?.body))
@@ -42,7 +40,7 @@ describe('Login no modo real (Keycloak), na tela do AQR', () => {
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
     expect(screen.getByLabelText('Usuário')).toBeInTheDocument()
     expect(screen.getByLabelText('Senha')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Receba um link por e-mail' })).toHaveAttribute('href', RESET_URL)
+    expect(screen.getByRole('link', { name: 'Receba um link por e-mail' })).toHaveAttribute('href', '/esqueci-senha')
     expect(screen.queryByRole('link', { name: /Entrar com a conta/ })).not.toBeInTheDocument()
   })
 

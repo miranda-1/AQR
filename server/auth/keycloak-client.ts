@@ -77,11 +77,4 @@ export class KeycloakClient {
       email: typeof claims.email === 'string' ? claims.email : null,
     }
   }
-
-  /** Página do Keycloak para receber por e-mail o link de nova senha ("Esqueceu a senha?"). */
-  resetPasswordUrl(): string {
-    const url = new URL(`${this.settings.issuer}/login-actions/reset-credentials`)
-    url.searchParams.set('client_id', this.settings.clientId)
-    return url.href
-  }
 }

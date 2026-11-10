@@ -16,7 +16,8 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 **Etapa 1, protótipo de frontend:** concluída. **Entrega 1 da etapa 2 (comparação real):** concluída; o site usa a comparação real por padrão.
 
 - Há servidor (`server/`) e comparação real de PDFs. Ainda não há autenticação real nem deploy; IA, autenticação real e deploy continuam dependendo de pedido explícito.
-- **Login visual** (`/entrar`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
+- **Login real com o Keycloak escondido** (`npm run dev:login`): contas criadas no próprio site; convites e "Esqueceu a senha?" por e-mail do AQR, com link para as páginas do AQR `/definir-senha` e `/esqueci-senha`; a pessoa nunca vê página, e-mail ou nome do Keycloak. Guia: `docs/login-keycloak.md` → "Keycloak escondido".
+- **Login visual** (`/entrar`, padrão do `npm run dev`): aparece antes de qualquer página. Não verifica credenciais: qualquer usuário e senha preenchidos entram. A sessão vale para a aba (`sessionStorage`) e termina ao fechá-la.
 - **Comparação real** (padrão): os PDFs vão para a API (`POST /api/comparisons`), são comparados numa thread isolada e o resultado volta com as diferenças, mostradas sobre as páginas reais. **Modo demonstrativo** (`VITE_COMPARISON_SERVICE=demo`): dados fictícios (`src/features/comparison/mocks/`), "Simular estado" e os avisos de protótipo.
 - Funcionam de verdade:
   - login "Névoa" (fundo claro azulado, anéis pontilhados em azul parados, cartão com as folhas "Original" e "Atualizado" em leque, PREFCG) com a entrada animada: o cartão sai, as folhas ficam lado a lado e a linha amarela desce pela página inteira acendendo as diferenças, que viram etiquetas numa lista no meio; a linha sobe apagando os PDFs e revelando a saudação pelo horário ("Bom dia, Maria"), desce trocando-a pelo AQR azul, e a logo voa até o cabeçalho sem trocar de cor; depois de entrar, a pessoa vai para a página que tinha pedido (ou para o início); "Sair" (botão de conta) faz o caminho inverso, com a logo voltando ao centro e virando pontinhos azuis que voltam aos anéis;
@@ -44,6 +45,8 @@ O pedido original completo está em `~/Downloads/Prompt_AQR_2.0_Claude_Code.txt`
 npm install
 npm run dev          # API em http://127.0.0.1:3000 e site em http://localhost:5173
 VITE_COMPARISON_SERVICE=demo npm run dev:web   # alternativa: dados fictícios, sem API
+npm run dev:login    # com o login real: sobe Keycloak + Mailpit (Docker) e usa docker/dev/aqr-login.env
+npm run login:criar-admin -- --usuario <login> --nome "<Nome>" --email <e-mail>   # 1º acesso; link no terminal e em http://localhost:8025
 ```
 
 Variáveis do servidor (opcionais): `HOST` (padrão `127.0.0.1`), `PORT` (`3000`), `NODE_ENV`, `LOG_LEVEL`, `COMPARISON_WORKERS` (`2`), `COMPARISON_QUEUE_LIMIT` (`8`), `COMPARISON_TIMEOUT_MS` (`120000`), `COMPARISON_RESULT_TTL_MS` (`1800000`), `COMPARISON_WORKER_MEMORY_MB` (`768`).
@@ -54,6 +57,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 
 | Data | Decisão |
 |---|---|
+| 09/11/2026 | **Keycloak continua, mas escondido.** O responsável não gostou do sistema de login como estava e escolheu, entre as opções (login próprio do AQR, Better Auth, Keycloak escondido, serviço externo), manter o Keycloak sem que a pessoa o veja. **Contas criadas dentro do site.** **Primeira senha e "Esqueceu a senha?" por link enviado por e-mail pelo próprio AQR**, para uma página do AQR (em vez da senha provisória definida pelo administrador). Substitui o convite e a recuperação pelas páginas e e-mails do Keycloak (decisões de 10/10/2026). O AQR passa a ter SMTP próprio (`nodemailer`); a senha passa pelo servidor só em trânsito e continua sem ser guardada pelo AQR. |
 | 22/10/2026 | **A `master` fica só com o frontend** e a comparação demonstrativa, para hospedar de graça; o servidor fica só aqui na `dev`. Substitui a ideia de hospedar o servidor no Cloudflare Containers (pago). Hospedar a comparação real fica para depois (opções: Containers pago, VM gratuita da Oracle ou comparação no navegador). |
 | 22/10/2026 | **Projeto dividido em branches:** `master` só com a comparação de PDFs (a triagem some por completo), para hospedar; `dev` com tudo. **Na `master`, login fictício `admin`/`admin`** (a tela de login aprovada continua igual, sem o login do servidor). **Hospedagem na Cloudflare** (Workers para o site + Containers para o servidor de comparação; guia em `docs/hospedagem-cloudflare.md` na `master`). |
 | 16/10/2026 | **Tela de comparação: barra única + modo foco + lista minimizável + números só ao passar o mouse** (com interruptor "Números" para deixá-los sempre visíveis). No foco, a faixa de diferenças fica sempre visível (sem minimizar), com setas para ir de uma à outra. Referência: `docs/propostas-comparacao/mistura.html`. |
@@ -196,10 +200,12 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 | 16/10/2026 | Teste no navegador real (`node --import tsx scripts/e2e-navegador.mts`, Chromium pelo protocolo DevTools, 19 verificações; capturas em `docs/comparador/capturas/`). Corrigidos: destaque selecionado cobria o texto da página; troca de dígito parecido ("15" → "18") ficava sem confirmação visual a 120 dpi → reconferência a 240 dpi só nos recortes das diferenças de texto não confirmadas. 1.000 páginas pela thread real (768 MB, 120 s): concluída em 90 s, parcial | ver `git log` |
 | 15/10/2026 | Entrada definitiva no site: fundo "Névoa" (token `--login-mist-mid`; saem `--login-night-*`), anéis e pontinhos da saída em azul, folhas com ícone de diferença (mesmos ícones do visualizador), varredura com lista, corte limpo com a saudação pelo horário (`greeting.ts`, com testes) e voo da logo sempre azul. Conferido no Chromium: entrar, chegar ao início e sair | ver `git log` |
 | 22/10/2026 | Criada a branch `dev` com o projeto completo; a `master` virou a versão para hospedar (só a comparação, login fictício, Cloudflare) | ver `git log` |
+| 09/11/2026 | **Keycloak escondido:** o AQR envia os convites e os links de nova senha (SMTP próprio, `nodemailer` 10.3.1 fixado, `SMTP_*` obrigatórias no login real) para as páginas novas `/esqueci-senha` e `/definir-senha` (mesmo visual do login, sem as folhas), que gravam a senha no Keycloak pela API de administração. Links de uso único com hash no banco (migração 0007, `password_links`; 72 h convite, 1 h recuperação), "Esqueceu a senha?" com resposta igual exista a conta ou não, eventos `senha.*`, textos da administração sem "Keycloak" ("Sincronizar acesso"), `admin:criar` cria o acesso no Keycloak já vinculado, `admin:link-senha`, e `npm run dev:login` sobe tudo. Testes do servidor e das páginas (axe); capturas em `docs/capturas-login/`. O E2E com Keycloak real (`scripts/e2e-keycloak.mjs`) foi ajustado, mas não rodou (sem acesso ao Docker nesta máquina) | ver `git log` |
 
 ## Pendências
 
-- **Login real (Keycloak) em produção:** depende de domínio, HTTPS, SMTP real e Keycloak institucional ou próprio em modo `start`; sem isso só roda local (compose com Mailpit). Falta a validação visual da tela de registros (capturas em `docs/capturas-login/`), um tema do Keycloak com a identidade da PREFCG (hoje o tema padrão, em português), e definir a retenção dos registros de acesso (`access_events`, com IP; hoje sem prazo). Ver `docs/login-keycloak.md`.
+- **Login real (Keycloak escondido) em produção:** depende de domínio, HTTPS, SMTP real da Prefeitura (agora nas variáveis `SMTP_*` do AQR) e Keycloak institucional ou próprio em modo `start`; sem isso só roda local (`npm run dev:login`, com Mailpit). Falta a validação visual das páginas de senha e da tela de registros (capturas em `docs/capturas-login/`) e definir a retenção dos registros de acesso (`access_events`, com IP; hoje sem prazo). O tema do Keycloak deixou de ser necessário (ninguém vê as páginas dele). Ver `docs/login-keycloak.md`.
+- **Rodar o E2E com Keycloak real** (`scripts/e2e-keycloak.mjs`) depois do Keycloak escondido: ajustado, mas não executado em 09/11/2026 porque o usuário desta máquina não tem acesso ao Docker (`sudo usermod -aG docker $USER`).
 
 - **Fontes padrão no visualizador:** o pdf.js avisa no console (`standardFontDataUrl`) ao abrir PDFs com fontes padrão não incorporadas; o desenho sai com fonte substituta. Se atrapalhar o alinhamento dos destaques, servir `pdfjs-dist/standard_fonts` e informar `standardFontDataUrl` em `load-pdf.ts`.
 
@@ -226,6 +232,7 @@ Antes de cada commit: `npm run lint`, `npm run typecheck`, `npm test` e `npm run
 |---|---|
 | Rotas | `src/app/routes.tsx`, `src/config/routes.ts` |
 | Transição entre páginas | `src/app/page-transition.ts` (sentido), `AppShell.tsx` (`view-transition-name: page`), CSS no fim de `src/styles/globals.css`; links e `navigate` usam `viewTransition` |
+| Páginas de senha (login real) | `src/pages/ForgotPasswordPage.tsx`, `SetPasswordPage.tsx`, `src/features/auth/components/AuthCard.tsx`, `password-reset.ts`; servidor em `server/auth/password-routes.ts`, `password-links.ts`, `mailer.ts` |
 | Login e entrada animada | `src/pages/LoginPage.tsx`, `src/features/auth/` (sessão, `RequireAuth`, anéis, formulário, `entry/` com a varredura da entrada em `scan-entry.ts`, a saudação em `greeting.ts`, a passagem para o cabeçalho e a saída em `entry-handoff.tsx`, `login.css`) |
 | Propostas de transição de página | `docs/propostas-transicoes/transicoes.html` (`#t1` a `#t3`) |
 | Propostas de barra superior | `docs/propostas-topbar/topbar.html` (`#v0` atual, `#v1` a `#v3`) e `icones-compactos.html` (`#v3` original, `#va` a `#vd`) e `sub-barras.html` (`#vd`, `#e1` a `#e3`) |

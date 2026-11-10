@@ -1,5 +1,6 @@
 import { integerColumn, transaction, type Database } from './database.ts'
 import { migration0001 } from './migrations/0001_contas_e_auditoria.ts'
+import { migration0007 } from './migrations/0007_links_de_senha.ts'
 import { migration0006 } from './migrations/0006_inatividade_e_comparacoes_sem_nomes.ts'
 import { migration0005 } from './migrations/0005_sem_id_token_e_auditoria_de_comparacoes.ts'
 import { migration0004 } from './migrations/0004_vinculo_keycloak_sub.ts'
@@ -13,7 +14,7 @@ export interface Migration {
 }
 
 /** Todas as migrações, em ordem. As migrações ficam em código, para irem junto no build. */
-export const migrations: readonly Migration[] = [migration0001, migration0002, migration0003, migration0004, migration0005, migration0006]
+export const migrations: readonly Migration[] = [migration0001, migration0002, migration0003, migration0004, migration0005, migration0006, migration0007]
 
 /**
  * Aplica as migrações que faltam, cada uma na sua transação, e registra em `schema_migrations`.

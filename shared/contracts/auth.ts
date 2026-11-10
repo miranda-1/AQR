@@ -1,11 +1,32 @@
 import type { AccountRole } from './admin.ts'
 
-/** Como o servidor autentica: "visual" (login sem verificação, só desenvolvimento) ou "keycloak". */
+/** Como o servidor autentica: "visual" (login sem verificação, só desenvolvimento) ou "keycloak" (login real). */
 export interface AuthStatus {
   mode: 'visual' | 'keycloak'
-  /** Só no login real: página do Keycloak para receber por e-mail o link de nova senha. */
-  recuperarSenhaUrl?: string
 }
+
+/** Pedido de link para criar uma nova senha (`POST /api/auth/senha/esqueci`): usuário ou e-mail. */
+export interface ForgotPasswordRequest {
+  usuario: string
+}
+
+/** O que a página de definir a senha mostra sobre o link (`POST /api/auth/senha/verificar`). */
+export interface PasswordLinkInfo {
+  finalidade: 'convite' | 'recuperacao'
+  usuario: string
+  /** Primeiro nome, para a saudação. */
+  nome: string
+}
+
+/** Nova senha pelo link (`POST /api/auth/senha/definir`). */
+export interface SetPasswordRequest {
+  codigo: string
+  senha: string
+}
+
+/** Tamanho aceito para a senha nova (o Keycloak pode exigir mais pela política dele). */
+export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MAX_LENGTH = 128
 
 /** Pedido de login na tela do AQR (`POST /api/auth/entrar`), só no login real. */
 export interface LoginRequest {

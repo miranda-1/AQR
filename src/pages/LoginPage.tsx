@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { AqrLogo } from '@/components/layout/AqrLogo'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { appConfig } from '@/config/app'
+import { routes } from '@/config/routes'
 import { useAuthSession } from '@/features/auth/auth-session'
 import { ComparedSheet, DifferenceChip, sheetDifferences } from '@/features/auth/components/ComparedSheet'
 import { DottedRings } from '@/features/auth/components/DottedRings'
@@ -23,7 +24,7 @@ type Phase = 'form' | 'entering'
 
 export function LoginPage() {
   useDocumentTitle('Entrar')
-  const { isAuthenticated, mode, recoverPasswordUrl, signIn } = useAuthSession()
+  const { isAuthenticated, mode, signIn } = useAuthSession()
   const navigate = useNavigate()
   const location = useLocation()
   const handoff = useEntryHandoff()
@@ -98,7 +99,7 @@ export function LoginPage() {
     [goToSite, reducedMotion],
   )
 
-  /** Login real: o servidor confere usuário e senha no Keycloak; só depois a entrada animada começa. */
+  /** Login real: o servidor confere usuário e senha no sistema de login; só depois a entrada animada começa. */
   const submitReal = useCallback(
     async (userName: string, password: string) => {
       setNotice(null)
@@ -161,12 +162,12 @@ export function LoginPage() {
                   />
                 )}
                 <p className="mt-[18px] text-center text-[0.84375rem] text-muted-foreground">
-                  {mode === 'keycloak' && recoverPasswordUrl ? (
+                  {mode === 'keycloak' ? (
                     <>
                       Esqueceu a senha?{' '}
-                      <a href={recoverPasswordUrl} className="font-semibold text-brand underline-offset-4 hover:underline">
+                      <Link to={routes.forgotPassword} className="font-semibold text-brand underline-offset-4 hover:underline">
                         Receba um link por e-mail
-                      </a>
+                      </Link>
                       .
                     </>
                   ) : (

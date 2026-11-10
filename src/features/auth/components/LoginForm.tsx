@@ -22,7 +22,7 @@ const messages: Record<Field, string> = {
   password: 'Informe a senha.',
 }
 
-const inputClass =
+export const inputClass =
   'h-[46px] w-full rounded-lg border border-line-strong bg-white px-3.5 text-[0.9375rem] text-ink transition-[border-color,box-shadow] focus-visible:border-brand focus-visible:shadow-[0_0_0_3px_rgb(40_53_135_/_0.22)] focus-visible:outline-none aria-[invalid=true]:border-destructive'
 
 export function LoginForm({ onSubmit, notice = null, onEdit, onType, disabled = false }: LoginFormProps) {

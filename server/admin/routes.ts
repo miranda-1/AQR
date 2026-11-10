@@ -43,7 +43,7 @@ export interface AdminRoutesOptions {
   auth?: AuthProvider
   /** Banco das contas e da auditoria; presente quando a administração está ligada. */
   db?: Database
-  /** Provisiona o acesso no Keycloak junto com a conta (login real). Sem ele, só o AQR é alterado. */
+  /** Provisiona o acesso no sistema de login (Keycloak) junto com a conta. Sem ele, só o AQR é alterado. */
   identity?: IdentityProvisioner
 }
 
@@ -120,7 +120,7 @@ export function registerAdminRoutes(app: FastifyInstance, options: AdminRoutesOp
     if (options.mode === 'real') registerEventRoutes(admin, db, onlyAdmins)
 
     if (identity) {
-      // Link por e-mail para a pessoa definir ou redefinir a senha (a senha nunca passa pelo AQR).
+      // Link por e-mail, enviado pelo AQR, para a pessoa definir ou redefinir a senha numa página do AQR.
       admin.post('/api/admin/accounts/:id/redefinir-senha', { preHandler: onlyAdmins }, async (request, reply) => {
         const actor = actorFromPrincipal(principalOf(request))
         await identity.sendPasswordEmail(service.get(idParam(request)), actor.id ?? '')

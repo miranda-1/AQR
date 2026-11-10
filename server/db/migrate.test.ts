@@ -22,7 +22,7 @@ describe('migrações', () => {
     expect(migrate(db)).toEqual(migrations.map((migration) => migration.version))
     expect(migrate(db)).toEqual([])
     const rows = db.prepare('SELECT version, name FROM schema_migrations').all()
-    expect(rows.map((row) => textColumn(row, 'name'))).toEqual(['contas_e_auditoria', 'sessoes_e_eventos_de_acesso', 'eventos_de_identidade', 'vinculo_keycloak_sub', 'sem_id_token_e_auditoria_de_comparacoes', 'inatividade_e_comparacoes_sem_nomes'])
+    expect(rows.map((row) => textColumn(row, 'name'))).toEqual(['contas_e_auditoria', 'sessoes_e_eventos_de_acesso', 'eventos_de_identidade', 'vinculo_keycloak_sub', 'sem_id_token_e_auditoria_de_comparacoes', 'inatividade_e_comparacoes_sem_nomes', 'links_de_senha'])
   })
 
   it('desfaz a migração inteira se ela falhar', () => {
@@ -30,7 +30,7 @@ describe('migrações', () => {
     const broken = { version: 99, name: 'quebrada', sql: 'CREATE TABLE ok (id INTEGER); CREATE TABLE ok (id INTEGER);' }
     expect(() => migrate(db, [...migrations, broken])).toThrow()
     expect(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name = 'ok'").get()).toEqual({ n: 0 })
-    expect(integerColumn(db.prepare('SELECT max(version) AS v FROM schema_migrations').get() ?? {}, 'v')).toBe(6)
+    expect(integerColumn(db.prepare('SELECT max(version) AS v FROM schema_migrations').get() ?? {}, 'v')).toBe(7)
   })
 
   describe('regras garantidas pelo banco', () => {

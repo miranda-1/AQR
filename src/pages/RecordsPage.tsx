@@ -35,7 +35,7 @@ export function RecordsPage() {
         </>
       ) : (
         <p role="status" className="mt-6 rounded-lg bg-white p-5 text-ink shadow-surface">
-          Os registros só existem com o login real (Keycloak). No modo de desenvolvimento não há o que mostrar.
+          Os registros só existem com o login real. No modo de desenvolvimento não há o que mostrar.
         </p>
       )}
 

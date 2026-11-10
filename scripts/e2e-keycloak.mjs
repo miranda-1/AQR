@@ -1,10 +1,10 @@
 // Ponta a ponta com Keycloak real + Mailpit + API do AQR (ver docs/login-keycloak.md).
 // Uso: node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>
-// Pré-requisitos: docker compose -f docker/dev/compose.yml up -d; API em PORT=3100 com AUTH_MODE=keycloak,
-// KEYCLOAK_CLIENT_SECRET=aqr-web-dev-secret, KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret, AUTH_LOGIN_ATTEMPTS_PER_MINUTE=1000
+// Pré-requisitos: docker compose -f docker/dev/compose.yml up -d; API em PORT=3100 com as variáveis de
+// docker/dev/aqr-login.env (Keycloak, SMTP do Mailpit) e AUTH_LOGIN_ATTEMPTS_PER_MINUTE=1000
 // (o script faz dezenas de logins por minuto do mesmo IP; o padrão é 30) e banco novo
-// com o administrador "admin" (npm run admin:criar, sem vínculo) e as MESMAS variáveis KEYCLOAK_*/DATABASE_PATH
-// exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
+// com o administrador "admin" criado SEM o login real (npm run admin:criar sem AUTH_MODE, portanto sem vínculo)
+// e as MESMAS variáveis exportadas neste terminal (o script chama admin:vincular). Só para desenvolvimento local.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
@@ -21,7 +21,6 @@ const check = (name, ok, extra = '') => {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const form = (data) => ({ method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data) })
-const formAction = (html) => html.match(/action="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&')
 
 class Jar {
   cookies = new Map()
@@ -77,8 +76,8 @@ const json = (jar, method, path, data) =>
   call(jar, method, path, { headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
 
 // ---- Mailpit ----
-async function waitForMail(to, since) {
-  for (let i = 0; i < 30; i++) {
+async function waitForMail(to, since, tries = 30) {
+  for (let i = 0; i < tries; i++) {
     const list = await (await fetch(`${MAIL}/api/v1/messages`)).json()
     const found = (list.messages ?? []).find((m) => m.To.some((t) => t.Address === to) && new Date(m.Created).getTime() >= since)
     if (found) return (await (await fetch(`${MAIL}/api/v1/message/${found.ID}`)).json()).Text
@@ -86,18 +85,15 @@ async function waitForMail(to, since) {
   }
   return null
 }
-const linkOf = (text) => text?.match(/https?:\/\/\S*action-token\S*/)?.[0]
+/** O link do e-mail é sempre do AQR (página /definir-senha, código depois do #); nunca do Keycloak. */
+const linkOf = (text) => text?.match(/https?:\/\/\S*\/definir-senha#[A-Za-z0-9_-]+/)?.[0]
+const postApi = (path, data) => fetch(`${API}${path}`, { method: 'POST', headers: { origin: APP, 'content-type': 'application/json' }, body: JSON.stringify(data) })
 
-/** Abre o link do e-mail e define a senha, como a pessoa faria. */
+/** Abre o link do e-mail e define a senha na página do AQR, como a pessoa faria (a página só chama a API). */
 async function setPasswordFromLink(link, password) {
-  const b = browser()
-  let { res } = await b.follow(link)
-  let html = await res.text()
-  const proceed = html.match(/href="([^"]*action-token[^"]*)"/)?.[1]?.replaceAll('&amp;', '&')
-  if (!html.includes('password-new') && proceed) html = await (await b.follow(new URL(proceed, KC).href)).res.text()
-  if (!html.includes('password-new')) return false
-  const sent = await b.hop(formAction(html), form({ 'password-new': password, 'password-confirm': password }))
-  return sent.status < 500
+  const codigo = new URL(link).hash.slice(1)
+  if (!(await postApi('/api/auth/senha/verificar', { codigo })).ok) return false
+  return (await postApi('/api/auth/senha/definir', { codigo, senha: password })).ok
 }
 
 // ---- API Admin do Keycloak (só para conferir o resultado) ----
@@ -107,24 +103,15 @@ async function kcAdmin(path) {
   return (await fetch(`${KC}/admin/realms/aqr/${path}`, { headers: { authorization: `Bearer ${token}` } })).json()
 }
 
-// ============ 1. Recuperação de senha pelo "Esqueceu a senha?" ============
+// ============ 1. O Keycloak fica escondido ============
 {
-  const b = browser()
+  const status = await (await fetch(`${API}/api/auth/status`)).json()
+  check('status não expõe endereço do Keycloak', JSON.stringify(status) === '{"mode":"keycloak"}', JSON.stringify(status))
+  // "recuperacao" existe no Keycloak, mas não no AQR: a resposta é a mesma e nenhum e-mail sai.
   const t0 = Date.now()
-  const forgot = (await (await fetch(`${API}/api/auth/status`)).json()).recuperarSenhaUrl
-  check('o AQR oferece o link de "Esqueceu a senha?" do Keycloak', typeof forgot === 'string' && forgot.includes('reset-credentials'), forgot)
-  const askPage = await b.follow(forgot)
-  await b.hop(formAction(await askPage.res.text()), form({ username: 'recuperacao' }))
-  const link = linkOf(await waitForMail('recuperacao@aqr.local', t0))
-  check('e-mail de recuperação chega ao Mailpit', Boolean(link))
-  check('nova senha definida pelo link', link && (await setPasswordFromLink(link, 'NovaSenha-dev-456')))
-  check('senha antiga deixa de valer', (await login('recuperacao', 'recuperacao-dev-123')).final === 'CREDENCIAIS_INVALIDAS')
-  check('nova senha autentica (sem conta no AQR → bloqueado)', (await login('recuperacao', 'NovaSenha-dev-456')).final === 'SEM_CONTA')
-  // devolve a senha original para a próxima execução
-  const t = await fetch(`${KC}/realms/master/protocol/openid-connect/token`, form({ grant_type: 'password', client_id: 'admin-cli', username: 'admin', password: 'admin' }))
-  const auth = { authorization: `Bearer ${(await t.json()).access_token}` }
-  const [u] = await (await fetch(`${KC}/admin/realms/aqr/users?username=recuperacao&exact=true`, { headers: auth })).json()
-  await fetch(`${KC}/admin/realms/aqr/users/${u.id}/reset-password`, { method: 'PUT', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify({ type: 'password', value: 'recuperacao-dev-123', temporary: false }) })
+  const asked = await postApi('/api/auth/senha/esqueci', { usuario: 'recuperacao' })
+  check('"Esqueceu a senha?" responde igual para quem não tem conta (202)', asked.status === 202)
+  check('nenhum e-mail sai para quem não tem conta no AQR', (await waitForMail('recuperacao@aqr.local', t0, 6)) === null)
 }
 
 // ============ 2. Acesso sem login e login errado ============
@@ -170,7 +157,8 @@ check('antes de definir a senha, "ana" não consegue entrar', (await login('ana'
 // ============ 5. Convite por e-mail: a pessoa define a própria senha ============
 const invite = await waitForMail('ana@aqr.local', t1)
 const inviteLink = linkOf(invite)
-check('convite chega ao Mailpit com link para definir a senha', Boolean(inviteLink))
+check('convite chega ao Mailpit com link para a página do AQR', Boolean(inviteLink) && inviteLink.startsWith(`${APP}/definir-senha#`))
+check('o convite não cita o Keycloak nem leva a ele', !/keycloak|:8080/i.test(invite ?? ''))
 check('ana define a senha pelo link', inviteLink && (await setPasswordFromLink(inviteLink, 'Ana-dev-123')))
 const analyst = await login('ana', 'Ana-dev-123')
 check('ana entra com a senha que ela definiu', analyst.api.cookies.has('aqr_sessao'), analyst.final)
@@ -224,10 +212,19 @@ check('e-mail de redefinição chega ao Mailpit', Boolean(resetLink))
 check('ana define a nova senha', resetLink && (await setPasswordFromLink(resetLink, 'Ana-nova-456')))
 check('senha antiga deixa de valer', (await login('ana', 'Ana-dev-123')).final === 'CREDENCIAIS_INVALIDAS')
 check('nova senha funciona', (await login('ana', 'Ana-nova-456')).api.cookies.has('aqr_sessao'))
+check('o link de senha vale uma vez só (410)', (await postApi('/api/auth/senha/definir', { codigo: new URL(resetLink).hash.slice(1), senha: 'Outra-senha-999' })).status === 410)
+
+// ============ 7b. A própria pessoa pede nova senha ("Esqueceu a senha?", pelo e-mail) ============
+const t3 = Date.now()
+check('ana pede link pelo e-mail (202)', (await postApi('/api/auth/senha/esqueci', { usuario: 'ana@aqr.local' })).status === 202)
+const forgotLink = linkOf(await waitForMail('ana@aqr.local', t3))
+check('e-mail de nova senha chega com link do AQR', Boolean(forgotLink))
+check('ana define a senha pela página do AQR', forgotLink && (await setPasswordFromLink(forgotLink, 'Ana-esqueci-789')))
+check('e entra com ela', (await login('ana', 'Ana-esqueci-789')).api.cookies.has('aqr_sessao'))
 
 // ============ 8. Sincronização e logout ============
 const sync = await call(admin.api, 'POST', `/api/admin/accounts/${ana.id}/sincronizar`)
-check('sincronizar com o Keycloak (200)', sync.status === 200)
+check('sincronizar acesso (200)', sync.status === 200)
 // ============ 9. Registros para o administrador (acessos e comparações) ============
 const access = await (await call(admin.api, 'GET', '/api/admin/access-events?pageSize=100')).json()
 const kinds = new Set(access.items.map((e) => e.evento))

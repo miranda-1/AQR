@@ -39,6 +39,31 @@ type AccessEvent =
   | 'logout'
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
+/**
+ * Limite de pedidos por origem (IP ou bloco /64 do IPv6) numa janela de 1 minuto. O mapa guarda as
+ * janelas em ordem de abertura e tem teto: as mais antigas saem primeiro. Devolve verdadeiro quando
+ * a origem passou do limite.
+ */
+export function createAttemptLimiter(perMinute: number): (ip: string) => boolean {
+  const attempts = new Map<string, { windowStart: number; count: number }>()
+  return (ip) => {
+    const now = Date.now()
+    const key = rateLimitKey(ip)
+    const current = attempts.get(key)
+    if (!current || now - current.windowStart >= 60_000) {
+      attempts.delete(key)
+      attempts.set(key, { windowStart: now, count: 1 })
+      for (const [oldKey, value] of attempts) {
+        if (attempts.size <= MAX_TRACKED_ORIGINS && now - value.windowStart < 60_000) break
+        attempts.delete(oldKey)
+      }
+      return false
+    }
+    current.count += 1
+    return current.count > perMinute
+  }
+}
+
 export interface KeycloakAuthOptions {
   client: KeycloakClient
   sessions: SessionStore
@@ -51,7 +76,7 @@ export interface KeycloakAuthOptions {
   loginAttemptsPerMinute: number
 }
 
-function readCookie(request: FastifyRequest, name: string): string | undefined {
+export function readCookie(request: FastifyRequest, name: string): string | undefined {
   for (const part of (request.headers.cookie ?? '').split(';')) {
     const [key, ...rest] = part.trim().split('=')
     if (key === name) return rest.join('=')
@@ -103,26 +128,9 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
   const { client, sessions, db, identity } = options
   const base = new URL(options.appBaseUrl)
   const secure = base.protocol === 'https:'
-  // Limite simples por origem (janela de 1 min) para tentativas de login: além do bloqueio por usuário
-  // do próprio Keycloak, segura quem testa muitas senhas de muitos usuários. O mapa guarda as janelas em
-  // ordem de abertura e tem teto: as mais antigas saem primeiro.
-  const attempts = new Map<string, { windowStart: number; count: number }>()
-  const tooManyAttempts = (ip: string): boolean => {
-    const now = Date.now()
-    const key = rateLimitKey(ip)
-    const current = attempts.get(key)
-    if (!current || now - current.windowStart >= 60_000) {
-      attempts.delete(key)
-      attempts.set(key, { windowStart: now, count: 1 })
-      for (const [oldKey, value] of attempts) {
-        if (attempts.size <= MAX_TRACKED_ORIGINS && now - value.windowStart < 60_000) break
-        attempts.delete(oldKey)
-      }
-      return false
-    }
-    current.count += 1
-    return current.count > options.loginAttemptsPerMinute
-  }
+  // Limite simples por origem para tentativas de login: além do bloqueio por usuário do próprio
+  // Keycloak, segura quem testa muitas senhas de muitos usuários.
+  const tooManyAttempts = createAttemptLimiter(options.loginAttemptsPerMinute)
   // A conta é localizada pelo `sub` (imutável) do Keycloak. O nome de usuário só serve para explicar a recusa.
   const findBySub = db.prepare('SELECT id, situacao, usuario, nome, papel FROM accounts WHERE keycloak_sub = ?')
   const findByUser = db.prepare('SELECT id, keycloak_sub FROM accounts WHERE usuario = ? COLLATE NOCASE')
@@ -152,7 +160,7 @@ export function registerKeycloakAuthRoutes(app: FastifyInstance, options: Keyclo
     }
   })
 
-  app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'keycloak', recuperarSenhaUrl: client.resetPasswordUrl() }))
+  app.get('/api/auth/status', async (): Promise<AuthStatus> => ({ mode: 'keycloak' }))
 
   app.get('/api/auth/me', async (request): Promise<SessionUser> => {
     const principal = await provider.resolvePrincipal(request)

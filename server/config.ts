@@ -1,5 +1,6 @@
 import { isIP } from 'node:net'
 import { z } from 'zod'
+import type { SmtpSettings } from './auth/mailer.ts'
 import { defaultComparisonLimits } from './comparison/limits.ts'
 
 /**
@@ -41,6 +42,15 @@ const environmentSchema = z.object({
   /** Credencial de serviço do AQR no Keycloak (cria usuários e envia convites); nunca vai ao navegador. */
   KEYCLOAK_ADMIN_CLIENT_ID: z.string().min(1).optional(),
   KEYCLOAK_ADMIN_CLIENT_SECRET: z.string().min(1).optional(),
+  /** SMTP do AQR: convites e recuperação de senha saem pelo AQR (o Keycloak fica escondido). */
+  SMTP_HOST: z.string().min(1).optional(),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  /** "tls" (porta 465), "starttls" (587) ou "nenhuma" (só desenvolvimento, ex.: Mailpit). */
+  SMTP_SECURITY: z.enum(['tls', 'starttls', 'nenhuma']).default('starttls'),
+  SMTP_USER: z.string().min(1).optional(),
+  SMTP_PASSWORD: z.string().min(1).optional(),
+  /** Remetente, ex.: "AQR <nao-responda@exemplo.gov.br>". */
+  SMTP_FROM: z.string().min(3).optional(),
 })
 
 /** Segredos que existem nos arquivos de desenvolvimento do repositório; nunca valem em produção. */
@@ -96,6 +106,8 @@ export interface ServerConfig {
     adminClientSecret: string
     /** Inícios de login e retornos do Keycloak aceitos por IP, a cada minuto. */
     loginAttemptsPerMinute: number
+    /** SMTP para os e-mails de senha, enviados pelo próprio AQR. */
+    smtp: SmtpSettings
   } | null
 }
 
@@ -137,6 +149,12 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     if (!data.KEYCLOAK_ADMIN_CLIENT_ID || !data.KEYCLOAK_ADMIN_CLIENT_SECRET) {
       throw new ConfigError('AUTH_MODE=keycloak exige KEYCLOAK_ADMIN_CLIENT_ID e KEYCLOAK_ADMIN_CLIENT_SECRET (credencial de serviço para criar usuários e enviar convites).')
     }
+    if (!data.SMTP_HOST || !data.SMTP_FROM) {
+      throw new ConfigError('AUTH_MODE=keycloak exige SMTP_HOST e SMTP_FROM: os links para definir a senha são enviados por e-mail pelo próprio AQR.')
+    }
+    if (data.SMTP_USER && !data.SMTP_PASSWORD) {
+      throw new ConfigError('SMTP_USER foi definido sem SMTP_PASSWORD. Informe as duas ou nenhuma.')
+    }
     if (data.ADMIN_API_MODE === 'dev') {
       throw new ConfigError('ADMIN_API_MODE=dev não pode ser usado com AUTH_MODE=keycloak: o login real já liga a administração.')
     }
@@ -159,6 +177,9 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       if (DEV_ONLY_SECRETS.has(data.KEYCLOAK_ADMIN_CLIENT_SECRET) || data.KEYCLOAK_ADMIN_CLIENT_SECRET.length < 24) {
         throw new ConfigError('KEYCLOAK_ADMIN_CLIENT_SECRET é um segredo de desenvolvimento ou curto demais (mínimo de 24 caracteres). Gere um segredo novo no Keycloak de produção.')
       }
+      if (data.SMTP_SECURITY === 'nenhuma') {
+        throw new ConfigError('SMTP_SECURITY=nenhuma não é permitido em produção: os e-mails levam links de senha. Use "starttls" ou "tls".')
+      }
     }
     keycloak = {
       issuer: data.KEYCLOAK_ISSUER.replace(/\/$/, ''),
@@ -168,6 +189,14 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
       adminClientId: data.KEYCLOAK_ADMIN_CLIENT_ID,
       adminClientSecret: data.KEYCLOAK_ADMIN_CLIENT_SECRET,
       loginAttemptsPerMinute: data.AUTH_LOGIN_ATTEMPTS_PER_MINUTE,
+      smtp: {
+        host: data.SMTP_HOST,
+        port: data.SMTP_PORT,
+        seguranca: data.SMTP_SECURITY,
+        usuario: data.SMTP_USER ?? null,
+        senha: data.SMTP_PASSWORD ?? null,
+        remetente: data.SMTP_FROM,
+      },
     }
   }
   return {

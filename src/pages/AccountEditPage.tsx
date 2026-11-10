@@ -116,7 +116,7 @@ export function AccountEditPage() {
         <section aria-labelledby="acesso-titulo" className="mt-6 rounded-xl bg-surface-sunken p-5 sm:p-8">
           <h2 id="acesso-titulo" className="text-xl font-extrabold text-ink">Acesso ao sistema</h2>
           <p className="mt-2 text-muted-foreground">
-            A senha é definida pela própria pessoa, por um link enviado por e-mail. O AQR nunca vê a senha.
+            A senha é definida pela própria pessoa, numa página do AQR aberta pelo link enviado por e-mail. Ninguém, nem os administradores, vê a senha.
           </p>
           {accessError && <p role="alert" className="mt-3 font-semibold text-destructive">{accessError}</p>}
           <div className="mt-4 flex flex-wrap gap-3">
@@ -134,9 +134,9 @@ export function AccountEditPage() {
               variant="outline"
               className="min-h-11"
               disabled={busy}
-              onClick={() => void runAccess(() => service.syncIdentity(id).then(() => setNotice('Acesso sincronizado com o Keycloak.')))}
+              onClick={() => void runAccess(() => service.syncIdentity(id).then(() => setNotice('Acesso sincronizado.')))}
             >
-              Sincronizar com o Keycloak
+              Sincronizar acesso
             </Button>
           </div>
         </section>

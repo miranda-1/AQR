@@ -10,3 +10,7 @@ Geradas em 10/10/2026 num Chromium real, com o Keycloak local (`docker/dev/compo
 | `04-registros-computador.png` | Administração → Registros: uso da comparação por pessoa e acessos. |
 | `05-registros-celular.png` | Registros no celular (390 px), sem rolagem horizontal. |
 | `06-login-celular.png` | Login no modo real no celular. |
+| `esqueci-senha.png` | (09/11/2026) "Esqueci a senha", página do AQR que substitui a do Keycloak: pede usuário ou e-mail e envia o link. |
+| `definir-senha.png` | (09/11/2026) Página aberta pelo link do e-mail (convite): mostra o usuário e pede a senha nova duas vezes. |
+
+As capturas 01 e 03 são de antes do login na tela do AQR e do Keycloak escondido: hoje a pessoa não vê nenhuma página do Keycloak.

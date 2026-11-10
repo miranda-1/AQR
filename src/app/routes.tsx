@@ -23,6 +23,15 @@ const workspaceHandle: RouteHandle = { fullHeight: true }
 export const appRoutes: RouteObject[] = [
   // Login em tela cheia, fora do AppShell.
   { path: routes.login, element: <LoginPage /> },
+  // Páginas de senha: públicas (a pessoa ainda não entrou), no mesmo visual do login.
+  {
+    path: routes.forgotPassword,
+    element: lazyPage(() => import('@/pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage }))),
+  },
+  {
+    path: routes.setPassword,
+    element: lazyPage(() => import('@/pages/SetPasswordPage').then((m) => ({ default: m.SetPasswordPage }))),
+  },
   {
     // Todas as demais páginas exigem a sessão (visual nesta etapa).
     element: (

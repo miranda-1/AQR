@@ -2,8 +2,8 @@ import * as oidc from 'openid-client'
 
 /**
  * Provisionamento de identidades no provedor de login (Keycloak), feito só pelo backend com uma
- * credencial de serviço (client credentials). Nenhuma senha passa pelo AQR: a pessoa define a
- * própria senha por um link enviado por e-mail pelo próprio Keycloak.
+ * credencial de serviço (client credentials). O Keycloak fica escondido: a pessoa define a senha
+ * numa página do AQR (link enviado pelo AQR) e o backend a repassa ao Keycloak, sem guardá-la.
  */
 
 export interface IdentityProfile {
@@ -34,8 +34,11 @@ export interface IdentityProvider {
   updateProfile(id: string, profile: IdentityProfile): Promise<void>
   /** Encerra as sessões da pessoa no provedor. */
   logoutUser(id: string): Promise<void>
-  /** O provedor envia um e-mail com o link para a pessoa definir uma nova senha. */
-  sendPasswordEmail(id: string): Promise<void>
+  /**
+   * Define a senha (definitiva) e marca o e-mail como confirmado, já que a pessoa chegou pelo link
+   * enviado a ele. `IdentityError` com status 400 quando a senha não atende à política do provedor.
+   */
+  setPassword(id: string, senha: string): Promise<void>
 }
 
 export interface KeycloakIdentitySettings {
@@ -44,12 +47,7 @@ export interface KeycloakIdentitySettings {
   /** Cliente de serviço (confidencial) com permissão de gerenciar usuários do realm. */
   adminClientId: string
   adminClientSecret: string
-  /** Cliente e endereço usados no link do e-mail (página para onde a pessoa volta). */
-  appClientId: string
-  appBaseUrl: string
 }
-
-const PASSWORD_LINK_LIFESPAN_SECONDS = 72 * 3600
 
 function splitName(nome: string): { firstName: string; lastName: string } {
   const [first = '', ...rest] = nome.trim().split(/\s+/)
@@ -108,7 +106,12 @@ export class KeycloakIdentityProvider implements IdentityProvider {
     } catch {
       throw new IdentityError('O Keycloak não respondeu.')
     }
-    if (!response.ok) throw new IdentityError(`O Keycloak recusou a operação (${response.status}).`, response.status)
+    if (!response.ok) {
+      // A política de senha do Keycloak explica a recusa em `error_description`; vale repassar à pessoa.
+      const body: unknown = response.status === 400 ? await response.json().catch(() => null) : null
+      const detail = typeof body === 'object' && body !== null && 'error_description' in body && typeof body.error_description === 'string' ? body.error_description : null
+      throw new IdentityError(detail ?? `O Keycloak recusou a operação (${response.status}).`, response.status)
+    }
     return response
   }
 
@@ -160,12 +163,8 @@ export class KeycloakIdentityProvider implements IdentityProvider {
     await this.call('POST', `/users/${encodeURIComponent(id)}/logout`)
   }
 
-  async sendPasswordEmail(id: string): Promise<void> {
-    const query = new URLSearchParams({
-      client_id: this.settings.appClientId,
-      redirect_uri: new URL('/entrar', this.settings.appBaseUrl).href,
-      lifespan: String(PASSWORD_LINK_LIFESPAN_SECONDS),
-    })
-    await this.call('PUT', `/users/${encodeURIComponent(id)}/execute-actions-email?${query.toString()}`, ['UPDATE_PASSWORD'])
+  async setPassword(id: string, senha: string): Promise<void> {
+    await this.call('PUT', `/users/${encodeURIComponent(id)}/reset-password`, { type: 'password', value: senha, temporary: false })
+    await this.call('PUT', `/users/${encodeURIComponent(id)}`, { emailVerified: true, requiredActions: [] })
   }
 }

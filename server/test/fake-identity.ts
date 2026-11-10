@@ -10,12 +10,13 @@ interface FakeUser extends IdentityProfile {
 /** Provedor de identidades em memória, para testar o provisionamento sem Keycloak. */
 export class FakeIdentityProvider implements IdentityProvider {
   readonly users = new Map<string, FakeUser>()
-  readonly emails: string[] = []
+  /** Senhas definidas (só nos testes; o provedor real nunca devolve senha). */
+  readonly passwords = new Map<string, string>()
   readonly loggedOut: string[] = []
   /** Quando verdadeiro, toda chamada falha como se o Keycloak estivesse fora do ar. */
   down = false
-  /** Quando verdadeiro, só o envio de e-mail falha. */
-  mailDown = false
+  /** Senhas que a política do provedor recusa (status 400). */
+  rejectPassword: (senha: string) => boolean = () => false
   private next = 1
 
   private guard(): void {
@@ -66,9 +67,11 @@ export class FakeIdentityProvider implements IdentityProvider {
     this.loggedOut.push(id)
   }
 
-  async sendPasswordEmail(id: string): Promise<void> {
+  async setPassword(id: string, senha: string): Promise<void> {
     this.guard()
-    if (this.mailDown) throw new IdentityError('SMTP fora do ar')
-    this.emails.push(id)
+    if (this.rejectPassword(senha)) throw new IdentityError('Invalid password: minimum length 12.', 400)
+    const user = this.users.get(id)
+    if (user) user.emailVerified = true
+    this.passwords.set(id, senha)
   }
 }

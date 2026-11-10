@@ -1,5 +1,19 @@
 # Login real com Keycloak: relatório e guia
 
+## Keycloak escondido (decisão de 09/11/2026)
+
+A pessoa **nunca vê o Keycloak**: nem página, nem e-mail, nem nome. Ele continua conferindo as senhas por trás, mas tudo o que aparece é do AQR:
+
+- **Contas são criadas no próprio site** (Administração de contas). O AQR cria o acesso no Keycloak sozinho.
+- **Convite e "Esqueceu a senha?"**: o **AQR** envia o e-mail (SMTP próprio, `SMTP_*`), com link para a página do AQR `/definir-senha#<código>`. A pessoa define a senha ali; o servidor a repassa ao Keycloak (`PUT /users/{id}/reset-password`) e a descarta. O e-mail do Keycloak passa a ser marcado como confirmado (a pessoa provou que o recebe).
+- **Links:** código aleatório de 256 bits, só o hash no banco (`password_links`, migração 0007), uso único, convite vale 72 h e recuperação 1 h; emitir um link novo, definir a senha ou desativar a conta invalida os anteriores. O código vai depois do `#` (não chega a servidores nem a logs) e sai da barra de endereço quando a página abre; à API ele vai só no corpo do pedido.
+- **"Esqueceu a senha?"** (`/esqueci-senha`): aceita usuário ou e-mail e responde **sempre igual** (202), exista a conta ou não; o e-mail sai em segundo plano, para o tempo da resposta não revelar nada. Só contas ativas, com e-mail e com acesso recebem o link. Limite de pedidos por origem igual ao do login.
+- **Senha nova:** de 8 a 128 caracteres e sem conter o usuário (conferido no navegador e no servidor); a política do Keycloak, se houver, vale por cima ("Esta senha não atende às regras de segurança", sem expor a mensagem do Keycloak). Definir a senha encerra as sessões da conta no AQR e no Keycloak.
+- **Textos da administração** não citam o Keycloak ("Sincronizar acesso", "Acesso criado", "Falha no sistema de login").
+- **Registros:** `senha.recuperacao_pedida` (detalhe: `enviado`, `sem_conta`, `conta_inativa`, `sem_email`, `sem_acesso`, `falha_email`) e `senha.definida` (`convite` ou `recuperacao`).
+
+Rotas públicas: `POST /api/auth/senha/esqueci` `{ usuario }` → 202; `POST /api/auth/senha/verificar` `{ codigo }` → `{ finalidade, usuario, nome }` ou 410 `LINK_INVALIDO`; `POST /api/auth/senha/definir` `{ codigo, senha }` → `{ usuario }`, 422 `SENHA_FRACA`, 410 ou 503 (o link continua valendo). Todas exigem a `Origin` do AQR.
+
 ## Como funciona
 
 O login é feito **na tela do próprio AQR** (campos de usuário e senha e a animação aprovada). O servidor do AQR é o cliente OIDC (padrão BFF) e confere a senha no Keycloak por um cliente **confidencial**.
@@ -12,7 +26,7 @@ O login é feito **na tela do próprio AQR** (campos de usuário e senha e a ani
 
    **Como o vínculo nasce (o `sub` só é gravado por quem tem credencial de serviço, nunca pelo próprio login):** (a) conta criada pela administração: o `sub` é o id do usuário que o backend acabou de criar no Keycloak; (b) conta antiga: administrador usa "Sincronizar com o Keycloak" (confere que o **e-mail** do Keycloak é o da conta, senão recusa) ou o operador roda `npm run admin:vincular -- --usuario <login>` / `--todos` no servidor (contas sem e-mail, como o primeiro administrador, exigem `--confirmo-identidade`). O vínculo é definitivo: o banco recusa alterá-lo e cada `sub` só pertence a uma conta. **Migração de contas existentes:** a migração 0004 só adiciona a coluna (nula); contas antigas ficam *sem acesso* até serem vinculadas por um dos dois caminhos.
 4. O servidor cria uma sessão (guardada no banco do AQR, só o hash) e entrega só um cookie `aqr_sessao` (aleatório, `HttpOnly`, `SameSite=Lax`, `Secure` em HTTPS). A sessão **cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login**. **Nenhum token vai ao navegador.**
-   "Esqueceu a senha?" é um link para a página do Keycloak que envia o e-mail de nova senha (`recuperarSenhaUrl` em `GET /api/auth/status`).
+   "Esqueceu a senha?" leva à página do AQR `/esqueci-senha` (ver "Keycloak escondido"). `GET /api/auth/status` devolve só `{ "mode": "keycloak" }`.
 5. A cada pedido a conta é consultada de novo: desativar ou mudar o papel vale na hora. Cada pedido conta como uso (o último uso é regravado no máximo a cada 30 s). No navegador, cliques, teclas e rolagem avisam o servidor (no máximo uma vez por minuto) e o relógio da sessão (`GET /api/auth/sessao`, que **não** conta como uso) é conferido a cada minuto e ao voltar à aba; quando a sessão termina, a pessoa vai para `/entrar?erro=sessao_expirada` e, ao entrar de novo, volta à página em que estava.
 6. `POST /api/auth/logout` apaga a sessão do AQR e, **pelo backend e com a credencial de serviço**, encerra as sessões da pessoa no Keycloak (`POST /users/{sub}/logout`); a resposta é só `{ "keycloakEncerrado": true|false }` e o frontend volta para `/entrar`. **Nenhum token (nem `id_token`) é guardado ou enviado ao navegador**: o `id_token_hint` deixou de ser necessário. Se o Keycloak estiver fora do ar, a sessão do AQR cai do mesmo jeito e o registro do logout anota `keycloak_nao_encerrado`.
 
@@ -31,6 +45,9 @@ Proteções: `Origin` obrigatório e igual a `APP_BASE_URL` em **todo** pedido `
 | `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET` | credencial de serviço do AQR (cliente confidencial `aqr-admin`, com `manage-users` e `view-users` do `realm-management`); **obrigatória** com `AUTH_MODE=keycloak`; só o servidor a conhece |
 | `APP_BASE_URL` | origem pública do site, ex.: `http://localhost:5173` (só pedidos com esta `Origin` alteram dados, inclusive o login) |
 | `AUTH_LOGIN_ATTEMPTS_PER_MINUTE` | inícios de login e retornos do Keycloak aceitos por IP, a cada minuto (padrão 30) |
+| `SMTP_HOST` / `SMTP_FROM` | **obrigatórios** com `AUTH_MODE=keycloak`: servidor de e-mail e remetente (ex.: `AQR <nao-responda@exemplo.gov.br>`) dos convites e links de senha, enviados pelo AQR |
+| `SMTP_PORT` / `SMTP_SECURITY` | porta (padrão 587) e segurança: `starttls` (padrão), `tls` (porta 465) ou `nenhuma` (só desenvolvimento; recusada em produção) |
+| `SMTP_USER` / `SMTP_PASSWORD` | autenticação no SMTP, se houver (as duas juntas) |
 | `TRUST_PROXY` | IPs ou faixas CIDR do proxy reverso, separados por vírgula (padrão: nenhum). Só eles podem informar o IP real (`X-Forwarded-For`) que vai para os registros; "todos" é recusado |
 
 `AUTH_MODE=keycloak` não combina com `ADMIN_API_MODE=dev`. Em modo `visual` nada muda (login só visual).
@@ -38,31 +55,31 @@ Proteções: `Origin` obrigatório e igual a `APP_BASE_URL` em **todo** pedido `
 ## Rodando localmente (Keycloak autohospedado + Mailpit)
 
 ```bash
-docker compose -f docker/dev/compose.yml up -d     # Keycloak 26.8.0 + Postgres + Mailpit
-npm run admin:criar -- --usuario admin --nome "Admin Local"
-AUTH_MODE=keycloak KEYCLOAK_ISSUER=http://localhost:8080/realms/aqr KEYCLOAK_CLIENT_ID=aqr-web \
-  KEYCLOAK_CLIENT_SECRET=aqr-web-dev-secret KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret \
-  APP_BASE_URL=http://localhost:5173 npm run dev
+npm run dev:login      # sobe Keycloak + Mailpit (Docker), espera o Keycloak e inicia site e API com o login real
+# na primeira vez, em outro terminal (o link para definir a senha aparece no terminal e no Mailpit):
+npm run login:criar-admin -- --usuario <login> --nome "<Nome completo>" --email <e-mail>
 ```
 
+As variáveis ficam em `docker/dev/aqr-login.env` (só desenvolvimento; banco em `data/aqr-login.sqlite`). `npm run login:link-senha -- --usuario <login>` gera um link novo no terminal, sem e-mail. Fora do `dev:login`, os mesmos comandos existem como `admin:criar` e `admin:link-senha`, que leem as variáveis do ambiente (produção). Com o login real, `admin:criar` cria também o acesso no Keycloak, já vinculado, e exige `--email`; o usuário `admin` já existe no realm de desenvolvimento, então use outro login.
+
 - Keycloak: http://localhost:8080 (console: `admin` / `admin`). Dados no volume Postgres `keycloak-db`; para reimportar o realm: `docker compose -f docker/dev/compose.yml down -v`.
-- **Mailpit** (caixa de e-mail falsa): http://localhost:8025. O Keycloak envia a ele o e-mail de "Esqueceu a senha?" (SMTP `mailpit:1025` no realm).
+- **Mailpit** (caixa de e-mail falsa): http://localhost:8025. O AQR envia a ele os convites e os links de nova senha (SMTP `localhost:1025`, sem TLS).
 - Cliente de serviço `aqr-admin` (segredo de desenvolvimento `aqr-admin-dev-secret`; use `KEYCLOAK_ADMIN_CLIENT_ID=aqr-admin KEYCLOAK_ADMIN_CLIENT_SECRET=aqr-admin-dev-secret`). Usuários do realm (`docker/dev/realm/aqr-realm-dev.json`, **só local**): `admin` / `admin-dev-123`, `recuperacao` / `recuperacao-dev-123` e `semconta` / `semconta-dev-123` (autentica no Keycloak, mas não tem conta no AQR → bloqueado). O analista `ana` **não** vem no realm: o E2E a cria pela administração, como no uso real.
 - Teste ponta a ponta: `AUTH_MODE=keycloak ... PORT=3100 DATABASE_PATH=<temporário> npx tsx server/main.ts` e, em outro terminal, `node scripts/e2e-keycloak.mjs <original.pdf> <revisado.pdf>`.
 
 ## Provisionamento da identidade (conta do AQR → usuário no Keycloak)
 
-O backend usa a API Admin do Keycloak com a credencial de serviço (`client_credentials`, via `openid-client`). **Nenhuma senha passa pelo AQR nem pelo navegador**: a pessoa define a própria senha por um link enviado pelo próprio Keycloak.
+O backend usa a API Admin do Keycloak com a credencial de serviço (`client_credentials`, via `openid-client`). A pessoa define a própria senha na página do AQR, pelo link que o **AQR** envia; a senha passa pelo servidor só em trânsito e vai direto ao Keycloak, sem ser guardada nem registrada. Nenhum administrador vê ou define a senha de outra pessoa.
 
 | Ação do administrador | O que acontece |
 |---|---|
-| Criar conta (`POST /api/admin/accounts`, **e-mail obrigatório**) | cria o usuário no Keycloak (ativo, sem senha) → grava a conta no AQR (se falhar, apaga o usuário do Keycloak) → envia o e-mail de convite (UPDATE_PASSWORD, 72 h). Keycloak fora do ar: nenhuma conta é criada (502). Só o e-mail falhou: conta criada e resposta com `aviso`; reenvie pelo botão |
+| Criar conta (`POST /api/admin/accounts`, **e-mail obrigatório**) | cria o usuário no Keycloak (ativo, sem senha) → grava a conta no AQR (se falhar, apaga o usuário do Keycloak) → o AQR envia o e-mail de convite com o link para `/definir-senha` (72 h). Keycloak fora do ar: nenhuma conta é criada (502). Só o e-mail falhou: conta criada e resposta com `aviso`; reenvie pelo botão |
 | Desativar / reativar | o AQR bloqueia na hora; depois bloqueia/desbloqueia o usuário no Keycloak e encerra as sessões dele. Falha no Keycloak: a conta fica alterada no AQR e a resposta traz `aviso` |
 | Editar | nome e e-mail seguem para o Keycloak |
-| `POST /api/admin/accounts/:id/redefinir-senha` | envia o link para definir uma nova senha (conta ativa e com e-mail) |
+| `POST /api/admin/accounts/:id/redefinir-senha` | o AQR envia o link para definir uma nova senha (conta ativa e com e-mail, 1 h); encerra já as sessões da conta; a senha atual vale até o link ser usado |
 | `POST /api/admin/accounts/:id/sincronizar` | alinha o Keycloak com a conta: cria o usuário e o convite de contas antigas, ou corrige situação e dados |
 
-Na tela: página de criação (e-mail obrigatório) e, na edição, a seção **Acesso ao sistema** com "Enviar link para definir a senha" e "Sincronizar com o Keycloak". Cada passo fica em `access_events` (`identidade.criada`, `convite_enviado`, `senha_redefinicao_enviada`, `bloqueada`, `reativada`, `sincronizada`, `falha`) com quem agiu.
+Na tela: página de criação (e-mail obrigatório) e, na edição, a seção **Acesso ao sistema** com "Enviar link para definir a senha" e "Sincronizar acesso". Cada passo fica em `access_events` (`identidade.criada`, `convite_enviado`, `senha_redefinicao_enviada`, `bloqueada`, `reativada`, `sincronizada`, `falha`) com quem agiu.
 
 ## Sessões e registros
 
@@ -80,7 +97,8 @@ Registros, lidos **só por administradores** (analista recebe 403, sem sessão 4
 - `AUTH_MODE` não for `keycloak` (o login visual aceita qualquer usuário e senha, e `ADMIN_API_MODE=dev` também é recusado);
 - `KEYCLOAK_ISSUER` ou `APP_BASE_URL` não forem HTTPS ou apontarem para `localhost`;
 - `KEYCLOAK_ADMIN_CLIENT_SECRET` for o segredo de teste do repositório ou tiver menos de 24 caracteres;
-- faltarem `KEYCLOAK_*` ou a credencial de serviço.
+- faltarem `KEYCLOAK_*` ou a credencial de serviço;
+- faltar o SMTP (`SMTP_HOST`, `SMTP_FROM`) ou ele estiver sem TLS (`SMTP_SECURITY=nenhuma`).
 
 O **frontend** também falha fechado: no build de produção, se o servidor não responder ou anunciar o modo visual, a tela de login mostra "Não foi possível verificar o sistema de login" e não oferece o login fictício.
 
@@ -88,10 +106,10 @@ O **frontend** também falha fechado: no build de produção, se o servidor não
 
 **Ainda dependem de domínio, SMTP e servidor (não resolvíveis no repositório):**
 - **Domínio e HTTPS** do Keycloak e do AQR, com certificados.
-- **SMTP real** (host, porta, TLS, remetente do domínio da Prefeitura) em *Realm settings → Email*; sem isso convites e recuperação de senha não saem.
+- **SMTP real** (host, porta, TLS, remetente do domínio da Prefeitura) nas variáveis `SMTP_*` do AQR; sem isso o servidor não inicia com o login real. O SMTP do Keycloak não é mais usado.
 - **Keycloak em produção:** `start` (não `start-dev`), `KC_HOSTNAME`, proxy reverso, Postgres com backup, administrador próprio, política de senha e de bloqueio definida pela SEMADES.
 - **Segredo da credencial de serviço** gerado no Keycloak e guardado em cofre/variável de ambiente.
-- **Vincular o primeiro administrador** (`npm run admin:criar` + `npm run admin:vincular -- --usuario <login> --confirmo-identidade`, depois de conferir a pessoa) e as contas antigas.
+- **Criar o primeiro administrador** com `npm run admin:criar -- --usuario <login> --nome "<Nome>" --email <e-mail>` já com as variáveis de produção: cria o acesso no Keycloak, vinculado, e manda o link (que também aparece no terminal). Contas antigas: `admin:vincular`.
 - Cookies passam a `Secure` automaticamente com `APP_BASE_URL` em HTTPS.
 
 ## Limitações conhecidas (honestas)
@@ -99,9 +117,9 @@ O **frontend** também falha fechado: no build de produção, se o servidor não
 - **Confiança no vínculo inicial:** "Sincronizar" e `admin:vincular` confiam no administrador/operador e conferem apenas o **e-mail** do Keycloak, que precisa estar **confirmado** (senão a resposta é `EMAIL_NAO_CONFIRMADO`); se o e-mail estiver errado no Keycloak, o vínculo errado é definitivo (o banco recusa alterar; corrigir exige intervenção manual no banco por quem tem acesso). `--confirmo-identidade` é uma declaração do operador, sem verificação técnica.
 - **Contas antigas ficam sem acesso até serem vinculadas** (é o comportamento seguro; planeje a janela de migração).
 - **Sessões**: caem com 30 min sem uso ou 8 h depois do login; não há aviso antes de cair (quem está usando não é interrompido, porque a atividade renova a sessão). Quem tiver o banco não assume sessões (só há hash) e não encontra tokens.
-- **Três sistemas para manter coerentes** (SQLite do AQR, Keycloak, e-mail): falhas parciais geram `aviso` e o botão "Sincronizar com o Keycloak" conclui; não há reconciliação automática periódica. Uma conta desativada no AQR com falha no Keycloak continua sem entrar (o AQR confere a situação a cada pedido).
+- **Três sistemas para manter coerentes** (SQLite do AQR, Keycloak, e-mail): falhas parciais geram `aviso` e o botão "Sincronizar acesso" conclui; não há reconciliação automática periódica. Uma conta desativada no AQR com falha no Keycloak continua sem entrar (o AQR confere a situação a cada pedido).
 - **Limite de tentativas de login** é por IPv4 ou bloco /64 do IPv6: quem controla muitos blocos (um /48 inteiro, por exemplo) ainda consegue fazer mais tentativas (o bloqueio por usuário do Keycloak continua valendo). Proteção mais forte exige limite no proxy reverso ou no firewall.
-- **A senha passa pelo servidor do AQR** (decisão do responsável, para manter o login na tela do AQR): só em trânsito, por HTTPS, sem ser gravada nem registrada. Contrapartida: 2 fatores ou login único entre sistemas da prefeitura exigiriam voltar à página do Keycloak. A troca por senha ("direct access grant") está fora do OAuth 2.1, mas segue suportada pelo Keycloak 26; fica restrita ao cliente confidencial.
+- **A senha passa pelo servidor do AQR** (decisão do responsável, para manter o login e a definição de senha nas telas do AQR): só em trânsito, por HTTPS, sem ser gravada nem registrada. Contrapartida: 2 fatores ou login único entre sistemas da prefeitura exigiriam voltar à página do Keycloak. A troca por senha ("direct access grant") está fora do OAuth 2.1, mas segue suportada pelo Keycloak 26; fica restrita ao cliente confidencial.
 - **Comparação com `comparacao.enviada` e sem desfecho no registro** significa servidor interrompido no meio dela (o desligamento não é registrado como cancelamento).
 - **Registro das comparações** vale só no login real. Os **registros de acesso** (`access_events`, com IP) não têm prazo de retenção definido: nada é apagado automaticamente.
 - **Encerramento no Keycloak** depende da credencial de serviço estar no ar; sem ela, o login único do Keycloak pode continuar ativo até expirar (a sessão do AQR sempre cai).
@@ -114,4 +132,4 @@ Compose de desenvolvimento (Keycloak 26.8.0 + Postgres + Mailpit) recriado do ze
 
 ## Testes
 
-`server/auth/keycloak-auth.test.ts` (servidor OIDC falso com HTTP e JWT RS256 reais): não autenticado, login correto pela tela do AQR (senha só no endpoint de token, com o segredo), senha errada, campos inválidos, token de outro aplicativo, Keycloak fora do ar, origem forjada, sem conta, limite por origem (IPv4 e bloco IPv6), administrador cria analista, analista sem permissão, desativação imediata, CSRF, logout. Com o provedor de identidade falso (`server/test/fake-identity.ts`): criação com convite, e-mail obrigatório, desfazer o usuário se a conta falhar, Keycloak fora do ar (502), SMTP fora do ar (aviso e reenvio), bloqueio/reativação, sincronização e permissões. Mais `server/config.test.ts` e `src/pages/LoginPage.keycloak.test.tsx` (campos aprovados, senha errada, volta à página pedida, aviso de sessão encerrada).
+`server/auth/password-routes.test.ts` (links e páginas de senha: e-mail sem Keycloak, resposta igual exista a conta ou não, link de uso único, link novo invalida o anterior, conta desativada, política de senha, Keycloak fora do ar mantém o link, origem e limite) e `src/pages/PasswordPages.test.tsx` (páginas, validação, código fora do endereço, axe). `server/auth/keycloak-auth.test.ts` (servidor OIDC falso com HTTP e JWT RS256 reais): não autenticado, login correto pela tela do AQR (senha só no endpoint de token, com o segredo), senha errada, campos inválidos, token de outro aplicativo, Keycloak fora do ar, origem forjada, sem conta, limite por origem (IPv4 e bloco IPv6), administrador cria analista, analista sem permissão, desativação imediata, CSRF, logout. Com o provedor de identidade falso (`server/test/fake-identity.ts`): criação com convite, e-mail obrigatório, desfazer o usuário se a conta falhar, Keycloak fora do ar (502), SMTP fora do ar (aviso e reenvio), bloqueio/reativação, sincronização e permissões. Mais `server/config.test.ts` e `src/pages/LoginPage.keycloak.test.tsx` (campos aprovados, senha errada, volta à página pedida, aviso de sessão encerrada).

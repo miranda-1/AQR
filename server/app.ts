@@ -9,6 +9,9 @@ import { KeycloakIdentityProvider, type IdentityProvider } from './auth/identity
 import { createDevAuthProvider } from './auth/dev-auth-provider.ts'
 import { createKeycloakAuthProvider, registerKeycloakAuthRoutes } from './auth/keycloak-auth.ts'
 import { KeycloakClient } from './auth/keycloak-client.ts'
+import { SmtpMailer, type Mailer } from './auth/mailer.ts'
+import { PasswordLinks } from './auth/password-links.ts'
+import { registerPasswordRoutes } from './auth/password-routes.ts'
 import { SessionStore } from './auth/session-store.ts'
 import { openDatabase, type Database } from './db/database.ts'
 import { migrate } from './db/migrate.ts'
@@ -29,6 +32,8 @@ export interface AppDependencies {
   keycloakClient?: KeycloakClient
   /** Provedor de identidades (testes trocam por um falso). */
   identityProvider?: IdentityProvider
+  /** Envio de e-mail (testes trocam por uma caixa em memória). */
+  mailer?: Mailer
 }
 
 /** Sessão: cai depois de 30 min sem uso e, em qualquer caso, 8 h depois do login (decisão do responsável). */
@@ -84,17 +89,22 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   let realAuth: AuthProvider | null = null
   let realDb: Database | null = null
   let realIdentity: IdentityProvider | null = null
+  let realMail: { mailer: Mailer; links: PasswordLinks } | null = null
   if (config.keycloak) {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())
     const sessions = new SessionStore(db, SESSION_LIMITS)
-    // Limpeza periódica: sessões vencidas (a cada minuto) e registro de comparações com mais de 1 ano (a cada hora).
+    const links = new PasswordLinks(db, config.keycloak.appBaseUrl)
+    // Limpeza periódica: sessões vencidas (a cada minuto); links de senha velhos e registro de comparações com mais de 1 ano (a cada hora).
     let minutes = 0
     const housekeeping = () => {
       try {
         sessions.purgeExpired()
-        if (minutes++ % 60 === 0) purgeOldComparisonEvents(db)
+        if (minutes++ % 60 === 0) {
+          purgeOldComparisonEvents(db)
+          links.purge()
+        }
       } catch (error) {
         // Banco já fechado durante o desligamento.
         if (db.isOpen) app.log.error({ err: error }, 'Falha na limpeza periódica do banco')
@@ -112,10 +122,11 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
         issuer: config.keycloak.issuer,
         adminClientId: config.keycloak.adminClientId,
         adminClientSecret: config.keycloak.adminClientSecret,
-        appClientId: config.keycloak.clientId,
-        appBaseUrl: config.keycloak.appBaseUrl,
       })
+    const mailer = deps.mailer ?? new SmtpMailer(config.keycloak.smtp)
     registerKeycloakAuthRoutes(app, { client, sessions, db, appBaseUrl: config.keycloak.appBaseUrl, identity: realIdentity, loginAttemptsPerMinute: config.keycloak.loginAttemptsPerMinute }, provider)
+    registerPasswordRoutes(app, { db, identity: realIdentity, links, mailer, attemptsPerMinute: config.keycloak.loginAttemptsPerMinute })
+    realMail = { mailer, links }
     realAuth = provider
     realDb = db
   } else {
@@ -139,8 +150,8 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   })
 
   // Administração: o banco só é aberto quando ela está ligada.
-  if (realAuth && realDb && realIdentity) {
-    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(realIdentity, realDb) })
+  if (realAuth && realDb && realIdentity && realMail) {
+    registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(realIdentity, realDb, realMail) })
   } else if (config.adminMode === 'dev') {
     const db = deps.db ?? openDatabase(config.databasePath)
     migrate(db)

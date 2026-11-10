@@ -67,9 +67,9 @@ export interface AccountService {
   updateAccount: (id: string, input: UpdateAccountInput) => Promise<Account>
   deactivateAccount: (id: string, input: StatusChangeInput) => Promise<Account>
   reactivateAccount: (id: string, input: StatusChangeInput) => Promise<Account>
-  /** Envia à pessoa, por e-mail (pelo Keycloak), o link para definir a senha. */
+  /** Envia à pessoa, por e-mail (pelo AQR), o link para a página do AQR onde ela define a senha. */
   sendPasswordLink: (id: string) => Promise<void>
-  /** Alinha o Keycloak com a conta (cria o acesso de contas antigas, corrige bloqueio e dados). */
+  /** Alinha o sistema de login (Keycloak) com a conta (cria o acesso de contas antigas, corrige bloqueio e dados). */
   syncIdentity: (id: string) => Promise<Account>
   listAudit: (query?: AuditQuery, options?: RequestOptions) => Promise<AuditPage>
   /** Registros de acesso (login real). */

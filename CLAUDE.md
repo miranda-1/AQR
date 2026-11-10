@@ -13,7 +13,7 @@ Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter 
 Repositório remoto: `miranda-1/AQR` (GitHub, privado). Comando de envio em `docs/CONTEXTO.md` → Repositório.
 
 ## Comandos
-`npm run dev` · `npm run dev:server` · `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`. Rode os quatro últimos antes de concluir qualquer mudança.
+`npm run dev` · `npm run dev:server` · `npm run dev:login` (login real: Keycloak escondido + Mailpit, via Docker) · `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`. Rode os quatro últimos antes de concluir qualquer mudança.
 
 ## Regras do projeto
 - **Marca:** PREFCG via `<BrandMark />` (`prefcg-azul.svg`). No rodapé (`AppFooter`) entram também SEMADES e o slogan, na versão azul (`semades-azul.svg`, `slogan-azul.svg`). Nunca redesenhar, recolorir, distorcer ou reconstruir as marcas ou o brasão. Ver `src/assets/brand/README.md`.
