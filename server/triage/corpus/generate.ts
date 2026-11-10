@@ -151,11 +151,15 @@ function gabaritoDoAnexo(spec: EspecAnexo, imovel: Imovel, nome: string, bytes: 
   if (spec.defeito === 'zip-caminho-perigoso') motivosIsolamento.push('zip-caminho-perigoso')
   if ((tipoReal === 'zip' || tipoReal === 'rar') && !EXTENSOES_CONTEINER.has(extensao)) motivosIsolamento.push('conteiner-disfarcado')
 
-  const integridade: GabaritoAnexo['integridade'] = spec.defeito
-    ? ({ corrompido: 'corrompido', senha: 'protegido-por-senha', vazio: 'vazio' } as const)[spec.defeito as 'corrompido' | 'senha' | 'vazio'] ?? 'nao-suportado'
-    : spec.formato === 'dxf' || spec.formato === 'dwg' || spec.formato === 'docx'
+  // Arquivo isolado não é aberto: a integridade dele fica sem verificar.
+  const integridade: GabaritoAnexo['integridade'] =
+    motivosIsolamento.length > 0
       ? 'nao-verificada'
-      : 'legivel'
+      : spec.defeito
+        ? ({ corrompido: 'corrompido', senha: 'protegido-por-senha', vazio: 'vazio' } as const)[spec.defeito as 'corrompido' | 'senha' | 'vazio'] ?? 'nao-suportado'
+        : spec.formato === 'dxf' || spec.formato === 'dwg' || spec.formato === 'docx'
+          ? 'nao-verificada'
+          : 'legivel'
 
   const leitura: GabaritoAnexo['leitura'] = spec.defeito
     ? 'nenhuma'

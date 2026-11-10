@@ -79,10 +79,22 @@ O visualizador recebe um `DocumentSource` por documento: o PDF escolhido (págin
 O plano completo está em `docs/plano-backend.md`. Estrutura:
 
 ```
-shared/contracts/   tipos de dados usados pelo frontend e pelo servidor (comparação, administração, erros da API)
+shared/contracts/   tipos de dados usados pelo frontend e pelo servidor (comparação, triagem, administração, erros da API)
 server/             servidor Node.js/TypeScript (Fastify): comparação de PDFs em tarefas assíncronas e, depois,
                     administração de contas com SQLite (node:sqlite), migrações e auditoria
+server/documents/   leitura comum à comparação e à triagem: abertura segura de PDF, texto com posição, OCR local
+                    (páginas e imagens), renderização, ordem de leitura, geometria, fila de threads isoladas,
+                    tipo real do arquivo (PDF, JPG, PNG, DXF, DWG, DOCX, ZIP, RAR), leitura defensiva de ZIP e
+                    inspeção (hash, extensão, integridade, isolamento de suspeitos)
+server/triage/      triagem documental assistida (em construção): catálogo de regras conferido, encaixe de modelo
+                    local (sem modelo) e corpus sintético de desdobro com gabarito
 ```
+
+- **Leitura compartilhada (09/11/2026, etapa E3 da triagem):** a leitura saiu de `server/comparison/pdf`, `ocr` e
+  `geometry.ts` para `server/documents/`, com rótulo genérico de documento e erro `DocumentFailure`. Os arquivos antigos
+  da comparação ficaram como fachadas com a mesma API: `pdf/load.ts` e `pdf/extract.ts` convertem `DocumentFailure` em
+  `ComparisonFailure` (mesmo motivo, papel do documento e causa); os demais só reexportam. A fila de threads
+  (`ComparisonWorkerPool`) usa a fila genérica `server/documents/isolated-pool.ts`, com as mesmas mensagens.
 
 - `ComparisonService` continua sendo o contrato do frontend; `types.ts` reexporta os tipos de `shared/contracts/`.
 - No desenvolvimento, o Vite encaminha `/api` para o servidor local (`127.0.0.1:3000`), na mesma origem.

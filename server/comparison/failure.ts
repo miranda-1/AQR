@@ -1,4 +1,5 @@
 import type { ComparisonError, ComparisonErrorCode, DocumentRole } from '../../shared/contracts/comparison.ts'
+import { DocumentFailure } from '../documents/failure.ts'
 
 /** Motivo interno da falha, mais detalhado que o código público (vai para o log, não para a interface). */
 export type FailureReason =
@@ -50,4 +51,19 @@ export class ComparisonFailure extends Error {
   toComparisonError(): ComparisonError {
     return this.document ? { code: this.code, document: this.document } : { code: this.code }
   }
+}
+
+function isFailureReason(reason: string): reason is FailureReason {
+  return reason in codeByReason
+}
+
+/**
+ * Converte o erro de leitura comum (`DocumentFailure`) no erro da comparação, com o mesmo motivo e
+ * o papel do documento. Motivo que a comparação não conhece (só ocorre com imagens avulsas, que ela
+ * não lê) vira falha inesperada. Outros erros passam sem mudança.
+ */
+export function asComparisonFailure(error: unknown, role: DocumentRole): unknown {
+  if (!(error instanceof DocumentFailure)) return error
+  const reason: FailureReason = isFailureReason(error.reason) ? error.reason : 'falha-inesperada'
+  return new ComparisonFailure(reason, error.document === undefined ? undefined : role, { cause: error.cause })
 }
