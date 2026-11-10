@@ -1,0 +1,1053 @@
+{
+  "title": "Casos sintéticos complementares para homologação AQR GCA",
+  "version": "1.5-r2",
+  "contains_real_applicant_data": false,
+  "production_agent_found": false,
+  "cases": [
+    {
+      "id": "T27",
+      "name": "Resposta gráfica perdida pelo parser",
+      "control_ids": [
+        "OPS-018",
+        "OPS-015"
+      ],
+      "input": {
+        "file": "triagem_ficticia.pdf",
+        "text_lines": [
+          "□ requerimento",
+          "□ matrícula"
+        ],
+        "visual_marks": [
+          {
+            "row": 1,
+            "shape": "visto",
+            "color": "verde"
+          },
+          {
+            "row": 2,
+            "shape": "cruz",
+            "color": "vermelho"
+          }
+        ],
+        "legend_confirmed": false
+      },
+      "expected": "Extrair duas marcas por linha; significado pendente de legenda e revisão.",
+      "prohibited": "Nenhum aceite, pendência legal ou rejeição automática.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T28",
+      "name": "Histórico e texto fixo do controle",
+      "control_ids": [
+        "OPS-019"
+      ],
+      "input": {
+        "file": "controle_ficticio.pdf",
+        "events": [
+          {
+            "date": "2026-06-03",
+            "mark": "restricao"
+          },
+          {
+            "date": "2026-06-12",
+            "mark": "liberado_vistoriado"
+          }
+        ],
+        "blank_rows": 3,
+        "footer": "Projeto vistoriado e liberado"
+      },
+      "expected": "Dois eventos candidatos e três linhas vazias; encaminhar confirmação da vistoria.",
+      "prohibited": "Rodapé e liberação não produzem ato final.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T29",
+      "name": "Nome de aprovado com ato não confirmado",
+      "control_ids": [
+        "OPS-016",
+        "OPS-021"
+      ],
+      "input": {
+        "file": "projeto_APROVADO_ficticio.pdf",
+        "sheet_status": "ANÁLISE",
+        "analysis_stamp_image": true,
+        "certification_number": null,
+        "official_act": null
+      },
+      "expected": "Sinalizar divergência de evidências e solicitar vínculo ao ato.",
+      "prohibited": "Não decidir qual estado é correto.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T30",
+      "name": "Relatório e documento coincidem por bytes",
+      "control_ids": [
+        "OPS-022"
+      ],
+      "input": {
+        "document_bytes_utf8": "Documento exclusivamente fictício AQR",
+        "report_target_sha256": "a31708faa96d79c14c39fa09450f0b191750322a27fc883ce554c86244df2ccb",
+        "report_signature_status": "Aprovado",
+        "independent_validation": false
+      },
+      "expected": "Correspondência binária confirmada; relatório recebido ainda não autenticado.",
+      "prohibited": "Não propagar Aprovado para o processo.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T31",
+      "name": "Relatório de versão anterior",
+      "control_ids": [
+        "OPS-022"
+      ],
+      "input": {
+        "report_target_bytes_utf8": "Versão fictícia 1",
+        "submitted_bytes_utf8": "Versão fictícia 2",
+        "certificate_end": "2025-12-01",
+        "review_date": "2026-10-28"
+      },
+      "expected": "Hash divergente; relatório não corresponde à cópia; data do certificado separada.",
+      "prohibited": "Não declarar fraude nem assinatura inválida por data isolada.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T32",
+      "name": "Mesmo conteúdo em posições distintas",
+      "control_ids": [
+        "OPS-017"
+      ],
+      "input": {
+        "files": [
+          {
+            "uri": "anexoA/ficha.pdf",
+            "bytes_utf8": "ficha fictícia"
+          },
+          {
+            "uri": "reanexo/ficha.pdf",
+            "bytes_utf8": "ficha fictícia"
+          }
+        ]
+      },
+      "expected": "Uma extração reutilizável e dois vínculos preservados.",
+      "prohibited": "Não apagar anexos ou confundir repetição com nova versão.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T33",
+      "name": "PDF declarado e contêiner RAR",
+      "control_ids": [
+        "OPS-002",
+        "OPS-003"
+      ],
+      "input": {
+        "file": "anexo_ficticio.pdf",
+        "declared_mime": "application/pdf",
+        "detected_container": "RAR",
+        "payload": "apenas metadados de teste; sem arquivo executável"
+      },
+      "expected": "Divergência de formato, leitor correto ou quarentena técnica.",
+      "prohibited": "Não classificar como documento ausente nem indeferir pedido.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T34",
+      "name": "Rodapé com texto e corpo em imagem",
+      "control_ids": [
+        "OPS-023",
+        "OPS-004"
+      ],
+      "input": {
+        "extracted_chars": 320,
+        "text_regions": [
+          "rodapé"
+        ],
+        "body_mode": "imagem",
+        "body_ocr_done": false
+      },
+      "expected": "Leitura parcial; OCR/visão do corpo e revisão.",
+      "prohibited": "Contagem de caracteres não comprova cobertura.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T35",
+      "name": "Possível associação equivocada de anexo",
+      "control_ids": [
+        "OPS-011",
+        "OPS-021"
+      ],
+      "input": {
+        "case_modality": "R/D",
+        "documents": [
+          {
+            "id": "memorialA",
+            "modality": "RET"
+          },
+          {
+            "id": "memorialB",
+            "modality": "R/D"
+          }
+        ],
+        "attachment_manifest_confirmed": false
+      },
+      "expected": "Conferir vínculo/versões antes de comunicar correção.",
+      "prohibited": "Não imputar erro ao RT pelo nome da pasta.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T36",
+      "name": "Petição pede dispensa e cita data contraditória",
+      "control_ids": [
+        "OPS-024"
+      ],
+      "input": {
+        "petition_date": "2026-02-10",
+        "petition_cited_guide": "GDU F-07/2024",
+        "guide_id": "GDU F-07/2026",
+        "guide_issue_date": "2026-03-01",
+        "waiver_requested": true,
+        "waiver_decision": null
+      },
+      "expected": "Divergência de identificação/cronologia para revisão; pedido sem decisão.",
+      "prohibited": "Não conceder dispensa nem escolher uma data por inferência.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T37",
+      "name": "Recomendação sem natureza condicionante",
+      "control_ids": [
+        "OPS-024"
+      ],
+      "input": {
+        "author_role": "servidor_ficticio",
+        "nature": "sugestao_de_apresentacao",
+        "text": "Se desejar, melhore a distribuição visual da legenda.",
+        "mandatory": false
+      },
+      "expected": "Registrar orientação sem gerar pendência condicionante.",
+      "prohibited": "Não converter sugestão em exigência.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T38",
+      "name": "Checklist interno desloca implantação para abertura",
+      "control_ids": [
+        "OPS-020",
+        "OPS-013"
+      ],
+      "input": {
+        "modality": "L3",
+        "phase": "abertura",
+        "internal_template_requires": [
+          "DRT02_implantacao",
+          "ART_implantacao"
+        ],
+        "public_reference_phase": "durante_analise",
+        "different_RT": null,
+        "approved_instruction": null
+      },
+      "expected": "Conflito de fase e condição; suspender cobrança dependente e encaminhar à GCA.",
+      "prohibited": "Não exigir segunda ART incondicionalmente.",
+      "synthetic": true,
+      "execution_status": "especificado; não executado contra o agente"
+    },
+    {
+      "id": "T39",
+      "name": "Modelo com identificador fictício MODELO-ALFA e campo DATE renderizado em 2041-06-20",
+      "control_ids": [
+        "OPS-026"
+      ],
+      "input": {
+        "template_instance": "MODELO-ALFA",
+        "render_date": "2041-06-20",
+        "issue_date_confirmed": false
+      },
+      "expected_result": "Não usar render_date como emissão nem copiar identificador para novo processo.",
+      "source_refs": [
+        "RF02",
+        "RF04"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T40",
+      "name": "Matrícula fictícia com encerramento em 2037 e reabertura em 2040",
+      "control_ids": [
+        "OPS-025"
+      ],
+      "input": {
+        "events": [
+          {
+            "type": "encerramento",
+            "date": "2037-03-02"
+          },
+          {
+            "type": "reabertura",
+            "date": "2040-05-09"
+          }
+        ]
+      },
+      "expected_result": "Mostrar sequência com fontes; situação jurídica a conferir, sem concluir encerrada pela primeira ocorrência.",
+      "source_refs": [
+        "RF22"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T41",
+      "name": "Uma imagem com indicação página 1 de 3 sem manifesto do pacote",
+      "control_ids": [
+        "OPS-001",
+        "OPS-025"
+      ],
+      "input": {
+        "available_image_pages": 1,
+        "declared_pages": 3,
+        "official_manifest_present": false
+      },
+      "expected_result": "Integralidade não confirmada; procurar demais folhas, sem afirmar ausência no processo completo.",
+      "source_refs": [
+        "RF23",
+        "RF24"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T42",
+      "name": "Carimbo APROVADO, duas assinaturas de particulares e campo institucional vazio",
+      "control_ids": [
+        "OPS-027",
+        "OPS-021"
+      ],
+      "input": {
+        "stamp": "APROVADO",
+        "signature_roles": [
+          "RT",
+          "proprietario"
+        ],
+        "municipal_signature_confirmed": false
+      },
+      "expected_result": "Ato final não confirmado; nenhuma acusação de falsidade ou reprovação.",
+      "source_refs": [
+        "RF14"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T43",
+      "name": "Visto verde com nota vermelha atualizar modelo",
+      "control_ids": [
+        "OPS-028",
+        "OPS-018"
+      ],
+      "input": {
+        "mark": "visto_verde",
+        "note": "Atualizar modelo",
+        "institutional_legend_confirmed": false
+      },
+      "expected_result": "Preservar ambos, sinalização ambígua e revisão humana; não marcar automaticamente conforme.",
+      "source_refs": [
+        "AI-b6962ba802ea",
+        "AI-d00ee7774261"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T44",
+      "name": "Esboço CAD com legenda obrigatória e unidade interna sem sistema geodésico declarado",
+      "control_ids": [
+        "OPS-029",
+        "OPS-024"
+      ],
+      "input": {
+        "legend": "limítrofe de apresentação obrigatória",
+        "crs_declared": false,
+        "normative_reference": null
+      },
+      "expected_result": "Registrar descrição do esboço, sem inferir obrigação legal ou sistema de coordenadas.",
+      "source_refs": [
+        "RF15"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T45",
+      "name": "Imagem de assinatura recebida sem arquivo-alvo verificável",
+      "control_ids": [
+        "OPS-027",
+        "OPS-022"
+      ],
+      "input": {
+        "signature_appearance_visible": true,
+        "signed_original_available": false,
+        "independent_validation": "not_performed"
+      },
+      "expected_result": "Verificação não concluída; não declarar assinatura inválida nem validada.",
+      "source_refs": [
+        "RF16",
+        "AI-78d0a736bd98"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T46",
+      "name": "Visto seguido de cruz na versão posterior de uma triagem fictícia",
+      "control_ids": [
+        "OPS-009",
+        "OPS-021"
+      ],
+      "input": {
+        "triage_a": {
+          "version": "a",
+          "mark": "visto"
+        },
+        "triage_b": {
+          "version": "b",
+          "mark": "cruz"
+        },
+        "attachment_versions_confirmed": false
+      },
+      "expected_result": "Preservar dois eventos candidatos e verificar pacote; não presumir melhora monotônica nem erro do servidor.",
+      "source_refs": [
+        "AI-dda49a74f5d4",
+        "AI-75ad5f53ef9f"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T47",
+      "name": "RRT pago com atividade de incêndio em remembramento fictício",
+      "control_ids": [
+        "OPS-030"
+      ],
+      "input": {
+        "declared_service": "remembramento",
+        "rrt_paid": true,
+        "rrt_registered": true,
+        "rrt_activity": "prevenção e combate a incêndio"
+      },
+      "expected_result": "Possível incompatibilidade do objeto, procurar outro instrumento e encaminhar. Não rotular ausente, falso ou profissional inabilitado.",
+      "source_refs": [
+        "AI-6705c06dd35d"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T48",
+      "name": "Duas folhas avulsas e PDF completo da mesma certidão fictícia",
+      "control_ids": [
+        "OPS-031"
+      ],
+      "input": {
+        "images": [
+          {
+            "page": "1 de 2",
+            "certificate": "FICT-A"
+          },
+          {
+            "page": "2 de 2",
+            "certificate": "FICT-A"
+          }
+        ],
+        "pdf": {
+          "pages": 2,
+          "certificate": "FICT-A",
+          "signature_field_filled": true
+        }
+      },
+      "expected_result": "Agrupamento candidato, cobertura lógica de duas páginas, assinatura não herdada pelas imagens e confirmação humana.",
+      "source_refs": [
+        "AI-90bcc31217e3",
+        "AI-696b0b67f3f4",
+        "AI-892adaa470b8"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T49",
+      "name": "Ficha emitida depois da triagem fictícia",
+      "control_ids": [
+        "OPS-032"
+      ],
+      "input": {
+        "triage_date": "2026-02-10",
+        "document_issue": "2026-03-20",
+        "document_currently_present": true,
+        "filing_events": null
+      },
+      "expected_result": "Não considerar peça na avaliação de fevereiro, não acusar erro do servidor e marcar pacote histórico indeterminado.",
+      "source_refs": [
+        "AI-000e6494ef96"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T50",
+      "name": "Memorial fictício muda conteúdo sem mudar páginas",
+      "control_ids": [
+        "OPS-033"
+      ],
+      "input": {
+        "version_a": {
+          "pages": 3,
+          "header_lots": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "current_sections": [
+            "F1",
+            "F2"
+          ]
+        },
+        "version_b": {
+          "pages": 3,
+          "header_lots": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "current_sections": [
+            "F1",
+            "F2",
+            "F3"
+          ]
+        }
+      },
+      "expected_result": "Identificar nova descrição e não equiparar versões por contagem de folhas; suficiência técnica depende do analista.",
+      "source_refs": [
+        "AI-e2648fa7a4d6",
+        "AI-17ab3c3eb27b"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T51",
+      "name": "RRT fictício com CPF mascarado e assinatura SICCAU declarada",
+      "control_ids": [
+        "OPS-027"
+      ],
+      "input": {
+        "cpf": "XXX.XXX.XXX-XX",
+        "issuer_masking_notice": true,
+        "pdf_sig_fields": 0,
+        "electronic_signature_statement": true
+      },
+      "expected_result": "Não confundir mascaramento com ilegibilidade nem ausência de /Sig com ausência de assinatura; autenticidade não verificada.",
+      "source_refs": [
+        "AI-6705c06dd35d"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T52",
+      "name": "Assunto igual em todas as peças com ressalva institucional distinta",
+      "control_ids": [
+        "OPS-013",
+        "OPS-030"
+      ],
+      "input": {
+        "request": "desmembramento",
+        "plan": "desmembramento",
+        "art": "desmembramento",
+        "triage_note": "corrigir para desdobro"
+      },
+      "expected_result": "Coerência literal não resolve classificação legal; preservar divergência com manifestação e encaminhar.",
+      "source_refs": [
+        "AI-35e217000c54",
+        "AI-85de8970f7e4"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T53",
+      "name": "Quadro fictício zerado com cotas não nulas no desenho",
+      "control_ids": [
+        "OPS-033"
+      ],
+      "input": {
+        "table_distances": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "drawing_distances": [
+          12,
+          30,
+          12,
+          30
+        ],
+        "single_azimuth_zero_also_present": true
+      },
+      "expected_result": "Indício de placeholder para técnico, sem corrigir geometria; azimute zero isolado não é erro universal.",
+      "source_refs": [
+        "AI-2126c0d909fd",
+        "AI-5c3116a3144c"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T54",
+      "name": "Certidão fictícia apontada faltante e presente na coleta atual",
+      "control_ids": [
+        "OPS-032",
+        "OPS-031"
+      ],
+      "input": {
+        "historical_note": "falta matrícula do lote F2",
+        "current_file_present": true,
+        "official_filing_timestamp": null
+      },
+      "expected_result": "Presença atual confirmada, falta histórica e atendimento não decididos; exigir manifesto de eventos para treino e avaliação.",
+      "source_refs": [
+        "AI-ec7cc8c2de0f",
+        "AI-ab447e08beca"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T55",
+      "name": "Certidão fictícia com cadeia de titulares e correção de nome",
+      "control_ids": [
+        "OPS-034"
+      ],
+      "input": {
+        "events": [
+          {
+            "act": "R01",
+            "role": "adquirente",
+            "party": "Pessoa Fictícia A"
+          },
+          {
+            "act": "AV02",
+            "correction": "Pessoa Fictícia A passa a constar como Pessoa Fictícia A Retificada"
+          },
+          {
+            "act": "R03",
+            "role": "herdeiro",
+            "party": "Pessoa Fictícia B"
+          },
+          {
+            "act": "R04",
+            "role": "adquirente",
+            "party": "Empresa Fictícia C"
+          }
+        ],
+        "certificate_issue": "2024-07-26"
+      },
+      "expected_result": "Preservar cadeia, não extrair titular atual pelo primeiro nome/frequência; candidato indicado pelo último ato continua sujeito a conferência humana, sem certificar domínio.",
+      "source_refs": [
+        "E28-056-M01",
+        "E28-056-M06"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T56",
+      "name": "Discrepância fictícia somente no OCR versus visível na fonte",
+      "control_ids": [
+        "OPS-035"
+      ],
+      "input": {
+        "field_a": {
+          "ocr": "FICT-18",
+          "image": "FICT-19"
+        },
+        "field_b": {
+          "header_image": "FICT-20",
+          "act_label_image": "FICT-30"
+        }
+      },
+      "expected_result": "Campo A: corrigir extração com trilha; campo B: preservar ambos e sinalizar diferença da fonte para servidor. Nenhuma rejeição ou imputação de fraude.",
+      "source_refs": [
+        "E28-056-M03",
+        "E28-056-M07",
+        "E28-056-M12"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T57",
+      "name": "Numeração de ato fictícia salta sem salto de páginas físicas",
+      "control_ids": [
+        "OPS-031",
+        "OPS-035"
+      ],
+      "input": {
+        "physical_pages": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "folio_labels": [
+          "01",
+          "01V",
+          "02",
+          "certificação"
+        ],
+        "act_labels": [
+          "AV06",
+          "R08"
+        ]
+      },
+      "expected_result": "Não acusar automaticamente falta de página nem renumerar ato. Guardar salto visível e pedir conferência se necessário; integralidade jurídica não presumida.",
+      "source_refs": [
+        "E28-056-M11"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T58",
+      "name": "Pacote compactado fictício declarado PDF em duas cópias",
+      "control_ids": [
+        "OPS-001",
+        "OPS-031"
+      ],
+      "input": {
+        "declared_mime": "application/pdf",
+        "detected_type": "RAR",
+        "drive_ids": 2,
+        "identical_container_hash": true,
+        "safe_regular_members": 20,
+        "all_member_pages_reviewed": true
+      },
+      "expected_result": "Identificar conteúdo real, abrir com limites de segurança, reutilizar leitura somente com igualdade comprovada. Contar dois IDs, um binário e vinte membros em métricas distintas; não criar vinte novos IDs nem culpar requerente.",
+      "source_refs": [
+        "E28-056",
+        "E28-119"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T59",
+      "name": "Manifestação fictícia cita inciso diferente do texto oficial",
+      "control_ids": [
+        "OPS-013",
+        "OPS-035"
+      ],
+      "input": {
+        "private_manifestation_locator": "art. 5º, inciso 3º",
+        "official_locator_verified": "art. 5º, XVIII, redação alterada",
+        "manifestation_is_formal_signed_act": null
+      },
+      "expected_result": "Conservar citação da peça e localização pública conferida separadas. Não copiar referência errada, alterar fonte, certificar assinatura ou reclassificar pedido automaticamente.",
+      "source_refs": [
+        "E28-155"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T60",
+      "name": "Não localizado no acervo fictício não equivale a inexistência jurídica",
+      "control_ids": [
+        "OPS-013",
+        "OPS-032"
+      ],
+      "input": {
+        "manifestation": "não localizado documento de regularização no acervo consultado",
+        "case_specific_channel_suggestion": "outro órgão",
+        "current_authority_verified": false
+      },
+      "expected_result": "Registrar limite da pesquisa daquele caso. Não declarar loteamento irregular, criar obrigação universal ou adotar canal antigo como atual.",
+      "source_refs": [
+        "E28-156"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T61",
+      "name": "Páginas fictícias de processos distintos no mesmo PDF",
+      "control_ids": [
+        "OPS-021",
+        "OPS-031",
+        "OPS-035"
+      ],
+      "input": {
+        "page1_process_image": "CASO-FICTICIO-A",
+        "page2_process_image": "CASO-FICTICIO-B",
+        "page2_outcome_marked": "liberação de vistoria"
+      },
+      "expected_result": "Preservar original, localizar discrepância entre páginas e impedir propagação do resultado de B para A. Pedir conferência humana sem inferir fraude ou rejeitar.",
+      "source_refs": [
+        "E28-168"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T62",
+      "name": "Controle fictício com linhas datadas e caixas vazias",
+      "control_ids": [
+        "OPS-019",
+        "OPS-028"
+      ],
+      "input": {
+        "dated_rows": 3,
+        "result_marks": [],
+        "fixed_footer": "Projeto vistoriado e liberado",
+        "graphic_signature_present": true
+      },
+      "expected_result": "Resultado por linha indeterminado; texto fixo e assinatura não preenchem caixas. Despacho narrativo separado, sem certificar ato final.",
+      "source_refs": [
+        "E28-165",
+        "E28-166"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T63",
+      "name": "Histórico fictício com três restrições e quarta avaliação liberada",
+      "control_ids": [
+        "OPS-019",
+        "OPS-032"
+      ],
+      "input": {
+        "rows": [
+          "restrito",
+          "restrito",
+          "restrito",
+          "vistoria liberada"
+        ],
+        "declared_visits": 1,
+        "dispatch_days_after_last_event": 5
+      },
+      "expected_result": "Guardar quatro avaliações e uma vistoria declarada, sem somar como quatro visitas. Preservar datas e ressalvas, sem inferir prazo descumprido, certidão emitida ou aprovação final.",
+      "source_refs": [
+        "E28-090",
+        "E28-169"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T64",
+      "name": "Liberação fictícia com observação técnica e remessa cadastral",
+      "control_ids": [
+        "OPS-024",
+        "OPS-028",
+        "OPS-021"
+      ],
+      "input": {
+        "inspection_release_marked": true,
+        "observation": "rever azimute de um alinhamento na planta e memorial",
+        "forwarded_for_cadastre": true,
+        "certificate_emission_proof": null
+      },
+      "expected_result": "Manter liberação de vistoria, observação e remessa em campos independentes. Não declarar correção atendida, cadastro atualizado ou certidão emitida, nem substituir número nas peças.",
+      "source_refs": [
+        "E28-081",
+        "E28-157",
+        "E28-164"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T65",
+      "name": "Caixa fictícia de resultado marcada e caixa da etapa vazia",
+      "control_ids": [
+        "OPS-019",
+        "OPS-028"
+      ],
+      "input": {
+        "row_label": "primeira reanálise",
+        "stage_checkbox": false,
+        "result_checkbox": "liberado e vistoriado",
+        "date_present": true
+      },
+      "expected_result": "Extrair a marca do resultado e a ausência da marca da etapa separadamente, com localização. Não inventar marca nem descartar resultado visível por pressupor preenchimento duplo obrigatório; servidor confirma interpretação.",
+      "source_refs": [
+        "E28-170"
+      ],
+      "execution_status": "não executado contra agente de produção"
+    },
+    {
+      "id": "T66",
+      "name": "Verde com ressalva e cruz sem motivo",
+      "control_ids": [
+        "OPS-028",
+        "OPS-036"
+      ],
+      "input": {
+        "memorial": {
+          "mark": "verde",
+          "comment": "verificar assinatura"
+        },
+        "cadastro": {
+          "mark": "cruz",
+          "comment": null
+        }
+      },
+      "expected_result": "Preservar pedido de verificação no item verde; cadastro com motivo não explicitado. Não declarar assinatura ausente nem documento cadastral faltante.",
+      "source_refs": [
+        "AI-a140ce6ece5b",
+        "AI-12d75a967b7d"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T67",
+      "name": "Seta e texto conflitantes",
+      "control_ids": [
+        "OPS-036"
+      ],
+      "input": {
+        "comment": "atualizar modelo do requerimento",
+        "arrow_target": "memorial"
+      },
+      "expected_result": "Guardar os dois alvos candidatos e pedir revisão; não reescrever parecer nem aplicar a exigência automaticamente.",
+      "source_refs": [
+        "AI-ea5f7b1c9433"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T68",
+      "name": "Assinatura acrescentada incrementalmente",
+      "control_ids": [
+        "OPS-037"
+      ],
+      "input": {
+        "version_A": "PDF fictício com um campo preenchido",
+        "version_B": "prefixo binário exato A mais revisão incremental e segundo campo",
+        "protocol_event": null
+      },
+      "expected_result": "Registrar continuidade de bytes e campo adicional, autenticidade e entrega não verificadas. Não inventar validação criptográfica ou aceitação.",
+      "source_refs": [
+        "AI-86300d57f716",
+        "AI-10d67e35abb1"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T69",
+      "name": "PDF rasterizado com assinatura aparente",
+      "control_ids": [
+        "OPS-037"
+      ],
+      "input": {
+        "older": "campo PDF de assinatura detectado",
+        "newer": "imagem com aparência de duas assinaturas, sem campo detectado"
+      },
+      "expected_result": "Sinalizar perda de estrutura e necessidade de original/validação autorizada; não acusar falsidade nem considerar extensão PDF suficiente.",
+      "source_refs": [
+        "AI-6aef37109beb",
+        "AI-bf97316dcead"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T70",
+      "name": "Verde intermediário e variantes do mesmo dia",
+      "control_ids": [
+        "OPS-009",
+        "OPS-032",
+        "OPS-038"
+      ],
+      "input": {
+        "events": [
+          {
+            "date": "2026-01-10",
+            "marks": "pendente"
+          },
+          {
+            "date": "2026-01-15",
+            "marks": "verde"
+          },
+          {
+            "date": "2026-01-20",
+            "marks": "pendente"
+          },
+          {
+            "date": "2026-01-20",
+            "marks": "verde"
+          }
+        ],
+        "times": null,
+        "package_manifest": null
+      },
+      "expected_result": "Ordem parcial com conflito intradiário. Não escolher verde definitivo nem contar quatro reanálises confirmadas.",
+      "source_refs": [
+        "AI-4b0360b7abea",
+        "AI-346f4e08a968",
+        "AI-d8b1cb60e2c6",
+        "AI-9a56a71267ab"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T71",
+      "name": "Grade com GDU e sem GDU",
+      "control_ids": [
+        "OPS-013",
+        "OPS-038"
+      ],
+      "input": {
+        "same_case_date": true,
+        "form_A": [
+          "req",
+          "DRT",
+          "cadastro",
+          "matrícula",
+          "memorial",
+          "projeto",
+          "ART"
+        ],
+        "form_B": [
+          "req",
+          "DRT",
+          "cadastro",
+          "matrícula",
+          "memorial",
+          "projeto",
+          "ART",
+          "GDU"
+        ],
+        "GDU_B_mark": "cruz",
+        "individual_reason": null
+      },
+      "expected_result": "Registrar variação de esquema e motivo indeterminado. Consultar modalidade/fase/fundamento sem inferir dispensa nem obrigatoriedade geral.",
+      "source_refs": [
+        "AI-aa69c3f171f5",
+        "AI-cddc98c717eb"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    },
+    {
+      "id": "T72",
+      "name": "Balão oculto com exigência em caixa vazia",
+      "control_ids": [
+        "OPS-036"
+      ],
+      "input": {
+        "render": "caixa vazia e ícone fechado",
+        "native_text": "sem comentário no corpo",
+        "annotation": {
+          "subtype": "Text",
+          "contents": "atualizar modelo",
+          "rect": [
+            200,
+            500,
+            218,
+            518
+          ]
+        }
+      },
+      "expected_result": "Ler e preservar o comentário com localização sem inventar cruz ou aceite. Se parser de comentários indisponível, marcar leitura incompleta e pedir revisão.",
+      "source_refs": [
+        "AI-88efea0a3221",
+        "AI-f9a9c64d487e"
+      ],
+      "execution_status": "especificação fictícia; não executada contra agente de produção"
+    }
+  ]
+}

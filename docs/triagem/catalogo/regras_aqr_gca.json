@@ -1,0 +1,2233 @@
+{
+  "title": "Catálogo de regras de triagem GCA para AQR",
+  "version": "1.0-review",
+  "cutoff_date": "2026-10-15",
+  "warning": "Achados para revisão humana; nenhuma regra executa aprovação ou indeferimento. Hipóteses desativadas.",
+  "rules": [
+    {
+      "id": "AQR-GCA-001",
+      "name": "Assunto reconhecível",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Protocolo recebido",
+      "inputs": [
+        "metadados do protocolo",
+        "requerimento"
+      ],
+      "extractions_required": [
+        "assunto",
+        "tipologia"
+      ],
+      "logic": "Se assunto ausente ou não mapeável, marcar 'modalidade indeterminada'; não inferir do nome do arquivo.",
+      "severity": "review",
+      "result": "triagem humana para classificação",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.1",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.1",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.1",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Desdobro declarado e DRT 01",
+      "negative_synthetic_example": "Assunto em branco"
+    },
+    {
+      "id": "AQR-GCA-002",
+      "name": "Requerimento presente",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Modalidade identificada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "classe documental"
+      ],
+      "logic": "Se nenhum anexo classificável como requerimento, apontar ausência provável.",
+      "severity": "major",
+      "result": "rascunho de pendência para servidor",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.2 item I",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3 item I",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.3 item I",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Requerimento legível",
+      "negative_synthetic_example": "Nenhum requerimento"
+    },
+    {
+      "id": "AQR-GCA-003",
+      "name": "DRT 01 correta",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R"
+      ],
+      "phase": "abertura",
+      "preconditions": "Modalidade R/D/DM",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título DRT",
+        "modalidade DRT"
+      ],
+      "logic": "Se não houver DRT 01, alertar; DRT 03 não substitui.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3 item II",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "DRT 01 de lote A",
+      "negative_synthetic_example": "Só DRT 03"
+    },
+    {
+      "id": "AQR-GCA-004",
+      "name": "DRT 03 correta",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "RET"
+      ],
+      "phase": "abertura",
+      "preconditions": "Retificação declarada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título DRT"
+      ],
+      "logic": "Se DRT 03 ausente, alertar; DRT 01 não substitui.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.3 item II",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "DRT 03 de lote A",
+      "negative_synthetic_example": "Só DRT 01"
+    },
+    {
+      "id": "AQR-GCA-005",
+      "name": "DRT 02 de projeto",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Loteamento L1/L2/L3/L4/L6/L7",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título DRT"
+      ],
+      "logic": "Se DRT 02 de projeto ausente, alertar; implantação é documento de etapa posterior.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item II",
+          "archive_member": null
+        },
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 durante análise I",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "DRT 02 projeto",
+      "negative_synthetic_example": "Só DRT implantação"
+    },
+    {
+      "id": "AQR-GCA-006",
+      "name": "Documento de inscrição imobiliária",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET"
+      ],
+      "phase": "abertura",
+      "preconditions": "Lote(s) declarados",
+      "inputs": [
+        "anexos",
+        "requerimento"
+      ],
+      "extractions_required": [
+        "número de lotes",
+        "inscrições encontradas"
+      ],
+      "logic": "Para cada lote declarado procurar FCI/IPTU/extrato/similar; lacuna é alerta, não conclusão de falta cadastral.",
+      "severity": "major",
+      "result": "lista de inscrições não localizadas",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3 item III",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.3 item III",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Dois lotes, duas FCI",
+      "negative_synthetic_example": "Dois lotes, uma FCI"
+    },
+    {
+      "id": "AQR-GCA-007",
+      "name": "Ficha cadastral de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Loteamento declarado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "classe FCI"
+      ],
+      "logic": "Se nenhuma FCI do imóvel de origem for identificada, alertar.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item III",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "FCI da gleba",
+      "negative_synthetic_example": "Só memorial"
+    },
+    {
+      "id": "AQR-GCA-008",
+      "name": "Título registral presente",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Imóvel identificado",
+      "inputs": [
+        "anexos",
+        "requerimento"
+      ],
+      "extractions_required": [
+        "número de imóveis",
+        "matrículas/transcrições"
+      ],
+      "logic": "Se título de algum imóvel de origem não for localizável, alertar e citar imóveis declarados.",
+      "severity": "major",
+      "result": "lista de títulos não localizados",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item V",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3 item IV",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item IV",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Duas matrículas para dois lotes",
+      "negative_synthetic_example": "Uma para dois lotes"
+    },
+    {
+      "id": "AQR-GCA-009",
+      "name": "Data do título registral para revisão",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Título e datas legíveis",
+      "inputs": [
+        "título",
+        "protocolo"
+      ],
+      "extractions_required": [
+        "data de emissão",
+        "data de protocolo"
+      ],
+      "logic": "Extrair datas e mostrar intervalo aparente; não decidir a contagem de '30 dias' automaticamente.",
+      "severity": "review",
+      "result": "alerta para conferência de prazo",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item V",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3 item IV",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item IV",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Emissão recente visível",
+      "negative_synthetic_example": "Emissão ambígua 03/04/26"
+    },
+    {
+      "id": "AQR-GCA-010",
+      "name": "Prova de representação condicional",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Signatário não coincide com titular aparente ou declara representação",
+      "inputs": [
+        "requerimento",
+        "título",
+        "documento representativo"
+      ],
+      "extractions_required": [
+        "signatário",
+        "titular",
+        "classe de poderes"
+      ],
+      "logic": "Se terceiro assina e nenhum documento de representação é classificável, alertar; nunca julgar poderes.",
+      "severity": "review",
+      "result": "revisão jurídica/cadastral",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item VI",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 item V",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item V",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Procurador e instrumento anexado",
+      "negative_synthetic_example": "Terceiro sem instrumento"
+    },
+    {
+      "id": "AQR-GCA-011",
+      "name": "ART RRT ou similar de projeto",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "RT identificado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "classe do conselho",
+        "atividade"
+      ],
+      "logic": "Se nenhum documento oficial de responsabilidade técnica for classificável, alertar.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item VII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 item VI",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item VI",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "RRT de projeto",
+      "negative_synthetic_example": "Só carnê IPTU"
+    },
+    {
+      "id": "AQR-GCA-012",
+      "name": "Planta e CAD para R D DM RET",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET"
+      ],
+      "phase": "abertura",
+      "preconditions": "Modalidade identificada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "PDF de prancha",
+        "DWG",
+        "DXF"
+      ],
+      "logic": "Exigir evidência de PDF e ao menos um DWG ou DXF; alertar se ausente sem abrir CAD inseguro.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 item VII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item VII",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Prancha.pdf + desenho.dxf",
+      "negative_synthetic_example": "Só prancha.pdf"
+    },
+    {
+      "id": "AQR-GCA-013",
+      "name": "Memorial PDF para R D DM RET",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET"
+      ],
+      "phase": "abertura",
+      "preconditions": "Modalidade identificada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "classe memorial",
+        "MIME"
+      ],
+      "logic": "Se memorial PDF não localizável, alertar; DOCX isolado não satisfaz formato expresso.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 item VIII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 item VIII",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "memorial.pdf",
+      "negative_synthetic_example": "Somente memorial.docx"
+    },
+    {
+      "id": "AQR-GCA-014",
+      "name": "Prancha CAD de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Loteamento declarado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "DWG",
+        "DXF"
+      ],
+      "logic": "Se nem DWG nem DXF for localizado, alertar; PDF da prancha é hipótese separada.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item IX",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "loteamento.dwg",
+      "negative_synthetic_example": "Só JPG"
+    },
+    {
+      "id": "AQR-GCA-015",
+      "name": "GDU ou GDR de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Tipologia urbana ou rural reconhecida",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "classe GDU/GDR",
+        "órgão emissor"
+      ],
+      "logic": "Se L1-L4 procurar GDU; se L6/L7 procurar GDR; ausência é alerta ao servidor.",
+      "severity": "major",
+      "result": "rascunho de pendência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 item X",
+          "archive_member": null
+        },
+        {
+          "source_id": "L03",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/36601?tipo=consolidado",
+          "location": "arts.22-23",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "L6 com GDR",
+      "negative_synthetic_example": "L6 sem diretriz"
+    },
+    {
+      "id": "AQR-GCA-016",
+      "name": "Assinatura do RT nas peças",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Planta e memorial existentes na etapa exigível",
+      "inputs": [
+        "planta",
+        "memorial"
+      ],
+      "extractions_required": [
+        "campo de assinatura do RT",
+        "sinal de assinatura"
+      ],
+      "logic": "Se campo nitidamente vazio, apontar para verificação; assinatura eletrônica exige validador.",
+      "severity": "review",
+      "result": "alerta de assinatura aparente",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S04",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/RESOLUCAO-N.-52-2021.pdf",
+          "location": "art.3 §4",
+          "archive_member": null
+        },
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.1 III",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.1 III",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.1 III",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "RT assinou",
+      "negative_synthetic_example": "Campo vazio"
+    },
+    {
+      "id": "AQR-GCA-017",
+      "name": "Assinatura do titular em loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura ou análise",
+      "preconditions": "Planta/memorial apresentado",
+      "inputs": [
+        "planta",
+        "memorial"
+      ],
+      "extractions_required": [
+        "campo assinatura titular"
+      ],
+      "logic": "Quando peça exige assinatura, campo vazio vira alerta; não importar dispensa GAU.",
+      "severity": "review",
+      "result": "alerta de assinatura aparente",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.1 III",
+          "archive_member": null
+        },
+        {
+          "source_id": "S04",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/RESOLUCAO-N.-52-2021.pdf",
+          "location": "art.3 §4",
+          "archive_member": null
+        },
+        {
+          "source_id": "D8329",
+          "url": "https://diogrande.campogrande.ms.gov.br/download_edicao/eyJjb2RpZ29kaWEiOiIxMDM3NiJ9.pdf",
+          "location": "Res.05 art.1 escopo GAU",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Titular assinou",
+      "negative_synthetic_example": "Campo em branco"
+    },
+    {
+      "id": "AQR-GCA-018",
+      "name": "Campos da ART RRT coerentes",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "ART/RRT legível",
+      "inputs": [
+        "ART/RRT",
+        "requerimento",
+        "título"
+      ],
+      "extractions_required": [
+        "assunto",
+        "titular",
+        "RT",
+        "lote",
+        "quadra",
+        "bairro",
+        "parcelamento",
+        "matrícula"
+      ],
+      "logic": "Comparar campos exigidos pela Res.52; discrepância ou campo não extraído vira revisão, não falsidade.",
+      "severity": "review",
+      "result": "quadro comparativo",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S04",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/RESOLUCAO-N.-52-2021.pdf",
+          "location": "art.3 §3",
+          "archive_member": null
+        },
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.1 II",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.1 II",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.1 II",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "ART e requerimento lote B",
+      "negative_synthetic_example": "ART lote C, requerimento B"
+    },
+    {
+      "id": "AQR-GCA-019",
+      "name": "Assunto consistente",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Textos legíveis",
+      "inputs": [
+        "requerimento",
+        "DRT",
+        "planta",
+        "memorial"
+      ],
+      "extractions_required": [
+        "assunto em cada peça"
+      ],
+      "logic": "Se assuntos diferem, apresentar pares e páginas; não alterar modalidade sozinho.",
+      "severity": "review",
+      "result": "alerta de divergência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "A01",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2012/07/MANUAL-DE-ORIENTACAO-AO-PROFISSIONAL-PARA-APRESENTACAO-DE-PROJETOS-CARTOGRAFICOS.docx",
+          "location": "pp.1,6",
+          "archive_member": null
+        },
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.2",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.3",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.3",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Quatro peças desdobro",
+      "negative_synthetic_example": "Uma peça retificação"
+    },
+    {
+      "id": "AQR-GCA-020",
+      "name": "Identidade do imóvel consistente",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Campos extraídos com confiança",
+      "inputs": [
+        "requerimento",
+        "matrícula",
+        "planta",
+        "memorial",
+        "cadastro"
+      ],
+      "extractions_required": [
+        "matrícula",
+        "lote",
+        "quadra",
+        "inscrição",
+        "bairro"
+      ],
+      "logic": "Se diferenças textuais exatas persistem após normalização conservadora, apresentar comparativo.",
+      "severity": "review",
+      "result": "alerta de divergência",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S04",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/RESOLUCAO-N.-52-2021.pdf",
+          "location": "art.4 VIII-XI",
+          "archive_member": null
+        },
+        {
+          "source_id": "A01",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2012/07/MANUAL-DE-ORIENTACAO-AO-PROFISSIONAL-PARA-APRESENTACAO-DE-PROJETOS-CARTOGRAFICOS.docx",
+          "location": "pp.1-3",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Lote A em todos",
+      "negative_synthetic_example": "Matrícula 123 vs 132"
+    },
+    {
+      "id": "AQR-GCA-021",
+      "name": "Datas de revisão planta memorial",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura ou análise",
+      "preconditions": "Ambas as peças na etapa",
+      "inputs": [
+        "planta",
+        "memorial"
+      ],
+      "extractions_required": [
+        "data revisão em ambas"
+      ],
+      "logic": "Se datas diferentes e inequívocas, alertar; número do processo só após primeira análise.",
+      "severity": "minor",
+      "result": "alerta de consistência",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "A01",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2012/07/MANUAL-DE-ORIENTACAO-AO-PROFISSIONAL-PARA-APRESENTACAO-DE-PROJETOS-CARTOGRAFICOS.docx",
+          "location": "p.2 campo Data",
+          "archive_member": null
+        },
+        {
+          "source_id": "A01",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2012/07/MANUAL-DE-ORIENTACAO-AO-PROFISSIONAL-PARA-APRESENTACAO-DE-PROJETOS-CARTOGRAFICOS.docx",
+          "location": "p.13 item 2.3",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Ambas 12/05/26",
+      "negative_synthetic_example": "Uma 12/05, outra 13/05"
+    },
+    {
+      "id": "AQR-GCA-022",
+      "name": "Escala da situação",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Prancha legível",
+      "inputs": [
+        "prancha"
+      ],
+      "extractions_required": [
+        "escala planta de situação"
+      ],
+      "logic": "Se situação não mostra 1:10.000, alertar para conferência, sem medir escala pelo raster.",
+      "severity": "review",
+      "result": "alerta de escala declarada",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 VIII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 VII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 VII",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Situação 1:10.000",
+      "negative_synthetic_example": "Situação 1:500"
+    },
+    {
+      "id": "AQR-GCA-023",
+      "name": "Carimbo e formato da prancha",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Prancha legível",
+      "inputs": [
+        "prancha"
+      ],
+      "extractions_required": [
+        "A0/A1/A2/A3",
+        "carimbo"
+      ],
+      "logic": "Confrontar tamanho permitido por TR 001 ou TR 002/003 e presença do carimbo; medida exata do layout é técnica.",
+      "severity": "review",
+      "result": "alerta de formato declarado",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 VIII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 VII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 VII",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "R A3",
+      "negative_synthetic_example": "R A0"
+    },
+    {
+      "id": "AQR-GCA-024",
+      "name": "Memorial na etapa de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Servidor registra etapa de solicitação",
+      "inputs": [
+        "anexos",
+        "solicitação de análise"
+      ],
+      "extractions_required": [
+        "DOC/DOCX",
+        "classe memorial"
+      ],
+      "logic": "Somente na fase documentada solicitar memorial editável DOC/DOCX; não disparar na abertura.",
+      "severity": "major",
+      "result": "rascunho de pendência de etapa",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 durante análise III-IV",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Memorial.docx na análise",
+      "negative_synthetic_example": "Abertura sem memorial"
+    },
+    {
+      "id": "AQR-GCA-025",
+      "name": "Planilha áreas na análise de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Solicitação dessa etapa registrada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "XLS/XLSX"
+      ],
+      "logic": "Se planilha XLS/XLSX não localizável após solicitação, alertar.",
+      "severity": "major",
+      "result": "rascunho de pendência de etapa",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 durante análise IV",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "areas.xlsx",
+      "negative_synthetic_example": "Só JPG de tabela"
+    },
+    {
+      "id": "AQR-GCA-026",
+      "name": "DRT implantação de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Etapa implantação documentada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "DRT 02 implantação"
+      ],
+      "logic": "Se declaração de implantação ausente na etapa, alertar.",
+      "severity": "major",
+      "result": "rascunho de pendência de etapa",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 durante análise I",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "DRT 02 implantação",
+      "negative_synthetic_example": "Só DRT projeto"
+    },
+    {
+      "id": "AQR-GCA-027",
+      "name": "ART implantação por RT distinto",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "RT de implantação distinto do RT do projeto",
+      "inputs": [
+        "ART projeto",
+        "DRT implantação",
+        "anexos"
+      ],
+      "extractions_required": [
+        "identidade de ambos",
+        "ART implantação"
+      ],
+      "logic": "Se RT diferente e ART/RRT de implantação não identificada, alertar.",
+      "severity": "review",
+      "result": "rascunho de pendência condicional",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 durante análise II",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "RT distinto com ART própria",
+      "negative_synthetic_example": "RT distinto sem ART"
+    },
+    {
+      "id": "AQR-GCA-028",
+      "name": "GDU desdobro maior que dois hectares",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "D",
+        "R/D",
+        "D/R"
+      ],
+      "phase": "abertura",
+      "preconditions": "Área da situação pertinente >20.000 m² confirmada por servidor",
+      "inputs": [
+        "título",
+        "planta",
+        "anexos"
+      ],
+      "extractions_required": [
+        "área",
+        "GDU"
+      ],
+      "logic": "Se condição já homologada e GDU PDF ausente, alertar; registrar divergência com LC74 art.22.",
+      "severity": "review",
+      "result": "consulta GCA PLANURB",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4 IX",
+          "archive_member": null
+        },
+        {
+          "source_id": "L03",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/36601?tipo=consolidado",
+          "location": "art.22 I",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "2,01 ha com GDU",
+      "negative_synthetic_example": "2,01 ha sem GDU"
+    },
+    {
+      "id": "AQR-GCA-029",
+      "name": "GDU do desmembramento por gatilho legal",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "DM"
+      ],
+      "phase": "abertura",
+      "preconditions": "Gatilho do art.22 confirmado por servidor",
+      "inputs": [
+        "área",
+        "localização",
+        "anexos"
+      ],
+      "extractions_required": [
+        "área",
+        "GDU"
+      ],
+      "logic": "Se >2 ha ou outro gatilho confirmado e GDU ausente, alertar; checklist sem limiar exige confirmação.",
+      "severity": "review",
+      "result": "consulta GCA PLANURB",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "L03",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/36601?tipo=consolidado",
+          "location": "art.22 I-VII",
+          "archive_member": null
+        },
+        {
+          "source_id": "S14-051",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/1.-Parcelamento-do-Solo-1.zip",
+          "location": "p.1",
+          "archive_member": "1. Parcelamento do Solo/Desmembramento/LISTA DE DOCUMENTOS PARA PROCESSOS CARTOGRÁFICOS - DESMEMBRAMENTO.pdf"
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "3 ha com GDU",
+      "negative_synthetic_example": "3 ha sem GDU"
+    },
+    {
+      "id": "AQR-GCA-030",
+      "name": "ZEIA levantamento na etapa",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "ZEIA 1 parcial ou ZEIA 2 total/parcial confirmada por camada e servidor",
+      "inputs": [
+        "mapa oficial",
+        "anexos"
+      ],
+      "extractions_required": [
+        "planta PDF",
+        "shapefile",
+        "ART específica"
+      ],
+      "logic": "Após condição confirmada, alertar pela falta do conjunto; não decidir interseção por camada incerta.",
+      "severity": "review",
+      "result": "rascunho de pendência condicional",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "pp.3-4",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.4",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "ZEIA confirmada com conjunto",
+      "negative_synthetic_example": "Sem shapefile"
+    },
+    {
+      "id": "AQR-GCA-031",
+      "name": "Licenças LP LI na análise de loteamento",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Etapa de licenciamento solicitada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "LP",
+        "LI",
+        "emissor"
+      ],
+      "logic": "Se LP ou LI não classificável na etapa documentada, alertar; não atestar validade.",
+      "severity": "review",
+      "result": "rascunho de pendência de etapa",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.4",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "LP e LI",
+      "negative_synthetic_example": "Só LP"
+    },
+    {
+      "id": "AQR-GCA-032",
+      "name": "Projetos complementares por tipo",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Projeto geométrico conforme e fase de infraestrutura declarada",
+      "inputs": [
+        "anexos",
+        "tipologia"
+      ],
+      "extractions_required": [
+        "energia",
+        "água",
+        "esgoto",
+        "pavimentação",
+        "drenagem",
+        "sinalização"
+      ],
+      "logic": "Comparar lista do TR por tipo; para L6/L7 não pedir água/esgoto e para L6 não pedir pavimentação/sinalização segundo exceções do TR.",
+      "severity": "review",
+      "result": "checklist de infraestrutura",
+      "confidence": "medium",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "pp.4-5",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "L1 com cinco projetos",
+      "negative_synthetic_example": "L1 sem energia"
+    },
+    {
+      "id": "AQR-GCA-033",
+      "name": "L2 documentos habitacionais",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L2"
+      ],
+      "phase": "análise",
+      "preconditions": "Tipologia L2 confirmada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "doação AMHASF",
+        "parecer PHIS",
+        "termo PHIS"
+      ],
+      "logic": "Se conjunto não classificável na etapa, alertar para servidor.",
+      "severity": "review",
+      "result": "checklist L2",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.4",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "L2 com três peças",
+      "negative_synthetic_example": "L2 sem parecer"
+    },
+    {
+      "id": "AQR-GCA-034",
+      "name": "L3 L7 administração registrada",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L3",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Tipologia confirmada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "documento de administração",
+        "registro"
+      ],
+      "logic": "Se documento não localizável, alertar; análise do teor e registro cabe ao servidor.",
+      "severity": "review",
+      "result": "checklist L3 L7",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "pp.4-5",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "L3 com documento",
+      "negative_synthetic_example": "L3 sem documento"
+    },
+    {
+      "id": "AQR-GCA-035",
+      "name": "L6 L7 anuência INCRA",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "L6",
+        "L7"
+      ],
+      "phase": "análise",
+      "preconditions": "Tipologia rural confirmada",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "anuência INCRA"
+      ],
+      "logic": "Se não identificada, alertar; não verificar mérito do INCRA.",
+      "severity": "review",
+      "result": "checklist L6 L7",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.5",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "L7 com anuência",
+      "negative_synthetic_example": "L7 sem anuência"
+    },
+    {
+      "id": "HYP-GCA-036",
+      "name": "Certidão de medidas documentos",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "CERT-MED"
+      ],
+      "phase": "abertura",
+      "preconditions": "Serviço DCC confirmado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título",
+        "extrato IPTU"
+      ],
+      "logic": "Se título ou extrato IPTU ausente, alertar; canal físico do checklist requer confirmação.",
+      "severity": "review",
+      "result": "checklist de certidão",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S13-002",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/5.-Certidoes-1.zip",
+          "location": "p.1",
+          "archive_member": "5. Certidões/LISTA DE DOCUMENTOS PARA CERTIDÃO DE MEDIDAS E CONFRONTAÇÕES.pdf"
+        },
+        {
+          "source_id": "L12",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/51377?tipo=original",
+          "location": "art.53",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Ambos anexos",
+      "negative_synthetic_example": "Só IPTU"
+    },
+    {
+      "id": "HYP-GCA-037",
+      "name": "Certidão novo loteamento documentos",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "CERT-LOG-NEW"
+      ],
+      "phase": "abertura",
+      "preconditions": "Serviço DCC confirmado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título",
+        "planta sentido",
+        "lista vias",
+        "IPTU"
+      ],
+      "logic": "Alertar falta aparente de título, duas plantas, lista alfabética ou IPTU sem impor canal antigo.",
+      "severity": "review",
+      "result": "checklist de certidão",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S13-003",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/5.-Certidoes-1.zip",
+          "location": "p.1",
+          "archive_member": "5. Certidões/LISTA DE DOCUMENTOS PARA CERTIDÃO DE NUMERAÇÃO E LOGRADOURO - NOVO LOTEAMENTO.pdf"
+        },
+        {
+          "source_id": "L12",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/51377?tipo=original",
+          "location": "art.53",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Quatro categorias",
+      "negative_synthetic_example": "Sem lista vias"
+    },
+    {
+      "id": "HYP-GCA-038",
+      "name": "Número predial substituição título IPTU",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "CERT-NUM"
+      ],
+      "phase": "abertura",
+      "preconditions": "Serviço DCC confirmado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "título",
+        "IPTU"
+      ],
+      "logic": "Aceitar presença de qualquer um como requisito de documento; não exigir ambos.",
+      "severity": "minor",
+      "result": "aviso de ausência se nenhum",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S13-006",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/5.-Certidoes-1.zip",
+          "location": "p.1",
+          "archive_member": "5. Certidões/LISTA DE DOCUMENTOS PARA FORNECIMENTO DE NUMERO PREDIAL.pdf"
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Só IPTU",
+      "negative_synthetic_example": "Nenhum"
+    },
+    {
+      "id": "AQR-GCA-039",
+      "name": "Retificação saída anuência",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "RET"
+      ],
+      "phase": "pós-análise",
+      "preconditions": "Processo tecnicamente examinado por servidor",
+      "inputs": [
+        "ato/parecer"
+      ],
+      "extractions_required": [
+        "tipo de ato"
+      ],
+      "logic": "Rotular resultado como anuência/certidão; se texto do agente usar 'aprovação registral', bloquear publicação e pedir correção.",
+      "severity": "critical",
+      "result": "bloqueio da mensagem do AQR",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "A30",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2022/07/resoluon-61-2022alteraaresoluon-52-2021-prefcg-1658846913.pdf",
+          "location": "art.4 §§3-4",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.4 IV",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Rascunho de anuência",
+      "negative_synthetic_example": "AQR aprovou registro"
+    },
+    {
+      "id": "AQR-GCA-040",
+      "name": "Sem decisão automática",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7",
+        "CERT-MED",
+        "CERT-LOG-NEW",
+        "CERT-NUM"
+      ],
+      "phase": "todas",
+      "preconditions": "Qualquer achado gerado",
+      "inputs": [
+        "resultado do motor"
+      ],
+      "extractions_required": [
+        "tipo de ação"
+      ],
+      "logic": "Bloquear ação de aprovar, indeferir, arquivar ou anuir sem assinatura/ato do servidor competente.",
+      "severity": "critical",
+      "result": "encaminhamento a servidor",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S04",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/RESOLUCAO-N.-52-2021.pdf",
+          "location": "arts.4,7-8",
+          "archive_member": null
+        },
+        {
+          "source_id": "L12",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/51377?tipo=original",
+          "location": "arts.49-53",
+          "archive_member": null
+        },
+        {
+          "source_id": "F03",
+          "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+          "location": "art.20",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Servidor decide",
+      "negative_synthetic_example": "AQR indefere sozinho"
+    },
+    {
+      "id": "AQR-GCA-041",
+      "name": "Proteção de dados na evidência",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7",
+        "CERT-MED",
+        "CERT-LOG-NEW",
+        "CERT-NUM"
+      ],
+      "phase": "todas",
+      "preconditions": "Qualquer evidência mostrada",
+      "inputs": [
+        "logs",
+        "recortes"
+      ],
+      "extractions_required": [
+        "CPF",
+        "endereço",
+        "matrícula"
+      ],
+      "logic": "Mascarar dados não necessários e restringir acesso; conservar original em ambiente autorizado.",
+      "severity": "critical",
+      "result": "evidência minimizada",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "L05",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/50435?tipo=original",
+          "location": "arts.5-12",
+          "archive_member": null
+        },
+        {
+          "source_id": "F03",
+          "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+          "location": "arts.6,23",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "CPF mascarado",
+      "negative_synthetic_example": "CPF íntegro em log público"
+    },
+    {
+      "id": "AQR-GCA-042",
+      "name": "Nota devolutiva sem mudança técnica",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET"
+      ],
+      "phase": "pós-decisão",
+      "preconditions": "Servidor confirma ausência de alteração técnica",
+      "inputs": [
+        "nota cartório",
+        "novas peças"
+      ],
+      "extractions_required": [
+        "nota",
+        "PDF",
+        "CAD",
+        "memorial"
+      ],
+      "logic": "Organizar peças para análise humana da substituição; não decidir identidade técnica.",
+      "severity": "review",
+      "result": "fila de substituição",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "p.2 X-XI",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "p.2 XI-XII",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Nota e novas peças",
+      "negative_synthetic_example": "Peças mudam área"
+    },
+    {
+      "id": "AQR-GCA-043",
+      "name": "Validação de formato do arquivo",
+      "status": "official-confirmed",
+      "enabled": true,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET"
+      ],
+      "phase": "abertura",
+      "preconditions": "Anexo classificado em requisito com formato expresso",
+      "inputs": [
+        "arquivo"
+      ],
+      "extractions_required": [
+        "MIME",
+        "extensão",
+        "legibilidade"
+      ],
+      "logic": "Comparar formato real/declared com JPG/PDF para administrativos e PDF+DWG/DXF para prancha; corrupção vira ilegível.",
+      "severity": "minor",
+      "result": "alerta de formato",
+      "confidence": "high",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "pp.3-4",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "pp.3-4",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "JPG do requerimento",
+      "negative_synthetic_example": "Executável renomeado .pdf"
+    },
+    {
+      "id": "HYP-GCA-044",
+      "name": "Representação de processo REURB E",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "REURB-E"
+      ],
+      "phase": "abertura",
+      "preconditions": "Tipo REURB-E identificado",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "ata COAREF",
+        "classe de projeto"
+      ],
+      "logic": "Não ativar checklist completo sem TR vigente confirmado; registrar candidato e encaminhar.",
+      "severity": "review",
+      "result": "rota manual",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S14-068",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/05/1.-Parcelamento-do-Solo-1.zip",
+          "location": "documento interno",
+          "archive_member": "1. Parcelamento do Solo/Loteamento/0 - Documentos/Documentos LOTEAMENTO REURB-E.docx"
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Ata e projeto",
+      "negative_synthetic_example": "Sem ato de enquadramento"
+    },
+    {
+      "id": "HYP-GCA-045",
+      "name": "Fila SAP GCA sem com GDU",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Nome de fila observado em sistema interno",
+      "inputs": [
+        "metadados SAP"
+      ],
+      "extractions_required": [
+        "código de fila"
+      ],
+      "logic": "Associação entre fila e gatilho legal não demonstrada em fonte pública; manter desativada.",
+      "severity": "review",
+      "result": "aguardar norma ou instrução",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S03",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/07/Manual-de-Acesso-ao-Sistema-Digital-de-Aprovacao-de-Projetos-Cartograficos-1.pdf",
+          "location": "pp.7-10",
+          "archive_member": null
+        },
+        {
+          "source_id": "L03",
+          "url": "https://gerencialleisweb.campogrande.ms.gov.br/api/documentos/visualizar/36601?tipo=consolidado",
+          "location": "art.22",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "Fila rotulada GDU",
+      "negative_synthetic_example": "Rótulo ausente"
+    },
+    {
+      "id": "HYP-GCA-046",
+      "name": "PDF da prancha em loteamento digital",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Protocolo digital pós outubro 2025",
+      "inputs": [
+        "anexos"
+      ],
+      "extractions_required": [
+        "PDF de prancha"
+      ],
+      "logic": "TR001 não menciona PDF na abertura; confirmação do sistema necessária antes de cobrar.",
+      "severity": "review",
+      "result": "aguardar manual digital",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "p.3 VIII-IX",
+          "archive_member": null
+        },
+        {
+          "source_id": "P04",
+          "url": "https://www.campogrande.ms.gov.br/cgnoticias/noticia/processos-de-loteamento-passam-a-ser-100-digitais-em-campo-grande/",
+          "location": "notícia 10/10/2025",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "PDF presente",
+      "negative_synthetic_example": "PDF ausente"
+    },
+    {
+      "id": "HYP-GCA-047",
+      "name": "Nomenclatura de arquivos GCA",
+      "status": "hypothesis",
+      "enabled": false,
+      "modalities": [
+        "R",
+        "D",
+        "DM",
+        "R/D",
+        "D/R",
+        "RET",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L6",
+        "L7"
+      ],
+      "phase": "abertura",
+      "preconditions": "Ato de padronização não localizado",
+      "inputs": [
+        "nomes dos arquivos"
+      ],
+      "extractions_required": [
+        "padrão de nome"
+      ],
+      "logic": "Nenhum padrão público encontrado; não avaliar.",
+      "severity": "none",
+      "result": "nenhuma ação",
+      "confidence": "low",
+      "evidence_required": "ID/hash do arquivo, página/recorte, campo extraído, valor e versão da regra; não reter dado pessoal desnecessário",
+      "sources": [
+        {
+          "source_id": "S06",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/1.-TERMO-DE-REFERENCIA-N.-01-GFCG-MODALIDADE-LOTEAMENTO.pdf",
+          "location": "pp.2-5",
+          "archive_member": null
+        },
+        {
+          "source_id": "S07",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/2.-TERMO-DE-REFERENCIA-%E2%80%93-002-%E2%80%93-GFCG-MODALIDADE-REMEMBRAMENTO-DESDOBRO-E-DESMEMBRAMENTO.pdf",
+          "location": "pp.3-4",
+          "archive_member": null
+        },
+        {
+          "source_id": "S08",
+          "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/24/2024/04/3.-TERMO-DE-REFERENCIA-%E2%80%93-003-%E2%80%93-GFCG-MODALIDADE-RETIFICACAO-DE-REGISTRO-IMOBILIARIO.pdf",
+          "location": "pp.3-4",
+          "archive_member": null
+        }
+      ],
+      "human_review": "Servidor GCA valida achado e comunicação",
+      "positive_synthetic_example": "planta_A.pdf",
+      "negative_synthetic_example": "arquivo.pdf"
+    }
+  ]
+}

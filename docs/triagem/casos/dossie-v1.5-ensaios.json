@@ -1,0 +1,234 @@
+{
+  "fonte": "Dossie_Normativo_e_Operacional_da_GCA.docx v1.5, seção 12, Anexo C.5 e Anexo E",
+  "observacao": "Casos inteiramente fictícios, extraídos sem alteração do texto.",
+  "ensaios": [
+    {
+      "id": "T01",
+      "entrada": "R com requerimento, DRT 01, duas matrículas, duas inscrições, ART, PDF+DXF e memorial PDF coerentes",
+      "saidaEsperada": "“Sem achados de presença/formato”, encaminhar; sem aprovação. [S07 pp. 3–4]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T02",
+      "entrada": "D com PDF de memorial ausente, mas DOCX presente",
+      "saidaEsperada": "Sinalizar memorial PDF não classificado, citar TR 002 p. 4; servidor verifica. [S07 p. 4]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T03",
+      "entrada": "D/R com só uma das duas matrículas",
+      "saidaEsperada": "Alertar possível falta da segunda, indicar dois lotes do requerimento. [S07 p. 3; S14-032 p. 1]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T04",
+      "entrada": "Retificação com DRT 01 em vez de DRT 03",
+      "saidaEsperada": "Alertar documento de modalidade trocada. [S08 p. 3]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T05",
+      "entrada": "PDF prancha digitalizado a 70 dpi ilegível",
+      "saidaEsperada": "“Leitura insuficiente”, recorte, não exigir 300 dpi. [S08 p. 4; L05 art. 5º]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T06",
+      "entrada": "Matrícula emitida 03/04/26, protocolo 04/05/26, fuso/dia desconhecidos",
+      "saidaEsperada": "Datas reportadas, possível prazo de 30 dias para revisão; não afirmar vencimento. [S07 p. 3]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T07",
+      "entrada": "Titular do requerimento diferente do título; procuração anexada mas OCR falha",
+      "saidaEsperada": "Alerta de representação/legibilidade; avaliação jurídica humana. [S07 pp. 3–4]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T08",
+      "entrada": "D de 2,01 ha sem GDU",
+      "saidaEsperada": "Citar TR 002 p. 4 e LC 74 art. 22; revisão GCA/PLANURB do enquadramento, sem reprovação.",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T09",
+      "entrada": "DM de 1,50 ha sem GDU, lote com frente 260 m",
+      "saidaEsperada": "Sinalizar gatilho art. 22, VI, e conflito de checklist; servidor decide. [L03 art. 22]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T10",
+      "entrada": "L2 na abertura sem LP, planilha, curva, parecer PHIS",
+      "saidaEsperada": "Não apontar faltas de etapa futura; registrar para análise. [S06 pp. 2–4]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T11",
+      "entrada": "L7 durante análise sem anuência INCRA",
+      "saidaEsperada": "Sinalizar condicional para servidor com TR 001 p. 5.",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T12",
+      "entrada": "Retificação com lote Q2 no memorial e Q3 na planta, ambos legíveis",
+      "saidaEsperada": "Sinalizar divergência, sem escolher lote correto. [S08 p. 4; A01 pp. 1–2]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T13",
+      "entrada": "Planta CAD com linha de polígono de área pública duvidosa",
+      "saidaEsperada": "Encaminhar à DFT/DAP; cálculo automatizado não produz anuência. [L12 arts. 50–51]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T14",
+      "entrada": "Certidão de número predial apenas com IPTU",
+      "saidaEsperada": "Não exigir matrícula adicional: lista permite título ou IPTU. [S13-006 p. 1]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T15",
+      "entrada": "Loteamento REURB-E com ata COAREF, mas sem TR específico",
+      "saidaEsperada": "“Fluxo não parametrizado”; servidor define roteiro. [S14-068]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T16",
+      "entrada": "Assinatura em projeto GAU por TRC, processo R/GCA sem assinatura do RT",
+      "saidaEsperada": "Não importar dispensa GAU; sinalizar fonte cartográfica e revisão humana. [D8329 arts. 1º–5º; S07 p. 1]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T17",
+      "entrada": "Imóvel parcialmente em ZEIA 1 segundo camada desatualizada",
+      "saidaEsperada": "“Possível ZEIA; base e data incertas”; GCA confirma limite e etapa. [S07 p. 4]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T18",
+      "entrada": "Mesmo arquivo chamado planta_final.pdf contém documento de terceiro",
+      "saidaEsperada": "Quarentena de dados, erro de classificação, reenvio pelo canal autorizado; não expor dados no relatório. [L05 arts. 7º, 10–12]",
+      "origem": "seção 12"
+    },
+    {
+      "id": "T19",
+      "entrada": "Arquivo memorial.zip contém internamente DOCX válido",
+      "saidaEsperada": "Registrar extensão/MIME divergentes e sugerir classe memorial; revisão humana, sem pendência legal automática.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T20",
+      "entrada": "ZIP verdadeiro contém PDF, DOCX e DWG em subpastas, mais entrada com caminho ../",
+      "saidaEsperada": "Aceitar apenas anexos seguros, bloquear extração perigosa, preservar manifesto e avisar servidor.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T21",
+      "entrada": "Pasta exportada contém somente DWG, enquanto o sistema não confirmou integralidade dos anexos",
+      "saidaEsperada": "Resultado “pacote parcial/desconhecido”; não disparar falta de requerimento ou matrícula.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T22",
+      "entrada": "PDF de duas páginas rasterizadas, OCR da segunda sem caracteres",
+      "saidaEsperada": "Exibir página original e “ilegível para extração”; nenhuma decisão de ausência de conteúdo.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T23",
+      "entrada": "JPG de baixa resolução com matrícula aparente e dígito OCR ambíguo",
+      "saidaEsperada": "Mostrar dois valores possíveis e o recorte; comparação interdocumental suspensa até leitura humana.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T24",
+      "entrada": "Aba histórica contém “INDEF. (60D)” sem ato associado",
+      "saidaEsperada": "Não transformar rótulo em indeferimento atual nem contar prazo automaticamente.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T25",
+      "entrada": "Assunto “REMEMB/DESD” na planilha e “remembramento/desdobro” no requerimento",
+      "saidaEsperada": "Sugerir mesma família, preservar os dois valores brutos e confirmar ordem das etapas com servidor.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T26",
+      "entrada": "Dois registros da planilha têm o mesmo identificador, datas/status diferentes",
+      "saidaEsperada": "Sinalizar provável duplicidade de controle; jamais fundir atos ou anexos sem reconciliar origem.",
+      "origem": "Anexo C.5"
+    },
+    {
+      "id": "T27",
+      "entrada": "Texto apresenta quadrados iguais; imagem contém visto e cruz em linhas diferentes",
+      "saidaEsperada": "Associar marcas às linhas; aguardar legenda e revisão.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T28",
+      "entrada": "Restrição inicial, liberação em reanálise e rodapé fixo",
+      "saidaEsperada": "Dois eventos candidatos; rodapé não cria ato.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T29",
+      "entrada": "Nome APROVADO, planilha ANÁLISE e certidão não preenchida",
+      "saidaEsperada": "Ato final não confirmado; apontar evidências conflitantes.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T30",
+      "entrada": "Hash do alvo coincide com relatório recebido",
+      "saidaEsperada": "Correspondência binária; autenticidade e validação independente separadas.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T31",
+      "entrada": "Relatório corresponde a versão anterior",
+      "saidaEsperada": "Vínculo não confirmado para a versão atual; nenhuma conclusão de fraude.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T32",
+      "entrada": "Fichas idênticas em dois locais",
+      "saidaEsperada": "Reusar extração mantendo os dois vínculos; não apagar arquivos.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T33",
+      "entrada": "Nome/MIME PDF com contêiner RAR",
+      "saidaEsperada": "Divergência técnica e encaminhamento apropriado; sem indeferimento.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T34",
+      "entrada": "Rodapé textual, corpo de matrícula em imagem",
+      "saidaEsperada": "Leitura parcial e OCR/visão do corpo.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T35",
+      "entrada": "Memorial RET ao lado de memorial R/D, pacote não confirmado",
+      "saidaEsperada": "Conferir associação e versão antes de comunicar ao RT.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T36",
+      "entrada": "Pedido de dispensa com guia e datas contraditórias",
+      "saidaEsperada": "Conferir fatos e encaminhar mérito; pedido não concede dispensa.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T37",
+      "entrada": "Sugestão de apresentação não condicionante",
+      "saidaEsperada": "Orientação, sem pendência obrigatória.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    },
+    {
+      "id": "T38",
+      "entrada": "Modelo interno desloca implantação para abertura",
+      "saidaEsperada": "Conflito de fase e condição até instrução homologada.",
+      "origem": "Anexo E (detalhados em casos_sinteticos_complementares_aqr.json)"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "versao": "1",
+  "descricao": "Condições que só valem confirmadas por servidor. Cada entrada cita literalmente a pré-condição do catálogo; o carregador recusa o catálogo se o texto mudar.",
+  "regras": [
+    {
+      "regra": "AQR-GCA-024",
+      "condicoes": [
+        "etapa-de-solicitacao-registrada"
+      ],
+      "precondicaoCatalogo": "Servidor registra etapa de solicitação"
+    },
+    {
+      "regra": "AQR-GCA-028",
+      "condicoes": [
+        "area-situacao-acima-2ha"
+      ],
+      "precondicaoCatalogo": "Área da situação pertinente >20.000 m² confirmada por servidor"
+    },
+    {
+      "regra": "AQR-GCA-029",
+      "condicoes": [
+        "gatilho-art22-lc74"
+      ],
+      "precondicaoCatalogo": "Gatilho do art.22 confirmado por servidor"
+    },
+    {
+      "regra": "AQR-GCA-030",
+      "condicoes": [
+        "zeia-confirmada"
+      ],
+      "precondicaoCatalogo": "ZEIA 1 parcial ou ZEIA 2 total/parcial confirmada por camada e servidor"
+    },
+    {
+      "regra": "AQR-GCA-033",
+      "condicoes": [
+        "tipologia-l2"
+      ],
+      "precondicaoCatalogo": "Tipologia L2 confirmada"
+    },
+    {
+      "regra": "AQR-GCA-034",
+      "condicoes": [
+        "tipologia-l3-l7"
+      ],
+      "precondicaoCatalogo": "Tipologia confirmada"
+    },
+    {
+      "regra": "AQR-GCA-035",
+      "condicoes": [
+        "tipologia-rural"
+      ],
+      "precondicaoCatalogo": "Tipologia rural confirmada"
+    },
+    {
+      "regra": "AQR-GCA-039",
+      "condicoes": [
+        "exame-tecnico-concluido"
+      ],
+      "precondicaoCatalogo": "Processo tecnicamente examinado por servidor"
+    },
+    {
+      "regra": "AQR-GCA-042",
+      "condicoes": [
+        "sem-alteracao-tecnica"
+      ],
+      "precondicaoCatalogo": "Servidor confirma ausência de alteração técnica"
+    },
+    {
+      "regra": "HYP-GCA-036",
+      "condicoes": [
+        "servico-dcc"
+      ],
+      "precondicaoCatalogo": "Serviço DCC confirmado"
+    },
+    {
+      "regra": "HYP-GCA-037",
+      "condicoes": [
+        "servico-dcc"
+      ],
+      "precondicaoCatalogo": "Serviço DCC confirmado"
+    },
+    {
+      "regra": "HYP-GCA-038",
+      "condicoes": [
+        "servico-dcc"
+      ],
+      "precondicaoCatalogo": "Serviço DCC confirmado"
+    }
+  ]
+}
