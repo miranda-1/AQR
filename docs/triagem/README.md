@@ -15,6 +15,8 @@ Esta pasta guarda, sob controle de versão, o que a triagem assistida do AQR usa
 | `casos/casos_sinteticos_complementares_aqr.json` | 46 casos fictícios complementares (T27–T72), versão `1.5-r2`, `contains_real_applicant_data: false`. **Cópia sem alteração.** | Artefatos do dossiê |
 | `casos/dossie-v1.5-ensaios.json` | Ensaios T01–T38 das tabelas do dossiê (seção 12, Anexo C.5, Anexo E), texto sem alteração. | Extraído do `.docx` |
 | `fontes/inventario_fontes.json` | Inventário das fontes oficiais públicas (URL, hash, páginas). **Cópia sem alteração.** | Artefatos do dossiê |
+| `e4-e6.md` | Arquitetura, resultados, defeitos corrigidos e limitações da classificação, da extração e do motor (E4–E6). | AQR |
+| `avaliacao-e4-e6.md` | Métricas da triagem experimental nos conjuntos de desenvolvimento e validação. **Gerado** por `npm run triagem:avaliar`. | AQR |
 | `reconciliacao-catalogo-dossie.md` | Comparação catálogo × dossiê, divergências e classificação das 47 regras. | AQR |
 
 ## Hashes de origem (SHA-256)

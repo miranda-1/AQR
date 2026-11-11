@@ -1,7 +1,7 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas'
 import { PDFDocument, PDFHexString } from 'pdf-lib'
 import type { ClasseDocumental, NomeCampo } from '../../../shared/contracts/triage.ts'
-import { A4, buildPdf, scanBytes, seeded, type Block, type ScanBlock } from '../../comparison/evaluation/corpus-pdf.ts'
+import { A4, buildPdf, scanBytes, seeded, type Block, type PageSpec, type ScanBlock } from '../../comparison/evaluation/corpus-pdf.ts'
 import { makeDocx, makeZip } from './zip.ts'
 
 /**
@@ -296,8 +296,8 @@ export interface OpcoesPdf {
   seed?: number
 }
 
-/** PDF com camada de texto. A prancha usa o formato de folha do imóvel. */
-export async function pdfDeTexto(texto: TextoDaPeca, opcoes: OpcoesPdf & { folha?: Imovel['formatoFolha'] } = {}): Promise<Uint8Array> {
+/** Página com camada de texto (usada também para montar PDF com mais de um documento). */
+export function paginaDeTexto(texto: TextoDaPeca, opcoes: OpcoesPdf & { folha?: Imovel['formatoFolha'] } = {}): PageSpec {
   const size = opcoes.folha ? SIZES[opcoes.folha] : A4
   const assinado = opcoes.assinado ?? true
   const blocks: Block[] = [
@@ -312,7 +312,12 @@ export async function pdfDeTexto(texto: TextoDaPeca, opcoes: OpcoesPdf & { folha
     blocks.push({ kind: 'text', x: left, y: top + 36, text: rotulo, size: 9 })
     if (assinado) blocks.push(...rubrica(left + 20, top + 2, (opcoes.seed ?? 1) * 10 + index))
   })
-  return (await buildPdf([{ size, blocks }])).bytes
+  return { size, blocks }
+}
+
+/** PDF com camada de texto. A prancha usa o formato de folha do imóvel. */
+export async function pdfDeTexto(texto: TextoDaPeca, opcoes: OpcoesPdf & { folha?: Imovel['formatoFolha'] } = {}): Promise<Uint8Array> {
+  return (await buildPdf([paginaDeTexto(texto, opcoes)])).bytes
 }
 
 export type Qualidade = 'boa' | 'ruido' | 'muito-degradada'

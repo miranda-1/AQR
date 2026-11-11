@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import { inflateRawSync } from 'node:zlib'
 import { loadImage, createCanvas } from '@napi-rs/canvas'
 import { contemDocumentoPessoal } from '../../../shared/contracts/triage.ts'
@@ -12,7 +13,8 @@ import { AVISO_FICTICIO } from './documents.ts'
 import { categoriasCorpus, type GabaritoAnexo } from './gabarito.ts'
 import { gerarCorpus, type ArquivoGerado, type PacoteGerado } from './generate.ts'
 
-const CATALOG_DIR = new URL('../../../docs/triagem/catalogo/', import.meta.url).pathname
+// `pathname` mantém o caminho codificado (ex.: "Códigos" vira "Co%CC%81digos") e o arquivo não é achado.
+const CATALOG_DIR = fileURLToPath(new URL('../../../docs/triagem/catalogo/', import.meta.url))
 
 let corpus: PacoteGerado[]
 beforeAll(async () => {
