@@ -2,6 +2,7 @@ import type { ClasseDocumental, NomeCampo, estadosCampo } from '../../../shared/
 import type { ExpectativaRegra, GabaritoPacote } from '../corpus/gabarito.ts'
 import { gerarCorpus } from '../corpus/generate.ts'
 import { gerarIndependente, type GabaritoIndependente } from '../corpus/independente.ts'
+import { gerarNovo, type GabaritoNovo } from '../corpus/novo.ts'
 import { gerarValidacao, type GabaritoValidacao } from '../corpus/validacao.ts'
 
 /**
@@ -10,15 +11,16 @@ import { gerarValidacao, type GabaritoValidacao } from '../corpus/validacao.ts'
  * extração e do motor, com outros modelos de texto).
  */
 
-export type Conjunto = 'desenvolvimento' | 'validacao' | 'independente'
+export type Conjunto = 'desenvolvimento' | 'validacao' | 'independente' | 'novo'
 
-export const CONJUNTOS: readonly Conjunto[] = ['desenvolvimento', 'validacao', 'independente']
+export const CONJUNTOS: readonly Conjunto[] = ['desenvolvimento', 'validacao', 'independente', 'novo']
 
 /** Nome de cada conjunto no relatório. */
 export const NOME_CONJUNTO: Record<Conjunto, string> = {
   desenvolvimento: 'desenvolvimento (DSD, usado na implementação)',
   validacao: 'validação usada nos ajustes (VAL)',
-  independente: 'independente congelado (IND)',
+  independente: 'independente IND (usado nas correções da E6.1)',
+  novo: 'segundo independente congelado (NOV)',
 }
 
 export interface AnexoEsperado {
@@ -67,7 +69,7 @@ export function casoDeDesenvolvimento(gabarito: GabaritoPacote, arquivos: CasoAv
   }
 }
 
-function deValidacao(gabarito: GabaritoValidacao | GabaritoIndependente, arquivos: CasoAvaliacao['arquivos'], conjunto: Conjunto = 'validacao'): CasoAvaliacao {
+function deValidacao(gabarito: GabaritoValidacao | GabaritoIndependente | GabaritoNovo, arquivos: CasoAvaliacao['arquivos'], conjunto: Conjunto = 'validacao'): CasoAvaliacao {
   return {
     id: gabarito.id,
     conjunto,
@@ -84,5 +86,6 @@ export async function casosDeAvaliacao(conjuntos: readonly Conjunto[] = CONJUNTO
   if (conjuntos.includes('desenvolvimento')) for (const pacote of await gerarCorpus()) casos.push(casoDeDesenvolvimento(pacote.gabarito, pacote.arquivos))
   if (conjuntos.includes('validacao')) for (const pacote of await gerarValidacao()) casos.push(deValidacao(pacote.gabarito, pacote.arquivos))
   if (conjuntos.includes('independente')) for (const pacote of await gerarIndependente()) casos.push(deValidacao(pacote.gabarito, pacote.arquivos, 'independente'))
+  if (conjuntos.includes('novo')) for (const pacote of await gerarNovo()) casos.push(deValidacao(pacote.gabarito, pacote.arquivos, 'novo'))
   return casos
 }

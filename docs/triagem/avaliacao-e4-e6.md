@@ -5,7 +5,8 @@
 
 - Conjunto de desenvolvimento: 48 pacotes, 372 anexos (DSD-01 a 48, usados durante a implementação).
 - Conjunto de validação: 16 pacotes, 128 anexos (VAL-01 a 16, escritos antes da extração e do motor, mas **usados para corrigir defeitos**: não são mais medida independente).
-- Conjunto independente: 16 pacotes, 126 anexos (IND-01 a 16, gabarito congelado em `docs/triagem/casos/independente-gabarito.json` antes da primeira execução; **é a medida de generalização**).
+- Conjunto independente: 16 pacotes, 126 anexos (IND-01 a 16, gabarito congelado antes da primeira execução, mas **usado nas correções da E6.1**; primeira execução registrada em `avaliacao-independente-primeira-execucao.md`).
+- Segundo conjunto independente: 16 pacotes, 130 anexos (NOV-01 a 16, gabarito congelado em `docs/triagem/casos/novo-gabarito.json` antes da primeira execução; **é a medida de generalização da E6.1**; primeira execução registrada em `avaliacao-novo-primeira-execucao.md`).
 - OCR local: disponível.
 
 ## Resumo por conjunto
@@ -14,7 +15,8 @@
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | desenvolvimento (DSD, usado na implementação) | 372 | 370 | 0 | 2 | 2583 | 2565 | 0 | 0 |
 | validação usada nos ajustes (VAL) | 128 | 127 | 0 | 1 | 740 | 705 | 0 | 0 |
-| independente congelado (IND) | 126 | 125 | 0 | 1 | 749 | 653 | 0 | 0 |
+| independente IND (usado nas correções da E6.1) | 126 | 125 | 0 | 1 | 749 | 653 | 0 | 0 |
+| segundo independente congelado (NOV) | 130 | 129 | 0 | 1 | 749 | 738 | 0 | 0 |
 
 Regras:
 
@@ -22,7 +24,8 @@ Regras:
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | desenvolvimento (DSD, usado na implementação) | 821 | 821 | 0 | 0 | 0 | 0 | 0 | 22 | 22 | 44 |
 | validação usada nos ajustes (VAL) | 144 | 143 | 1 | 0 | 0 | 0 | 0 | 3 | 3 | 15 |
-| independente congelado (IND) | 288 | 288 | 0 | 0 | 0 | 0 | 0 | 4 | 4 | 15 |
+| independente IND (usado nas correções da E6.1) | 288 | 288 | 0 | 0 | 0 | 0 | 0 | 4 | 4 | 15 |
+| segundo independente congelado (NOV) | 291 | 290 | 0 | 0 | 1 | 0 | 0 | 8 | 7 | 16 |
 
 ## E4: classificação documental
 
@@ -118,7 +121,7 @@ Divergências do gabarito:
 
 - VAL-05/rrt.pdf: esperado **outro**, obtido **indeterminada** (origem: classificacao; leitura legivel). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
 
-### Conjunto de independente congelado (IND) (126 anexos)
+### Conjunto de independente IND (usado nas correções da E6.1) (126 anexos)
 
 - Classe igual ao gabarito: **125 de 126** (99,2%).
 - Anexos com documento: 126; abstenções (indeterminada): **1** (0,8%); classe errada proposta: **0**.
@@ -164,6 +167,46 @@ Documentos compostos (mais de um documento no mesmo arquivo):
 Divergências do gabarito:
 
 - IND-15/08-memorial.pdf: esperado **memorial**, obtido **indeterminada** (origem: leitura-ocr; leitura parcial (OCR 17)). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
+
+### Conjunto de segundo independente congelado (NOV) (130 anexos)
+
+- Classe igual ao gabarito: **129 de 130** (99,2%).
+- Anexos com documento: 130; abstenções (indeterminada): **1** (0,8%); classe errada proposta: **0**.
+- Arquivos sem documento legível: 0; classificados como indeterminada: 0.
+
+| Classe | Esperados | Propostos | Acertos | Precisão | Cobertura | Abstenções |
+|---|---:|---:|---:|---:|---:|---:|
+| art-rrt-similar | 15 | 15 | 15 | 100,0% | 100,0% | 0 |
+| cad | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+| drt-01 | 15 | 15 | 15 | 100,0% | 100,0% | 0 |
+| inscricao-imobiliaria | 18 | 18 | 18 | 100,0% | 100,0% | 0 |
+| matricula-transcricao | 18 | 17 | 17 | 100,0% | 94,4% | 1 |
+| memorial | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+| prancha | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+| requerimento | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+
+<details><summary>Matriz de confusão</summary>
+
+| esperado ↓ / obtido → | art-rrt-similar | cad | drt-01 | indeterminada | inscricao-imobiliaria | matricula-transcricao | memorial | prancha | requerimento |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| art-rrt-similar | **15** | · | · | · | · | · | · | · | · |
+| cad | · | **16** | · | · | · | · | · | · | · |
+| drt-01 | · | · | **15** | · | · | · | · | · | · |
+| inscricao-imobiliaria | · | · | · | · | **18** | · | · | · | · |
+| matricula-transcricao | · | · | · | 1 | · | **17** | · | · | · |
+| memorial | · | · | · | · | · | · | **16** | · | · |
+| prancha | · | · | · | · | · | · | · | **16** | · |
+| requerimento | · | · | · | · | · | · | · | · | **16** |
+
+</details>
+
+Documentos compostos (mais de um documento no mesmo arquivo):
+
+- NOV-12/b-drt-e-rrt.pdf: esperado drt-01 + art-rrt-similar; notado (drt-01, art-rrt-similar).
+
+Divergências do gabarito:
+
+- NOV-10/c-certidao.pdf: esperado **matricula-transcricao**, obtido **indeterminada** (origem: leitura-ocr; leitura parcial (OCR 50)). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
 
 ## E5: extração e normalização de campos
 
@@ -288,7 +331,7 @@ Origem dos erros: classificação 0, OCR 4, extração 31.
 
 Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): lote 18, quadra 16, rt-registro 16.
 
-### Conjunto de independente congelado (IND) (749 campos impressos no gabarito)
+### Conjunto de independente IND (usado nas correções da E6.1) (749 campos impressos no gabarito)
 
 - Extraídos como no gabarito: **653 de 749** (87,2%).
 - Valor diferente do impresso (erro que pareceria acerto): **0**.
@@ -418,17 +461,62 @@ Origem dos erros: classificação 7, OCR 12, extração 77.
 
 Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): rt-registro 30, lote 1.
 
+### Conjunto de segundo independente congelado (NOV) (749 campos impressos no gabarito)
+
+- Extraídos como no gabarito: **738 de 749** (98,5%).
+- Valor diferente do impresso (erro que pareceria acerto): **0**.
+
+| Campo | Impressos | Certos | Valor diferente | Não encontrado | Ilegível | Vários valores | Sem campo | Estado diferente | Normalização certa / conferida | Evidência ancorada / com região |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| area | 50 | 49 | 0 | 0 | 0 | 0 | 1 | 0 | 49 / 49 | 49 / 49 |
+| assunto | 47 | 46 | 0 | 1 | 0 | 0 | 0 | 0 | — | 46 / 46 |
+| bairro | 34 | 33 | 0 | 1 | 0 | 0 | 0 | 0 | — | 33 / 33 |
+| cartorio | 18 | 17 | 0 | 0 | 0 | 0 | 1 | 0 | — | 17 / 17 |
+| data-emissao | 18 | 17 | 0 | 0 | 0 | 0 | 1 | 0 | 17 / 17 | 17 / 17 |
+| data-revisao | 32 | 32 | 0 | 0 | 0 | 0 | 0 | 0 | 31 / 31 | 32 / 32 |
+| escala-situacao | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | 16 / 16 | 16 / 16 |
+| formato-folha | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | 16 / 16 | 16 / 16 |
+| inscricao | 33 | 33 | 0 | 0 | 0 | 0 | 0 | 0 | 33 / 33 | 33 / 33 |
+| lote | 99 | 99 | 0 | 0 | 0 | 0 | 0 | 0 | 95 / 95 | 99 / 99 |
+| matricula | 66 | 65 | 0 | 0 | 0 | 0 | 1 | 0 | 61 / 61 | 65 / 65 |
+| parcelamento | 33 | 32 | 0 | 0 | 0 | 0 | 1 | 0 | — | 32 / 32 |
+| quadra | 99 | 98 | 0 | 0 | 0 | 0 | 1 | 0 | 98 / 98 | 98 / 98 |
+| rt-nome | 78 | 77 | 0 | 1 | 0 | 0 | 0 | 0 | — | 77 / 77 |
+| rt-registro | 45 | 45 | 0 | 0 | 0 | 0 | 0 | 0 | — | 45 / 45 |
+| signatario | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | — | 16 / 16 |
+| titular | 49 | 47 | 0 | 1 | 0 | 0 | 1 | 0 | — | 47 / 47 |
+
+Origem dos erros: classificação 7, OCR 0, extração 4.
+
+<details><summary>Campos diferentes do gabarito</summary>
+
+- NOV-09/a-requerimento.pdf · assunto: esperado "Desdobro"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- NOV-09/a-requerimento.pdf · titular: esperado "Rosa Teste Ficcional"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- NOV-09/a-requerimento.pdf · bairro: esperado "Jardim Demonstrativo"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- NOV-09/a-requerimento.pdf · rt-nome: esperado "Igor Engenheiro Simulado"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- NOV-10/c-certidao.pdf · matricula: esperado "101.202"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · cartorio: esperado "Cartório do 3º Registro de Imóveis Fictício"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · quadra: esperado "5"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · parcelamento: esperado "Parque Ilusorio"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · area: esperado "420,00 m²"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · titular: esperado "Rosa Teste Ficcional"; obtido nenhum campo (sem-campo; origem classificacao).
+- NOV-10/c-certidao.pdf · data-emissao: esperado "01/11/2026"; obtido nenhum campo (sem-campo; origem classificacao).
+
+</details>
+
+Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): rt-registro 32.
+
 ### Comparação interdocumental
 
 Só entram valores encontrados com confiança e sem ambiguidade; o resto fica inconclusivo. "Insuficiente" quer dizer menos de dois valores para comparar (ausência não é divergência). Se a divergência é esperada ou não, o gabarito diz nas regras 018 a 021 (seção E6).
 
 | Comparação | Coincide | Diverge | Inconclusivo | Insuficiente | Pacotes com divergência |
 |---|---:|---:|---:|---:|---|
-| Matrícula no requerimento × memorial | 70 | 0 | 2 | 8 | — |
-| Lote na prancha × memorial | 70 | 1 | 1 | 8 | VAL-06 ("07" × "7") |
-| Responsável técnico na DRT × ART/RRT | 72 | 0 | 0 | 8 | — |
-| Assunto do requerimento × DRT | 70 | 3 | 1 | 6 | DSD-08 ("DESDOBRO" × "RETIFICAÇÃO DE REGISTRO IMOBILIÁRIO"), VAL-15 ("Remembramento" × "Desdobro"), IND-16 ("Desdobro de lote" × "Retificação de registro imobiliário") |
-| Data de revisão da prancha × memorial | 70 | 2 | 0 | 8 | DSD-19 ("01/11/2026" × "03/11/2026"), VAL-10 ("12/05/2026" × "13/05/2026") |
+| Matrícula no requerimento × memorial | 81 | 1 | 6 | 8 | NOV-15 ("101.220" × "101.202") |
+| Lote na prancha × memorial | 86 | 1 | 1 | 8 | VAL-06 ("07" × "7") |
+| Responsável técnico na DRT × ART/RRT | 86 | 0 | 0 | 10 | — |
+| Assunto do requerimento × DRT | 84 | 3 | 1 | 8 | DSD-08 ("DESDOBRO" × "RETIFICAÇÃO DE REGISTRO IMOBILIÁRIO"), VAL-15 ("Remembramento" × "Desdobro"), IND-16 ("Desdobro de lote" × "Retificação de registro imobiliário") |
+| Data de revisão da prancha × memorial | 83 | 3 | 2 | 8 | DSD-19 ("01/11/2026" × "03/11/2026"), VAL-10 ("12/05/2026" × "13/05/2026"), NOV-02 ("03/11/2026" × "05/11/2026") |
 
 ## E6: motor de regras
 
@@ -496,7 +584,7 @@ Resultados diferentes do gabarito:
 
 - VAL-13 · AQR-GCA-001: esperado sem-achado; obtido **achado** (condicao-indeterminada) — falso-alerta, origem extracao. Gabarito: O assunto está no requerimento, com outro rótulo.
 
-### Conjunto de independente congelado (IND) (288 expectativas de regra)
+### Conjunto de independente IND (usado nas correções da E6.1) (288 expectativas de regra)
 
 - Resultado aceito pelo gabarito: **288 de 288** (100,0%).
 - Falsos alertas: **0**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
@@ -526,29 +614,63 @@ Resultados diferentes do gabarito:
 
 Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 0.
 
+### Conjunto de segundo independente congelado (NOV) (291 expectativas de regra)
+
+- Resultado aceito pelo gabarito: **290 de 291** (99,7%).
+- Falsos alertas: **0**; achados esperados não detectados: **0**; abstenções indevidas: **1**; tipo de achado diferente: **0**; outro resultado: **0**.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 21 corretas de 21.
+
+| Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| AQR-GCA-001 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 0 / 0 / 0 |
+| AQR-GCA-002 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-003 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-006 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 14 / 2 / 0 / 0 / 0 |
+| AQR-GCA-008 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 13 / 1 / 2 / 0 / 0 |
+| AQR-GCA-009 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 / 15 / 1 / 0 / 0 |
+| AQR-GCA-010 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 1 / 0 / 14 |
+| AQR-GCA-011 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-012 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-013 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-016 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-018 | 15 | 14 | 0 | 0 | 1 | 0 | 0 | 14 / 0 / 1 / 0 / 0 |
+| AQR-GCA-019 | 13 | 13 | 0 | 0 | 0 | 0 | 0 | 13 / 0 / 0 / 0 / 0 |
+| AQR-GCA-020 | 9 | 9 | 0 | 0 | 0 | 0 | 0 | 8 / 1 / 0 / 0 / 0 |
+| AQR-GCA-021 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 13 / 1 / 2 / 0 / 0 |
+| AQR-GCA-022 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-023 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-028 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 / 16 / 0 |
+| AQR-GCA-043 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+
+Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 1.
+
+Resultados diferentes do gabarito:
+
+- NOV-11 · AQR-GCA-018: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem regra. Gabarito: RRT coerente com requerimento e matrícula.
+
 ### Estados de todas as avaliações (com e sem expectativa no gabarito)
 
 | Regra | sem-achado | achado | não avaliável | condição pendente | não aplicável |
 |---|---:|---:|---:|---:|---:|
-| AQR-GCA-001 | 76 | 1 | 3 | 0 | 0 |
-| AQR-GCA-002 | 78 | 1 | 1 | 0 | 0 |
-| AQR-GCA-003 | 74 | 4 | 2 | 0 | 0 |
-| AQR-GCA-006 | 77 | 1 | 2 | 0 | 0 |
-| AQR-GCA-008 | 73 | 2 | 5 | 0 | 0 |
-| AQR-GCA-009 | 0 | 74 | 6 | 0 | 0 |
-| AQR-GCA-010 | 3 | 2 | 4 | 0 | 71 |
-| AQR-GCA-011 | 75 | 3 | 2 | 0 | 0 |
-| AQR-GCA-012 | 76 | 3 | 1 | 0 | 0 |
-| AQR-GCA-013 | 73 | 2 | 5 | 0 | 0 |
-| AQR-GCA-016 | 75 | 2 | 3 | 0 | 0 |
-| AQR-GCA-018 | 59 | 1 | 20 | 0 | 0 |
-| AQR-GCA-019 | 74 | 4 | 2 | 0 | 0 |
-| AQR-GCA-020 | 73 | 4 | 3 | 0 | 0 |
-| AQR-GCA-021 | 70 | 2 | 8 | 0 | 0 |
-| AQR-GCA-022 | 76 | 2 | 2 | 0 | 0 |
-| AQR-GCA-023 | 76 | 1 | 3 | 0 | 0 |
-| AQR-GCA-028 | 2 | 1 | 0 | 76 | 1 |
-| AQR-GCA-043 | 69 | 11 | 0 | 0 | 0 |
+| AQR-GCA-001 | 91 | 2 | 3 | 0 | 0 |
+| AQR-GCA-002 | 94 | 1 | 1 | 0 | 0 |
+| AQR-GCA-003 | 89 | 4 | 3 | 0 | 0 |
+| AQR-GCA-006 | 91 | 3 | 2 | 0 | 0 |
+| AQR-GCA-008 | 86 | 3 | 7 | 0 | 0 |
+| AQR-GCA-009 | 0 | 89 | 7 | 0 | 0 |
+| AQR-GCA-010 | 3 | 2 | 5 | 0 | 86 |
+| AQR-GCA-011 | 91 | 3 | 2 | 0 | 0 |
+| AQR-GCA-012 | 92 | 3 | 1 | 0 | 0 |
+| AQR-GCA-013 | 89 | 2 | 5 | 0 | 0 |
+| AQR-GCA-016 | 91 | 2 | 3 | 0 | 0 |
+| AQR-GCA-018 | 73 | 1 | 22 | 0 | 0 |
+| AQR-GCA-019 | 90 | 4 | 2 | 0 | 0 |
+| AQR-GCA-020 | 87 | 5 | 4 | 0 | 0 |
+| AQR-GCA-021 | 83 | 3 | 10 | 0 | 0 |
+| AQR-GCA-022 | 92 | 2 | 2 | 0 | 0 |
+| AQR-GCA-023 | 92 | 1 | 3 | 0 | 0 |
+| AQR-GCA-028 | 2 | 1 | 0 | 92 | 1 |
+| AQR-GCA-043 | 85 | 11 | 0 | 0 | 0 |
 
 Regras não executadas em todos os pacotes: HYP-GCA-045 (Hipótese desativada: depende de ato ou instrução escrita da GCA.); HYP-GCA-047 (Hipótese desativada: depende de ato ou instrução escrita da GCA.).
 Garantias aplicadas como invariantes: AQR-GCA-040, AQR-GCA-041.
