@@ -149,6 +149,49 @@ describe('motor de regras', () => {
   })
 })
 
+describe('política de abstenção', () => {
+  /** Troca o anexo de uma classe por um PDF com as páginas dadas. */
+  async function trocar(id: string, classe: string, paginas: string[][]): Promise<ResultadoTriagem> {
+    const { entrada, anexos } = await pacote(id)
+    const { bytes } = await makePdf(paginas)
+    const indice = anexos.findIndex((anexo) => anexo.classificacao.contrato.classe === classe)
+    const trocados = [...anexos]
+    trocados[indice] = await triarAnexo(defined(anexos[indice]).lido.id, 'trocado.pdf', bytes, { limites: LIMITES_AVALIACAO })
+    return executarTriagem(entrada, trocados, { catalogo })
+  }
+
+  it('vários imóveis no requerimento: título, inscrição, ART e identidade não concluem', async () => {
+    const resultado = await trocar('DSD-01', 'requerimento', [
+      ['REQUERIMENTO PARA PROCESSO CARTOGRÁFICO', 'Assunto: DESDOBRO', 'Proprietário(a): Carla Ficticia de Exemplo', 'Matrícula: 90417 e matrícula 90418', 'Lote: F7'],
+    ])
+    for (const numero of ['006', '008', '018', '020']) {
+      const item = avaliacao(resultado, numero)
+      expect(item.contrato.resultado, numero).toBe('nao-avaliavel')
+      expect(item.contrato.motivo, numero).toContain('um imóvel por pacote')
+    }
+  })
+
+  it('valor ambíguo em uma peça impede "sem achado" na comparação', async () => {
+    const resultado = await trocar('DSD-01', 'memorial', [
+      ['MEMORIAL DESCRITIVO', 'Assunto: DESDOBRO', 'Imóvel: lote F7 da quadra 12, matrícula 90417.', 'Confrontação com a matrícula 90471.', 'Data: 01/11/2026'],
+    ])
+    const identidade = avaliacao(resultado, '020')
+    expect(identidade.contrato.resultado).toBe('nao-avaliavel')
+    expect(identidade.contrato.motivo).toContain('mais de um valor')
+  })
+
+  it('arquivo composto com página sem classe impede apontar ausência', async () => {
+    const requerimento = ['REQUERIMENTO PARA PROCESSO CARTOGRÁFICO', 'Assunto: DESDOBRO', 'Proprietário(a): Carla Ficticia de Exemplo', 'Lote: F7 Quadra: 12']
+    const drt = ['DECLARAÇÃO DE RESPONSABILIDADE TÉCNICA - DRT 01', 'Declaro ser o responsável técnico.']
+    const resolvido = await trocar('DSD-09', 'requerimento', [requerimento, drt])
+    expect(avaliacao(resolvido, '008').contrato.resultado).toBe('achado')
+    const naoResolvido = await trocar('DSD-09', 'requerimento', [requerimento, drt, ['Documento digitalizado em anexo', 'folha sem título']])
+    const titulo = avaliacao(naoResolvido, '008')
+    expect(titulo.contrato.resultado).toBe('nao-avaliavel')
+    expect(titulo.contrato.motivo).toContain('anexo-1')
+  })
+})
+
 describe('regra 023: formatos de folha do TR 002', () => {
   /** DSD-22 com a prancha no formato pedido (texto "Formato X" e página do mesmo tamanho). */
   async function comFolha(formato: 'A3' | 'A2' | 'A1' | 'A0'): Promise<ResultadoTriagem> {

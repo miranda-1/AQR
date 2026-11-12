@@ -317,9 +317,9 @@ Resultados diferentes do gabarito:
 | AQR-GCA-012 | 60 | 3 | 1 | 0 | 0 |
 | AQR-GCA-013 | 58 | 2 | 4 | 0 | 0 |
 | AQR-GCA-016 | 59 | 2 | 3 | 0 | 0 |
-| AQR-GCA-018 | 59 | 1 | 4 | 0 | 0 |
+| AQR-GCA-018 | 45 | 1 | 18 | 0 | 0 |
 | AQR-GCA-019 | 60 | 3 | 1 | 0 | 0 |
-| AQR-GCA-020 | 60 | 3 | 1 | 0 | 0 |
+| AQR-GCA-020 | 59 | 3 | 2 | 0 | 0 |
 | AQR-GCA-021 | 56 | 2 | 6 | 0 | 0 |
 | AQR-GCA-022 | 61 | 1 | 2 | 0 | 0 |
 | AQR-GCA-023 | 60 | 1 | 3 | 0 | 0 |

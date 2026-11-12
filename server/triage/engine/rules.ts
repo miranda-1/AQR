@@ -7,8 +7,8 @@ import {
   anexosDaClasse,
   avaliarPresenca,
   camposDe,
+  indicioDeVariosImoveis,
   evidenciaDoAnexo,
-  integridadeParaProcura,
   type FuncaoRegra,
   type ResultadoDaRegra,
   type ValorConflitante,
@@ -94,8 +94,9 @@ function descreverDivergencia(comparacao: Comparacao): string {
 function resultadoDeComparacoes(comparacoes: readonly Comparacao[], titulo: string, semDadosMotivo: string): ResultadoDaRegra {
   const divergentes = comparacoes.filter((item) => item.resultado === 'diverge')
   const comparadas = comparacoes.filter((item) => item.resultado === 'diverge' || item.resultado === 'coincide')
-  const inconclusivas = comparacoes.filter((item) => item.resultado === 'inconclusivo')
-  const limitacoes = inconclusivas.map((item) => `${nomeCampo[item.campo]}: ${item.inconclusivos.map((valor) => `${valor.anexoId} (${valor.motivo})`).join(', ')}`)
+  // Valor ambíguo, ilegível ou pouco confiável em qualquer anexo: aquele campo não sustenta "sem achado".
+  const comIncerteza = comparacoes.filter((item) => item.inconclusivos.length > 0)
+  const limitacoes = comIncerteza.map((item) => `${nomeCampo[item.campo]} não comparado com segurança em ${item.inconclusivos.map((valor) => `${valor.anexoId} (${valor.motivo})`).join(', ')}`)
   if (divergentes.length > 0) {
     return {
       resultado: 'achado',
@@ -108,6 +109,10 @@ function resultadoDeComparacoes(comparacoes: readonly Comparacao[], titulo: stri
       limitacoes,
     }
   }
+  if (comIncerteza.length > 0) {
+    const motivo = `Extração ambígua ou incerta: ${limitacoes.join('; ')}.`.slice(0, 500)
+    return { resultado: 'nao-avaliavel', motivo, rascunho: `${titulo}: comparação não conclusiva; ${comIncerteza.map((item) => nomeCampo[item.campo]).join(', ')} com leitura incerta em algum anexo.`, evidencias: evidenciasDe(comparadas).slice(0, 8), confianca: 'baixa', limitacoes }
+  }
   if (comparadas.length === 0) {
     return { resultado: 'nao-avaliavel', motivo: semDadosMotivo, rascunho: `${titulo}: ${semDadosMotivo}`, confianca: 'baixa', limitacoes }
   }
@@ -116,8 +121,19 @@ function resultadoDeComparacoes(comparacoes: readonly Comparacao[], titulo: stri
     rascunho: `${titulo}: ${comparadas.map((item) => nomeCampo[item.campo]).join(', ')} coincidem entre os anexos em que foram encontrados.`,
     evidencias: evidenciasDe(comparadas).slice(0, 8),
     camposUsados: camposUsados(comparadas),
-    confianca: inconclusivas.length > 0 ? 'media' : 'alta',
+    confianca: 'alta',
     limitacoes,
+  }
+}
+
+/** Pacote com indício de mais de um imóvel: a verificação de correspondência não conclui. */
+function variosImoveis(indicio: string, oQue: string): ResultadoDaRegra {
+  return {
+    resultado: 'nao-avaliavel',
+    motivo: `Indício de mais de um imóvel (${indicio}); o motor verifica um imóvel por pacote.`,
+    rascunho: `Não foi possível verificar ${oQue}: ${indicio}. Conferência manual.`,
+    confianca: 'baixa',
+    limitacoes: ['Limitação conhecida: um imóvel por pacote.'],
   }
 }
 
@@ -191,22 +207,9 @@ const r006: FuncaoRegra = (ctx) => {
     return { resultado: 'nao-avaliavel', motivo: 'Nenhum lote identificado nos anexos lidos.', rascunho: 'Documento de inscrição imobiliária não verificado: lotes não identificados.', confianca: 'baixa' }
   }
   const presenca = avaliarPresenca(ctx, { classes: ['inscricao-imobiliaria'], nome: 'Documento de inscrição imobiliária' })
-  if (presenca.resultado !== 'sem-achado') return presenca
-  // Lotes do requerimento: com mais de um, confere a quantidade de documentos de inscrição.
-  const doRequerimento = anexosDaClasse(ctx, 'requerimento').flatMap((anexo) => camposDe(ctx, anexo.lido.id, 'lote') ?? [])
-  const declarados = new Set(doRequerimento.flatMap((campo) => (campo.contrato.estado === 'varios-valores' ? (campo.contrato.alternativas ?? []) : campo.contrato.valorBruto ? [campo.contrato.valorBruto] : [])))
-  if (declarados.size > fichas.length && integridadeParaProcura(ctx.entrada) === 'completo') {
-    return {
-      resultado: 'achado',
-      tipo: 'nao-localizado',
-      rascunho: `O requerimento declara ${declarados.size} lotes e há ${fichas.length} documento(s) de inscrição entre os anexos recebidos. Lacuna para conferência, não conclusão sobre o cadastro.`,
-      procura: { integridadeDoPacote: 'completo', anexosProcurados: ctx.anexos.map((anexo) => ({ anexoId: anexo.lido.id, classe: anexo.classificacao.contrato.classe })) },
-      evidencias: [...fichas.map((anexo) => evidenciaDoAnexo(anexo)), ...doRequerimento.flatMap((campo) => campo.contrato.evidencias.slice(0, 1))],
-      camposUsados: doRequerimento.map((campo) => campo.contrato.id),
-      confianca: 'media',
-    }
-  }
-  return { ...presenca, limitacoes: [...(presenca.limitacoes ?? []), 'A correspondência entre cada inscrição e cada lote não é verificada.'] }
+  const varios = indicioDeVariosImoveis(ctx)
+  if (varios && presenca.resultado === 'sem-achado') return variosImoveis(varios, 'a correspondência entre cada lote e seu documento de inscrição')
+  return { ...presenca, limitacoes: [...(presenca.limitacoes ?? []), 'Verificação feita para um imóvel por pacote.'] }
 }
 
 /** AQR-GCA-008. */
@@ -216,7 +219,9 @@ const r008: FuncaoRegra = (ctx) => {
     return { resultado: 'nao-avaliavel', motivo: 'Imóvel não identificado nos anexos lidos.', rascunho: 'Título registral não verificado: imóvel não identificado.', confianca: 'baixa' }
   }
   const resultado = avaliarPresenca(ctx, { classes: ['matricula-transcricao'], nome: 'Certidão de matrícula ou transcrição' })
-  return { ...resultado, limitacoes: [...(resultado.limitacoes ?? []), 'Com mais de um imóvel de origem, a correspondência título × imóvel não é verificada nesta fase.'] }
+  const varios = indicioDeVariosImoveis(ctx)
+  if (varios && resultado.resultado === 'sem-achado') return variosImoveis(varios, 'se há um título para cada imóvel de origem')
+  return { ...resultado, limitacoes: [...(resultado.limitacoes ?? []), 'Verificação feita para um imóvel por pacote.'] }
 }
 
 const DIA_MS = 24 * 60 * 60 * 1000
@@ -378,6 +383,8 @@ const r016: FuncaoRegra = (ctx) => {
 /** AQR-GCA-018: campos da ART/RRT × requerimento e título; discrepância é revisão, não falsidade. */
 const CAMPOS_018: NomeCampo[] = ['titular', 'rt-nome', 'lote', 'quadra', 'bairro', 'parcelamento', 'matricula']
 const r018: FuncaoRegra = (ctx) => {
+  const varios = indicioDeVariosImoveis(ctx)
+  if (varios) return variosImoveis(varios, 'a correspondência dos campos da ART/RRT com cada imóvel')
   const arts = anexosDaClasse(ctx, 'art-rrt-similar').filter((anexo) => anexo.lido.legibilidade === 'legivel')
   if (arts.length === 0) return { resultado: 'nao-avaliavel', motivo: 'Nenhuma ART/RRT legível entre os anexos.', rascunho: 'Campos da ART/RRT não comparados: documento não localizado ou ilegível.', confianca: 'baixa' }
   const classes: ClasseDocumental[] = ['art-rrt-similar', 'requerimento', 'matricula-transcricao']
@@ -401,6 +408,8 @@ const r019: FuncaoRegra = (ctx) => {
 /** AQR-GCA-020: matrícula, lote, quadra, inscrição e bairro após normalização conservadora. */
 const CAMPOS_020: NomeCampo[] = ['matricula', 'lote', 'quadra', 'inscricao', 'bairro']
 const r020: FuncaoRegra = (ctx) => {
+  const varios = indicioDeVariosImoveis(ctx)
+  if (varios) return variosImoveis(varios, 'a identidade de cada imóvel entre as peças')
   const classes: ClasseDocumental[] = ['requerimento', 'matricula-transcricao', 'prancha', 'memorial', 'inscricao-imobiliaria']
   return resultadoDeComparacoes(CAMPOS_020.map((campo) => compararCampo(ctx.campos, campo, classes)), 'Identidade do imóvel', 'Nenhum identificador do imóvel encontrado com confiança em dois anexos.')
 }
@@ -459,8 +468,8 @@ const r022: FuncaoRegra = (ctx) => {
       limitacoes: ['A escala pode estar no desenho, fora do texto lido.', ...incertas],
     }
   }
-  if (iguais.length === 0) return { resultado: 'nao-avaliavel', motivo: incertas.join('; ').slice(0, 500) || 'Escala não lida.', rascunho: 'Escala da situação não pôde ser lida.', confianca: 'baixa' }
-  return { resultado: 'sem-achado', rascunho: 'A planta de situação declara 1:10.000.', evidencias: iguais, camposUsados: usados, confianca: incertas.length ? 'media' : 'alta', limitacoes: incertas }
+  if (iguais.length === 0 || incertas.length > 0) return { resultado: 'nao-avaliavel', motivo: incertas.join('; ').slice(0, 500) || 'Escala não lida.', rascunho: 'Escala da situação não pôde ser lida com segurança em todas as pranchas.', evidencias: iguais, confianca: 'baixa' }
+  return { resultado: 'sem-achado', rascunho: 'A planta de situação declara 1:10.000.', evidencias: iguais, camposUsados: usados, confianca: 'alta' }
 }
 
 /**

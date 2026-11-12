@@ -105,12 +105,39 @@ export function integridadeParaProcura(entrada: EntradaTriagem): 'completo' | 'p
  * Anexos que podem ser o documento procurado sem que o sistema consiga dizer: isolados, ilegíveis,
  * lidos só em parte e sem classe, ou sem classe mas com a classe procurada entre as alternativas.
  */
+/** Arquivo com mais de um documento e alguma página sem classe: não resolvido, pode esconder outro documento. */
+export function compostoNaoResolvido(anexo: AnexoTriado): boolean {
+  return anexo.classificacao.composto && anexo.classificacao.porPagina.some((pagina) => pagina.classe === 'indeterminada')
+}
+
 export function anexosQuePodemSer(ctx: ContextoRegra, classes: readonly ClasseDocumental[]): AnexoTriado[] {
   return ctx.anexos.filter((anexo) => {
+    if (compostoNaoResolvido(anexo)) return true
     if (anexo.classificacao.contrato.classe !== 'indeterminada') return false
     if (anexo.lido.legibilidade === 'isolado' || anexo.lido.legibilidade === 'ilegivel' || anexo.lido.legibilidade === 'parcial') return true
     return anexo.classificacao.contrato.alternativas.some((alternativa) => classes.includes(alternativa.classe))
   })
+}
+
+/**
+ * Indício de mais de um imóvel no pacote: o requerimento traz vários lotes ou matrículas, ou há
+ * títulos registrais com números diferentes. O motor verifica um imóvel por pacote; com vários,
+ * as verificações de correspondência (título × imóvel, inscrição × lote, identidade) não concluem.
+ */
+export function indicioDeVariosImoveis(ctx: ContextoRegra): string | undefined {
+  const requerimentos = anexosDaClasse(ctx, 'requerimento').map((anexo) => anexo.lido.id)
+  const doRequerimento = ctx.campos.filter(
+    (campo) => requerimentos.includes(campo.contrato.anexoId) && (campo.contrato.campo === 'lote' || campo.contrato.campo === 'matricula') && campo.contrato.estado === 'varios-valores',
+  )
+  if (doRequerimento.length > 0) return `o requerimento traz mais de um ${doRequerimento.map((campo) => (campo.contrato.campo === 'lote' ? 'lote' : 'número de matrícula')).join(' e ')}`
+  const titulos = anexosDaClasse(ctx, 'matricula-transcricao').map((anexo) => anexo.lido.id)
+  const numeros = new Set(
+    ctx.campos
+      .filter((campo) => titulos.includes(campo.contrato.anexoId) && campo.contrato.campo === 'matricula' && campo.contrato.estado === 'encontrado')
+      .map((campo) => String(campo.contrato.valorNormalizado ?? campo.contrato.valorBruto)),
+  )
+  if (numeros.size > 1) return `há títulos registrais com ${numeros.size} números de matrícula diferentes`
+  return undefined
 }
 
 const DESCRICAO_LEGIBILIDADE: Record<string, string> = {
@@ -156,7 +183,12 @@ export function avaliarPresenca(
       evidencias: aceitos.map((anexo) => evidenciaDoAnexo(anexo)),
       anexos: aceitos.map((anexo) => anexo.lido.id),
       confianca: aceitos.every((anexo) => anexo.classificacao.contrato.confianca === 'alta') ? 'alta' : 'media',
-      limitacoes: ['A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana.'],
+      limitacoes: [
+        'A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana.',
+        ...(aceitos.every((anexo) => anexo.classificacao.composto)
+          ? ['Localizado só dentro de arquivo com mais de um documento (página com título próprio); o arquivo não foi dividido.']
+          : []),
+      ],
     }
   }
   const integridade = integridadeParaProcura(ctx.entrada)
