@@ -272,7 +272,7 @@ Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 0.
 
 - Resultado aceito pelo gabarito: **143 de 144** (99,3%).
 - Falsos alertas: **1**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
-- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 7 corretas de 7.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 8 corretas de 8.
 
 | Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -281,7 +281,7 @@ Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 0.
 | AQR-GCA-003 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 0 / 0 / 0 |
 | AQR-GCA-006 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
 | AQR-GCA-008 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
-| AQR-GCA-009 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 0 / 0 / 0 |
+| AQR-GCA-009 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 / 1 / 0 / 0 / 0 |
 | AQR-GCA-010 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 0 / 1 |
 | AQR-GCA-011 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 0 / 0 / 0 |
 | AQR-GCA-012 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
@@ -311,7 +311,7 @@ Resultados diferentes do gabarito:
 | AQR-GCA-003 | 60 | 3 | 1 | 0 | 0 |
 | AQR-GCA-006 | 61 | 1 | 2 | 0 | 0 |
 | AQR-GCA-008 | 58 | 1 | 5 | 0 | 0 |
-| AQR-GCA-009 | 56 | 2 | 6 | 0 | 0 |
+| AQR-GCA-009 | 0 | 58 | 6 | 0 | 0 |
 | AQR-GCA-010 | 2 | 2 | 2 | 0 | 58 |
 | AQR-GCA-011 | 60 | 2 | 2 | 0 | 0 |
 | AQR-GCA-012 | 60 | 3 | 1 | 0 | 0 |
@@ -396,10 +396,11 @@ Garantias aplicadas como invariantes: AQR-GCA-040, AQR-GCA-041.
 *Matrícula com data de emissão ambígua (03/04/26)*
 
 - Versão da regra: `AQR-GCA-009@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: baixa.
-- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Conferir o prazo do título: data de emissão "03/04/26" com leitura ambígua (ano com dois dígitos: o século não está no documento); protocolo em 2026-11-05. O sistema não decide a contagem do prazo nem afirma vencimento.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Datas para conferência do prazo do título (protocolo registrado em 2026-11-05T13:00:00.000Z, dia 2026-11-05 no fuso de Campo Grande): emissão "03/04/26" com leitura ambígua (ano com dois dígitos: o século não está no documento); intervalo não calculado. O sistema não aplica critério de contagem, não declara validade nem vencimento; a avaliação temporal é do servidor.
 - Evidência: anexo-3, hash ed45cf57042c…, página 1, região x=0.263 y=0.193, trecho "Certidão emitida em 03/04/26." (camada-de-texto).
 - Fundamento: S06 (p.3 item V); S07 (p.3 item IV); S08 (p.4 item IV).
-- Limitação: Contagem (corrida ou útil), fuso e marco inicial do prazo são decisão humana.
+- Limitação: A forma de contagem do prazo de 30 dias (corrida ou útil, marco inicial, fuso) não é homologada: pergunta 5 do dossiê.
+- Limitação: O intervalo em dias corridos é só apresentação, não critério.
 - Revisão humana: Servidor GCA valida achado e comunicação.
 
 ### DSD-23 · AQR-GCA-016 (Assinatura do RT nas peças): achado / condicao-indeterminada

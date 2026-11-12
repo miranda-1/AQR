@@ -46,9 +46,9 @@ describe('motor de regras', () => {
     expect(defined(aplicaveis.find((regra) => regra.id === 'AQR-GCA-028')).condicoes).toEqual(['area-situacao-acima-2ha'])
   })
 
-  it('pacote completo e coerente: nenhum achado; 028 aguarda servidor; hipóteses não rodam; garantias aplicadas', async () => {
+  it('pacote completo e coerente: só o alerta de conferência de prazo (009); 028 aguarda servidor; hipóteses não rodam', async () => {
     const resultado = await triar('DSD-01')
-    expect(resultado.avaliacoes.filter((item) => item.contrato.resultado === 'achado').map((item) => item.contrato.regraId)).toEqual([])
+    expect(resultado.avaliacoes.filter((item) => item.contrato.resultado === 'achado').map((item) => item.contrato.regraId)).toEqual(['AQR-GCA-009'])
     expect(avaliacao(resultado, '028').contrato).toMatchObject({ resultado: 'condicao-pendente', condicoesPendentes: ['area-situacao-acima-2ha'] })
     expect(resultado.naoExecutadas.map((item) => item.regraId)).toEqual(['HYP-GCA-045', 'HYP-GCA-047'])
     expect(resultado.garantias.map((item) => item.regraId)).toEqual(['AQR-GCA-040', 'AQR-GCA-041'])
@@ -116,15 +116,19 @@ describe('motor de regras', () => {
     expect(avaliacao(declarada, '028').contrato.resultado).toBe('condicao-pendente')
   })
 
-  it('009 mostra o intervalo sem decidir o prazo; data ambígua não é resolvida', async () => {
-    const longe = avaliacao(await triar('DSD-27'), '009')
-    expect(longe.contrato).toMatchObject({ resultado: 'achado', tipo: 'condicao-indeterminada' })
-    expect(longe.contrato.rascunho).toContain('87 dias corridos')
-    expect(longe.contrato.rascunho).toContain('não decide a contagem')
-    expect(longe.contrato.rascunho).not.toMatch(/vencid/u)
+  it('009 registra as datas e o intervalo sem critério de contagem; data ambígua não é resolvida', async () => {
+    // Sem limiar: intervalo curto ou longo, sempre encaminha a avaliação temporal ao servidor.
+    for (const [id, dias] of [['DSD-01', 16], ['DSD-27', 87]] as const) {
+      const item = avaliacao(await triar(id), '009')
+      expect(item.contrato).toMatchObject({ resultado: 'achado', tipo: 'condicao-indeterminada' })
+      expect(item.contrato.rascunho).toContain(`intervalo aparente de ${dias} dia(s) corrido(s)`)
+      expect(item.contrato.rascunho).toContain('não aplica critério de contagem')
+      expect(item.contrato.rascunho).not.toMatch(/dentro de 30|sem alerta/u)
+    }
     const ambigua = avaliacao(await triar('DSD-26'), '009')
-    expect(ambigua.contrato.rascunho).toContain('ambígua')
-    expect(avaliacao(await triar('DSD-01'), '009').contrato.resultado).toBe('sem-achado')
+    expect(ambigua.contrato.rascunho).toContain('leitura ambígua')
+    expect(ambigua.contrato.rascunho).toContain('intervalo não calculado')
+    expect(avaliacao(await triar('DSD-09'), '009').contrato.resultado).toBe('nao-avaliavel')
   })
 
   it('representação: compara signatário e titular aparente; não julga poderes', async () => {

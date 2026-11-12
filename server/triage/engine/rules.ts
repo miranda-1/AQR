@@ -226,9 +226,10 @@ function diaDoProtocolo(instante: string): string {
 }
 
 /**
- * AQR-GCA-009: mostra o intervalo aparente entre a emissão do título e o protocolo, sem decidir a
- * contagem de 30 dias. Leitura do AQR: até 29 dias corridos o intervalo cabe em qualquer contagem
- * (corrida ou útil) e não gera alerta; a partir de 30, alerta para conferência, nunca "vencido".
+ * AQR-GCA-009: registra as datas e o intervalo aparente entre a emissão do título e o protocolo e
+ * encaminha a avaliação temporal ao servidor. Não há limiar: o dossiê não autoriza decidir a
+ * contagem dos 30 dias (pergunta 5), então nenhum intervalo vira "sem achado" nem "vencido".
+ * Sempre que há data legível, o resultado é um alerta de conferência ("condição indeterminada").
  */
 const r009: FuncaoRegra = (ctx) => {
   const titulos = anexosDaClasse(ctx, 'matricula-transcricao')
@@ -237,7 +238,7 @@ const r009: FuncaoRegra = (ctx) => {
   const legiveis = datas.filter((item) => item.campo?.contrato.estado === 'encontrado')
   if (legiveis.length === 0) return { resultado: 'nao-avaliavel', motivo: 'Data de emissão do título não localizada ou ilegível.', rascunho: 'Data de emissão do título não pôde ser lida.', confianca: 'baixa' }
   const protocolo = diaDoProtocolo(ctx.entrada.protocoladoEm)
-  const alertas: string[] = []
+  const registros: string[] = []
   const evidencias: Evidencia[] = []
   const usados: string[] = []
   let ambigua = false
@@ -248,32 +249,24 @@ const r009: FuncaoRegra = (ctx) => {
     const normalizada = normalizarData(campo.contrato.valorBruto ?? '')
     if (!normalizada || normalizada.situacao === 'ambiguo') {
       ambigua = true
-      alertas.push(`data de emissão "${campo.contrato.valorBruto ?? ''}" com leitura ambígua (${normalizada?.situacao === 'ambiguo' ? normalizada.descricao : 'formato não reconhecido'}); protocolo em ${protocolo}`)
+      registros.push(`emissão "${campo.contrato.valorBruto ?? ''}" com leitura ambígua (${normalizada?.situacao === 'ambiguo' ? normalizada.descricao : 'formato não reconhecido'}); intervalo não calculado`)
       continue
     }
     const dias = Math.round((Date.parse(protocolo) - Date.parse(normalizada.valor)) / DIA_MS)
-    if (dias < 0) alertas.push(`emissão (${normalizada.valor}) posterior ao protocolo (${protocolo})`)
-    else if (dias >= 30) alertas.push(`intervalo aparente de ${dias} dias corridos entre a emissão (${normalizada.valor}) e o protocolo (${protocolo})`)
-  }
-  if (alertas.length === 0) {
-    return {
-      resultado: 'sem-achado',
-      rascunho: 'Emissão do título até 29 dias corridos antes do protocolo; dentro de 30 dias em qualquer contagem.',
-      evidencias,
-      camposUsados: usados,
-      confianca: 'media',
-      limitacoes: ['O fuso e o dia exato do protocolo vêm do registro do sistema; o prazo aplicável é conferência humana.'],
-    }
+    registros.push(
+      dias < 0
+        ? `emissão em ${normalizada.valor}, posterior ao dia do protocolo`
+        : `emissão em ${normalizada.valor}; intervalo aparente de ${dias} dia(s) corrido(s) até o dia do protocolo`,
+    )
   }
   return {
     resultado: 'achado',
-    // O prazo é condição que só o servidor determina: o achado é sempre "condição indeterminada".
     tipo: 'condicao-indeterminada',
-    rascunho: `Conferir o prazo do título: ${alertas.join('; ')}. O sistema não decide a contagem do prazo nem afirma vencimento.`,
+    rascunho: `Datas para conferência do prazo do título (protocolo registrado em ${ctx.entrada.protocoladoEm}, dia ${protocolo} no fuso de Campo Grande): ${registros.join('; ')}. O sistema não aplica critério de contagem, não declara validade nem vencimento; a avaliação temporal é do servidor.`,
     evidencias,
     camposUsados: usados,
     confianca: ambigua ? 'baixa' : 'media',
-    limitacoes: ['Contagem (corrida ou útil), fuso e marco inicial do prazo são decisão humana.'],
+    limitacoes: ['A forma de contagem do prazo de 30 dias (corrida ou útil, marco inicial, fuso) não é homologada: pergunta 5 do dossiê.', 'O intervalo em dias corridos é só apresentação, não critério.'],
   }
 }
 
