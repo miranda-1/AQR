@@ -235,3 +235,191 @@ Só entram valores encontrados com confiança e sem ambiguidade; o resto fica in
 | Responsável técnico na DRT × ART/RRT | 58 | 0 | 0 | 6 | — |
 | Assunto do requerimento × DRT | 57 | 2 | 0 | 5 | DSD-08 ("DESDOBRO" × "RETIFICAÇÃO DE REGISTRO IMOBILIÁRIO"), VAL-15 ("Remembramento" × "Desdobro") |
 | Data de revisão da prancha × memorial | 56 | 2 | 0 | 6 | DSD-19 ("01/11/2026" × "03/11/2026"), VAL-10 ("12/05/2026" × "13/05/2026") |
+
+## E6: motor de regras
+
+### Conjunto de desenvolvimento (821 expectativas de regra)
+
+- Resultado aceito pelo gabarito: **821 de 821** (100,0%).
+- Falsos alertas: **0**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 36 corretas de 36.
+
+| Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| AQR-GCA-001 | 45 | 45 | 0 | 0 | 0 | 0 | 0 | 45 / 0 / 0 / 0 / 0 |
+| AQR-GCA-002 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 46 / 1 / 1 / 0 / 0 |
+| AQR-GCA-003 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 45 / 2 / 1 / 0 / 0 |
+| AQR-GCA-006 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 45 / 1 / 2 / 0 / 0 |
+| AQR-GCA-008 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 43 / 1 / 4 / 0 / 0 |
+| AQR-GCA-009 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 0 / 2 / 1 / 0 / 0 |
+| AQR-GCA-010 | 46 | 46 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 1 / 0 / 43 |
+| AQR-GCA-011 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 45 / 1 / 2 / 0 / 0 |
+| AQR-GCA-012 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 44 / 3 / 1 / 0 / 0 |
+| AQR-GCA-013 | 48 | 48 | 0 | 0 | 0 | 0 | 0 | 42 / 2 / 4 / 0 / 0 |
+| AQR-GCA-016 | 41 | 41 | 0 | 0 | 0 | 0 | 0 | 39 / 2 / 0 / 0 / 0 |
+| AQR-GCA-018 | 46 | 46 | 0 | 0 | 0 | 0 | 0 | 44 / 1 / 1 / 0 / 0 |
+| AQR-GCA-019 | 38 | 38 | 0 | 0 | 0 | 0 | 0 | 36 / 2 / 0 / 0 / 0 |
+| AQR-GCA-020 | 34 | 34 | 0 | 0 | 0 | 0 | 0 | 32 / 2 / 0 / 0 / 0 |
+| AQR-GCA-021 | 44 | 44 | 0 | 0 | 0 | 0 | 0 | 41 / 1 / 2 / 0 / 0 |
+| AQR-GCA-022 | 47 | 47 | 0 | 0 | 0 | 0 | 0 | 45 / 1 / 1 / 0 / 0 |
+| AQR-GCA-023 | 47 | 47 | 0 | 0 | 0 | 0 | 0 | 45 / 1 / 1 / 0 / 0 |
+| AQR-GCA-028 | 47 | 47 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 44 / 1 |
+| AQR-GCA-043 | 47 | 47 | 0 | 0 | 0 | 0 | 0 | 36 / 11 / 0 / 0 / 0 |
+
+Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 0.
+
+### Conjunto de validação (144 expectativas de regra)
+
+- Resultado aceito pelo gabarito: **143 de 144** (99,3%).
+- Falsos alertas: **1**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 7 corretas de 7.
+
+| Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| AQR-GCA-001 | 2 | 1 | 1 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 0 / 0 |
+| AQR-GCA-002 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-003 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 0 / 0 / 0 |
+| AQR-GCA-006 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
+| AQR-GCA-008 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-009 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 0 / 0 / 0 |
+| AQR-GCA-010 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 0 / 1 |
+| AQR-GCA-011 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 0 / 0 / 0 |
+| AQR-GCA-012 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
+| AQR-GCA-013 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
+| AQR-GCA-016 | 2 | 2 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 1 / 0 / 0 |
+| AQR-GCA-018 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 1 / 0 / 0 |
+| AQR-GCA-019 | 2 | 2 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 0 / 0 |
+| AQR-GCA-020 | 2 | 2 | 0 | 0 | 0 | 0 | 0 | 1 / 1 / 0 / 0 / 0 |
+| AQR-GCA-021 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 2 / 1 / 0 / 0 / 0 |
+| AQR-GCA-022 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 3 / 0 / 0 / 0 / 0 |
+| AQR-GCA-023 | 2 | 2 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 1 / 0 / 0 |
+| AQR-GCA-028 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 / 15 / 0 |
+| AQR-GCA-043 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 0 / 0 / 0 |
+
+Origem dos erros: classificacao 0, ocr 0, extracao 1, condicao 0, regra 0.
+
+Resultados diferentes do gabarito:
+
+- VAL-13 · AQR-GCA-001: esperado sem-achado; obtido **achado** (condicao-indeterminada) — falso-alerta, origem extracao. Gabarito: O assunto está no requerimento, com outro rótulo.
+
+### Estados de todas as avaliações (com e sem expectativa no gabarito)
+
+| Regra | sem-achado | achado | não avaliável | condição pendente | não aplicável |
+|---|---:|---:|---:|---:|---:|
+| AQR-GCA-001 | 61 | 1 | 2 | 0 | 0 |
+| AQR-GCA-002 | 62 | 1 | 1 | 0 | 0 |
+| AQR-GCA-003 | 60 | 3 | 1 | 0 | 0 |
+| AQR-GCA-006 | 61 | 1 | 2 | 0 | 0 |
+| AQR-GCA-008 | 58 | 1 | 5 | 0 | 0 |
+| AQR-GCA-009 | 56 | 2 | 6 | 0 | 0 |
+| AQR-GCA-010 | 2 | 2 | 2 | 0 | 58 |
+| AQR-GCA-011 | 60 | 2 | 2 | 0 | 0 |
+| AQR-GCA-012 | 60 | 3 | 1 | 0 | 0 |
+| AQR-GCA-013 | 58 | 2 | 4 | 0 | 0 |
+| AQR-GCA-016 | 59 | 2 | 3 | 0 | 0 |
+| AQR-GCA-018 | 59 | 1 | 4 | 0 | 0 |
+| AQR-GCA-019 | 60 | 3 | 1 | 0 | 0 |
+| AQR-GCA-020 | 60 | 3 | 1 | 0 | 0 |
+| AQR-GCA-021 | 56 | 2 | 6 | 0 | 0 |
+| AQR-GCA-022 | 61 | 1 | 2 | 0 | 0 |
+| AQR-GCA-023 | 59 | 1 | 4 | 0 | 0 |
+| AQR-GCA-028 | 1 | 1 | 0 | 61 | 1 |
+| AQR-GCA-043 | 53 | 11 | 0 | 0 | 0 |
+
+Regras não executadas em todos os pacotes: HYP-GCA-045 (Hipótese desativada: depende de ato ou instrução escrita da GCA.); HYP-GCA-047 (Hipótese desativada: depende de ato ou instrução escrita da GCA.).
+Garantias aplicadas como invariantes: AQR-GCA-040, AQR-GCA-041.
+
+## Exemplos de triagem
+
+### DSD-16 · AQR-GCA-018 (Campos da ART RRT coerentes): achado / divergencia
+
+*ART com lote diferente do requerimento*
+
+- Versão da regra: `AQR-GCA-018@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: alta.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Campos da ART/RRT: lote difere entre requerimento e matrícula/transcrição × ART/RRT. Os valores e as páginas estão no quadro comparativo. O sistema não indica qual documento está correto.
+- Evidência: anexo-1, hash 7b0b5cbd8e56…, página 1, região x=0.140 y=0.193, trecho "Lote: F7 Quadra: 12" (camada-de-texto).
+- Evidência: anexo-3, hash 2596a64ad52e…, página 1, região x=0.193 y=0.144, trecho "Imóvel: lote F7 da quadra 12 do Jardim Ficticio, com área de 450,00 m²." (camada-de-texto).
+- Evidência: anexo-5, hash 5a087240d7f8…, página 1, região x=0.142 y=0.193, trecho "Lote: C3 Quadra: 12 Bairro: Bairro Exemplo" (camada-de-texto).
+- Valores de lote: "F7" (requerimento, anexo-1) × "F7" (matricula-transcricao, anexo-3) × "C3" (art-rrt-similar, anexo-5).
+- Fundamento: S04 (art.3 §3); S06 (p.1 II); S07 (p.1 II); S08 (p.1 II).
+- Limitação: Não extraídos da ART/RRT: parcelamento.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-08 · AQR-GCA-003 (DRT 01 correta): achado / nao-localizado
+
+*DRT 03 (retificação) no lugar da DRT 01*
+
+- Versão da regra: `AQR-GCA-003@1.0-review+fd9b3e3b9db5`; severidade do alerta: major; confiança: media.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Possível pendência: DRT 01 não localizado nos anexos recebidos. Há DRT 03, que não substitui a DRT 01 segundo o catálogo. Servidor confere antes de qualquer comunicação.
+- Evidência: anexo-2, hash 96abd32dd9fc…, página 1, região x=0.094 y=0.080, trecho "DECLARAÇÃO DE RESPONSABILIDADE TÉCNICA - DRT 03" (camada-de-texto).
+- Anexos procurados (pacote completo): anexo-1=requerimento, anexo-2=drt-03, anexo-3=matricula-transcricao, anexo-4=inscricao-imobiliaria, anexo-5=art-rrt-similar, anexo-6=prancha, anexo-7=cad, anexo-8=memorial.
+- Fundamento: S07 (p.3 item II).
+- Limitação: A busca cobre só os anexos recebidos, classificados pelo conteúdo; um documento com cabeçalho fora do padrão pode não ter sido reconhecido.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-46 · AQR-GCA-002 (Requerimento presente): nao-avaliavel
+
+*Só um desenho DWG, sem confirmação de que o pacote está completo*
+
+- Versão da regra: `AQR-GCA-002@1.0-review+fd9b3e3b9db5`; severidade do alerta: major; confiança: baixa.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Requerimento: não localizado entre os anexos recebidos, mas o pacote não foi confirmado como completo. Nada a apontar sem conferência do protocolo.
+- Motivo: Integridade do pacote não confirmada: o documento pode estar entre os anexos não recebidos.
+- Fundamento: S06 (p.2 item I); S07 (p.3 item I); S08 (p.3 item I).
+- Limitação: Ausência nos anexos recebidos não comprova ausência no processo.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-42 · AQR-GCA-028 (GDU desdobro maior que dois hectares): condicao-pendente
+
+*Área de 2,01 ha (20.100 m²), sem GDU, sem confirmação*
+
+- Versão da regra: `AQR-GCA-028@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: baixa.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Regra aguardando confirmação de servidor (area-situacao-acima-2ha). Pré-condição do catálogo: "Área da situação pertinente >20.000 m² confirmada por servidor". Informação: área acima de 20.000 m² extraída em anexo-3, anexo-6, anexo-8. Isso não ativa a regra; o enquadramento depende de confirmação do servidor.
+- Fundamento: S07 (p.4 IX); L03 (art.22 I).
+- Limitação: Sem a confirmação, a regra não é executada.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-43 · AQR-GCA-028 (GDU desdobro maior que dois hectares): achado / nao-localizado
+
+*Área de 2,01 ha, sem GDU, servidor confirmou área acima de 2 ha*
+
+- Versão da regra: `AQR-GCA-028@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: media.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Possível pendência: GDU/GDR em PDF não localizado nos anexos recebidos. Condição de área confirmada por servidor; consulta GCA/PLANURB. Servidor confere antes de qualquer comunicação.
+- Anexos procurados (pacote completo): anexo-1=requerimento, anexo-2=drt-01, anexo-3=matricula-transcricao, anexo-4=inscricao-imobiliaria, anexo-5=art-rrt-similar, anexo-6=prancha, anexo-7=cad, anexo-8=memorial.
+- Fundamento: S07 (p.4 IX); L03 (art.22 I).
+- Limitação: A busca cobre só os anexos recebidos, classificados pelo conteúdo; um documento com cabeçalho fora do padrão pode não ter sido reconhecido.
+- Limitação: Divergência registrada no catálogo com a LC 74, art. 22 (gatilhos da GDU); o enquadramento é do servidor.
+- Limitação: Validade e conteúdo da GDU não são verificados.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-26 · AQR-GCA-009 (Data do título registral para revisão): achado / condicao-indeterminada
+
+*Matrícula com data de emissão ambígua (03/04/26)*
+
+- Versão da regra: `AQR-GCA-009@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: baixa.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Conferir o prazo do título: data de emissão "03/04/26" com leitura ambígua (ano com dois dígitos: o século não está no documento); protocolo em 2026-11-05. O sistema não decide a contagem do prazo nem afirma vencimento.
+- Evidência: anexo-3, hash ed45cf57042c…, página 1, região x=0.263 y=0.193, trecho "Certidão emitida em 03/04/26." (camada-de-texto).
+- Fundamento: S06 (p.3 item V); S07 (p.3 item IV); S08 (p.4 item IV).
+- Limitação: Contagem (corrida ou útil), fuso e marco inicial do prazo são decisão humana.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### DSD-23 · AQR-GCA-016 (Assinatura do RT nas peças): achado / condicao-indeterminada
+
+*Campo de assinatura do RT vazio na prancha*
+
+- Versão da regra: `AQR-GCA-016@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: media.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Área de assinatura do responsável técnico aparentemente vazia em prancha (anexo-6). Verificar se há assinatura eletrônica ou física.
+- Evidência: anexo-6, hash c33e478b5441…, página 1, região x=0.047 y=0.822, trecho "Assinatura do responsável técnico" (camada-de-texto).
+- Fundamento: S04 (art.3 §4); S06 (p.1 III); S07 (p.1 III); S08 (p.1 III).
+- Limitação: Só a presença de traço na área de assinatura é vista; autoria, assinatura eletrônica e validade não são verificadas.
+- Revisão humana: Servidor GCA valida achado e comunicação.
+
+### VAL-13 · AQR-GCA-001 (Assunto reconhecível): achado / condicao-indeterminada
+
+*Assunto com outro rótulo ("Objeto do pedido")*
+
+- Versão da regra: `AQR-GCA-001@1.0-review+fd9b3e3b9db5`; severidade do alerta: review; confiança: media.
+- Rascunho: Verificação técnica experimental, para revisão de servidor (não enviar ao requerente sem revisão). Assunto não localizado no texto lido do requerimento: modalidade indeterminada, para classificação pelo servidor. O sistema não infere o assunto do nome do arquivo.
+- Evidência: anexo-1, hash aea58c3a0f71…, página 1, região x=0.094 y=0.080, trecho "Requerimento" (camada-de-texto).
+- Fundamento: S06 (p.1); S07 (p.1); S08 (p.1).
+- Limitação: O assunto pode estar sob outro rótulo que o sistema não reconhece.
+- Revisão humana: Servidor GCA valida achado e comunicação.

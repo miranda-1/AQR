@@ -35,7 +35,7 @@ export interface CasoAvaliacao {
   arquivos: { nome: string; bytes: Uint8Array }[]
 }
 
-function deDesenvolvimento(gabarito: GabaritoPacote, arquivos: CasoAvaliacao['arquivos']): CasoAvaliacao {
+export function casoDeDesenvolvimento(gabarito: GabaritoPacote, arquivos: CasoAvaliacao['arquivos']): CasoAvaliacao {
   return {
     id: gabarito.id,
     conjunto: 'desenvolvimento',
@@ -71,7 +71,7 @@ function deValidacao(gabarito: GabaritoValidacao, arquivos: CasoAvaliacao['arqui
 
 export async function casosDeAvaliacao(conjuntos: readonly Conjunto[] = ['desenvolvimento', 'validacao']): Promise<CasoAvaliacao[]> {
   const casos: CasoAvaliacao[] = []
-  if (conjuntos.includes('desenvolvimento')) for (const pacote of await gerarCorpus()) casos.push(deDesenvolvimento(pacote.gabarito, pacote.arquivos))
+  if (conjuntos.includes('desenvolvimento')) for (const pacote of await gerarCorpus()) casos.push(casoDeDesenvolvimento(pacote.gabarito, pacote.arquivos))
   if (conjuntos.includes('validacao')) for (const pacote of await gerarValidacao()) casos.push(deValidacao(pacote.gabarito, pacote.arquivos))
   return casos
 }

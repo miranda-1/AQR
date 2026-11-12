@@ -76,6 +76,38 @@ describe('avaliação integrada da triagem', () => {
     })
   })
 
+  describe('E6: motor de regras', () => {
+    it('desenvolvimento: todo resultado é um dos aceitos pelo gabarito', () => {
+      expect(avaliacao.regras.filter((item) => item.conjunto === 'desenvolvimento' && !item.certo)).toEqual([])
+    })
+
+    it('validação: o único erro é o falso alerta da 001 por rótulo de assunto fora do vocabulário (VAL-13)', () => {
+      const erros = avaliacao.regras.filter((item) => item.conjunto === 'validacao' && !item.certo)
+      expect(erros.map((item) => `${item.caso}:${item.regraId}:${item.erro}:${item.origem}`)).toEqual(['VAL-13:AQR-GCA-001:falso-alerta:extracao'])
+    })
+
+    it('toda evidência de achado aponta para anexo e página do pacote e ancora os valores conflitantes', () => {
+      expect(avaliacao.regras.filter((item) => item.obtido === 'achado' && item.evidencia !== 'correta')).toEqual([])
+    })
+
+    it('nenhum "não localizado" fora de pacote completo; 028 nunca acha sem condição confirmada', () => {
+      for (const { caso, triagem } of avaliacao.executados) {
+        const avaliacoes = triagem?.avaliacoes ?? []
+        if (caso.entrada.integridadeDoPacote !== 'completo') expect(avaliacoes.filter((item) => item.contrato.tipo === 'nao-localizado')).toEqual([])
+        const gdu = avaliacoes.find((item) => item.contrato.regraId === 'AQR-GCA-028')
+        if (!caso.entrada.condicoesConfirmadas.some((condicao) => condicao.id === 'area-situacao-acima-2ha')) expect(gdu?.contrato.resultado).toBe('condicao-pendente')
+      }
+    })
+
+    it('todo resultado de pacote é verificação experimental, sem decisão e sem comunicação', () => {
+      for (const { triagem } of avaliacao.executados) {
+        expect(triagem?.natureza).toBe('verificacao-tecnica-experimental')
+        expect(triagem?.decisaoAdministrativa).toBeNull()
+        expect(triagem?.comunicacaoAoRequerente).toBe('bloqueada')
+      }
+    })
+  })
+
   it('gera o relatório com métricas por classe e as divergências', () => {
     const texto = relatorio(avaliacao)
     expect(texto).toContain('## E4: classificação documental')
@@ -83,5 +115,7 @@ describe('avaliação integrada da triagem', () => {
     expect(texto).toContain('DSD-28/matricula.pdf')
     expect(texto).toContain('## E5: extração e normalização de campos')
     expect(texto).toContain('### Comparação interdocumental')
+    expect(texto).toContain('## E6: motor de regras')
+    expect(texto).toContain('## Exemplos de triagem')
   })
 })

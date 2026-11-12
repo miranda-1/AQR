@@ -1,10 +1,14 @@
 import { defaultComparisonLimits } from '../../comparison/limits.ts'
 import { defaultImageLimits } from '../../documents/limits.ts'
 import { createOcrEngine, type OcrEngine } from '../../documents/ocr/ocr-engine.ts'
+import { fileURLToPath } from 'node:url'
+import { loadCatalog } from '../catalog/catalog.ts'
+import type { ResultadoTriagem } from '../engine/engine.ts'
 import { triarAnexo, type AnexoTriado, type DependenciasTriagem } from '../pipeline.ts'
 import { casosDeAvaliacao, type CasoAvaliacao, type Conjunto } from './casos.ts'
 import { avaliarClassificacao, type ResultadoClassificacao } from './classificacao.ts'
 import { avaliarExtracao, type CampoExtra, type ResultadoCampo } from './extracao.ts'
+import { avaliarRegras, triarCaso, type ResultadoRegraAvaliada } from './regras.ts'
 
 /**
  * Roda o núcleo da triagem sobre os conjuntos sintéticos e compara com os gabaritos. Os gabaritos
@@ -14,6 +18,7 @@ import { avaliarExtracao, type CampoExtra, type ResultadoCampo } from './extraca
 export interface CasoExecutado {
   caso: CasoAvaliacao
   anexos: AnexoTriado[]
+  triagem?: ResultadoTriagem
 }
 
 export interface Avaliacao {
@@ -21,9 +26,12 @@ export interface Avaliacao {
   classificacao: ResultadoClassificacao[]
   extracao: ResultadoCampo[]
   extras: CampoExtra[]
+  regras: ResultadoRegraAvaliada[]
   ocrDisponivel: boolean
   duracaoMs: number
 }
+
+export const CATALOGO_DIR = fileURLToPath(new URL('../../../docs/triagem/catalogo/', import.meta.url))
 
 export const LIMITES_AVALIACAO: DependenciasTriagem['limites'] = { reading: defaultComparisonLimits, image: defaultImageLimits }
 
@@ -60,10 +68,18 @@ export async function avaliar(opcoes: { conjuntos?: Conjunto[]; ocr?: OcrEngine 
     )
     const classificacao = pares.map(({ caso, esperado, triado }) => avaliarClassificacao(caso, esperado, triado))
     const extracoes = pares.map(({ caso, esperado, triado }) => avaliarExtracao(caso, esperado, triado))
+    const extracao = extracoes.flatMap((item) => item.campos)
+    const catalogo = await loadCatalog(CATALOGO_DIR)
+    const regras: ResultadoRegraAvaliada[] = []
+    for (const executado of executados) {
+      executado.triagem = triarCaso(executado.caso, executado.anexos, catalogo)
+      regras.push(...avaliarRegras(executado.caso, executado.anexos, executado.triagem, classificacao, extracao))
+    }
     return {
       executados,
       classificacao,
-      extracao: extracoes.flatMap((item) => item.campos),
+      extracao,
+      regras,
       extras: extracoes.flatMap((item) => item.extras),
       ocrDisponivel: ocr !== undefined,
       duracaoMs: Date.now() - inicio,
