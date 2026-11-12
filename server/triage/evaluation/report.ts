@@ -1,4 +1,5 @@
 import { secaoClassificacao } from './classificacao.ts'
+import { secaoComparacoes, secaoExtracao } from './extracao.ts'
 import type { Avaliacao } from './run.ts'
 
 /** Relatório em Markdown da avaliação da triagem (gerado; não editar à mão). */
@@ -16,6 +17,8 @@ export function relatorio(avaliacao: Avaliacao): string {
     `- OCR local: ${avaliacao.ocrDisponivel ? 'disponível' : '**indisponível** (páginas digitalizadas ficam sem leitura)'}.`,
     '',
     ...secaoClassificacao(avaliacao.classificacao),
+    ...secaoExtracao(avaliacao.extracao, avaliacao.extras),
+    ...secaoComparacoes(avaliacao.executados),
   ]
   return `${linhas.join('\n').trimEnd()}\n`
 }

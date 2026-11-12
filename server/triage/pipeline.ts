@@ -1,6 +1,7 @@
 import { anexoSchema, type Anexo } from '../../shared/contracts/triage.ts'
 import type { OcrEngine } from '../documents/ocr/ocr-engine.ts'
 import { classificarAnexo, type ClassificacaoDetalhada } from './classification/classify.ts'
+import { extrairCampos, type CampoDetalhado } from './extraction/extract.ts'
 import { lerAnexo, type AnexoLido, type LeituraLimites } from './reading/read.ts'
 
 /**
@@ -21,6 +22,8 @@ export interface AnexoTriado {
   classificacao: ClassificacaoDetalhada
   /** O anexo no formato do contrato (`shared/contracts/triage.ts`). */
   contrato: Anexo
+  /** Campos extraídos (E5), cada um com evidência. */
+  campos: CampoDetalhado[]
 }
 
 const PADRAO_OCR_MIN = 45
@@ -51,7 +54,7 @@ export function anexoDoContrato(lido: AnexoLido, classificacao: ClassificacaoDet
   })
 }
 
-/** Lê e classifica um anexo. O id é dado por quem chama (nunca derivado do conteúdo do nome). */
+/** Lê, classifica e extrai os campos de um anexo. O id é dado por quem chama (nunca derivado do conteúdo do nome). */
 export async function triarAnexo(id: string, nome: string, bytes: Uint8Array, deps: DependenciasTriagem): Promise<AnexoTriado> {
   const lido = await lerAnexo(id, nome, bytes, {
     limites: deps.limites,
@@ -59,7 +62,7 @@ export async function triarAnexo(id: string, nome: string, bytes: Uint8Array, de
     ocrMinConfidence: deps.ocrMinConfidence ?? PADRAO_OCR_MIN,
   })
   const classificacao = classificarAnexo(lido)
-  return { lido, classificacao, contrato: anexoDoContrato(lido, classificacao) }
+  return { lido, classificacao, contrato: anexoDoContrato(lido, classificacao), campos: extrairCampos(lido, classificacao) }
 }
 
 export async function triarAnexos(arquivos: readonly { nome: string; bytes: Uint8Array }[], deps: DependenciasTriagem): Promise<AnexoTriado[]> {

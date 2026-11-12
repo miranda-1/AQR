@@ -4,6 +4,7 @@ import { createOcrEngine, type OcrEngine } from '../../documents/ocr/ocr-engine.
 import { triarAnexo, type AnexoTriado, type DependenciasTriagem } from '../pipeline.ts'
 import { casosDeAvaliacao, type CasoAvaliacao, type Conjunto } from './casos.ts'
 import { avaliarClassificacao, type ResultadoClassificacao } from './classificacao.ts'
+import { avaliarExtracao, type CampoExtra, type ResultadoCampo } from './extracao.ts'
 
 /**
  * Roda o núcleo da triagem sobre os conjuntos sintéticos e compara com os gabaritos. Os gabaritos
@@ -18,6 +19,8 @@ export interface CasoExecutado {
 export interface Avaliacao {
   executados: CasoExecutado[]
   classificacao: ResultadoClassificacao[]
+  extracao: ResultadoCampo[]
+  extras: CampoExtra[]
   ocrDisponivel: boolean
   duracaoMs: number
 }
@@ -48,14 +51,23 @@ export async function avaliar(opcoes: { conjuntos?: Conjunto[]; ocr?: OcrEngine 
     const deps: DependenciasTriagem = { limites: LIMITES_AVALIACAO, ...(ocr ? { ocr } : {}) }
     const executados: CasoExecutado[] = []
     for (const caso of await casosDeAvaliacao(opcoes.conjuntos)) executados.push(await executarCaso(caso, deps))
-    const classificacao = executados.flatMap(({ caso, anexos }) =>
+    const pares = executados.flatMap(({ caso, anexos }) =>
       caso.anexos.map((esperado, indice) => {
         const triado = anexos[indice]
         if (!triado) throw new Error('anexo sem resultado')
-        return avaliarClassificacao(caso, esperado, triado)
+        return { caso, esperado, triado }
       }),
     )
-    return { executados, classificacao, ocrDisponivel: ocr !== undefined, duracaoMs: Date.now() - inicio }
+    const classificacao = pares.map(({ caso, esperado, triado }) => avaliarClassificacao(caso, esperado, triado))
+    const extracoes = pares.map(({ caso, esperado, triado }) => avaliarExtracao(caso, esperado, triado))
+    return {
+      executados,
+      classificacao,
+      extracao: extracoes.flatMap((item) => item.campos),
+      extras: extracoes.flatMap((item) => item.extras),
+      ocrDisponivel: ocr !== undefined,
+      duracaoMs: Date.now() - inicio,
+    }
   } finally {
     if (criado) await ocr?.close()
   }

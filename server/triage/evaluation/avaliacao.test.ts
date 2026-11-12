@@ -45,10 +45,43 @@ describe('avaliação integrada da triagem', () => {
     })
   })
 
+  describe('E5: extração', () => {
+    it('nenhum valor diferente do impresso passa por encontrado; normalização e evidência sempre certas', () => {
+      expect(avaliacao.extracao.filter((item) => item.erro === 'valor-diferente')).toEqual([])
+      expect(avaliacao.extracao.filter((item) => item.normalizacao === 'errada')).toEqual([])
+      expect(avaliacao.extracao.filter((item) => item.evidencia === 'nao-ancorada')).toEqual([])
+    })
+
+    it('todo campo com valor tem evidência com o hash do anexo', () => {
+      for (const { anexos } of avaliacao.executados) {
+        for (const anexo of anexos) {
+          for (const { contrato } of anexo.campos) {
+            if (contrato.valorBruto === undefined && contrato.estado !== 'varios-valores') continue
+            expect(contrato.evidencias.length).toBeGreaterThan(0)
+            expect(contrato.evidencias.every((evidencia) => evidencia.sha256 === anexo.lido.inspecao.sha256)).toBe(true)
+          }
+        }
+      }
+    })
+
+    it('desenvolvimento: os erros restantes vêm da classificação ou do OCR, não dos padrões', () => {
+      const erros = avaliacao.extracao.filter((item) => item.conjunto === 'desenvolvimento' && !item.certo)
+      expect(erros.filter((item) => item.origem === 'extracao')).toEqual([])
+    })
+
+    it('validação: os erros de padrão restantes são os rótulos fora do vocabulário, deixados como limitação', () => {
+      const erros = avaliacao.extracao.filter((item) => item.conjunto === 'validacao' && item.origem === 'extracao')
+      const tipos = new Set(erros.map((item) => `${item.anexo}:${item.campo}`))
+      expect([...tipos].sort()).toEqual(['certidao.pdf:parcelamento', 'planta.pdf:area', 'req.pdf:assunto'])
+    })
+  })
+
   it('gera o relatório com métricas por classe e as divergências', () => {
     const texto = relatorio(avaliacao)
     expect(texto).toContain('## E4: classificação documental')
     expect(texto).toContain('Matriz de confusão')
     expect(texto).toContain('DSD-28/matricula.pdf')
+    expect(texto).toContain('## E5: extração e normalização de campos')
+    expect(texto).toContain('### Comparação interdocumental')
   })
 })

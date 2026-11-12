@@ -34,8 +34,10 @@ export function dobrar(texto: string): string {
     .trim()
 }
 
+/** Monta a linha. O texto fica em NFC, para que as posições de caractere valham em toda a triagem. */
 export function linhaDe(pagina: number, palavras: PalavraLida[]): LinhaLida {
-  return { pagina, palavras, texto: palavras.map((palavra) => palavra.texto).join(' ') }
+  const normalizadas = palavras.map((palavra) => ({ ...palavra, texto: palavra.texto.normalize('NFC') }))
+  return { pagina, palavras: normalizadas, texto: normalizadas.map((palavra) => palavra.texto).join(' ') }
 }
 
 /** Linha sem posição (DOCX, DXF): uma "palavra" por termo separado por espaço. */
