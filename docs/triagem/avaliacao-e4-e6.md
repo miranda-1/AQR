@@ -4,12 +4,29 @@
 > os resultados medem verificações técnicas experimentais, não conformidade nem decisão administrativa.
 
 - Conjunto de desenvolvimento: 48 pacotes, 372 anexos (DSD-01 a 48, usados durante a implementação).
-- Conjunto de validação: 16 pacotes, 128 anexos (VAL-01 a 16, escritos antes da extração e do motor, com outros modelos de texto).
+- Conjunto de validação: 16 pacotes, 128 anexos (VAL-01 a 16, escritos antes da extração e do motor, mas **usados para corrigir defeitos**: não são mais medida independente).
+- Conjunto independente: 16 pacotes, 126 anexos (IND-01 a 16, gabarito congelado em `docs/triagem/casos/independente-gabarito.json` antes da primeira execução; **é a medida de generalização**).
 - OCR local: disponível.
+
+## Resumo por conjunto
+
+| Conjunto | Anexos | Classe igual ao gabarito | Classe errada proposta | Abstenções de classe | Campos impressos | Campos certos | Valor errado aceito | Normalização errada |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| desenvolvimento (DSD, usado na implementação) | 372 | 370 | 0 | 2 | 2583 | 2565 | 0 | 0 |
+| validação usada nos ajustes (VAL) | 128 | 127 | 0 | 1 | 740 | 705 | 0 | 0 |
+| independente congelado (IND) | 126 | 124 | 0 | 2 | 749 | 634 | 0 | 0 |
+
+Regras:
+
+| Conjunto | Expectativas | Aceitas | Falsos alertas | Achados não detectados | Abstenções indevidas | Tipo de achado diferente | Outro resultado | Não avaliáveis (total) | Abstenções aceitas | Condição pendente |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| desenvolvimento (DSD, usado na implementação) | 821 | 821 | 0 | 0 | 0 | 0 | 0 | 22 | 22 | 44 |
+| validação usada nos ajustes (VAL) | 144 | 143 | 1 | 0 | 0 | 0 | 0 | 3 | 3 | 15 |
+| independente congelado (IND) | 288 | 270 | 1 | 1 | 16 | 0 | 0 | 23 | 6 | 15 |
 
 ## E4: classificação documental
 
-### Conjunto de desenvolvimento (372 anexos)
+### Conjunto de desenvolvimento (DSD, usado na implementação) (372 anexos)
 
 - Classe igual ao gabarito: **370 de 372** (99,5%).
 - Anexos com documento: 364; abstenções (indeterminada): **2** (0,5%); classe errada proposta: **0**.
@@ -53,7 +70,7 @@ Divergências do gabarito:
 - DSD-28/matricula.pdf: esperado **matricula-transcricao**, obtido **indeterminada** (origem: leitura-ocr; leitura parcial (OCR 32)). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
 - DSD-29/matricula.pdf: esperado **matricula-transcricao**, obtido **indeterminada** (origem: leitura-ocr; leitura parcial (OCR 17)). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
 
-### Conjunto de validação (128 anexos)
+### Conjunto de validação usada nos ajustes (VAL) (128 anexos)
 
 - Classe igual ao gabarito: **127 de 128** (99,2%).
 - Anexos com documento: 128; abstenções (indeterminada): **1** (0,8%); classe errada proposta: **0**.
@@ -101,9 +118,57 @@ Divergências do gabarito:
 
 - VAL-05/rrt.pdf: esperado **outro**, obtido **indeterminada** (origem: classificacao; leitura legivel). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
 
+### Conjunto de independente congelado (IND) (126 anexos)
+
+- Classe igual ao gabarito: **124 de 126** (98,4%).
+- Anexos com documento: 126; abstenções (indeterminada): **2** (1,6%); classe errada proposta: **0**.
+- Arquivos sem documento legível: 0; classificados como indeterminada: 0.
+
+| Classe | Esperados | Propostos | Acertos | Precisão | Cobertura | Abstenções |
+|---|---:|---:|---:|---:|---:|---:|
+| art-rrt-similar | 15 | 15 | 15 | 100,0% | 100,0% | 0 |
+| cad | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+| drt-01 | 14 | 14 | 14 | 100,0% | 100,0% | 0 |
+| drt-03 | 1 | 1 | 1 | 100,0% | 100,0% | 0 |
+| gdu-gdr | 1 | 1 | 1 | 100,0% | 100,0% | 0 |
+| inscricao-imobiliaria | 15 | 15 | 15 | 100,0% | 100,0% | 0 |
+| matricula-transcricao | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+| memorial | 15 | 14 | 14 | 100,0% | 93,3% | 1 |
+| prancha | 16 | 15 | 15 | 100,0% | 93,8% | 1 |
+| representacao | 1 | 1 | 1 | 100,0% | 100,0% | 0 |
+| requerimento | 16 | 16 | 16 | 100,0% | 100,0% | 0 |
+
+<details><summary>Matriz de confusão</summary>
+
+| esperado ↓ / obtido → | art-rrt-similar | cad | drt-01 | drt-03 | gdu-gdr | indeterminada | inscricao-imobiliaria | matricula-transcricao | memorial | prancha | representacao | requerimento |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| art-rrt-similar | **15** | · | · | · | · | · | · | · | · | · | · | · |
+| cad | · | **16** | · | · | · | · | · | · | · | · | · | · |
+| drt-01 | · | · | **14** | · | · | · | · | · | · | · | · | · |
+| drt-03 | · | · | · | **1** | · | · | · | · | · | · | · | · |
+| gdu-gdr | · | · | · | · | **1** | · | · | · | · | · | · | · |
+| inscricao-imobiliaria | · | · | · | · | · | · | **15** | · | · | · | · | · |
+| matricula-transcricao | · | · | · | · | · | · | · | **16** | · | · | · | · |
+| memorial | · | · | · | · | · | 1 | · | · | **14** | · | · | · |
+| prancha | · | · | · | · | · | 1 | · | · | · | **15** | · | · |
+| representacao | · | · | · | · | · | · | · | · | · | · | **1** | · |
+| requerimento | · | · | · | · | · | · | · | · | · | · | · | **16** |
+
+</details>
+
+Documentos compostos (mais de um documento no mesmo arquivo):
+
+- IND-04/03-documentos-do-imovel.pdf: esperado matricula-transcricao + inscricao-imobiliaria; notado (matricula-transcricao, inscricao-imobiliaria).
+- IND-05/06-planta-e-memorial.pdf: esperado prancha + memorial; notado (prancha, memorial).
+
+Divergências do gabarito:
+
+- IND-14/06-planta.pdf: esperado **prancha**, obtido **indeterminada** (origem: classificacao; leitura legivel). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
+- IND-15/08-memorial.pdf: esperado **memorial**, obtido **indeterminada** (origem: leitura-ocr; leitura parcial (OCR 17)). Nenhum título ou campo característico de classe documental foi encontrado no texto lido.
+
 ## E5: extração e normalização de campos
 
-### Conjunto de desenvolvimento (2583 campos impressos no gabarito)
+### Conjunto de desenvolvimento (DSD, usado na implementação) (2583 campos impressos no gabarito)
 
 - Extraídos como no gabarito: **2565 de 2583** (99,3%).
 - Valor diferente do impresso (erro que pareceria acerto): **0**.
@@ -155,7 +220,7 @@ Origem dos erros: classificação 15, OCR 3, extração 0.
 
 Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): rt-registro 135.
 
-### Conjunto de validação (740 campos impressos no gabarito)
+### Conjunto de validação usada nos ajustes (VAL) (740 campos impressos no gabarito)
 
 - Extraídos como no gabarito: **705 de 740** (95,3%).
 - Valor diferente do impresso (erro que pareceria acerto): **0**.
@@ -224,21 +289,170 @@ Origem dos erros: classificação 0, OCR 4, extração 31.
 
 Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): lote 18, quadra 16, rt-registro 16.
 
+### Conjunto de independente congelado (IND) (749 campos impressos no gabarito)
+
+- Extraídos como no gabarito: **634 de 749** (84,6%).
+- Valor diferente do impresso (erro que pareceria acerto): **0**.
+
+| Campo | Impressos | Certos | Valor diferente | Não encontrado | Ilegível | Vários valores | Sem campo | Estado diferente | Normalização certa / conferida | Evidência ancorada / com região |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| area | 47 | 30 | 0 | 15 | 0 | 0 | 2 | 0 | 30 / 30 | 30 / 30 |
+| assunto | 46 | 44 | 0 | 0 | 1 | 0 | 1 | 0 | — | 44 / 44 |
+| bairro | 30 | 29 | 0 | 0 | 1 | 0 | 0 | 0 | — | 29 / 29 |
+| cartorio | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | — | 16 / 16 |
+| data-emissao | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | 16 / 16 | 16 / 16 |
+| data-revisao | 31 | 14 | 0 | 15 | 0 | 0 | 2 | 0 | 14 / 14 | 14 / 14 |
+| escala-situacao | 16 | 15 | 0 | 0 | 0 | 0 | 1 | 0 | 15 / 15 | 15 / 15 |
+| formato-folha | 16 | 15 | 0 | 0 | 0 | 0 | 1 | 0 | 15 / 15 | 15 / 15 |
+| inscricao | 30 | 15 | 0 | 14 | 1 | 0 | 0 | 0 | 15 / 15 | 15 / 15 |
+| lote | 110 | 92 | 0 | 16 | 1 | 0 | 1 | 0 | 92 / 92 | 76 / 76 |
+| matricula | 63 | 61 | 0 | 0 | 1 | 0 | 1 | 0 | 60 / 60 | 61 / 61 |
+| parcelamento | 31 | 16 | 0 | 14 | 1 | 0 | 0 | 0 | — | 16 / 16 |
+| quadra | 110 | 92 | 0 | 16 | 1 | 0 | 1 | 0 | 92 / 92 | 76 / 76 |
+| rt-nome | 77 | 73 | 0 | 1 | 1 | 0 | 2 | 0 | — | 73 / 73 |
+| rt-registro | 45 | 44 | 0 | 0 | 0 | 0 | 1 | 0 | — | 44 / 44 |
+| signatario | 17 | 16 | 0 | 0 | 1 | 0 | 0 | 0 | — | 16 / 16 |
+| titular | 48 | 46 | 0 | 1 | 1 | 0 | 0 | 0 | — | 46 / 46 |
+
+Origem dos erros: classificação 12, OCR 12, extração 91.
+
+<details><summary>Campos diferentes do gabarito</summary>
+
+- IND-01/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-01/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-01/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-01/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-01/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-01/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/01-requerimento.pdf · titular: esperado "Helena Modelo Simulada"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/01-requerimento.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/01-requerimento.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/01-requerimento.pdf · rt-nome: esperado "Bruno Projetista Imaginario"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-02/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-03/01-requerimento.pdf · assunto: esperado "Desdobro de lote"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · titular: esperado "Helena Modelo Simulada"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · lote: esperado "15"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · quadra: esperado "08"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · bairro: esperado "Vila Teste"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · matricula: esperado "55.120"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · rt-nome: esperado "Bruno Projetista Imaginario"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/01-requerimento.pdf · rt-registro: esperado "CREA-FIC 000777"; obtido nenhum campo (sem-campo; origem extracao).
+- IND-03/01-requerimento.pdf · signatario: esperado "Helena Modelo Simulada"; obtido ilegivel (ilegivel; origem ocr).
+- IND-03/05-art.jpg · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem ocr).
+- IND-03/05-art.jpg · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem ocr).
+- IND-03/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-03/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-04/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/06-planta-e-memorial.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-05/06-planta-e-memorial.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-06/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-06/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-06/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-06/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-07/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-08/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-09/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-10/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-11/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-12/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/06-planta.pdf · area: esperado "25.000,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-13/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-14/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-14/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-14/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-14/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-14/06-planta.pdf · area: esperado "360,00 m²"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-14/06-planta.pdf · escala-situacao: esperado "1:10.000"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-14/06-planta.pdf · formato-folha: esperado "A3"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-14/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-14/06-planta.pdf · rt-nome: esperado "Bruno Projetista Imaginario"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-15/08-memorial.pdf · assunto: esperado "Desdobro"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · lote: esperado "15"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · quadra: esperado "08"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · matricula: esperado "55.120"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · area: esperado "360,00 m²"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · data-revisao: esperado "30/10/2026"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-15/08-memorial.pdf · rt-nome: esperado "Bruno Projetista Imaginario"; obtido nenhum campo (sem-campo; origem classificacao).
+- IND-16/01-requerimento.pdf · parcelamento: esperado "Residencial Hipotetico"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-16/01-requerimento.pdf · inscricao: esperado "1234.5678.009"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-16/05-art.pdf · lote: esperado "15"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-16/05-art.pdf · quadra: esperado "08"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-16/06-planta.pdf · area: esperado "360,00 m²"; obtido nao-encontrado (nao-encontrado; origem extracao).
+- IND-16/06-planta.pdf · data-revisao: esperado "30/10/2026"; obtido nao-encontrado (nao-encontrado; origem extracao).
+
+</details>
+
+Campos encontrados que o gabarito não lista para aquele anexo (não contam como erro; o gabarito só afirma o que a peça foi feita para mostrar): rt-registro 29, lote 1.
+
 ### Comparação interdocumental
 
 Só entram valores encontrados com confiança e sem ambiguidade; o resto fica inconclusivo. "Insuficiente" quer dizer menos de dois valores para comparar (ausência não é divergência). Se a divergência é esperada ou não, o gabarito diz nas regras 018 a 021 (seção E6).
 
 | Comparação | Coincide | Diverge | Inconclusivo | Insuficiente | Pacotes com divergência |
 |---|---:|---:|---:|---:|---|
-| Matrícula no requerimento × memorial | 58 | 0 | 0 | 6 | — |
-| Lote na prancha × memorial | 56 | 1 | 1 | 6 | VAL-06 ("07" × "7") |
-| Responsável técnico na DRT × ART/RRT | 58 | 0 | 0 | 6 | — |
-| Assunto do requerimento × DRT | 57 | 2 | 0 | 5 | DSD-08 ("DESDOBRO" × "RETIFICAÇÃO DE REGISTRO IMOBILIÁRIO"), VAL-15 ("Remembramento" × "Desdobro") |
-| Data de revisão da prancha × memorial | 56 | 2 | 0 | 6 | DSD-19 ("01/11/2026" × "03/11/2026"), VAL-10 ("12/05/2026" × "13/05/2026") |
+| Matrícula no requerimento × memorial | 70 | 0 | 2 | 8 | — |
+| Lote na prancha × memorial | 69 | 1 | 1 | 9 | VAL-06 ("07" × "7") |
+| Responsável técnico na DRT × ART/RRT | 72 | 0 | 0 | 8 | — |
+| Assunto do requerimento × DRT | 70 | 3 | 1 | 6 | DSD-08 ("DESDOBRO" × "RETIFICAÇÃO DE REGISTRO IMOBILIÁRIO"), VAL-15 ("Remembramento" × "Desdobro"), IND-16 ("Desdobro de lote" × "Retificação de registro imobiliário") |
+| Data de revisão da prancha × memorial | 56 | 2 | 0 | 22 | DSD-19 ("01/11/2026" × "03/11/2026"), VAL-10 ("12/05/2026" × "13/05/2026") |
 
 ## E6: motor de regras
 
-### Conjunto de desenvolvimento (821 expectativas de regra)
+### Conjunto de desenvolvimento (DSD, usado na implementação) (821 expectativas de regra)
 
 - Resultado aceito pelo gabarito: **821 de 821** (100,0%).
 - Falsos alertas: **0**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
@@ -268,7 +482,7 @@ Só entram valores encontrados com confiança e sem ambiguidade; o resto fica in
 
 Origem dos erros: classificacao 0, ocr 0, extracao 0, condicao 0, regra 0.
 
-### Conjunto de validação (144 expectativas de regra)
+### Conjunto de validação usada nos ajustes (VAL) (144 expectativas de regra)
 
 - Resultado aceito pelo gabarito: **143 de 144** (99,3%).
 - Falsos alertas: **1**; achados esperados não detectados: **0**; abstenções indevidas: **0**; tipo de achado diferente: **0**; outro resultado: **0**.
@@ -302,29 +516,80 @@ Resultados diferentes do gabarito:
 
 - VAL-13 · AQR-GCA-001: esperado sem-achado; obtido **achado** (condicao-indeterminada) — falso-alerta, origem extracao. Gabarito: O assunto está no requerimento, com outro rótulo.
 
+### Conjunto de independente congelado (IND) (288 expectativas de regra)
+
+- Resultado aceito pelo gabarito: **270 de 288** (93,8%).
+- Falsos alertas: **1**; achados esperados não detectados: **1**; abstenções indevidas: **16**; tipo de achado diferente: **0**; outro resultado: **0**.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 22 corretas de 22.
+
+| Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| AQR-GCA-001 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 0 / 0 / 0 |
+| AQR-GCA-002 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+| AQR-GCA-003 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 14 / 1 / 1 / 0 / 0 |
+| AQR-GCA-006 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-008 | 16 | 15 | 0 | 1 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-009 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 / 16 / 0 / 0 / 0 |
+| AQR-GCA-010 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 1 / 0 / 13 |
+| AQR-GCA-011 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 1 / 0 / 0 / 0 |
+| AQR-GCA-012 | 16 | 15 | 1 | 0 | 0 | 0 | 0 | 15 / 1 / 0 / 0 / 0 |
+| AQR-GCA-013 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-016 | 14 | 14 | 0 | 0 | 0 | 0 | 0 | 14 / 0 / 0 / 0 / 0 |
+| AQR-GCA-018 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 13 / 0 / 2 / 0 / 0 |
+| AQR-GCA-019 | 12 | 12 | 0 | 0 | 0 | 0 | 0 | 11 / 1 / 0 / 0 / 0 |
+| AQR-GCA-020 | 11 | 11 | 0 | 0 | 0 | 0 | 0 | 10 / 1 / 0 / 0 / 0 |
+| AQR-GCA-021 | 14 | 0 | 0 | 0 | 14 | 0 | 0 | 0 / 0 / 14 / 0 / 0 |
+| AQR-GCA-022 | 16 | 15 | 0 | 0 | 1 | 0 | 0 | 14 / 1 / 1 / 0 / 0 |
+| AQR-GCA-023 | 16 | 15 | 0 | 0 | 1 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
+| AQR-GCA-028 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 0 / 15 / 0 |
+| AQR-GCA-043 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 16 / 0 / 0 / 0 / 0 |
+
+Origem dos erros: classificacao 4, ocr 1, extracao 13, condicao 0, regra 0.
+
+Resultados diferentes do gabarito:
+
+- IND-01 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-02 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-03 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem ocr. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-04 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-06 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-07 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-08 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-09 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-10 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-11 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-11 · AQR-GCA-008: esperado achado (nao-localizado); obtido **nao-avaliavel** — achado-nao-detectado, origem extracao. Gabarito: Dossiê, ensaio T03: alertar a possível falta do título do segundo imóvel.
+- IND-12 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-13 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-14 · AQR-GCA-012: esperado sem-achado; obtido **achado** (nao-localizado) — falso-alerta, origem classificacao. Gabarito: A peça é a planta do desdobro, em PDF, com DXF.
+- IND-14 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+- IND-14 · AQR-GCA-022: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Situação em 1:10.000.
+- IND-14 · AQR-GCA-023: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Folha A3, permitida pelo TR 002.
+- IND-16 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
+
 ### Estados de todas as avaliações (com e sem expectativa no gabarito)
 
 | Regra | sem-achado | achado | não avaliável | condição pendente | não aplicável |
 |---|---:|---:|---:|---:|---:|
-| AQR-GCA-001 | 61 | 1 | 2 | 0 | 0 |
-| AQR-GCA-002 | 62 | 1 | 1 | 0 | 0 |
-| AQR-GCA-003 | 60 | 3 | 1 | 0 | 0 |
-| AQR-GCA-006 | 61 | 1 | 2 | 0 | 0 |
-| AQR-GCA-008 | 58 | 1 | 5 | 0 | 0 |
-| AQR-GCA-009 | 0 | 58 | 6 | 0 | 0 |
-| AQR-GCA-010 | 2 | 2 | 2 | 0 | 58 |
-| AQR-GCA-011 | 60 | 2 | 2 | 0 | 0 |
-| AQR-GCA-012 | 60 | 3 | 1 | 0 | 0 |
-| AQR-GCA-013 | 58 | 2 | 4 | 0 | 0 |
-| AQR-GCA-016 | 59 | 2 | 3 | 0 | 0 |
-| AQR-GCA-018 | 45 | 1 | 18 | 0 | 0 |
-| AQR-GCA-019 | 60 | 3 | 1 | 0 | 0 |
-| AQR-GCA-020 | 59 | 3 | 2 | 0 | 0 |
-| AQR-GCA-021 | 56 | 2 | 6 | 0 | 0 |
-| AQR-GCA-022 | 61 | 1 | 2 | 0 | 0 |
-| AQR-GCA-023 | 60 | 1 | 3 | 0 | 0 |
-| AQR-GCA-028 | 1 | 1 | 0 | 61 | 1 |
-| AQR-GCA-043 | 53 | 11 | 0 | 0 | 0 |
+| AQR-GCA-001 | 76 | 1 | 3 | 0 | 0 |
+| AQR-GCA-002 | 78 | 1 | 1 | 0 | 0 |
+| AQR-GCA-003 | 74 | 4 | 2 | 0 | 0 |
+| AQR-GCA-006 | 76 | 1 | 3 | 0 | 0 |
+| AQR-GCA-008 | 73 | 1 | 6 | 0 | 0 |
+| AQR-GCA-009 | 0 | 74 | 6 | 0 | 0 |
+| AQR-GCA-010 | 3 | 2 | 4 | 0 | 71 |
+| AQR-GCA-011 | 75 | 3 | 2 | 0 | 0 |
+| AQR-GCA-012 | 75 | 4 | 1 | 0 | 0 |
+| AQR-GCA-013 | 73 | 2 | 5 | 0 | 0 |
+| AQR-GCA-016 | 75 | 2 | 3 | 0 | 0 |
+| AQR-GCA-018 | 58 | 1 | 21 | 0 | 0 |
+| AQR-GCA-019 | 74 | 4 | 2 | 0 | 0 |
+| AQR-GCA-020 | 72 | 4 | 4 | 0 | 0 |
+| AQR-GCA-021 | 56 | 2 | 22 | 0 | 0 |
+| AQR-GCA-022 | 75 | 2 | 3 | 0 | 0 |
+| AQR-GCA-023 | 75 | 1 | 4 | 0 | 0 |
+| AQR-GCA-028 | 2 | 1 | 0 | 76 | 1 |
+| AQR-GCA-043 | 69 | 11 | 0 | 0 | 0 |
 
 Regras não executadas em todos os pacotes: HYP-GCA-045 (Hipótese desativada: depende de ato ou instrução escrita da GCA.); HYP-GCA-047 (Hipótese desativada: depende de ato ou instrução escrita da GCA.).
 Garantias aplicadas como invariantes: AQR-GCA-040, AQR-GCA-041.

@@ -2,7 +2,7 @@ import type { NomeCampo } from '../../../shared/contracts/triage.ts'
 import { COMPARACOES, compararCampo } from '../extraction/compare.ts'
 import { propostaAncorada, type LeituraParaModelo } from '../model/document-model.ts'
 import type { AnexoTriado } from '../pipeline.ts'
-import type { AnexoEsperado, CasoAvaliacao, Conjunto } from './casos.ts'
+import { CONJUNTOS, NOME_CONJUNTO, type AnexoEsperado, type CasoAvaliacao, type Conjunto } from './casos.ts'
 import { porcentagem } from './metrics.ts'
 
 /**
@@ -145,12 +145,12 @@ export function avaliarExtracao(caso: CasoAvaliacao, esperado: AnexoEsperado, tr
 
 export function secaoExtracao(resultados: readonly ResultadoCampo[], extras: readonly CampoExtra[]): string[] {
   const linhas: string[] = ['## E5: extração e normalização de campos', '']
-  for (const conjunto of ['desenvolvimento', 'validacao'] as const) {
+  for (const conjunto of CONJUNTOS) {
     const doConjunto = resultados.filter((item) => item.conjunto === conjunto)
     if (doConjunto.length === 0) continue
     const certos = doConjunto.filter((item) => item.certo).length
     linhas.push(
-      `### Conjunto de ${conjunto === 'validacao' ? 'validação' : 'desenvolvimento'} (${doConjunto.length} campos impressos no gabarito)`,
+      `### Conjunto de ${NOME_CONJUNTO[conjunto]} (${doConjunto.length} campos impressos no gabarito)`,
       '',
       `- Extraídos como no gabarito: **${certos} de ${doConjunto.length}** (${porcentagem(certos / doConjunto.length)}).`,
       `- Valor diferente do impresso (erro que pareceria acerto): **${doConjunto.filter((item) => item.erro === 'valor-diferente').length}**.`,

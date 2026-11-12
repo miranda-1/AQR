@@ -4,7 +4,7 @@ import type { EntradaTriagem } from '../engine/context.ts'
 import { executarTriagem, type AvaliacaoDetalhada, type ResultadoTriagem } from '../engine/engine.ts'
 import { propostaAncorada, type LeituraParaModelo } from '../model/document-model.ts'
 import type { AnexoTriado } from '../pipeline.ts'
-import type { CasoAvaliacao, Conjunto } from './casos.ts'
+import { CONJUNTOS, NOME_CONJUNTO, type CasoAvaliacao, type Conjunto } from './casos.ts'
 import type { ResultadoClassificacao } from './classificacao.ts'
 import type { ResultadoCampo } from './extracao.ts'
 import { porcentagem } from './metrics.ts'
@@ -142,14 +142,14 @@ export function avaliarRegras(
 
 export function secaoRegras(resultados: readonly ResultadoRegraAvaliada[], triagens: readonly { caso: CasoAvaliacao; triagem: ResultadoTriagem }[]): string[] {
   const linhas: string[] = ['## E6: motor de regras', '']
-  for (const conjunto of ['desenvolvimento', 'validacao'] as const) {
+  for (const conjunto of CONJUNTOS) {
     const doConjunto = resultados.filter((item) => item.conjunto === conjunto)
     if (doConjunto.length === 0) continue
     const certos = doConjunto.filter((item) => item.certo).length
     const conta = (lista: readonly ResultadoRegraAvaliada[], erro: ErroRegra) => lista.filter((item) => item.erro === erro).length
     const achados = doConjunto.filter((item) => item.obtido === 'achado')
     linhas.push(
-      `### Conjunto de ${conjunto === 'validacao' ? 'validação' : 'desenvolvimento'} (${doConjunto.length} expectativas de regra)`,
+      `### Conjunto de ${NOME_CONJUNTO[conjunto]} (${doConjunto.length} expectativas de regra)`,
       '',
       `- Resultado aceito pelo gabarito: **${certos} de ${doConjunto.length}** (${porcentagem(certos / doConjunto.length)}).`,
       `- Falsos alertas: **${conta(doConjunto, 'falso-alerta')}**; achados esperados não detectados: **${conta(doConjunto, 'achado-nao-detectado')}**; abstenções indevidas: **${conta(doConjunto, 'abstencao-indevida')}**; tipo de achado diferente: **${conta(doConjunto, 'tipo-de-achado-diferente')}**; outro resultado: **${conta(doConjunto, 'resultado-diferente')}**.`,
@@ -220,6 +220,31 @@ export function secaoExemplos(triagens: readonly { caso: CasoAvaliacao; triagem:
       ...avaliacao.limitacoes.slice(0, 3).map((limitacao) => `- Limitação: ${limitacao}`),
       `- Revisão humana: ${avaliacao.revisaoHumana}.`,
       '',
+    )
+  }
+  return linhas
+}
+
+/**
+ * Tabela-resumo por conjunto: cada categoria numa coluna, sem juntar abstenção com erro.
+ * - falso alerta: achado onde o gabarito não aceita achado;
+ * - achado não detectado: o gabarito só aceita achado e o motor deu outra coisa;
+ * - abstenção indevida: não avaliável ou pendente onde o gabarito não aceita;
+ * - não avaliáveis (total): todas as avaliações não avaliáveis, aceitas ou não;
+ * - abstenções aceitas: não avaliável que o gabarito lista como aceitável.
+ */
+export function tabelaResumoRegras(resultados: readonly ResultadoRegraAvaliada[]): string[] {
+  const linhas = [
+    '| Conjunto | Expectativas | Aceitas | Falsos alertas | Achados não detectados | Abstenções indevidas | Tipo de achado diferente | Outro resultado | Não avaliáveis (total) | Abstenções aceitas | Condição pendente |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+  ]
+  for (const conjunto of CONJUNTOS) {
+    const doConjunto = resultados.filter((item) => item.conjunto === conjunto)
+    if (doConjunto.length === 0) continue
+    const conta = (erro: ErroRegra) => doConjunto.filter((item) => item.erro === erro).length
+    const naoAvaliaveis = doConjunto.filter((item) => item.obtido === 'nao-avaliavel')
+    linhas.push(
+      `| ${NOME_CONJUNTO[conjunto]} | ${doConjunto.length} | ${doConjunto.filter((item) => item.certo).length} | ${conta('falso-alerta')} | ${conta('achado-nao-detectado')} | ${conta('abstencao-indevida')} | ${conta('tipo-de-achado-diferente')} | ${conta('resultado-diferente')} | ${naoAvaliaveis.length} | ${naoAvaliaveis.filter((item) => item.certo).length} | ${doConjunto.filter((item) => item.obtido === 'condicao-pendente').length} |`,
     )
   }
   return linhas

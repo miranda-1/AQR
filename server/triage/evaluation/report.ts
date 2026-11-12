@@ -1,6 +1,7 @@
 import { secaoClassificacao } from './classificacao.ts'
 import { secaoComparacoes, secaoExtracao } from './extracao.ts'
-import { secaoExemplos, secaoRegras } from './regras.ts'
+import { secaoExemplos, secaoRegras, tabelaResumoRegras } from './regras.ts'
+import { CONJUNTOS, NOME_CONJUNTO } from './casos.ts'
 import type { Avaliacao } from './run.ts'
 
 /** Relatório em Markdown da avaliação da triagem (gerado; não editar à mão). */
@@ -27,8 +28,23 @@ export function relatorio(avaliacao: Avaliacao): string {
     '> os resultados medem verificações técnicas experimentais, não conformidade nem decisão administrativa.',
     '',
     `- Conjunto de desenvolvimento: ${conjuntos('desenvolvimento').length} pacotes, ${anexos('desenvolvimento')} anexos (DSD-01 a 48, usados durante a implementação).`,
-    `- Conjunto de validação: ${conjuntos('validacao').length} pacotes, ${anexos('validacao')} anexos (VAL-01 a 16, escritos antes da extração e do motor, com outros modelos de texto).`,
+    `- Conjunto de validação: ${conjuntos('validacao').length} pacotes, ${anexos('validacao')} anexos (VAL-01 a 16, escritos antes da extração e do motor, mas **usados para corrigir defeitos**: não são mais medida independente).`,
+    `- Conjunto independente: ${conjuntos('independente').length} pacotes, ${anexos('independente')} anexos (IND-01 a 16, gabarito congelado em \`docs/triagem/casos/independente-gabarito.json\` antes da primeira execução; **é a medida de generalização**).`,
     `- OCR local: ${avaliacao.ocrDisponivel ? 'disponível' : '**indisponível** (páginas digitalizadas ficam sem leitura)'}.`,
+    '',
+    '## Resumo por conjunto',
+    '',
+    '| Conjunto | Anexos | Classe igual ao gabarito | Classe errada proposta | Abstenções de classe | Campos impressos | Campos certos | Valor errado aceito | Normalização errada |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
+    ...CONJUNTOS.filter((conjunto) => avaliacao.classificacao.some((item) => item.conjunto === conjunto)).map((conjunto) => {
+      const classes = avaliacao.classificacao.filter((item) => item.conjunto === conjunto)
+      const campos = avaliacao.extracao.filter((item) => item.conjunto === conjunto)
+      return `| ${NOME_CONJUNTO[conjunto]} | ${classes.length} | ${classes.filter((item) => !item.origemErro).length} | ${classes.filter((item) => item.origemErro && item.obtido !== 'indeterminada').length} | ${classes.filter((item) => item.origemErro && item.obtido === 'indeterminada').length} | ${campos.length} | ${campos.filter((item) => item.certo).length} | ${campos.filter((item) => item.erro === 'valor-diferente').length} | ${campos.filter((item) => item.normalizacao === 'errada').length} |`
+    }),
+    '',
+    'Regras:',
+    '',
+    ...tabelaResumoRegras(avaliacao.regras),
     '',
     ...secaoClassificacao(avaliacao.classificacao),
     ...secaoExtracao(avaliacao.extracao, avaliacao.extras),

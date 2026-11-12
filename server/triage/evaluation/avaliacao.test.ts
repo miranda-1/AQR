@@ -108,6 +108,50 @@ describe('avaliação integrada da triagem', () => {
     })
   })
 
+  describe('auditoria das 19 regras', () => {
+    const triagens = () => avaliacao.executados.flatMap(({ triagem }) => (triagem ? [triagem] : []))
+
+    it('todo pacote tem as 19 regras, com versão, fundamento normativo e política de abstenção', () => {
+      for (const triagem of triagens()) {
+        expect(triagem.avaliacoes).toHaveLength(19)
+        for (const item of triagem.avaliacoes) {
+          const { contrato } = item
+          expect(contrato.regraVersao).toMatch(/@1\.0-review\+[0-9a-f]{12}$/u)
+          expect(contrato.fundamentos.length).toBeGreaterThan(0)
+          expect(item.revisaoHumana.length).toBeGreaterThan(0)
+          if (contrato.resultado === 'achado') expect(contrato.tipo && (contrato.evidencias.length > 0 || contrato.procura)).toBeTruthy()
+          if (contrato.resultado === 'nao-avaliavel' || contrato.resultado === 'nao-aplicavel') expect(contrato.motivo).toBeTruthy()
+          if (contrato.resultado === 'condicao-pendente') expect(contrato.condicoesPendentes.length).toBeGreaterThan(0)
+        }
+      }
+    })
+
+    it('nenhum resultado conclusivo se apoia em campo ambíguo, ilegível ou com vários valores', () => {
+      for (const { anexos, triagem } of avaliacao.executados) {
+        const campos = new Map(anexos.flatMap((anexo) => anexo.campos).map((campo) => [campo.contrato.id, campo.contrato]))
+        for (const item of triagem?.avaliacoes ?? []) {
+          const conclusivo = item.contrato.resultado === 'sem-achado' || (item.contrato.resultado === 'achado' && item.contrato.tipo !== 'condicao-indeterminada')
+          if (!conclusivo) continue
+          for (const id of item.contrato.camposUsados) {
+            const campo = campos.get(id)
+            expect(campo?.estado, `${item.contrato.id} usa ${id}`).toBe('encontrado')
+            expect(campo?.alternativas ?? [], `${item.contrato.id} usa ${id}`).toEqual([])
+          }
+        }
+      }
+    })
+
+    it('presença não se apoia só em arquivo composto não resolvido', () => {
+      for (const { anexos, triagem } of avaliacao.executados) {
+        const naoResolvidos = new Set(anexos.filter((anexo) => anexo.classificacao.composto && anexo.classificacao.porPagina.some((pagina) => pagina.classe === 'indeterminada')).map((anexo) => anexo.lido.id))
+        for (const item of triagem?.avaliacoes ?? []) {
+          if (item.contrato.resultado !== 'sem-achado' || item.anexos.length === 0) continue
+          expect(item.anexos.every((id) => naoResolvidos.has(id)), item.contrato.id).toBe(false)
+        }
+      }
+    })
+  })
+
   it('gera o relatório com métricas por classe e as divergências', () => {
     const texto = relatorio(avaliacao)
     expect(texto).toContain('## E4: classificação documental')

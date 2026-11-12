@@ -1,6 +1,6 @@
 import type { ClasseDocumental } from '../../../shared/contracts/triage.ts'
 import type { AnexoTriado } from '../pipeline.ts'
-import type { AnexoEsperado, CasoAvaliacao, Conjunto } from './casos.ts'
+import { CONJUNTOS, NOME_CONJUNTO, type AnexoEsperado, type CasoAvaliacao, type Conjunto } from './casos.ts'
 import { matrizDeConfusao, metricasPorCategoria, porcentagem, tabelaMatriz, tabelaMetricas, type Par } from './metrics.ts'
 
 /** Avaliação da classificação documental (E4) contra o gabarito. */
@@ -57,7 +57,7 @@ function par(resultado: ResultadoClassificacao): Par<string> {
 
 export function secaoClassificacao(resultados: readonly ResultadoClassificacao[]): string[] {
   const linhas: string[] = ['## E4: classificação documental', '']
-  for (const conjunto of ['desenvolvimento', 'validacao'] as const) {
+  for (const conjunto of CONJUNTOS) {
     const doConjunto = resultados.filter((item) => item.conjunto === conjunto)
     if (doConjunto.length === 0) continue
     const pares = doConjunto.map(par)
@@ -67,7 +67,7 @@ export function secaoClassificacao(resultados: readonly ResultadoClassificacao[]
     const errosDeClasse = comDocumento.filter((item) => item.obtido !== INDETERMINADA && item.obtido !== item.esperado).length
     const semDocumento = doConjunto.filter((item) => item.esperado === SEM_DOCUMENTO)
     linhas.push(
-      `### Conjunto de ${conjunto === 'validacao' ? 'validação' : 'desenvolvimento'} (${doConjunto.length} anexos)`,
+      `### Conjunto de ${NOME_CONJUNTO[conjunto]} (${doConjunto.length} anexos)`,
       '',
       `- Classe igual ao gabarito: **${certos} de ${doConjunto.length}** (${porcentagem(certos / doConjunto.length)}).`,
       `- Anexos com documento: ${comDocumento.length}; abstenções (indeterminada): **${abstencoes}** (${porcentagem(comDocumento.length ? abstencoes / comDocumento.length : null)}); classe errada proposta: **${errosDeClasse}**.`,
