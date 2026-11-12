@@ -173,6 +173,27 @@ describe('extração de campos', () => {
   })
 })
 
+describe('data de revisão por família de rótulo', () => {
+  it('reconhece revisão numerada, abreviada e entre parênteses, com evidência', async () => {
+    for (const linha of ['Revisão 01 - 30/10/2026', 'Rev. 02 – 30/10/2026', 'REVISÃO: 2 (30.10.2026)', 'Data da revisão: 30/10/2026']) {
+      const data = campo(await extrair([['MEMORIAL DESCRITIVO', 'Perímetro: inicia no vértice V1.', linha]]), 'data-revisao')
+      expect(data.estado, linha).toBe('encontrado')
+      expect(data.valorNormalizado, linha).toBe('2026-10-30')
+      expect(data.evidencias[0]?.trecho, linha).toContain('30')
+    }
+  })
+
+  it('tabela de revisões com datas diferentes fica com vários valores, sem escolher a última', async () => {
+    const data = campo(await extrair([['MEMORIAL DESCRITIVO', 'Revisão 00 - 01/10/2026', 'Revisão 01 - 30/10/2026']]), 'data-revisao')
+    expect(data.estado).toBe('varios-valores')
+    expect(data.alternativas).toEqual(['01/10/2026', '30/10/2026'])
+  })
+
+  it('palavra parecida ou revisão sem data não vira data de revisão', async () => {
+    expect(campo(await extrair([['MEMORIAL DESCRITIVO', 'Verso e reverso 12/05/2026', 'Revisão 01']]), 'data-revisao').estado).toBe('nao-encontrado')
+  })
+})
+
 describe('comparação entre anexos', () => {
   it('divergência guarda os dois valores e as evidências, sem dizer qual está certo', async () => {
     const req = await extrair([['REQUERIMENTO', 'Matrícula: 90417'], []], 'a.pdf', 'anexo-1')

@@ -122,6 +122,19 @@ function decidir(ranking: readonly Placar[]): { classe: ClasseDocumental | 'inde
   return { classe: primeira.classe, confianca: margem >= MARGEM_ALTA ? 'alta' : 'media', pontos: primeira.pontos }
 }
 
+/**
+ * Prancha reconhecida pela estrutura, sem título: só com folha maior que A4 (quem chama confere),
+ * pelo menos dois sinais distintos de prancha no corpo (planta de situação, escala, formato de
+ * folha, quadro de situação) e nenhum sinal de título de outra classe. A confiança fica média.
+ * Devolve os pontos ou 0.
+ */
+function pranchaPelaEstrutura(sinais: readonly SinalEncontrado[]): number {
+  const outrosTitulos = sinais.some((sinal) => sinal.classe !== 'prancha' && sinal.peso > 0 && SINAIS.find((item) => item.classe === sinal.classe)?.sinais.find((item) => item.id === sinal.sinal)?.onde === 'titulo')
+  if (outrosTitulos) return 0
+  const deCorpo = new Set(sinais.filter((sinal) => sinal.classe === 'prancha' && sinal.peso > 0).map((sinal) => sinal.sinal))
+  return deCorpo.size >= 2 ? deCorpo.size + 1 : 0
+}
+
 const rebaixar = (confianca: ConfiancaClasse): ConfiancaClasse => (confianca === 'alta' ? 'media' : 'baixa')
 
 function indeterminada(justificativa: string, evidencias: Evidencia[] = [], metodo: Classificacao['metodo'] = 'regra-lexica'): ClassificacaoDetalhada {
@@ -166,6 +179,7 @@ export function classificarAnexo(anexo: AnexoLido): ClassificacaoDetalhada {
   const paginas = [...new Set(anexo.linhas.map((linha) => linha.pagina))].sort((a, b) => a - b)
   const porPagina: ClassePagina[] = []
   const todosSinais: SinalEncontrado[] = []
+  const pelaEstrutura = new Set<number>()
   const grande = (numero: number) => {
     const pagina = anexo.paginas.find((item) => item.pagina === numero)
     return pagina?.larguraPt !== undefined && pagina.alturaPt !== undefined && Math.max(pagina.larguraPt, pagina.alturaPt) > LADO_A4
@@ -174,7 +188,14 @@ export function classificarAnexo(anexo: AnexoLido): ClassificacaoDetalhada {
     const linhas = anexo.linhas.filter((linha) => linha.pagina === numero)
     const sinais = sinaisDaPagina(linhas)
     todosSinais.push(...sinais)
-    const decisao = decidir(placar(sinais, grande(numero) ? { prancha: 1 } : {}))
+    let decisao = decidir(placar(sinais, grande(numero) ? { prancha: 1 } : {}))
+    if (decisao.classe === 'indeterminada' && grande(numero)) {
+      const estrutural = pranchaPelaEstrutura(sinais)
+      if (estrutural) {
+        decisao = { classe: 'prancha', confianca: 'media', pontos: estrutural }
+        pelaEstrutura.add(numero)
+      }
+    }
     porPagina.push({ pagina: numero, ...decisao })
   }
 
@@ -214,7 +235,9 @@ export function classificarAnexo(anexo: AnexoLido): ClassificacaoDetalhada {
   if (composto) confianca = rebaixar(confianca)
 
   const descricoes = [...new Set(sinaisPrincipais.map((sinal) => sinal.descricao))]
-  const partes = [`${descricoes.join('; ')} (${principal.pontos} pontos, página ${principal.pagina})`]
+  const partes = pelaEstrutura.has(principal.pagina)
+    ? [`sem título de classe; estrutura de prancha: folha maior que A4 e ${descricoes.join('; ')} (página ${principal.pagina})`]
+    : [`${descricoes.join('; ')} (${principal.pontos} pontos, página ${principal.pagina})`]
   if (grande(principal.pagina) && principal.classe === 'prancha') partes.push('folha maior que A4')
   const descartadas = ranking.filter((item) => item.classe !== principal.classe && item.pontos > 0).slice(0, 2)
   if (descartadas.length > 0) partes.push(`alternativas com menos evidência: ${descartadas.map((item) => `${item.classe} (${item.pontos})`).join(', ')}`)

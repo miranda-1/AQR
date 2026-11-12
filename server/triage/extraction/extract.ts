@@ -110,8 +110,20 @@ const PADROES: Padrao[] = [
   { campo: 'inscricao', re: /\binscricao(?: imobiliaria)?\s*(?:n[ºo°]\.?)?\s*:\s*(?<v>\d[\d.\-/]*\d)/du, confianca: 0.9 },
 
   { campo: 'data-emissao', re: new RegExp(String.raw`\b(?:emitida em|expedida em|emissao\s*:|data de emissao\s*:)\s*(?<v>${DATA})`, 'du'), classes: ['matricula-transcricao'], confianca: 0.9 },
-  // Em prancha e memorial, "Data:" é tratado como data da revisão da peça (é o que a regra 021 compara).
-  { campo: 'data-revisao', re: new RegExp(String.raw`\b(?:revisao|data)\s*:\s*(?<v>${DATA})`, 'du'), classes: PECAS, confianca: 0.85 },
+  /**
+   * Data de revisão de prancha e memorial (a regra 021 compara). Padrão de família, não rótulo exato:
+   * a palavra "revisão", "rev." ou "data", até 25 caracteres sem algarismo (ex.: " da revisão: "),
+   * um número de revisão opcional (1 ou 2 algarismos, ex.: "Revisão 01 -", "REV. 2 (") e a data.
+   * Cobre "Data:", "Data da revisão:", "Revisão 01 - 30/10/2026", "Rev. 02 – 30/10/2026",
+   * "REVISÃO: 2 (30.10.2026)". Várias datas diferentes na mesma peça (tabela de revisões) ficam
+   * como "vários valores": o sistema não escolhe a última.
+   */
+  {
+    campo: 'data-revisao',
+    re: new RegExp(String.raw`\b(?:revisao|rev\.?|data)(?![a-z])[^\d\n]{0,25}?(?:n[ºo°]\.?\s*)?(?:\d{1,2}(?![\d/.-]\d)[^\d\n]{1,10}?)?(?<v>${DATA})`, 'du'),
+    classes: PECAS,
+    confianca: 0.85,
+  },
 
   {
     campo: 'area',

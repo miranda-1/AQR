@@ -1,13 +1,15 @@
 import type { ClasseDocumental, Evidencia, NomeCampo } from '../../../shared/contracts/triage.ts'
 import { compararCampo, type Comparacao } from '../extraction/compare.ts'
-import { chaveDeTexto, modalidadeDoAssunto, normalizarData } from '../extraction/normalize.ts'
+import { chaveDeTexto, modalidadeDoAssunto, normalizarCodigo, normalizarData, normalizarIdentificador } from '../extraction/normalize.ts'
+import { corresponder, linhasDoQuadro, mapaDeImoveis, type Declaracao, type MapaImoveis, type Vinculo } from './imoveis.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { dobrar } from '../reading/text.ts'
 import {
   anexosDaClasse,
   avaliarPresenca,
+  anexosQuePodemSer,
   camposDe,
-  indicioDeVariosImoveis,
+  integridadeParaProcura,
   evidenciaDoAnexo,
   type FuncaoRegra,
   type ResultadoDaRegra,
@@ -137,6 +139,65 @@ function variosImoveis(indicio: string, oQue: string): ResultadoDaRegra {
   }
 }
 
+/**
+ * Correspondência declarado × documento, imóvel a imóvel. Lacuna só vira achado com pacote completo
+ * confirmado, todos os números lidos com segurança e nenhum anexo que possa ser o documento; senão,
+ * não avaliável. Não conclui nada sobre propriedade ou validade: só "há documento com este número".
+ */
+function lacunaPorImovel(
+  ctx: Parameters<FuncaoRegra>[0],
+  opcoes: { declarados: Declaracao; documentos: readonly Vinculo[]; classe: ClasseDocumental; rotulo: string; documento: string; campo: 'matricula' | 'lote' },
+): ResultadoDaRegra {
+  const { declarados, documentos } = opcoes
+  const correspondencia = corresponder(declarados, documentos)
+  const total = declarados.valores.length
+  const quadro: ValorConflitante = { campo: opcoes.campo, valores: linhasDoQuadro(declarados, documentos, opcoes.classe, opcoes.campo) }
+  const limitacoes = [
+    'Correspondência só pelo número normalizado; propriedade, cadeia dominial e validade registral não são avaliadas.',
+    ...(correspondencia.naoDeclarados.length > 0 ? [`${correspondencia.naoDeclarados.length} documento(s) com número não declarado no requerimento.`] : []),
+  ]
+  const evidencias = [...declarados.evidencias, ...documentos.flatMap((documento) => documento.evidencias)]
+  if (correspondencia.semDocumento.length === 0) {
+    return {
+      resultado: 'sem-achado',
+      rascunho: `Cada um dos ${total} ${opcoes.rotulo} tem ${opcoes.documento} entre os anexos recebidos.`,
+      evidencias,
+      camposUsados: declarados.campoIds,
+      valoresConflitantes: [quadro],
+      confianca: 'media',
+      limitacoes,
+    }
+  }
+  const impedimentos = [
+    ...(integridadeParaProcura(ctx.entrada) !== 'completo' ? ['pacote não confirmado como completo'] : []),
+    ...(declarados.incerta ? ['declaração do requerimento com leitura incerta'] : []),
+    ...correspondencia.incertos.map((documento) => `${documento.anexoId} sem número lido com segurança`),
+    ...anexosQuePodemSer(ctx, [opcoes.classe]).map((anexo) => `${anexo.lido.id} pode ser o documento`),
+  ]
+  if (impedimentos.length > 0) {
+    return {
+      resultado: 'nao-avaliavel',
+      motivo: `${correspondencia.semDocumento.length} de ${total} ${opcoes.rotulo} sem ${opcoes.documento}, mas não dá para concluir: ${impedimentos.join('; ')}.`.slice(0, 500),
+      rascunho: `Possível lacuna por imóvel não confirmada (${impedimentos.join('; ')}). Conferir o quadro de correspondência.`,
+      evidencias,
+      valoresConflitantes: [quadro],
+      confianca: 'baixa',
+      limitacoes,
+    }
+  }
+  return {
+    resultado: 'achado',
+    tipo: 'nao-localizado',
+    rascunho: `Possível pendência: ${correspondencia.semDocumento.length} de ${total} ${opcoes.rotulo} sem ${opcoes.documento} entre os anexos recebidos. Os números estão no quadro de correspondência. Servidor confere antes de qualquer comunicação.`,
+    procura: { integridadeDoPacote: 'completo', anexosProcurados: ctx.anexos.map((anexo) => ({ anexoId: anexo.lido.id, classe: anexo.classificacao.contrato.classe })) },
+    evidencias,
+    camposUsados: declarados.campoIds,
+    valoresConflitantes: [quadro],
+    confianca: 'media',
+    limitacoes,
+  }
+}
+
 // ---------- regras ----------
 
 /** AQR-GCA-001: assunto ausente ou não mapeável → modalidade indeterminada, para triagem humana. */
@@ -207,9 +268,17 @@ const r006: FuncaoRegra = (ctx) => {
     return { resultado: 'nao-avaliavel', motivo: 'Nenhum lote identificado nos anexos lidos.', rascunho: 'Documento de inscrição imobiliária não verificado: lotes não identificados.', confianca: 'baixa' }
   }
   const presenca = avaliarPresenca(ctx, { classes: ['inscricao-imobiliaria'], nome: 'Documento de inscrição imobiliária' })
-  const varios = indicioDeVariosImoveis(ctx)
-  if (varios && presenca.resultado === 'sem-achado') return variosImoveis(varios, 'a correspondência entre cada lote e seu documento de inscrição')
-  return { ...presenca, limitacoes: [...(presenca.limitacoes ?? []), 'Verificação feita para um imóvel por pacote.'] }
+  const mapa = mapaDeImoveis(ctx)
+  if (presenca.resultado !== 'sem-achado' || mapa.lotes.valores.length <= 1) return presenca
+  // Vários lotes declarados: cada um precisa de documento de inscrição com o mesmo lote.
+  return lacunaPorImovel(ctx, {
+    declarados: mapa.lotes,
+    documentos: mapa.inscricoes,
+    classe: 'inscricao-imobiliaria',
+    rotulo: 'lotes declarados no requerimento',
+    documento: 'documento de inscrição com o mesmo lote',
+    campo: 'lote',
+  })
 }
 
 /** AQR-GCA-008. */
@@ -218,10 +287,21 @@ const r008: FuncaoRegra = (ctx) => {
   if (!identificado && anexosDaClasse(ctx, 'matricula-transcricao').length === 0) {
     return { resultado: 'nao-avaliavel', motivo: 'Imóvel não identificado nos anexos lidos.', rascunho: 'Título registral não verificado: imóvel não identificado.', confianca: 'baixa' }
   }
-  const resultado = avaliarPresenca(ctx, { classes: ['matricula-transcricao'], nome: 'Certidão de matrícula ou transcrição' })
-  const varios = indicioDeVariosImoveis(ctx)
-  if (varios && resultado.resultado === 'sem-achado') return variosImoveis(varios, 'se há um título para cada imóvel de origem')
-  return { ...resultado, limitacoes: [...(resultado.limitacoes ?? []), 'Verificação feita para um imóvel por pacote.'] }
+  const presenca = avaliarPresenca(ctx, { classes: ['matricula-transcricao'], nome: 'Certidão de matrícula ou transcrição' })
+  const mapa = mapaDeImoveis(ctx)
+  if (presenca.resultado !== 'sem-achado' || !mapa.varios) return presenca
+  if (mapa.matriculas.valores.length === 0) {
+    return variosImoveis('há títulos com números diferentes e o requerimento não declara as matrículas', 'qual título corresponde a cada imóvel declarado')
+  }
+  // Cada matrícula declarada precisa de título com o mesmo número (dossiê, ensaio T03).
+  return lacunaPorImovel(ctx, {
+    declarados: mapa.matriculas,
+    documentos: mapa.titulos,
+    classe: 'matricula-transcricao',
+    rotulo: 'matrículas declaradas no requerimento',
+    documento: 'título registral com o mesmo número',
+    campo: 'matricula',
+  })
 }
 
 const DIA_MS = 24 * 60 * 60 * 1000
@@ -383,10 +463,10 @@ const r016: FuncaoRegra = (ctx) => {
 /** AQR-GCA-018: campos da ART/RRT × requerimento e título; discrepância é revisão, não falsidade. */
 const CAMPOS_018: NomeCampo[] = ['titular', 'rt-nome', 'lote', 'quadra', 'bairro', 'parcelamento', 'matricula']
 const r018: FuncaoRegra = (ctx) => {
-  const varios = indicioDeVariosImoveis(ctx)
-  if (varios) return variosImoveis(varios, 'a correspondência dos campos da ART/RRT com cada imóvel')
   const arts = anexosDaClasse(ctx, 'art-rrt-similar').filter((anexo) => anexo.lido.legibilidade === 'legivel')
   if (arts.length === 0) return { resultado: 'nao-avaliavel', motivo: 'Nenhuma ART/RRT legível entre os anexos.', rascunho: 'Campos da ART/RRT não comparados: documento não localizado ou ilegível.', confianca: 'baixa' }
+  const mapa = mapaDeImoveis(ctx)
+  if (mapa.varios) return artComVariosImoveis(ctx, arts, mapa)
   const classes: ClasseDocumental[] = ['art-rrt-similar', 'requerimento', 'matricula-transcricao']
   // Só contam os campos em que a ART tem valor: divergência só entre requerimento e título é da regra 020.
   const comparacoes = CAMPOS_018.map((campo) => compararCampo(ctx.campos, campo, classes)).filter(
@@ -399,6 +479,101 @@ const r018: FuncaoRegra = (ctx) => {
   return resultado
 }
 
+/** Valor normalizado de matrícula ou lote do anexo, quando lido com segurança (um só). */
+function numeroDo(ctx: Parameters<FuncaoRegra>[0], anexoId: string, campo: 'matricula' | 'lote'): { valores: string[]; brutoDe: (valor: string) => string; incerto: boolean; evidencias: Evidencia[]; campoId?: string } {
+  const detalhe = camposDe(ctx, anexoId, campo)?.contrato
+  if (!detalhe || detalhe.estado === 'nao-encontrado' || detalhe.estado === 'nao-aplicavel') return { valores: [], brutoDe: (valor) => valor, incerto: false, evidencias: [] }
+  const brutos = detalhe.estado === 'encontrado' && detalhe.valorBruto ? [detalhe.valorBruto] : detalhe.estado === 'varios-valores' ? (detalhe.alternativas ?? []) : []
+  const pares = brutos.flatMap((bruto) => {
+    const normalizado = campo === 'matricula' ? normalizarIdentificador(bruto) : normalizarCodigo(bruto)
+    return normalizado?.situacao === 'normalizado' ? [{ bruto, valor: String(normalizado.valor) }] : []
+  })
+  return {
+    valores: pares.map((par) => par.valor),
+    brutoDe: (valor: string) => pares.find((par) => par.valor === valor)?.bruto ?? valor,
+    incerto: detalhe.estado === 'ilegivel' || pares.length !== brutos.length || brutos.length === 0,
+    evidencias: detalhe.evidencias.slice(0, 1),
+    campoId: detalhe.id,
+  }
+}
+
+/**
+ * 020 com vários imóveis: (1) toda matrícula citada numa peça precisa estar entre as declaradas no
+ * requerimento; (2) lote, quadra, inscrição e bairro só são comparados entre peças do mesmo imóvel
+ * (mesma matrícula). Peça que cita mais de um imóvel não entra na comparação por imóvel.
+ */
+function identidadePorImovel(ctx: Parameters<FuncaoRegra>[0], classes: readonly ClasseDocumental[], mapa: MapaImoveis): ResultadoDaRegra {
+  const declaradas = mapa.matriculas.valores.length > 0 ? mapa.matriculas.valores : [...new Set(mapa.titulos.flatMap((titulo) => (titulo.valor ? [titulo.valor] : [])))]
+  if (declaradas.length === 0) return variosImoveis('vários imóveis sem matrícula declarada nem título com número legível', 'a identidade de cada imóvel entre as peças')
+  const anexos = classes.filter((classe) => classe !== 'requerimento').flatMap((classe) => anexosDaClasse(ctx, classe))
+  const fora: ValorConflitante['valores'] = []
+  const grupos = new Map<string, string[]>()
+  const incertas: string[] = []
+  for (const anexo of anexos) {
+    const numero = numeroDo(ctx, anexo.lido.id, 'matricula')
+    if (numero.incerto && numero.valores.length === 0 && camposDe(ctx, anexo.lido.id, 'matricula')) incertas.push(`${anexo.lido.id}: matrícula com leitura incerta`)
+    for (const valor of numero.valores) {
+      if (!declaradas.includes(valor)) fora.push({ anexoId: anexo.lido.id, classe: anexo.classificacao.contrato.classe, campoId: numero.campoId ?? '', valorBruto: numero.brutoDe(valor), evidencias: numero.evidencias })
+    }
+    if (numero.valores.length === 1 && numero.valores[0]) grupos.set(numero.valores[0], [...(grupos.get(numero.valores[0]) ?? []), anexo.lido.id])
+  }
+  const limitacoes = ['Vários imóveis: comparação feita imóvel a imóvel, pela matrícula citada em cada peça; peças sem matrícula ou com mais de uma não entram na comparação por imóvel.', ...incertas]
+  if (fora.length > 0) {
+    return {
+      resultado: 'achado',
+      tipo: 'divergencia',
+      rascunho: 'Identidade dos imóveis: peça cita matrícula que não está entre as declaradas no requerimento. Os números estão no quadro comparativo. O sistema não indica qual documento está correto.',
+      evidencias: [...mapa.matriculas.evidencias, ...fora.flatMap((valor) => valor.evidencias)],
+      camposUsados: mapa.matriculas.campoIds,
+      valoresConflitantes: [{ campo: 'matricula', valores: [...linhasDoQuadro(mapa.matriculas, [], 'requerimento', 'matricula'), ...fora] }],
+      confianca: 'media',
+      limitacoes,
+    }
+  }
+  const comparacoes = [...grupos.values()]
+    .filter((ids) => ids.length >= 2)
+    .flatMap((ids) => (['lote', 'quadra', 'inscricao', 'bairro'] as NomeCampo[]).map((campo) => compararCampo(ctx.campos.filter((item) => ids.includes(item.contrato.anexoId)), campo, classes)))
+  const resultado = resultadoDeComparacoes(comparacoes, 'Identidade de cada imóvel', 'Não há duas peças do mesmo imóvel com identificadores para comparar.')
+  return { ...resultado, limitacoes: [...limitacoes, ...(resultado.limitacoes ?? [])] }
+}
+
+/** 018 com vários imóveis: titular e RT comparados com o requerimento; lote e matrícula da ART precisam estar entre os declarados. */
+function artComVariosImoveis(ctx: Parameters<FuncaoRegra>[0], arts: readonly AnexoTriado[], mapa: MapaImoveis): ResultadoDaRegra {
+  const comparacoes = (['titular', 'rt-nome'] as NomeCampo[]).map((campo) => compararCampo(ctx.campos, campo, ['art-rrt-similar', 'requerimento']))
+  const fora: ValorConflitante[] = []
+  for (const campo of ['lote', 'matricula'] as const) {
+    const declarados = campo === 'lote' ? mapa.lotes : mapa.matriculas
+    if (declarados.valores.length === 0) continue
+    for (const anexo of arts) {
+      const numero = numeroDo(ctx, anexo.lido.id, campo)
+      const ausentes = numero.valores.filter((valor) => !declarados.valores.includes(valor))
+      if (ausentes.length > 0) {
+        fora.push({
+          campo,
+          valores: [
+            ...linhasDoQuadro(declarados, [], 'requerimento', campo),
+            ...ausentes.map((valor) => ({ anexoId: anexo.lido.id, classe: 'art-rrt-similar', campoId: numero.campoId ?? '', valorBruto: numero.brutoDe(valor), evidencias: numero.evidencias })),
+          ],
+        })
+      }
+    }
+  }
+  const limitacoes = ['Vários imóveis: lote e matrícula da ART/RRT conferidos contra a lista declarada; quadra, bairro e parcelamento não são comparados.']
+  if (fora.length > 0) {
+    return {
+      resultado: 'achado',
+      tipo: 'divergencia',
+      rascunho: `Campos da ART/RRT: ${fora.map((item) => nomeCampo[item.campo]).join(', ')} não está entre os declarados no requerimento. Os valores estão no quadro comparativo. O sistema não indica qual documento está correto.`,
+      evidencias: fora.flatMap((item) => item.valores.flatMap((valor) => valor.evidencias)),
+      valoresConflitantes: fora,
+      confianca: 'media',
+      limitacoes,
+    }
+  }
+  const resultado = resultadoDeComparacoes(comparacoes, 'Campos da ART/RRT', 'Nenhum campo da ART/RRT pôde ser comparado.')
+  return { ...resultado, limitacoes: [...limitacoes, ...(resultado.limitacoes ?? [])] }
+}
+
 /** AQR-GCA-019: assunto em requerimento, DRT, planta e memorial; não altera a modalidade sozinho. */
 const r019: FuncaoRegra = (ctx) => {
   const comparacao = compararCampo(ctx.campos, 'assunto', ['requerimento', ...DRTS, 'prancha', 'memorial'])
@@ -408,9 +583,9 @@ const r019: FuncaoRegra = (ctx) => {
 /** AQR-GCA-020: matrícula, lote, quadra, inscrição e bairro após normalização conservadora. */
 const CAMPOS_020: NomeCampo[] = ['matricula', 'lote', 'quadra', 'inscricao', 'bairro']
 const r020: FuncaoRegra = (ctx) => {
-  const varios = indicioDeVariosImoveis(ctx)
-  if (varios) return variosImoveis(varios, 'a identidade de cada imóvel entre as peças')
   const classes: ClasseDocumental[] = ['requerimento', 'matricula-transcricao', 'prancha', 'memorial', 'inscricao-imobiliaria']
+  const mapa = mapaDeImoveis(ctx)
+  if (mapa.varios) return identidadePorImovel(ctx, classes, mapa)
   return resultadoDeComparacoes(CAMPOS_020.map((campo) => compararCampo(ctx.campos, campo, classes)), 'Identidade do imóvel', 'Nenhum identificador do imóvel encontrado com confiança em dois anexos.')
 }
 

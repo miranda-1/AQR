@@ -134,6 +134,14 @@ describe('avaliação integrada da triagem', () => {
           if (!conclusivo) continue
           for (const id of item.contrato.camposUsados) {
             const campo = campos.get(id)
+            // Exceção documentada: no requerimento, várias matrículas ou lotes são a lista de imóveis
+            // declarados (regras de correspondência por imóvel), não uma leitura ambígua.
+            const listaDeImoveis =
+              campo?.estado === 'varios-valores' &&
+              (campo.campo === 'matricula' || campo.campo === 'lote') &&
+              anexos.find((anexo) => anexo.lido.id === campo.anexoId)?.classificacao.contrato.classe === 'requerimento' &&
+              ['AQR-GCA-006', 'AQR-GCA-008', 'AQR-GCA-018', 'AQR-GCA-020'].includes(item.contrato.regraId)
+            if (listaDeImoveis) continue
             expect(campo?.estado, `${item.contrato.id} usa ${id}`).toBe('encontrado')
             expect(campo?.alternativas ?? [], `${item.contrato.id} usa ${id}`).toEqual([])
           }

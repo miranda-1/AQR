@@ -2,6 +2,8 @@ import { classificacaoSchema } from '../../../shared/contracts/triage.ts'
 import { defaultComparisonLimits } from '../../comparison/limits.ts'
 import { defaultImageLimits } from '../../documents/limits.ts'
 import { makePdf } from '../../test/make-pdf.ts'
+import { buildPdf } from '../../comparison/evaluation/corpus-pdf.ts'
+import { paginaDeTexto } from '../corpus/documents.ts'
 import { gerarPacote } from '../corpus/generate.ts'
 import { PACOTES } from '../corpus/pacotes.ts'
 import { defined } from '../../test/defined.ts'
@@ -77,6 +79,30 @@ describe('classificação documental', () => {
     // Composto não tem confiança alta: pede revisão.
     expect(composto.contrato.confianca).toBe('media')
     expect(composto.porPagina.map((pagina) => pagina.classe)).toEqual(['requerimento', 'drt-01'])
+  })
+
+  describe('prancha pela estrutura, sem "prancha" ou "planta" no título', () => {
+    async function folha(titulo: string, linhas: string[], tamanho?: 'A1' | 'A3') {
+      const pagina = paginaDeTexto({ titulo, linhas, campos: {}, assinaturas: [] }, tamanho ? { folha: tamanho } : {})
+      const { bytes } = await buildPdf([pagina])
+      return classificarAnexo(await lerAnexo('anexo-1', 'folha.pdf', bytes, OPCOES))
+    }
+
+    it('folha grande com dois ou mais sinais de prancha no corpo: prancha, confiança média, justificada', async () => {
+      const resultado = await folha('LEVANTAMENTO DO LOTE 3 - FOLHA 1/1', ['Quadro de áreas', 'Proprietário: Fulano Ficticio', 'Situação atual: lote 3 - 300,00 m²', 'Esc.: 1/10.000'], 'A1')
+      expect([resultado.contrato.classe, resultado.contrato.confianca]).toEqual(['prancha', 'media'])
+      expect(resultado.justificativa).toContain('estrutura de prancha')
+    })
+
+    it('não basta a folha grande: um sinal só, ou folha A4, fica indeterminada', async () => {
+      expect((await folha('LEVANTAMENTO DO LOTE 3', ['Quadro de áreas', 'Proprietário: Fulano', 'Observações gerais', 'Esc.: 1/10.000'], 'A1')).contrato.classe).toBe('indeterminada')
+      expect((await folha('LEVANTAMENTO DO LOTE 3', ['Quadro de áreas', 'Proprietário: Fulano', 'Situação atual: lote 3', 'Esc.: 1/10.000'])).contrato.classe).toBe('indeterminada')
+    })
+
+    it('folha grande com título de outra classe continua sendo a outra classe', async () => {
+      const resultado = await folha('MEMORIAL DESCRITIVO', ['Perímetro: inicia no vértice V1.', 'Situação atual: lote 3', 'Esc.: 1/10.000'], 'A3')
+      expect(resultado.contrato.classe).toBe('memorial')
+    })
   })
 
   it('classifica pelo conteúdo, não pelo nome do arquivo', async () => {

@@ -160,15 +160,55 @@ describe('política de abstenção', () => {
     return executarTriagem(entrada, trocados, { catalogo })
   }
 
-  it('vários imóveis no requerimento: título, inscrição, ART e identidade não concluem', async () => {
-    const resultado = await trocar('DSD-01', 'requerimento', [
-      ['REQUERIMENTO PARA PROCESSO CARTOGRÁFICO', 'Assunto: DESDOBRO', 'Proprietário(a): Carla Ficticia de Exemplo', 'Matrícula: 90417 e matrícula 90418', 'Lote: F7'],
-    ])
-    for (const numero of ['006', '008', '018', '020']) {
-      const item = avaliacao(resultado, numero)
-      expect(item.contrato.resultado, numero).toBe('nao-avaliavel')
-      expect(item.contrato.motivo, numero).toContain('um imóvel por pacote')
+  describe('vários imóveis', () => {
+    const REQUERIMENTO_DUAS = [
+      ['REQUERIMENTO PARA PROCESSO CARTOGRÁFICO', 'Assunto: DESDOBRO', 'Proprietário(a): Carla Ficticia de Exemplo', 'Matrícula: 90417 e matrícula 90418', 'Lote: F7 Quadra: 12'],
+    ]
+    const CERTIDAO_90418 = [['CERTIDÃO DE INTEIRO TEOR - MATRÍCULA Nº 90418', '9º Serviço Registral Fictício', 'Imóvel: lote F8 da quadra 12 do Jardim Ficticio.', 'Certidão emitida em 20/10/2026.']]
+
+    /** DSD-01 com o requerimento de duas matrículas e, opcionalmente, mais anexos. */
+    async function comDuasMatriculas(extras: string[][][] = [], ajuste: (entrada: EntradaTriagem) => EntradaTriagem = (entrada) => entrada): Promise<ResultadoTriagem> {
+      const { entrada, anexos } = await pacote('DSD-01')
+      const indice = anexos.findIndex((anexo) => anexo.classificacao.contrato.classe === 'requerimento')
+      const trocados = [...anexos]
+      trocados[indice] = await triarAnexo(defined(anexos[indice]).lido.id, 'req.pdf', (await makePdf(REQUERIMENTO_DUAS)).bytes, { limites: LIMITES_AVALIACAO })
+      for (const [posicao, paginas] of extras.entries()) {
+        trocados.push(await triarAnexo(`anexo-extra-${posicao + 1}`, 'extra.pdf', (await makePdf(paginas)).bytes, { limites: LIMITES_AVALIACAO }))
+      }
+      return executarTriagem(ajuste(entrada), trocados, { catalogo })
     }
+
+    it('aponta a matrícula declarada sem título (ensaio T03), sem desativar as outras verificações', async () => {
+      const resultado = await comDuasMatriculas()
+      const titulo = avaliacao(resultado, '008')
+      expect(titulo.contrato).toMatchObject({ resultado: 'achado', tipo: 'nao-localizado' })
+      expect(titulo.contrato.rascunho).toContain('1 de 2 matrículas declaradas')
+      expect(titulo.contrato.rascunho).not.toContain('90418')
+      expect(titulo.valoresConflitantes[0]?.valores.map((valor) => valor.valorBruto)).toEqual(['90417', '90418', '90417'])
+      // As demais continuam conclusivas: identidade por imóvel e ART dentro da lista declarada.
+      expect(avaliacao(resultado, '020').contrato.resultado).toBe('sem-achado')
+      expect(avaliacao(resultado, '018').contrato.resultado).toBe('sem-achado')
+      expect(avaliacao(resultado, '006').contrato.resultado).toBe('sem-achado')
+    })
+
+    it('com um título para cada matrícula declarada, sem achado', async () => {
+      const resultado = await comDuasMatriculas([CERTIDAO_90418])
+      expect(avaliacao(resultado, '008').contrato.resultado).toBe('sem-achado')
+    })
+
+    it('lacuna em pacote não confirmado como completo não é concluída', async () => {
+      const resultado = await comDuasMatriculas([], (entrada) => ({ ...entrada, integridadeDoPacote: { ...entrada.integridadeDoPacote, valor: 'parcial' } }))
+      const titulo = avaliacao(resultado, '008')
+      expect(titulo.contrato.resultado).toBe('nao-avaliavel')
+      expect(titulo.contrato.motivo).toContain('não confirmado como completo')
+    })
+
+    it('peça que cita matrícula fora da lista declarada é divergência de identidade', async () => {
+      const resultado = await comDuasMatriculas([[['CERTIDÃO DE INTEIRO TEOR - MATRÍCULA Nº 77777', 'Serviço Registral Fictício', 'Certidão emitida em 20/10/2026.']]])
+      const identidade = avaliacao(resultado, '020')
+      expect(identidade.contrato).toMatchObject({ resultado: 'achado', tipo: 'divergencia' })
+      expect(identidade.valoresConflitantes[0]?.valores.some((valor) => valor.valorBruto === '77777')).toBe(true)
+    })
   })
 
   it('valor ambíguo em uma peça impede "sem achado" na comparação', async () => {
