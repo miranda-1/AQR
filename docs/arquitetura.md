@@ -161,6 +161,35 @@ Frontend (`src/features/admin/`): `AccountService` (contrato) com `createHttpAcc
 disponível. Telas: `/administracao/contas` (lista e busca), `/administracao/contas/nova`, `/administracao/contas/:id`
 (edição, situação e histórico) e `/administracao/auditoria`.
 
+### Triagem documental: persistência (E7)
+
+Só com `TRIAGEM_MODO=experimental-sintetico`, que o servidor **recusa em produção**: só pacotes sintéticos, porque a política de retenção de documentos reais não foi homologada.
+
+- **Banco** (migração `0008_triagem`, SQLite):
+  - `triagens`: processo, com id estável, autoria imutável, `versao` para concorrência e prazo de retenção;
+  - `triagem_anexos`: SHA-256, metadados imutáveis; o conteúdo só passa de `armazenado` para `expurgado`;
+  - `triagem_versoes`: motor × catálogo com hash;
+  - `triagem_analises`: análises numeradas, com a entrada usada, os hashes dos anexos e o resultado no contrato `ProcessoTriagem`;
+  - `triagem_leituras`: estado do anexo para reprocessar, **sem o texto integral**;
+  - `triagem_classificacoes`, `triagem_campos`, `triagem_avaliacoes`, `triagem_evidencias`;
+  - `triagem_confirmacoes`: modalidade, etapa, completude do pacote e condições, sempre por servidor;
+  - `triagem_revisoes`: confirmar, descartar, encaminhar achado e corrigir campo;
+  - `triagem_eventos`: trilha de auditoria.
+
+  Tudo o que é resultado, revisão ou evento é **só de inserção**, garantido por triggers: correção gera registro novo. A análise encerrada não muda. Não há ação de decisão na lista de eventos do banco.
+- **Serviço** (`server/triage/store/service.ts`):
+  - toda alteração em transação (`BEGIN IMMEDIATE`), com conferência da versão do processo (409 se outra ação chegou antes);
+  - processo visto e alterado só por quem criou ou por administrador; a tentativa de outro analista vira evento `acesso.negado`;
+  - idempotência pela chave do cliente;
+  - ao iniciar, análises que estavam rodando ficam `interrompida` e o processo volta à última análise concluída (ou `falhou`).
+- **Reprocessamento:** nova análise a partir do estado guardado da atual, com as correções de campo (registro novo, `metodo: servidor`, `corrigidoPor`) e as confirmações. Só as regras afetadas são recalculadas (mapa `DEPENDENCIAS`: campos lidos, completude, condições; modalidade ou etapa nova recalcula tudo). As demais são copiadas com referência à análise de origem. O motor roda inteiro como verificação: regra "não afetada" que mudar é recalculada e registrada como dependência não prevista.
+- **Conteúdo dos anexos** (`server/triage/store/conteudo.ts`): guardado só com `TRIAGEM_CONTEUDO_CHAVE` (32 bytes, base64). A chave fica na configuração, nunca na pasta nem no log.
+  - Cada arquivo é cifrado com AES-256-GCM e IV próprio, com a referência como dado autenticado.
+  - O nome do arquivo é aleatório; a pasta tem permissão 700 e os arquivos, 600.
+  - Na leitura, o SHA-256 é conferido.
+  - Expurgo automático depois de `TRIAGEM_RETENCAO_HORAS` (padrão 72), verificado (o arquivo não existe mais) e registrado.
+  - Sem chave, só metadados e resultados ficam guardados; o reprocessamento continua funcionando, porque usa o estado guardado.
+
 ### Como entrará a autenticação real
 
 Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:

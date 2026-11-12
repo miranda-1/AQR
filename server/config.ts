@@ -51,6 +51,29 @@ const environmentSchema = z.object({
   SMTP_PASSWORD: z.string().min(1).optional(),
   /** Remetente, ex.: "AQR <nao-responda@exemplo.gov.br>". */
   SMTP_FROM: z.string().min(3).optional(),
+  /**
+   * Triagem documental (E7–E8). "desativada" (padrão) ou "experimental-sintetico": só pacotes
+   * sintéticos, nunca em produção (a política de retenção de documentos reais não foi homologada).
+   */
+  TRIAGEM_MODO: z.enum(['desativada', 'experimental-sintetico']).default('desativada'),
+  TRIAGEM_MAX_ANEXOS: z.coerce.number().int().min(1).max(200).default(40),
+  TRIAGEM_MAX_BYTES_PACOTE: z.coerce.number().int().min(1024).max(2 * 1024 * 1024 * 1024).default(200 * 1024 * 1024),
+  TRIAGEM_WORKERS: z.coerce.number().int().min(1).max(4).default(1),
+  TRIAGEM_QUEUE_LIMIT: z.coerce.number().int().min(0).max(100).default(4),
+  TRIAGEM_TIMEOUT_MS: z.coerce.number().int().min(5000).max(3_600_000).default(600_000),
+  TRIAGEM_WORKER_MEMORY_MB: z.coerce.number().int().min(256).max(8192).default(1536),
+  TRIAGEM_OCR: z.enum(['on', 'off']).default('on'),
+  /** Pasta privada do conteúdo cifrado dos anexos (só com TRIAGEM_CONTEUDO_CHAVE). */
+  TRIAGEM_CONTEUDO_DIR: z.string().min(1).default('data/triagem-conteudo'),
+  /**
+   * Chave AES-256 (32 bytes em base64) do conteúdo dos anexos. Sem ela, o conteúdo não é guardado:
+   * só metadados e resultados. Fica fora da pasta do conteúdo e nunca vai para o log.
+   */
+  TRIAGEM_CONTEUDO_CHAVE: z.string().min(1).optional(),
+  /** Horas até o expurgo do conteúdo cifrado (os metadados e resultados sintéticos ficam). */
+  TRIAGEM_RETENCAO_HORAS: z.coerce.number().int().min(1).max(24 * 365).default(72),
+  /** Pasta do catálogo normativo versionado (regras, condições, homologações). */
+  TRIAGEM_CATALOGO_DIR: z.string().min(1).default('docs/triagem/catalogo'),
 })
 
 /** Segredos que existem nos arquivos de desenvolvimento do repositório; nunca valem em produção. */
@@ -81,6 +104,24 @@ export interface ComparisonSettings {
   ocrLanguagePath: string
 }
 
+export interface TriagemSettings {
+  modo: 'desativada' | 'experimental-sintetico'
+  maxAnexos: number
+  maxBytesPacote: number
+  maxBytesArquivo: number
+  workers: number
+  queueLimit: number
+  jobTimeoutMs: number
+  workerMemoryMb: number
+  ocr: boolean
+  ocrLanguagePath: string
+  conteudoDir: string
+  /** Chave do conteúdo (32 bytes) ou `null`: sem chave, o conteúdo dos anexos não é guardado. */
+  conteudoChave: Buffer | null
+  retencaoHoras: number
+  catalogoDir: string
+}
+
 export interface ServerConfig {
   environment: 'development' | 'test' | 'production'
   host: string
@@ -91,6 +132,7 @@ export interface ServerConfig {
   comparison: ComparisonSettings
   /** Arquivo do banco SQLite (contas e auditoria). `:memory:` nos testes. */
   databasePath: string
+  triagem: TriagemSettings
   /**
    * Administração de contas. "disabled" (padrão): desligada. "dev": ligada sem autenticação real,
    * identificando a pessoa por `X-AQR-Dev-Actor`; só fora de produção e só na máquina local.
@@ -220,6 +262,37 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     },
     databasePath: data.DATABASE_PATH,
     adminMode: data.ADMIN_API_MODE,
+    triagem: triagemSettings(data),
+  }
+}
+
+function triagemSettings(data: z.infer<typeof environmentSchema>): TriagemSettings {
+  if (data.TRIAGEM_MODO === 'experimental-sintetico' && data.NODE_ENV === 'production') {
+    throw new ConfigError('TRIAGEM_MODO=experimental-sintetico não é permitido em produção: a triagem só aceita pacotes sintéticos e a política de retenção de documentos reais não foi homologada.')
+  }
+  let conteudoChave: Buffer | null = null
+  if (data.TRIAGEM_CONTEUDO_CHAVE) {
+    const chave = Buffer.from(data.TRIAGEM_CONTEUDO_CHAVE, 'base64')
+    if (chave.length !== 32 || chave.toString('base64') !== data.TRIAGEM_CONTEUDO_CHAVE) {
+      throw new ConfigError('TRIAGEM_CONTEUDO_CHAVE precisa ser uma chave de 32 bytes em base64 (gere com: openssl rand -base64 32).')
+    }
+    conteudoChave = chave
+  }
+  return {
+    modo: data.TRIAGEM_MODO,
+    maxAnexos: data.TRIAGEM_MAX_ANEXOS,
+    maxBytesPacote: data.TRIAGEM_MAX_BYTES_PACOTE,
+    maxBytesArquivo: defaultComparisonLimits.maxFileSizeBytes,
+    workers: data.TRIAGEM_WORKERS,
+    queueLimit: data.TRIAGEM_QUEUE_LIMIT,
+    jobTimeoutMs: data.TRIAGEM_TIMEOUT_MS,
+    workerMemoryMb: data.TRIAGEM_WORKER_MEMORY_MB,
+    ocr: data.TRIAGEM_OCR === 'on',
+    ocrLanguagePath: data.COMPARISON_OCR_LANG_PATH,
+    conteudoDir: data.TRIAGEM_CONTEUDO_DIR,
+    conteudoChave,
+    retencaoHoras: data.TRIAGEM_RETENCAO_HORAS,
+    catalogoDir: data.TRIAGEM_CATALOGO_DIR,
   }
 }
 
