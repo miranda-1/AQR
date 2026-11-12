@@ -1,0 +1,4504 @@
+[
+  {
+    "id": "NOV-01",
+    "titulo": "Pacote completo com revisões \"Rev. 02 – data\" e \"REVISÃO: 2 (data)\"",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "4885ca98bbf0a8cd71f877c93f10c3d2d13e46c6c86832dfec1638dd2763f87c",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "6cf4efcff2fd381f41d492d19ba99c7e20fedf4925ccd4e84644f107a4ed5a06",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "d9b9437c3e83e15cd9502038a5b57a341078923f4bf01c65304f41c43c44db09",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "fcd1db6e8f208ac60332f6a6a1f1bda092e10d8103a82d2d037ba7ce39d6c1e9",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "ee26226e1b5802e3ec02f6d4805fea57f6c4cd36690d9cbb38b26633ef4263a2",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "6e01a40f4af285e7c91fe6074fade7d3812e911e22b1500192465173ba9469ef",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      }
+    }
+  },
+  {
+    "id": "NOV-02",
+    "titulo": "Revisões com datas diferentes na prancha e no memorial",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "132478b2d2704f36500233443ae130953384e81ad3e9140d35a53cd5127d7d5f",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "732b3e5b309358f66ebd204af4c849e4506e8393c702faa05d450f33875057a4",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "9e6a454600f1c2c5438f3adacb156c960b45afe172f08b8f22dfc333ec17e370",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "63d7e717c5f5b597d4b24413926f509e067c59f180be71c49272ab4b3d8c87d7",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "a4a13bd7a6a8b0808e772f7e4b6715ec672c5b6f9faac95b5f230099da4abb87",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "87d03ffc00dff1e7ad296e12c68198d0731c34d4e955ff09c2b2a673a702cfff",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "05/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "divergencia",
+        "motivo": "Prancha 03/11/2026, memorial 05/11/2026."
+      }
+    }
+  },
+  {
+    "id": "NOV-03",
+    "titulo": "Revisão com ano de dois dígitos na prancha",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "65434c03add36bf7179d1edf393f72853aeb256140e46b6d7947287fe3917d43",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "c5379fdb9e569c6958186642bfb6003f7159fba5635d18f1922353fa2ded69f7",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "f8953d38f2ca14053f2ec1c4e7f25e358a953d7cbdf51a2dbb95bda95956216d",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "ee20ac6647b813f0824c49c9d265ff62e8dd2ec894ff7bf213f65faf8a2861bf",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/26",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "26a6dfc442e713403a642feacba853ffd6c34c58facf3773ba29f35235a10b06",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "baea596863c9a69228d979d20f2be18ff1d8ef278930f3da0ac88447a750bf4c",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "nao-avaliavel"
+        ],
+        "motivo": "Data ambígua na prancha: a comparação não pode concluir."
+      }
+    }
+  },
+  {
+    "id": "NOV-04",
+    "titulo": "Prancha em A2 sem \"prancha\" ou \"planta\" no título",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "83add59487ce6ceddbde10eb70ac000539db5c8a51dc7410ffca2f02ce3d6efb",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "3e4d2e06841938e1aed5a1af336e78407d6a74d3437a4c1cfc9074f2d5901749",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "6bc16774f995f3b0372ae5d1502f08f388c660c934737a209cf2224f36f1aa60",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "cd0ea13577c11466d56d1b2fa13f5a6644df7b731356f3640656588dfd02a407",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A2",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "0c02988894e02fdf03e6ff95da554264d9aa441288b16344c5489abd7fa46eae",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "0586087295d504d450b4e11294780f3f98fc203b6cd2ce9226bcfdd15d49b43f",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "A peça é a prancha; reconhecê-la sem título é desejável, abster-se é aceitável."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Assinada; depende de a peça ser reconhecida."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Mesma data; depende de a peça ser reconhecida."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Escala 1:10.000; depende de a peça ser reconhecida."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "A2 é permitido; depende de a peça ser reconhecida."
+      }
+    }
+  },
+  {
+    "id": "NOV-05",
+    "titulo": "Dois imóveis declarados, com os dois títulos e as duas inscrições",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "6d2d8d94cd87922255c90a37e8b47b502b33977a8ae3742ff3bbbede4e445117",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional"
+        },
+        "estados": {
+          "lote": "varios-valores",
+          "matricula": "varios-valores"
+        },
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "fdabb043dbc69113cb81b97c83e389e668c1715715aa0db93e05878679566400",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "bbe3aae54dd6d289b51407ddb229798cc204f9854e5438fb81b65082c3a4ed61",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "a98c494a58e11341a95f1e0797d630361dfef4b0b455de546e92d50c37c053b0",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "6260ad5fa0e0637ccb53c7cf471738dc97b4e2b6bb0ea6574b57ab71d2f05233",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "b5da12450d3ca55cb78eabff2cd11cb8bec0d7c532200c4a7b85b047a520142d",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c2-certidao.pdf",
+        "sha256": "c46f2540db705f23442dac14add2af1687ea74073033f06d97c20d8ef76463b1",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.203",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "23",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101203"
+        }
+      },
+      {
+        "nome": "d2-espelho.pdf",
+        "sha256": "f41b02c65bd586fc649ffb7a9985404d83de5fa03634a07990f32ee25fa69dec",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.023",
+          "lote": "23",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Cada lote declarado tem espelho cadastral."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Cada matrícula declarada tem certidão."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Peças coerentes com os imóveis declarados."
+      }
+    }
+  },
+  {
+    "id": "NOV-06",
+    "titulo": "Dois imóveis declarados, só um título, pacote completo",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "8d8330c535e244ed345e5423ec2392c672cddfc05762a4a5e9c94cec74cf6777",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional"
+        },
+        "estados": {
+          "lote": "varios-valores",
+          "matricula": "varios-valores"
+        },
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "7ffd0ef095e48867f028e6ca3c553034612ee5553a65dd38e00d6a2a826efbf6",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "e55ec4579f0cc4a72325a805b8c7bef1184fc6de0e529da5ad858568686a13b0",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "9e5cf25158ab9ba9fb177d160bc286372fcee22048254c4b2086ca19c29c12b8",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "72df796bf1acc713b70bcd1054f77539f799dd01c57fffec46a1260c5dabd786",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "51a197a3fc2fd65c5a6c3fa5749f32cecbc479539b9edc36b24bbbabc8c551f2",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "d2-espelho.pdf",
+        "sha256": "f41b02c65bd586fc649ffb7a9985404d83de5fa03634a07990f32ee25fa69dec",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.023",
+          "lote": "23",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Matrícula 101.203 declarada sem certidão (ensaio T03)."
+      }
+    }
+  },
+  {
+    "id": "NOV-07",
+    "titulo": "Dois lotes declarados, só uma inscrição, pacote completo",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "5d37e0ddf27db96e8fd11e08987c101e8f34bf36e5d78ed4c7aa15cc25d3899f",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional"
+        },
+        "estados": {
+          "lote": "varios-valores",
+          "matricula": "varios-valores"
+        },
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "48ddbfb7e211b51db4a3066455a205e4393bd8b12e04769469b6865cd1d2d544",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "2cef258b34db2cdadc5e179b37be72e5104b22133aa08cd66103ba0876ba367c",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "a4d90fab106ce17ba02a9203e4251d48a6bed6068d6bbe3921aef66f90e8f5a5",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "3238ff104766e4ad4e4f162e169d17b7f0f93bfae77f393b84760f5d588f808e",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "9503d534b26c1ea6c5552348a325ed75f778bc1a6600deda2358fddf265ca17f",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c2-certidao.pdf",
+        "sha256": "c46f2540db705f23442dac14add2af1687ea74073033f06d97c20d8ef76463b1",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.203",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "23",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101203"
+        }
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Lote 23 declarado sem documento de inscrição."
+      }
+    }
+  },
+  {
+    "id": "NOV-08",
+    "titulo": "Dois imóveis declarados, só um título, pacote parcial",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "parcial",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "bacde31cf8eec888222ad6e3d9a656eaf4329aa515e306b0fd64c6f19fc581b5",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional"
+        },
+        "estados": {
+          "lote": "varios-valores",
+          "matricula": "varios-valores"
+        },
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "fbcdb84ed22187d761371a3e1401e453073f3da094ec38a92e5c79ea38cbca2c",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "436159c2cf01f5f9bafbfd935a0d2638bf9e905f764f97aca65b8c411e0b03c6",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "1b37ea7a9be0fa353aeaaf797a62bea6f546506a135db35d1f32e06ddda7ef53",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "13f6da5daa452677cef9e2c813306c832529570d16bdb0778ec02ecfa9b33e41",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "98554981c99afbcd8413115aa9be953e88ffc84279a69a8c7b30dcb897cc88d6",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "d2-espelho.pdf",
+        "sha256": "f41b02c65bd586fc649ffb7a9985404d83de5fa03634a07990f32ee25fa69dec",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.023",
+          "lote": "23",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "nao-avaliavel"
+        ],
+        "motivo": "Pacote parcial: o segundo título pode estar no que não veio."
+      }
+    }
+  },
+  {
+    "id": "NOV-09",
+    "titulo": "Requerimento com rótulos em travessão e campos separados por barras",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "f86e6675be6e2a69fe38292b091a5488d3aebf805f1b998ed1cb5e23b440e0e4",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "bairro": "Jardim Demonstrativo",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "signatario": "Rosa Teste Ficcional"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "6cd374741a6c6109bf9102a6268bfab15ced6b4aad7dac801d425d04791a1d0c",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "9c2b3580bba95b05ba840d63df15f60af4dca03d287be0710792235cd9254432",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "ae85ea88997b73364d70521488331b8085d2f720b8fc008d1b54e06d17312538",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "518fb7f91e82ed3b00e35ab56b873919b24284b4c4b02a2c676f04c0675cf358",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "f7d6116a676fb68a6465ec031bf58e50dee46c6c22a941d9e71e602a52c57a07",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado",
+          "achado"
+        ],
+        "motivo": "O assunto está lá; rótulo com travessão pode não ser lido (alerta de classificação humana é aceitável, não conclusão)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "A proprietária assina."
+      }
+    }
+  },
+  {
+    "id": "NOV-10",
+    "titulo": "Certidão digitalizada com ruído",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "6756234c398dd0df52aa65f13ef8f565fbe082b55ef11288818c406d2bf6c19d",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "8814fc2bef7f230a735ad768b2775401c93eb107bd0870ecced7e2d9943700ae",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "365d039b28fe6e1d16fc77bfde90513792d67286924ada20ec95bfc0df12d627",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "ocr",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "24216f13ac4ce9ff9f4023bf062b52b1ac9d9341f4d6d23c9fe8998130d81a80",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "46ac953f61a302b06223901770acc713cf24eedbc2a6520d7e0bb35b135d0133",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "e93757226271010908d30eecb580c2dad3f72e86be60eaff9f456c70760bdf83",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "42c1f0b6e9e42be53404fa1eaff5b31e2b3b639f6bf3bb058f1b3ca95647b7d6",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "A certidão está lá; leitura difícil nunca é ausência."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Depende da leitura da data."
+      }
+    }
+  },
+  {
+    "id": "NOV-11",
+    "titulo": "Requerimento em JPG girado 90°",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.jpg",
+        "sha256": "7f5d331886a6415497f51b0598601262dcd694eee75b23d94eaea1d4295af125",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "ocr",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "e6ce39080d24c06e2089210e7e3c1a07b9da9a08199c528169f8b0657edd1950",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "b0b5ea546ea508af991ce8fb2e38c3ffdbe0913ca98fdae36971f085ab016b82",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "ae670a8bef6b4e2da5ebdbde76e5053195995d550c27bfb04f8fa6d88905a5df",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "5c0f33ca3275a89f3e837d3c6cc8bfb562f5832d62e546367d4f0bd90d8c0a2e",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "cc026dc18bc0b27f1883f4a0da7696ea9eec0c8ccaca2b2b2209333f93dd8514",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Requerimento presente, em imagem girada."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      }
+    }
+  },
+  {
+    "id": "NOV-12",
+    "titulo": "DRT e RRT no mesmo PDF",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "d817a4d2b696613285cf4a73ae116512228e9e237bd0782f7d14fb7aa963b720",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt-e-rrt.pdf",
+        "sha256": "b01cd8256ceb6ba9ce2f3d0e39170ede0b1b46c173569f7b60155449a2f9d655",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01",
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "699ca6835f5f82e32fa8dc6b575c4cc897cdf6a8e7edfd9c30643da0d07279d6",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "ea7d155b88788da26ed60b7dcd1bf4a2f2fd305affe67a9b6993c5e2b72187a9",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "86147093e9dcdef05eaef0d6dee9873b38fd4bed425f609afd2d3f45832ff6d0",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "DRT na página 1 do composto."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "RRT na página 2 do composto."
+      }
+    }
+  },
+  {
+    "id": "NOV-13",
+    "titulo": "Sem espelho cadastral, pacote completo",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "a6ec0974b664fd1ac03f8eed1adb4611243998fb61bd0943c035cb0af5476c3a",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "5f7688102bfb58dc6360b307f5399510b8ed5f1292fd37e0a36c7f2412eb9664",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "047ab44a5340c233cab34af5c79d9780f571bd5bf44a918078792c837c0c13bb",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "f41193a8312df9cad1389ca6d016941eb8379d5c861a982bb34b7884f11020db",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "52da0ea520960a270e99c68e245c6fb20740860461c42b7bebe97af979f0c660",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "52741c4d7835e64f272fffd7926668700668e22750785ffd295adc6c90423fb0",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Nenhum documento de inscrição entre os anexos."
+      }
+    }
+  },
+  {
+    "id": "NOV-14",
+    "titulo": "Memorial com data em tabela de revisões (duas datas)",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "17a441328910dc7c7e2a8d2eac5ca62aed7c711eb79d5164216924a35e911d41",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "75b88a671810e6f1d90e4d91dc397316ba369ec5726d7ddadfcdf522286244ef",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "af84df2e63e1d32d69c1ce65e89f78887a7f48b99b8f8f8e46b15222cf080440",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "464171f1bc886de4622fca80def2110174d02dbff1a86e418df57dd57ec90597",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "11e58a4aae38100d6003ea7fc1a22f6b7484b4734bcf4a7e88058bc417fe3704",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "83b178c69b1b5316c1c5c94c3a4b330f7e33c0a69ff7330586691e83b4e04a62",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "01/10/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {
+          "data-revisao": "varios-valores"
+        },
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "nao-avaliavel"
+        ],
+        "motivo": "Duas datas de revisão no memorial: o sistema não escolhe a vigente."
+      }
+    }
+  },
+  {
+    "id": "NOV-15",
+    "titulo": "Requerimento cita matrícula diferente da certidão",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "c079ccafcb4eef2ca7400eb9263e1a63e2d1f04cd7841018c26cdb8d47581a54",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.220"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "b-drt.pdf",
+        "sha256": "e407751d9dffd764aedaa9e370e6d47cb8fb4f5021cd1e89bcc7ad06f853851c",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "a1b26fe10761ecdebe1f4b37aeabbf0fda1d9a58273b2d91f2f4c8e5d5504f6a",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "8510b1e2ab07f18ba845ab624a067fce3c224555cf8e15361273c7633b449463",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "c2ce37cb6292b6a3fd2e5b7f89ec91bca792738cd77c27b14af9edabc0477be8",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "4950db904332452f8483c84d1b8d162019cfbcee19f1c991076afec5de159963",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em todas as peças com assunto."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "divergencia",
+        "motivo": "Requerimento 101.220; certidão, prancha e memorial 101.202."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado",
+          "achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Há certidão; a correspondência do número é a regra 020."
+      }
+    }
+  },
+  {
+    "id": "NOV-16",
+    "titulo": "Sem DRT, integridade desconhecida",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "desconhecida",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "a-requerimento.pdf",
+        "sha256": "b93a21154f1a2bc36a095bf12e2fb6a24949f5c5e29573d606b590c1a5927b89",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "titular": "Rosa Teste Ficcional",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "bairro": "Jardim Demonstrativo",
+          "inscricao": "7777.0001.022",
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "signatario": "Rosa Teste Ficcional",
+          "lote": "22",
+          "matricula": "101.202"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "c-certidao.pdf",
+        "sha256": "43bea347e34a836cccfba1d7ac7700458b16a52d3520cbb647f441484c8ef631",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "matricula": "101.202",
+          "cartorio": "Cartório do 3º Registro de Imóveis Fictício",
+          "lote": "22",
+          "quadra": "5",
+          "parcelamento": "Parque Ilusorio",
+          "area": "420,00 m²",
+          "titular": "Rosa Teste Ficcional",
+          "data-emissao": "01/11/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "101202"
+        }
+      },
+      {
+        "nome": "d-espelho.pdf",
+        "sha256": "6af531d6804fedaad9fa9194e8ce4a6081973db457f4118eec6728b2a847b81d",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "7777.0001.022",
+          "lote": "22",
+          "quadra": "5",
+          "bairro": "Jardim Demonstrativo"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "e-rrt.pdf",
+        "sha256": "5dec1f287f0cf7fc4339fb34ad59fbcd54136a106fc3bc373102fd613243bc6b",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Igor Engenheiro Simulado",
+          "rt-registro": "CREA-FIC 004321",
+          "titular": "Rosa Teste Ficcional",
+          "lote": "22",
+          "quadra": "5"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "f-prancha.pdf",
+        "sha256": "3cefe9b559c6084e8697417554c13e91f01a69be09fa87561a32832787f411d6",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "03/11/2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "g-desenho.dwg",
+        "sha256": "b44d7d41c05bd55a3d6f4118ba10f9530f3c7dab103595b8c61029fc972a1816",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {},
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "h-memorial.pdf",
+        "sha256": "3495b0234ee14f9b20694d8d5f4d77482e9bdfd509100cdbf4b61b47a11ab6f7",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "22",
+          "quadra": "5",
+          "matricula": "101.202",
+          "area": "420,00 m²",
+          "data-revisao": "03.11.2026",
+          "rt-nome": "Igor Engenheiro Simulado"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Espelho cadastral com a inscrição do lote."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão vintenária da matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Emissão legível: alerta de conferência de prazo, sem critério de contagem."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha em PDF e DWG."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha e memorial assinados."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "RRT coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Mesmos matrícula, lote, quadra, inscrição e bairro."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Prancha \"Rev. 02 – 03/11/2026\" e memorial \"REVISÃO: 2 (03.11.2026)\": mesma data."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "nao-avaliavel"
+        ],
+        "motivo": "Integridade desconhecida."
+      }
+    }
+  }
+]

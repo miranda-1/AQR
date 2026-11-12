@@ -16,6 +16,7 @@ Esta pasta guarda, sob controle de versão, o que a triagem assistida do AQR usa
 | `casos/dossie-v1.5-ensaios.json` | Ensaios T01–T38 das tabelas do dossiê (seção 12, Anexo C.5, Anexo E), texto sem alteração. | Extraído do `.docx` |
 | `fontes/inventario_fontes.json` | Inventário das fontes oficiais públicas (URL, hash, páginas). **Cópia sem alteração.** | Artefatos do dossiê |
 | `casos/independente-gabarito.json` | Gabarito **congelado** do conjunto independente IND-01 a 16 (SHA-256 `f8d0bd9562f9ff41fc2ca3920433fbc5ff121c896c7357755677a7e627fe5f05`), gravado e commitado antes da primeira execução do motor. Não editar. | AQR |
+| `casos/novo-gabarito.json` | Gabarito **congelado** do segundo conjunto independente NOV-01 a 16 (E6.1; SHA-256 `35326fc748e1ac9baafe557a03b4092010acfd7df29ea4c3ce48898d9c73ed7b`), gravado e commitado antes da primeira execução do motor. Não editar. | AQR |
 | `e4-e6.md` | Arquitetura, resultados, defeitos corrigidos e limitações da classificação, da extração e do motor (E4–E6). | AQR |
 | `avaliacao-e4-e6.md` | Métricas da triagem experimental nos conjuntos de desenvolvimento e validação. **Gerado** por `npm run triagem:avaliar`. | AQR |
 | `reconciliacao-catalogo-dossie.md` | Comparação catálogo × dossiê, divergências e classificação das 47 regras. | AQR |
