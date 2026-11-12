@@ -180,6 +180,18 @@ describe('política de abstenção', () => {
     expect(identidade.contrato.motivo).toContain('mais de um valor')
   })
 
+  it('anexo sem classe mas com indício da classe procurada impede apontar ausência', async () => {
+    // Planta sem "prancha/planta" no título: fica sem classe, mas tem "planta de situação" no corpo.
+    const resultado = await trocar('DSD-01', 'prancha', [['DESDOBRO DO LOTE F7 - FOLHA ÚNICA', 'Lote: F7 Quadra: 12', 'Matrícula: 90417', 'Bairro: Bairro Exemplo', 'Planta de situação - escala 1:10.000']])
+    const planta = avaliacao(resultado, '012')
+    expect(resultado.processo.anexos.find((anexo) => anexo.nome === 'trocado.pdf')?.classificacao.classe).toBe('indeterminada')
+    expect(planta.contrato.resultado).toBe('nao-avaliavel')
+    expect(planta.contrato.motivo).toContain('pode ser o documento')
+    // Sem nenhum indício (declaração genérica no lugar da ART), a ausência continua apontada.
+    const semIndicio = await trocar('DSD-01', 'art-rrt-similar', [['DECLARAÇÃO', 'Declaro que o levantamento foi feito por mim.']])
+    expect(avaliacao(semIndicio, '011').contrato).toMatchObject({ resultado: 'achado', tipo: 'nao-localizado' })
+  })
+
   it('arquivo composto com página sem classe impede apontar ausência', async () => {
     const requerimento = ['REQUERIMENTO PARA PROCESSO CARTOGRÁFICO', 'Assunto: DESDOBRO', 'Proprietário(a): Carla Ficticia de Exemplo', 'Lote: F7 Quadra: 12']
     const drt = ['DECLARAÇÃO DE RESPONSABILIDADE TÉCNICA - DRT 01', 'Declaro ser o responsável técnico.']

@@ -110,12 +110,34 @@ export function compostoNaoResolvido(anexo: AnexoTriado): boolean {
   return anexo.classificacao.composto && anexo.classificacao.porPagina.some((pagina) => pagina.classe === 'indeterminada')
 }
 
+/** Lado maior da folha A4 em pontos, com folga: folha maior é indício estrutural de prancha. */
+const LADO_A4 = 862
+
+/**
+ * Anexo sem classe que traz algum indício da classe procurada: sinal léxico (mesmo fraco, só de
+ * corpo) ou, para prancha, folha maior que A4. Não basta para classificar, mas basta para não
+ * concluir que o documento falta (defeito achado no conjunto independente, IND-14: planta sem
+ * "prancha" no título ficou sem classe e a regra 012 apontou a prancha como não localizada).
+ */
+function temIndicioDa(anexo: AnexoTriado, classes: readonly ClasseDocumental[]): boolean {
+  for (const classe of classes) {
+    const pontos = anexo.classificacao.sinais.filter((sinal) => sinal.classe === classe).reduce((soma, sinal) => soma + sinal.peso, 0)
+    if (pontos > 0) return true
+    if (classe === 'prancha') {
+      const pagina = anexo.lido.paginas[0]
+      if (pagina?.larguraPt !== undefined && pagina.alturaPt !== undefined && Math.max(pagina.larguraPt, pagina.alturaPt) > LADO_A4) return true
+    }
+  }
+  return false
+}
+
 export function anexosQuePodemSer(ctx: ContextoRegra, classes: readonly ClasseDocumental[]): AnexoTriado[] {
   return ctx.anexos.filter((anexo) => {
     if (compostoNaoResolvido(anexo)) return true
     if (anexo.classificacao.contrato.classe !== 'indeterminada') return false
     if (anexo.lido.legibilidade === 'isolado' || anexo.lido.legibilidade === 'ilegivel' || anexo.lido.legibilidade === 'parcial') return true
-    return anexo.classificacao.contrato.alternativas.some((alternativa) => classes.includes(alternativa.classe))
+    if (anexo.classificacao.contrato.alternativas.some((alternativa) => classes.includes(alternativa.classe))) return true
+    return temIndicioDa(anexo, classes)
   })
 }
 

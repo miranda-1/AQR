@@ -22,7 +22,7 @@ Regras:
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | desenvolvimento (DSD, usado na implementação) | 821 | 821 | 0 | 0 | 0 | 0 | 0 | 22 | 22 | 44 |
 | validação usada nos ajustes (VAL) | 144 | 143 | 1 | 0 | 0 | 0 | 0 | 3 | 3 | 15 |
-| independente congelado (IND) | 288 | 270 | 1 | 1 | 16 | 0 | 0 | 23 | 6 | 15 |
+| independente congelado (IND) | 288 | 270 | 0 | 1 | 17 | 0 | 0 | 24 | 6 | 15 |
 
 ## E4: classificação documental
 
@@ -519,8 +519,8 @@ Resultados diferentes do gabarito:
 ### Conjunto de independente congelado (IND) (288 expectativas de regra)
 
 - Resultado aceito pelo gabarito: **270 de 288** (93,8%).
-- Falsos alertas: **1**; achados esperados não detectados: **1**; abstenções indevidas: **16**; tipo de achado diferente: **0**; outro resultado: **0**.
-- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 22 corretas de 22.
+- Falsos alertas: **0**; achados esperados não detectados: **1**; abstenções indevidas: **17**; tipo de achado diferente: **0**; outro resultado: **0**.
+- Evidência dos achados (hash e página conferem; valores conflitantes na região citada): 21 corretas de 21.
 
 | Regra | Expectativas | Aceitas | Falso alerta | Não detectado | Abstenção indevida | Tipo diferente | Outro | Obtidos (sem-achado / achado / não avaliável / pendente / não aplicável) |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -532,7 +532,7 @@ Resultados diferentes do gabarito:
 | AQR-GCA-009 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 0 / 16 / 0 / 0 / 0 |
 | AQR-GCA-010 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 1 / 0 / 1 / 0 / 13 |
 | AQR-GCA-011 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 1 / 0 / 0 / 0 |
-| AQR-GCA-012 | 16 | 15 | 1 | 0 | 0 | 0 | 0 | 15 / 1 / 0 / 0 / 0 |
+| AQR-GCA-012 | 16 | 15 | 0 | 0 | 1 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
 | AQR-GCA-013 | 16 | 16 | 0 | 0 | 0 | 0 | 0 | 15 / 0 / 1 / 0 / 0 |
 | AQR-GCA-016 | 14 | 14 | 0 | 0 | 0 | 0 | 0 | 14 / 0 / 0 / 0 / 0 |
 | AQR-GCA-018 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 13 / 0 / 2 / 0 / 0 |
@@ -561,7 +561,7 @@ Resultados diferentes do gabarito:
 - IND-11 · AQR-GCA-008: esperado achado (nao-localizado); obtido **nao-avaliavel** — achado-nao-detectado, origem extracao. Gabarito: Dossiê, ensaio T03: alertar a possível falta do título do segundo imóvel.
 - IND-12 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
 - IND-13 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem extracao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
-- IND-14 · AQR-GCA-012: esperado sem-achado; obtido **achado** (nao-localizado) — falso-alerta, origem classificacao. Gabarito: A peça é a planta do desdobro, em PDF, com DXF.
+- IND-14 · AQR-GCA-012: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: A peça é a planta do desdobro, em PDF, com DXF.
 - IND-14 · AQR-GCA-021: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Planta (revisão 01) e memorial com a mesma data, 30/10/2026.
 - IND-14 · AQR-GCA-022: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Situação em 1:10.000.
 - IND-14 · AQR-GCA-023: esperado sem-achado; obtido **nao-avaliavel** — abstencao-indevida, origem classificacao. Gabarito: Folha A3, permitida pelo TR 002.
@@ -579,7 +579,7 @@ Resultados diferentes do gabarito:
 | AQR-GCA-009 | 0 | 74 | 6 | 0 | 0 |
 | AQR-GCA-010 | 3 | 2 | 4 | 0 | 71 |
 | AQR-GCA-011 | 75 | 3 | 2 | 0 | 0 |
-| AQR-GCA-012 | 75 | 4 | 1 | 0 | 0 |
+| AQR-GCA-012 | 75 | 3 | 2 | 0 | 0 |
 | AQR-GCA-013 | 73 | 2 | 5 | 0 | 0 |
 | AQR-GCA-016 | 75 | 2 | 3 | 0 | 0 |
 | AQR-GCA-018 | 58 | 1 | 21 | 0 | 0 |
