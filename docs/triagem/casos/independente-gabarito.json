@@ -1,0 +1,4476 @@
+[
+  {
+    "id": "IND-01",
+    "titulo": "Pacote completo com a terminologia do TR 002",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "ba63cf3b8faf7fbae61c39724d221fa71b23fb7882edf3ddea87ed51e56bfc55",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "62150148b1bda0cdc0e14cc4caaeb4e2f0a4a145578bfda967d4a1a0d769660c",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "43f9af129d61eeab2ec6c17189aac70c9a12220650dc0466593bb00502dd6ae6",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "7dbc9178f4fb214d99b1e82f847ee0514d807753700a7d4855853c1bec850020",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "9f3c70730f4ebe46bd9f2cba2383412938136c912a13baff4fdc4932d9d4254d",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      }
+    }
+  },
+  {
+    "id": "IND-02",
+    "titulo": "Requerimento curto com abreviações (Lt., Qd., RT, Requerente)",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "3425d2cff415fffab401935c99b18ab94391e486724f6eb840bd0c15400052b9",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "DESDOBRO",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55120",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "437627d7c464d04aadb4e828248173545330f83abf377a97b268747ecab79f1e",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "0d8da299361d254ae374fe16271f5659a628e871cfce85e0a45ac228c1f76d87",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "0383f0b6a1cb8e25e6a3810d065408969c9e3dd162b959ccdc083ec34c43da54",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "127f4a3cfdb0a1d825df81bb3e316154afdd4e94438757b332fdf3d9f1599211",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "A requerente se declara proprietária; o rótulo é \"Requerente\"."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55120 e 55.120 são o mesmo número; lote e quadra iguais."
+      }
+    }
+  },
+  {
+    "id": "IND-03",
+    "titulo": "Requerimento digitalizado com ruído e ART em JPG",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "c14a44d38ca5aaad54b3ed673e0294e87850eb2acc6b6c9e872e330b6b293ff9",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "ocr",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "8140376a413fa12baa8f873bfc2823cca044863e5a9910536a58f425772b46e7",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.jpg",
+        "sha256": "7c006fdb8b5f463482a402955af0b070c1675f1f3c9c0d2fe7def7740f322fca",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "ocr",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "c36aad2d18d829e0913c028f760a5310e49ddb458bbcd35f1e7cf241c0b96bea",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "caacff42f98897233d2fc5e3c19c73b09786c7436a7a323acb535b70387f3a1f",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Requerimento presente, em imagem com ruído."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "ART presente, em JPG."
+      }
+    }
+  },
+  {
+    "id": "IND-04",
+    "titulo": "Certidão de matrícula e extrato de débitos no mesmo PDF",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "c825bfe58f09c930b6202f97887efebb51c598f3ecae85f6675dab0b875498ba",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "7093033f7febe243ad869c29313f2f7039872b8202fbddcf06b55a7a56a45fa2",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-documentos-do-imovel.pdf",
+        "sha256": "095fe8d08b5bf82a41e08e32302af4ad6655f9613fab1c3ec5358d86be9a928c",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao",
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "be642c99b122e071f767e5b5d33a85cd2e6efce2a1bcab17dd7e9a51d690e3e9",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "007fb8a3ad7b88a4871fc4a358e27da0b4b8e03e32018b917218dd95095c0d96",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "1fa28dd77740012109afb7aa37b9b54bb25a363beab28accf5b045fdbd608cba",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Extrato na página 2 do arquivo composto."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Certidão na página 1 do arquivo composto."
+      }
+    }
+  },
+  {
+    "id": "IND-05",
+    "titulo": "Planta e memorial no mesmo PDF",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "e8f2e8e87ac97b5b56f0b664a8ebedc093281ccfa4f9ec7837d617e2275cb33f",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "5708e938c1d3a065433564f8fa055ab1de2906ac024a559b3e0e99a2efb3f224",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "c7608082ca0155c400baede4ecde8535e70a2e8e7f9ccf854fc885832f897230",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta-e-memorial.pdf",
+        "sha256": "16783d12e7b7bead140e0853db2f50d57ff53da749f77f63ed9e27368a553612",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha",
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Planta em PDF (página 1 do composto) e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Memorial em PDF, na página 2 do arquivo composto."
+      }
+    }
+  },
+  {
+    "id": "IND-06",
+    "titulo": "Sem ART, pacote completo",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "25b3f86bd73a65b0b632da74a91e4ef2643db8ec27c6ec959a0d6693be13af90",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "5b080faadf4a419b83afe52ad67646574d99d5eb31958a428d28c5628d882fc6",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "5fc2e794b40ff861812dffc4ca4833f25cb8cd7cc79ecebec2c4cd83426442e9",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "85781efdbcddd7cf6b270a91116aadc6fde7560c7642e65d7bdec0f7448b08bd",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Nenhum documento de responsabilidade técnica entre os anexos."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "nao-avaliavel",
+          "nao-aplicavel"
+        ],
+        "motivo": "Sem ART."
+      }
+    }
+  },
+  {
+    "id": "IND-07",
+    "titulo": "Sem DRT, pacote marcado como parcial",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "parcial",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "1c4a5cd8fc8b741af9e816765da9a4887e3daebdcb0053a8fd4a05920b41cf01",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "886deece83b9cc2a0c45379b2e9178763e0f97eba2edb0b1b959d79b214a2f62",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "40431da9a75d15bd177079ee5701ef91b0f8677e741a68e54d16ee8112d537c2",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "26664762dd84237bc6379af0c81f579c26f5ff727a2b1e4166137f16594856a9",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "nao-avaliavel"
+        ],
+        "motivo": "Pacote parcial: a DRT pode estar no que não veio."
+      }
+    }
+  },
+  {
+    "id": "IND-08",
+    "titulo": "Quadra diferente na planta (09) e no resto (08)",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "4c63ec880b78e20138c7c3f3e4ade8e1ef3af75c305aac5e43528ba4e4646a0c",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "c2a0b030cf2e29dca6c6bb2b6285912a3f3f5228df809850f9fef722cfd87410",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "034d84f4c50f432b3c9b7034f59e80823253ceaa54c64c0e1e90245bad31eaa9",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "e74d09ac668767a609787c273e7edac8ff1f9748342ebb8761f46e22ac8c01ed",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "09",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "95172a46d08017a3ce41ec14c1cb724e862a031319ae5b64253628947dcfa891",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "divergencia",
+        "motivo": "Quadra 09 na planta, 08 nas demais peças."
+      }
+    }
+  },
+  {
+    "id": "IND-09",
+    "titulo": "Planta em A2 com situação em 1:5.000",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "7817f7b0d1aa53c95dab59b7f0ea2f82af9b232aa1be870c14d85087d926bb4c",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "b0d8ce36aea0f898b8cbbafdc5c44c75ecb0c272a10083b5f868457aa2d06d36",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "505130255ebf031896f9f191d60d0202c208fe818d9d9335a2051c6c70297787",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "c94fe5abc99434424f15c9121b08e896b3ac90164b19a663054b97664e63c22a",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:5.000",
+          "formato-folha": "A2",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 5000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "c49248baf278cb00ad2d4e1d76e9cc10281d5ae38934a1caa4552e458910326e",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "divergencia",
+        "motivo": "Situação declarada em 1:5.000; o TR 002 pede 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "A2 é permitido pelo TR 002."
+      }
+    }
+  },
+  {
+    "id": "IND-10",
+    "titulo": "Data de emissão da matrícula com ano de dois dígitos",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "770e88b4c6aba9f2c2f6f7e4e6121378c93a936bad348c07a7993a4b5c31e031",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "b5f57c921a81646d0c6ec8cefb18119e4bb5a5fee672ec67eba597ca0784c434",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "ae7e31f0c69f8385a2510a72fd154f97c3dbf12e80c16a3aaad7369679d040a4",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/26"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "4b930c6ea44ce8828bdc9b90dcd921743693fbae93610066852e51d1f1c1298b",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "a4c43cb8fa400c301ccc715353971d1762c448c485692d8afd6ece1c4244da63",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "578e1b0ea5497ed1d3b7346f26e78322dc13605a103d4729c4f50d81aafacba1",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data ambígua: mostrar e encaminhar ao servidor."
+      }
+    }
+  },
+  {
+    "id": "IND-11",
+    "titulo": "Requerimento com duas matrículas e uma só certidão",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "50fdffb9a7ac804dfb01d9cc24a3338720066945b4cd71063cd7c250268cc416",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {
+          "matricula": "varios-valores"
+        },
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "85defb4a35935647f7009cdf43eeab9a93deb3a149c4d573861b831b4b9b9e74",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "f008a0cf9a5bd9c78566357b0b146046d5570bb3dbcd3eeae914b953e9417a73",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "28295c4db81c2f45930d55aba0b5526013b3319f5ee391e7fbfa9037f6c4f67e",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "af7d0b705f0b406540aa67bac38573f08ab1c05fa6133f5829327a9b2cf2f077",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Dossiê, ensaio T03: alertar a possível falta do título do segundo imóvel."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "Um lote declarado e um extrato; com duas matrículas, a correspondência pode ficar para o servidor."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "ART coerente com o lote declarado; com dois imóveis, a correspondência pode ficar para o servidor."
+      }
+    }
+  },
+  {
+    "id": "IND-12",
+    "titulo": "Procurador assina, com substabelecimento anexado",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "f203398268eecb0249d140811be89c564b8d70334422d5cd497b65db11348b87",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Otavio Representante Ficticio"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "7dd42ff8b7ea2f940fb73d351bf6f3464080184f1ac8bf5f6bf01cca77e968a2",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "c2dbe1bbf5455e5970e64bde69ca37b1ec2641d89b6eb3c4b38157b18d810661",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "983d9220f46f3d014b4e107cc40e71741bf07ac8d2120cc3a5a70a670cde3c68",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "dd4da0195fa7588491dcdbd248d83c195a485982dc18ca898d83ed4debc67c23",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "09-substabelecimento.pdf",
+        "sha256": "6099379139a77eb4293009fcff900b3891e64220a2b97553184eae796d692902",
+        "classe": "representacao",
+        "classesNoArquivo": [
+          "representacao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "titular": "Helena Modelo Simulada",
+          "signatario": "Otavio Representante Ficticio"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Há documento de representação; poderes não são julgados."
+      }
+    }
+  },
+  {
+    "id": "IND-13",
+    "titulo": "Área de 2,50 ha confirmada por servidor, com GDU",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": [
+        {
+          "id": "area-situacao-acima-2ha",
+          "valor": true
+        }
+      ]
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "8488bd6256e43a19bde66087d8ca1d45b5f10806c183734765ccde9e993d7ab2",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "275c61c1f054b04ac586e59ff1f46884a1280c4f4e4b5740813a74fa5b5e20e9",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "e1b77784e6785301864fa5cd04f5fa1581614f9864c5f20f7ebfaeb3a87beb98",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "2,50 ha",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "90c050f0ceacc50b158ef2285eda332d5661e05c378608d6af1650bf8fb19148",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "4680fab7733cb908595649e4619f6dae784fdfdca85046f183ecde6ed8f8f904",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "25.000,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "2ae5d641082a2314c7cf3d165edcf70a46c5d3bd5f80848f9cfdf2ec612d17e3",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "25.000,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "10-gdu.pdf",
+        "sha256": "18f5a48155db44335dbf9e831af712a48b166b6c7cbe77c3722cc8896df4a310",
+        "classe": "gdu-gdr",
+        "classesNoArquivo": [
+          "gdu-gdr"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Condição confirmada e GDU em PDF presente."
+      }
+    }
+  },
+  {
+    "id": "IND-14",
+    "titulo": "Planta com título \"PROJETO DE DESDOBRO - FOLHA 01/01\"",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "fe0f1589d3bf36c7f8e2223d06961e58f0de51e0bee58121a871b91917ac1d0d",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "05ae3449de765e42170de70dc8161172d35b4e2ded7d2e1dfae7c8688dfd53bf",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "01ec311171be61fc54780b8824f42dd1cb36e83c242187abbde2c2dd729a209a",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "da6d1f8df376fbf52798abab8f354a86bc69f4742e47f719a073f407790e5372",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "bbc8981fd0d7ed69dd27c5d9dbdb1261eef5e20590335c0155441de33bae4999",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "A peça é a planta do desdobro, em PDF, com DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Desdobro em requerimento, DRT e memorial."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      }
+    }
+  },
+  {
+    "id": "IND-15",
+    "titulo": "Memorial digitalizado muito degradado",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "8aa2a2ceab0b2cebb0d554717d2126ec11dc83ecff660a1f900d75e04adf8125",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "75145cb343362bb4360e6406562c68ce5d9df21b2ab0066b9de9dd28450b102f",
+        "classe": "drt-01",
+        "classesNoArquivo": [
+          "drt-01"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "988395ce0eb8307fdb98790e777685958b1e437c063359a94c0256ac9f3fa344",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "195716889a8faa5a599244f1e0e1c76ecb57dd2f2888fe5abf12f14221b74d6a",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "d72eb2be73906b25163ed4d827bd6619f5b8b4b3cb62af21e34d58f092f8007f",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "ocr",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "DRT 01 presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado",
+          "nao-avaliavel"
+        ],
+        "motivo": "O memorial está lá; leitura ruim nunca é ausência."
+      }
+    }
+  },
+  {
+    "id": "IND-16",
+    "titulo": "DRT nº 03 no lugar da DRT 01",
+    "entrada": {
+      "modalidade": "D",
+      "etapa": "abertura",
+      "protocoladoEm": "2026-11-05T13:00:00.000Z",
+      "integridadeDoPacote": "completo",
+      "condicoesConfirmadas": []
+    },
+    "anexos": [
+      {
+        "nome": "01-requerimento.pdf",
+        "sha256": "45c35929ca7cdedf385ef83aeefec0c14f3586273b98caf5d6df04668a7cf42d",
+        "classe": "requerimento",
+        "classesNoArquivo": [
+          "requerimento"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro de lote",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "bairro": "Vila Teste",
+          "matricula": "55.120",
+          "inscricao": "1234.5678.009",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "signatario": "Helena Modelo Simulada"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "02-drt.pdf",
+        "sha256": "3872588c1e3692d2e9fac5dfe02bbe19a8bbd9ee36e17368707cc44da3e72537",
+        "classe": "drt-03",
+        "classesNoArquivo": [
+          "drt-03"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Retificação de registro imobiliário",
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "03-certidao.pdf",
+        "sha256": "4dc1e20992111261034d8c22cad76e5d21ce574e56c67c717d953baea277f38d",
+        "classe": "matricula-transcricao",
+        "classesNoArquivo": [
+          "matricula-transcricao"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "cartorio": "2º Ofício de Registro de Imóveis Fictício",
+          "matricula": "55.120",
+          "lote": "15",
+          "quadra": "08",
+          "parcelamento": "Residencial Hipotetico",
+          "area": "360,00 m²",
+          "titular": "Helena Modelo Simulada",
+          "data-emissao": "28/10/2026"
+        },
+        "estados": {},
+        "normalizados": {
+          "matricula": "55120"
+        }
+      },
+      {
+        "nome": "04-extrato.pdf",
+        "sha256": "b0af0ca5ac2437363ec84deb187e6e87f716738838470d8bd8a0e3e08cbf850a",
+        "classe": "inscricao-imobiliaria",
+        "classesNoArquivo": [
+          "inscricao-imobiliaria"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "inscricao": "1234.5678.009",
+          "lote": "15",
+          "quadra": "08",
+          "bairro": "Vila Teste"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "05-art.pdf",
+        "sha256": "7996df27e5139f1a1cd4d1ef640cd0736ebcf8fa000ed9665391b6a57c38b7f1",
+        "classe": "art-rrt-similar",
+        "classesNoArquivo": [
+          "art-rrt-similar"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "rt-nome": "Bruno Projetista Imaginario",
+          "rt-registro": "CREA-FIC 000777",
+          "titular": "Helena Modelo Simulada",
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "06-planta.pdf",
+        "sha256": "f047734a542338980d1f735ea07625de7ae01e53e6b93807a6da4420edc22eb7",
+        "classe": "prancha",
+        "classesNoArquivo": [
+          "prancha"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "escala-situacao": "1:10.000",
+          "formato-folha": "A3",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {
+          "escala-situacao": 10000
+        }
+      },
+      {
+        "nome": "07-planta.dxf",
+        "sha256": "bb1f8bd9ce5a71a0e614d2af8ca3df45fba997887d34e3372cc465ac377e90c6",
+        "classe": "cad",
+        "classesNoArquivo": [
+          "cad"
+        ],
+        "leitura": "nao-interpretado",
+        "campos": {
+          "lote": "15",
+          "quadra": "08"
+        },
+        "estados": {},
+        "normalizados": {}
+      },
+      {
+        "nome": "08-memorial.pdf",
+        "sha256": "79a981f794faf47a9b5ab6a60e230e876404dcdc24d5bbd03ba6ef44152d2d0d",
+        "classe": "memorial",
+        "classesNoArquivo": [
+          "memorial"
+        ],
+        "leitura": "camada-de-texto",
+        "campos": {
+          "assunto": "Desdobro",
+          "lote": "15",
+          "quadra": "08",
+          "matricula": "55.120",
+          "area": "360,00 m²",
+          "data-revisao": "30/10/2026",
+          "rt-nome": "Bruno Projetista Imaginario"
+        },
+        "estados": {},
+        "normalizados": {}
+      }
+    ],
+    "regras": {
+      "AQR-GCA-001": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Assunto \"Desdobro de lote\" no requerimento."
+      },
+      "AQR-GCA-002": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Requerimento presente."
+      },
+      "AQR-GCA-006": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Extrato de débitos do IPTU com a inscrição (TR 002, item III: \"Extrato de Débito, ou similar\")."
+      },
+      "AQR-GCA-008": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Certidão de matrícula presente."
+      },
+      "AQR-GCA-009": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "condicao-indeterminada",
+        "motivo": "Data de emissão legível: alerta para conferência de prazo pelo servidor (sem critério de contagem)."
+      },
+      "AQR-GCA-010": {
+        "aceitaveis": [
+          "nao-aplicavel",
+          "sem-achado"
+        ],
+        "motivo": "A proprietária assina."
+      },
+      "AQR-GCA-011": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART presente."
+      },
+      "AQR-GCA-012": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta em PDF e DXF."
+      },
+      "AQR-GCA-013": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Memorial em PDF."
+      },
+      "AQR-GCA-016": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta e memorial assinados pelo RT."
+      },
+      "AQR-GCA-018": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "ART coerente com requerimento e matrícula."
+      },
+      "AQR-GCA-020": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Matrícula 55.120, lote 15, quadra 08 em todas as peças."
+      },
+      "AQR-GCA-021": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Planta (revisão 01) e memorial com a mesma data, 30/10/2026."
+      },
+      "AQR-GCA-022": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Situação em 1:10.000."
+      },
+      "AQR-GCA-023": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Folha A3, permitida pelo TR 002."
+      },
+      "AQR-GCA-028": {
+        "aceitaveis": [
+          "condicao-pendente"
+        ],
+        "motivo": "Sem confirmação de servidor sobre a área."
+      },
+      "AQR-GCA-043": {
+        "aceitaveis": [
+          "sem-achado"
+        ],
+        "motivo": "Formatos aceitos."
+      },
+      "AQR-GCA-003": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "nao-localizado",
+        "motivo": "Só DRT 03; não substitui a DRT 01."
+      },
+      "AQR-GCA-019": {
+        "aceitaveis": [
+          "achado"
+        ],
+        "tipo": "divergencia",
+        "motivo": "A DRT traz assunto de retificação."
+      }
+    }
+  }
+]
