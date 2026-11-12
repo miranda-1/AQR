@@ -11,7 +11,10 @@ import { triarAnexos, type AnexoTriado } from '../pipeline.ts'
 import type { EntradaTriagem } from './context.ts'
 import { executarTriagem, type ResultadoTriagem } from './engine.ts'
 import { converterEmDecisao, DecisaoAutomaticaBloqueada, resumoParaLog, verificarGarantias } from './guard.ts'
-import { GARANTIAS, REGRAS } from './rules.ts'
+import { readFileSync } from 'node:fs'
+import { makePdf } from '../../test/make-pdf.ts'
+import { triarAnexo } from '../pipeline.ts'
+import { FORMATOS_DE_FOLHA, GARANTIAS, REGRAS } from './rules.ts'
 
 const CATALOGO_DIR = fileURLToPath(new URL('../../../docs/triagem/catalogo/', import.meta.url))
 
@@ -143,6 +146,58 @@ describe('motor de regras', () => {
     const resultado = await triar('DSD-01', (entrada) => ({ ...entrada, modalidade: { valor: 'indeterminado', origem: 'proposto-sistema' } }))
     expect(resultado.avaliacoes).toEqual([])
     expect(resultado.avisos.join(' ')).toContain('nenhuma regra foi executada')
+  })
+})
+
+describe('regra 023: formatos de folha do TR 002', () => {
+  /** DSD-22 com a prancha no formato pedido (texto "Formato X" e página do mesmo tamanho). */
+  async function comFolha(formato: 'A3' | 'A2' | 'A1' | 'A0'): Promise<ResultadoTriagem> {
+    const base = defined(PACOTES.find((item) => item.id === 'DSD-22'))
+    const definicao = { ...base, anexos: base.anexos.map((anexo) => (anexo.peca === 'prancha' ? { ...anexo, imovel: { formatoFolha: formato } } : anexo)) }
+    const gerado = await gerarPacote(definicao)
+    const anexos = await triarAnexos(gerado.arquivos, { limites: LIMITES_AVALIACAO })
+    return executarTriagem(entradaDoCaso(casoDeDesenvolvimento(gerado.gabarito, gerado.arquivos)), anexos, { catalogo })
+  }
+
+  /** DSD-01 com a prancha trocada por um PDF A4 com o texto dado. */
+  async function comPranchaDeTexto(linhas: string[]): Promise<ResultadoTriagem> {
+    const { entrada, anexos } = await pacote('DSD-01')
+    const { bytes } = await makePdf([linhas])
+    const indice = anexos.findIndex((anexo) => anexo.classificacao.contrato.classe === 'prancha')
+    const trocados = [...anexos]
+    trocados[indice] = await triarAnexo(defined(anexos[indice]).lido.id, 'prancha.pdf', bytes, { limites: LIMITES_AVALIACAO })
+    return executarTriagem(entrada, trocados, { catalogo })
+  }
+
+  it('cita a fonte conferida: TR 002, p. 4, item VII, com o hash do inventário', () => {
+    const inventario = JSON.parse(readFileSync(new URL('../../../docs/triagem/fontes/inventario_fontes.json', import.meta.url), 'utf8')) as { sources: Record<string, { sha256: string }> }
+    expect(inventario.sources.S07?.sha256).toBe(FORMATOS_DE_FOLHA.sha256)
+    const regra = defined(catalogo.regras.find((item) => item.id === 'AQR-GCA-023'))
+    expect(regra.fontes.some((fonte) => fonte.fonte === 'S07' && fonte.local === 'p.4 VII')).toBe(true)
+    expect(FORMATOS_DE_FOLHA.permitidos).toEqual(['A3', 'A2', 'A1'])
+  })
+
+  it('positivos: A3, A2 e A1 sem achado', async () => {
+    for (const formato of ['A3', 'A2', 'A1'] as const) {
+      expect(avaliacao(await comFolha(formato), '023').contrato.resultado, formato).toBe('sem-achado')
+    }
+  })
+
+  it('negativo: A0 é formato fora da lista', async () => {
+    const item = avaliacao(await comFolha('A0'), '023')
+    expect(item.contrato).toMatchObject({ resultado: 'achado', tipo: 'formato-incompativel' })
+    expect(item.contrato.rascunho).toContain('A3, A2, A1')
+  })
+
+  it('abstém sem formato declarado, com declarado diferente da página e fora do TR 002', async () => {
+    const semFormato = avaliacao(await comPranchaDeTexto(['PRANCHA - DESDOBRO', 'Planta de situação - escala 1:10.000']), '023')
+    expect(semFormato.contrato.resultado).toBe('nao-avaliavel')
+    // Página A4 com "Formato A2" escrito: inconsistente, não conclui.
+    const divergente = avaliacao(await comPranchaDeTexto(['PRANCHA - DESDOBRO', 'Planta de situação - escala 1:10.000', 'Formato A2']), '023')
+    expect(divergente.contrato.resultado).toBe('nao-avaliavel')
+    expect(divergente.contrato.motivo).toContain('mede A4')
+    const retificacao = await triar('DSD-01', (entrada) => ({ ...entrada, modalidade: { ...entrada.modalidade, valor: 'RET' } }))
+    expect(avaliacao(retificacao, '023').contrato.resultado).toBe('nao-avaliavel')
   })
 })
 

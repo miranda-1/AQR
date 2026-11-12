@@ -464,49 +464,77 @@ const r022: FuncaoRegra = (ctx) => {
 }
 
 /**
- * AQR-GCA-023: formato da folha. O catálogo dá só os exemplos "A3" (positivo) e "A0" (negativo);
- * a tabela de formatos do TR 001/002/003 não está no repositório. Formato fora dos exemplos fica
- * não avaliável, em vez de decidido por suposição. O carimbo não é verificado.
+ * AQR-GCA-023: formato da folha da prancha × formatos permitidos pelo termo de referência da
+ * modalidade. Só o TR 002 (R, D, DM, R/D, D/R) foi conferido: p. 4, item VII, "prancha A-3, A-2 ou
+ * A-1". Para as demais modalidades a tabela não está conferida e a regra fica não avaliável.
+ *
+ * Política de abstenção: o resultado só é conclusivo com o formato **declarado** na prancha. O
+ * tamanho da página do arquivo serve só para corroborar; se diverge do declarado, ou se não há
+ * formato declarado, a regra não conclui (página digitalizada nem é medida: o tamanho do scan não é
+ * o da folha original). O carimbo não é verificado.
  */
-const FORMATOS_DO_CATALOGO: Record<string, 'aceito' | 'nao-aceito'> = { A3: 'aceito', A0: 'nao-aceito' }
+export const FORMATOS_DE_FOLHA = {
+  fonte: 'S07',
+  documento: 'TR n.º 002 – Modalidade remembramento, desdobro e desmembramento',
+  local: 'p. 4, item VII',
+  sha256: 'a13d7b540d131c46f3c02867a244939d2f401ee5f13ec1d6e14ddbb5a705d50b',
+  trecho: 'Uma (01) via do projeto podendo ser em prancha A-3, A-2 ou A-1',
+  modalidades: ['R', 'D', 'DM', 'R/D', 'D/R'],
+  permitidos: ['A3', 'A2', 'A1'],
+} as const
+
 const MEDIDAS_ISO: Record<string, readonly [number, number]> = { A0: [2384, 3370], A1: [1684, 2384], A2: [1191, 1684], A3: [842, 1191], A4: [595, 842] }
 function formatoDaFolha(largura: number, altura: number): string | undefined {
   const [menor, maior] = largura < altura ? [largura, altura] : [altura, largura]
   return Object.entries(MEDIDAS_ISO).find(([, [a, b]]) => Math.abs(a - menor) <= a * 0.03 && Math.abs(b - maior) <= b * 0.03)?.[0]
 }
+
 const r023: FuncaoRegra = (ctx) => {
+  const modalidade = ctx.entrada.modalidade.valor
+  const tabela = (FORMATOS_DE_FOLHA.modalidades as readonly string[]).includes(modalidade) ? FORMATOS_DE_FOLHA : undefined
   const pranchas = anexosDaClasse(ctx, 'prancha')
   if (pranchas.length === 0) return { resultado: 'nao-avaliavel', motivo: 'Prancha não localizada entre os anexos.', rascunho: 'Formato da prancha não verificado: prancha não localizada.', confianca: 'baixa' }
-  const limitacoes = ['Presença e conteúdo do carimbo não são verificados nesta fase.', 'Só A3 (aceito) e A0 (não aceito) vêm dos exemplos do catálogo; outros formatos dependem da tabela do TR.']
-  const fora: Evidencia[] = []
+  if (!tabela) {
+    return { resultado: 'nao-avaliavel', motivo: `Formatos permitidos para a modalidade ${modalidade} não conferidos no termo de referência.`, rascunho: 'Formato da prancha não confrontado: tabela de formatos desta modalidade não conferida.', confianca: 'baixa' }
+  }
+  const limitacoes = [`Formatos permitidos: ${tabela.permitidos.join(', ')} (${tabela.fonte}, ${tabela.local}).`, 'Presença e conteúdo do carimbo não são verificados.']
+  const fora: { evidencia: Evidencia; formato: string }[] = []
   const aceitos: Evidencia[] = []
   const indefinidos: string[] = []
   const usados: string[] = []
   for (const anexo of pranchas) {
     const campo = camposDe(ctx, anexo.lido.id, 'formato-folha')?.contrato
-    const pagina = anexo.lido.paginas[0]
-    const pelaFolha = pagina?.larguraPt && pagina.alturaPt ? formatoDaFolha(pagina.larguraPt, pagina.alturaPt) : undefined
     const declarado = campo?.estado === 'encontrado' && typeof campo.valorNormalizado === 'string' ? campo.valorNormalizado : undefined
-    const formato = declarado ?? pelaFolha
-    if (campo?.estado === 'encontrado') usados.push(campo.id)
-    const evidencia: Evidencia = declarado && campo ? (campo.evidencias[0] ?? evidenciaDoAnexo(anexo)) : { anexoId: anexo.lido.id, sha256: anexo.lido.inspecao.sha256, pagina: 1, trecho: `Folha de ${Math.round(pagina?.larguraPt ?? 0)} × ${Math.round(pagina?.alturaPt ?? 0)} pt`, origem: 'metadado-arquivo' }
-    if (!formato) {
-      indefinidos.push(`${anexo.lido.id}: formato não declarado nem reconhecível pelo tamanho da folha`)
+    const pagina = anexo.lido.paginas[0]
+    const medida = pagina?.conteudo !== 'scanned' && pagina?.larguraPt && pagina.alturaPt ? formatoDaFolha(pagina.larguraPt, pagina.alturaPt) : undefined
+    if (!declarado || !campo) {
+      indefinidos.push(`${anexo.lido.id}: formato não declarado ou não lido com segurança${campo ? ` (${campo.estado})` : ''}`)
       continue
     }
-    if (declarado && pelaFolha && declarado !== pelaFolha) limitacoes.push(`${anexo.lido.id}: formato declarado ${declarado}, folha do arquivo com medida de ${pelaFolha}.`)
-    const situacao = FORMATOS_DO_CATALOGO[formato]
-    if (situacao === 'nao-aceito') fora.push(evidencia)
-    else if (situacao === 'aceito') aceitos.push(evidencia)
-    else indefinidos.push(`${anexo.lido.id}: formato ${formato} fora dos exemplos do catálogo`)
+    usados.push(campo.id)
+    if (medida && medida !== declarado) {
+      indefinidos.push(`${anexo.lido.id}: formato declarado ${declarado}, mas a página do arquivo mede ${medida}`)
+      continue
+    }
+    const evidencia = campo.evidencias[0] ?? evidenciaDoAnexo(anexo)
+    if ((tabela.permitidos as readonly string[]).includes(declarado)) aceitos.push(evidencia)
+    else fora.push({ evidencia, formato: declarado })
   }
   if (fora.length > 0) {
-    return { resultado: 'achado', tipo: 'formato-incompativel', rascunho: 'Formato de folha da prancha fora do exemplo aceito no catálogo (A0). Conferir com o TR aplicável.', evidencias: fora, camposUsados: usados, confianca: 'media', limitacoes }
+    return {
+      resultado: 'achado',
+      tipo: 'formato-incompativel',
+      rascunho: `Formato de folha da prancha (${[...new Set(fora.map((item) => item.formato))].join(', ')}) fora dos permitidos pelo ${tabela.documento.split(' – ')[0]} (${tabela.permitidos.join(', ')}). Conferir na prancha.`,
+      evidencias: fora.map((item) => item.evidencia),
+      camposUsados: usados,
+      confianca: 'media',
+      limitacoes: [...limitacoes, ...indefinidos],
+    }
   }
   if (indefinidos.length > 0) {
-    return { resultado: 'nao-avaliavel', motivo: indefinidos.join('; ').slice(0, 500), rascunho: 'Formato da prancha não confrontado: a lista de formatos permitidos do TR não está disponível ao sistema.', evidencias: aceitos, camposUsados: usados, confianca: 'baixa', limitacoes }
+    return { resultado: 'nao-avaliavel', motivo: indefinidos.join('; ').slice(0, 500), rascunho: 'Formato da prancha não confrontado: formato não declarado ou inconsistente com o arquivo.', evidencias: aceitos, camposUsados: usados, confianca: 'baixa', limitacoes }
   }
-  return { resultado: 'sem-achado', rascunho: 'Prancha em A3, formato do exemplo aceito do catálogo.', evidencias: aceitos, camposUsados: usados, confianca: 'media', limitacoes }
+  return { resultado: 'sem-achado', rascunho: `Prancha em formato permitido pelo ${tabela.documento.split(' – ')[0]} (${tabela.permitidos.join(', ')}).`, evidencias: aceitos, camposUsados: usados, confianca: 'media', limitacoes }
 }
 
 /**
