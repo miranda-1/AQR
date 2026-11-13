@@ -115,4 +115,15 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ NODE_ENV: 'staging' })).toThrow(/Corrija as variáveis de ambiente/)
     expect(() => loadConfig({ COMPARISON_WORKERS: '0' })).toThrow(/COMPARISON_WORKERS/)
   })
+
+  it('triagem: desligada por padrão, recusada em produção e chave do conteúdo validada', () => {
+    const padrao = loadConfig({})
+    expect([padrao.triagem.modo, padrao.triagem.conteudoChave, padrao.triagem.retencaoHoras]).toEqual(['desativada', null, 72])
+    expect(loadConfig({ TRIAGEM_MODO: 'experimental-sintetico', TRIAGEM_CONTEUDO_CHAVE: '' }).triagem.conteudoChave).toBeNull()
+    const chave = Buffer.alloc(32, 5).toString('base64')
+    expect(loadConfig({ TRIAGEM_CONTEUDO_CHAVE: chave }).triagem.conteudoChave?.length).toBe(32)
+    expect(() => loadConfig({ TRIAGEM_CONTEUDO_CHAVE: Buffer.alloc(16).toString('base64') })).toThrow(/32 bytes/)
+    expect(() => loadConfig({ TRIAGEM_CONTEUDO_CHAVE: 'não é base64' })).toThrow(/32 bytes/)
+    expect(() => loadConfig({ NODE_ENV: 'production', AUTH_MODE: 'keycloak', TRIAGEM_MODO: 'experimental-sintetico' })).toThrow(/TRIAGEM_MODO=experimental-sintetico não é permitido em produção/)
+  })
 })

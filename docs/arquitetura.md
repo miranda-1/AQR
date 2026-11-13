@@ -190,6 +190,16 @@ Só com `TRIAGEM_MODO=experimental-sintetico`, que o servidor **recusa em produ�
   - Expurgo automático depois de `TRIAGEM_RETENCAO_HORAS` (padrão 72), verificado (o arquivo não existe mais) e registrado.
   - Sem chave, só metadados e resultados ficam guardados; o reprocessamento continua funcionando, porque usa o estado guardado.
 
+### Triagem documental: API (E8)
+
+Rotas em `server/triage/api/routes.ts`, contratos zod em `shared/contracts/triage-api.ts`. Guia completo, com papéis e exemplos: `docs/triagem/api-triagem.md`.
+
+- **Quando existe:** só com `TRIAGEM_MODO=experimental-sintetico` e pessoa identificada: login real, ou `ADMIN_API_MODE=dev` só local.
+- **Papéis:** analista cria, confirma, revisa e reprocessa os próprios processos; administrador só acompanha.
+- **Processamento:** o envio multipart é validado (quantidade, tamanho, metadados) e a leitura, a classificação e a extração rodam em thread isolada (`server/triage/worker.ts`, `TriagemWorkerPool` sobre `IsolatedWorkerPool`). As regras e a gravação rodam no processo principal, em transação.
+- **Desligamento e reinício:** no desligamento, o gancho `preClose` marca as análises em andamento como interrompidas; na inicialização, as que ficaram para trás também são marcadas.
+- **Fora da API:** não há rota de decisão nem de alteração de resultado.
+
 ### Como entrará a autenticação real
 
 Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:

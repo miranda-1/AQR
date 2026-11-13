@@ -21,6 +21,14 @@ import { registerComparisonRoutes } from './comparison/routes.ts'
 import { ComparisonWorkerPool } from './comparison/worker-pool.ts'
 import type { ServerConfig } from './config.ts'
 import { registerErrorHandling } from './http/errors.ts'
+import path from 'node:path'
+import { defaultComparisonLimits } from './comparison/limits.ts'
+import { defaultImageLimits } from './documents/limits.ts'
+import { loadCatalog } from './triage/catalog/catalog.ts'
+import { registerTriagemRoutes } from './triage/api/routes.ts'
+import { ConteudoCifrado } from './triage/store/conteudo.ts'
+import { TriagemService } from './triage/store/service.ts'
+import { TriagemWorkerPool } from './triage/worker-pool.ts'
 
 /** JSON da API é pequeno; os PDFs chegam por multipart, com limites próprios. */
 const JSON_BODY_LIMIT = 64 * 1024
@@ -150,6 +158,7 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
   })
 
   // Administração: o banco só é aberto quando ela está ligada.
+  let devAuth: { auth: AuthProvider; db: Database } | null = null
   if (realAuth && realDb && realIdentity && realMail) {
     registerAdminRoutes(app, { mode: 'real', auth: realAuth, db: realDb, identity: new IdentityProvisioner(realIdentity, realDb, realMail) })
   } else if (config.adminMode === 'dev') {
@@ -157,10 +166,50 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
     migrate(db)
     if (!deps.db) app.addHook('onClose', async () => db.close())
     app.log.warn('Administração em modo de desenvolvimento: sem autenticação real, só para este computador.')
-    registerAdminRoutes(app, { mode: 'dev', auth: createDevAuthProvider(db), db })
+    devAuth = { auth: createDevAuthProvider(db), db }
+    registerAdminRoutes(app, { mode: 'dev', ...devAuth })
   } else {
     registerAdminRoutes(app, { mode: 'disabled' })
   }
 
+  // Triagem documental experimental (E8): só pacotes sintéticos e sempre com pessoa identificada.
+  const triagemAuth = realAuth && realDb ? { auth: realAuth, db: realDb, somenteLocal: false } : devAuth ? { ...devAuth, somenteLocal: true } : null
+  app.get('/api/triagem/status', async () => ({ disponivel: config.triagem.modo !== 'desativada' && triagemAuth !== null, modo: config.triagem.modo }))
+  if (config.triagem.modo === 'experimental-sintetico') {
+    if (!triagemAuth) {
+      app.log.warn('TRIAGEM_MODO=experimental-sintetico sem autenticação (login real ou ADMIN_API_MODE=dev): a triagem fica desligada.')
+    } else {
+      await registerTriagem(app, config, triagemAuth)
+    }
+  }
+
   return app
+}
+
+async function registerTriagem(app: FastifyInstance, config: ServerConfig, access: { auth: AuthProvider; db: Database; somenteLocal: boolean }): Promise<void> {
+  const settings = config.triagem
+  const catalogo = await loadCatalog(path.resolve(settings.catalogoDir))
+  const conteudo = settings.conteudoChave ? new ConteudoCifrado(settings.conteudoDir, settings.conteudoChave) : null
+  if (!conteudo) app.log.warn('Triagem sem TRIAGEM_CONTEUDO_CHAVE: o conteúdo dos anexos não é guardado (só metadados e resultados).')
+  const service = new TriagemService({ db: access.db, catalogo, conteudo, retencaoHoras: settings.retencaoHoras })
+  const interrompidas = service.recuperarInterrompidas()
+  if (interrompidas > 0) app.log.warn({ interrompidas }, 'Análises de triagem interrompidas por reinício marcadas como tal')
+  const pool = new TriagemWorkerPool(settings, { reading: { ...defaultComparisonLimits, maxFileSizeBytes: settings.maxBytesArquivo }, image: defaultImageLimits })
+  const expurgo = () => {
+    try {
+      const { expurgados, falhas } = service.expurgarVencidos()
+      if (expurgados + falhas > 0) app.log.info({ expurgados, falhas }, 'expurgo do conteúdo da triagem')
+    } catch (error) {
+      if (access.db.isOpen) app.log.error({ err: error }, 'Falha no expurgo do conteúdo da triagem')
+    }
+  }
+  if (conteudo) {
+    expurgo()
+    const timer = setInterval(expurgo, 3600_000)
+    timer.unref()
+    app.addHook('onClose', async () => clearInterval(timer))
+  }
+  // As rotas registram o cancelamento do desligamento antes do encerramento da fila.
+  registerTriagemRoutes(app, { auth: access.auth, service, pool, settings, somenteLocal: access.somenteLocal, log: (mensagem, detalhes) => app.log.warn(detalhes, mensagem) })
+  app.addHook('onClose', async () => pool.close())
 }

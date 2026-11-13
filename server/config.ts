@@ -69,7 +69,7 @@ const environmentSchema = z.object({
    * Chave AES-256 (32 bytes em base64) do conteúdo dos anexos. Sem ela, o conteúdo não é guardado:
    * só metadados e resultados. Fica fora da pasta do conteúdo e nunca vai para o log.
    */
-  TRIAGEM_CONTEUDO_CHAVE: z.string().min(1).optional(),
+  TRIAGEM_CONTEUDO_CHAVE: z.string().default(''),
   /** Horas até o expurgo do conteúdo cifrado (os metadados e resultados sintéticos ficam). */
   TRIAGEM_RETENCAO_HORAS: z.coerce.number().int().min(1).max(24 * 365).default(72),
   /** Pasta do catálogo normativo versionado (regras, condições, homologações). */
@@ -165,6 +165,10 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
     throw new ConfigError(`Configuração do servidor inválida (${problems}). Corrija as variáveis de ambiente e inicie de novo.`)
   }
   const data = parsed.data
+  // Triagem só com pacotes sintéticos: nunca em produção (retenção de documentos reais não homologada).
+  if (data.TRIAGEM_MODO === 'experimental-sintetico' && data.NODE_ENV === 'production') {
+    throw new ConfigError('TRIAGEM_MODO=experimental-sintetico não é permitido em produção: a triagem só aceita pacotes sintéticos e a política de retenção de documentos reais não foi homologada.')
+  }
   // Falha fechado: o login visual aceita qualquer usuário e senha, então nunca pode rodar em produção.
   if (data.NODE_ENV === 'production' && data.AUTH_MODE !== 'keycloak') {
     throw new ConfigError(
@@ -267,9 +271,6 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
 }
 
 function triagemSettings(data: z.infer<typeof environmentSchema>): TriagemSettings {
-  if (data.TRIAGEM_MODO === 'experimental-sintetico' && data.NODE_ENV === 'production') {
-    throw new ConfigError('TRIAGEM_MODO=experimental-sintetico não é permitido em produção: a triagem só aceita pacotes sintéticos e a política de retenção de documentos reais não foi homologada.')
-  }
   let conteudoChave: Buffer | null = null
   if (data.TRIAGEM_CONTEUDO_CHAVE) {
     const chave = Buffer.from(data.TRIAGEM_CONTEUDO_CHAVE, 'base64')
