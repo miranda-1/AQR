@@ -174,13 +174,14 @@ export async function buildApp(config: ServerConfig, deps: AppDependencies = {})
 
   // Triagem documental experimental (E8): só pacotes sintéticos e sempre com pessoa identificada.
   const triagemAuth = realAuth && realDb ? { auth: realAuth, db: realDb, somenteLocal: false } : devAuth ? { ...devAuth, somenteLocal: true } : null
-  app.get('/api/triagem/status', async () => ({ disponivel: config.triagem.modo !== 'desativada' && triagemAuth !== null, modo: config.triagem.modo }))
-  if (config.triagem.modo === 'experimental-sintetico') {
-    if (!triagemAuth) {
+  if (config.triagem.modo === 'experimental-sintetico' && triagemAuth) {
+    // Com a triagem ligada, as rotas registram o próprio status (com limites e papel da pessoa).
+    await registerTriagem(app, config, triagemAuth)
+  } else {
+    if (config.triagem.modo === 'experimental-sintetico') {
       app.log.warn('TRIAGEM_MODO=experimental-sintetico sem autenticação (login real ou ADMIN_API_MODE=dev): a triagem fica desligada.')
-    } else {
-      await registerTriagem(app, config, triagemAuth)
     }
+    app.get('/api/triagem/status', async () => ({ disponivel: false as const, modo: config.triagem.modo }))
   }
 
   return app

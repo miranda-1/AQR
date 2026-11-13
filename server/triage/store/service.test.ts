@@ -11,6 +11,7 @@ import { loadCatalog, type CatalogoNormativo } from '../catalog/catalog.ts'
 import { gerarPacote } from '../corpus/generate.ts'
 import { PACOTES } from '../corpus/pacotes.ts'
 import { LIMITES_AVALIACAO } from '../evaluation/run.ts'
+import { executarTriagem } from '../engine/engine.ts'
 import { triarAnexo } from '../pipeline.ts'
 import { ConteudoCifrado } from './conteudo.ts'
 import { MOTOR_VERSAO, TriagemErro, TriagemService, type Ator } from './service.ts'
@@ -190,6 +191,28 @@ describe('persistência da triagem (E7)', () => {
     expect(corrigido?.metodo).toBe('servidor')
     expect(typeof corrigido?.corrigido_por).toBe('string')
     expect(servico.repo.analises(id).map((analise) => [analise.numero, analise.situacao])).toEqual([[1, 'concluida'], [2, 'concluida']])
+  })
+
+  it('equivalência: o resultado do reprocessamento é idêntico ao da execução integral das 19 regras', async () => {
+    for (const [pacote, preparar] of [
+      ['DSD-17', (id: string) => {
+        const primeira = defined(servico.repo.analisePorNumero(id, 1))
+        const prancha = defined(servico.anexosDaAnalise(primeira).find((anexo) => anexo.classificacao.contrato.classe === 'prancha'))
+        servico.revisar(analista, id, 2, { decisao: 'corrigido', campoId: `${prancha.lido.id}:matricula`, novoValor: '90417', justificativa: 'Conferido na prancha.' })
+      }],
+      ['DSD-15', (id: string) => servico.confirmar(analista, id, 2, { tipo: 'integridade', valor: 'completo', justificativa: 'Conferido com o protocolo.' })],
+      ['DSD-42', (id: string) => servico.confirmar(analista, id, 2, { tipo: 'condicao', condicao: 'area-situacao-acima-2ha', valor: true, justificativa: 'Área conferida.' })],
+    ] as const) {
+      const { criado } = await processar(pacote)
+      const id = criado.triagem.id
+      preparar(id)
+      const { analise, alteradas } = servico.reprocessar(analista, id, 3)
+      const integral = executarTriagem(analise.entrada as Parameters<typeof executarTriagem>[0], servico.anexosDaAnalise(analise), { catalogo })
+      const gravadas = servico.repo.avaliacoes(analise.id).map((item) => item.detalhe)
+      const porRegra = [...integral.avaliacoes].sort((a, b) => a.contrato.regraId.localeCompare(b.contrato.regraId))
+      expect(gravadas.map((detalhe) => JSON.stringify(detalhe)), pacote).toEqual(porRegra.map((detalhe) => JSON.stringify(detalhe)))
+      expect(alteradas.length, pacote).toBeGreaterThan(0)
+    }
   })
 
   it('revisão de achado: confirmar e descartar só achado; descartar exige justificativa; tudo revisado muda a situação', async () => {

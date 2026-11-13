@@ -37,7 +37,8 @@ O processo de outra pessoa responde 404, sem revelar que existe, e a tentativa f
 | Método e caminho | O que faz | Respostas |
 |---|---|---|
 | `POST /api/triagens` | multipart: campo `metadados` (JSON `{referencia, protocoladoEm, modalidade, etapa}`) e arquivos em `anexos`. Cabeçalho opcional `Idempotency-Key`. Valida quantidade, tamanho por arquivo e do pacote; tipo real, integridade e isolamento são conferidos pelo conteúdo na thread. | 202 (na fila), 200 (mesma chave), 400, 401, 403, 413, 415, 503 |
-| `GET /api/triagens?limit&offset` | Processos visíveis à pessoa. | 200 |
+| `GET /api/triagem/status` | Disponibilidade decidida pelo servidor. Ligada: modalidades e etapas suportadas (D, abertura), limites, se o conteúdo é guardado, prazo de retenção e a pessoa identificada (papel, `podeCriar`). Desligada: `{disponivel: false, modo}`. | 200 |
+| `GET /api/triagens?limit&offset` | Processos visíveis à pessoa, com modalidade e etapa atuais, última análise (inclusive interrompida ou com falha), achados e achados sem revisão. | 200 |
 | `GET /api/triagens/:id` | Processo, enquadramento atual (declarado ou confirmado), todas as análises (versão do motor, catálogo e hashes), confirmações e revisões. | 200, 404 |
 | `GET /api/triagens/:id/anexos?analise=N` | Metadados, tipo real, integridade, isolamento e classificação com justificativa. | 200, 404 |
 | `GET /api/triagens/:id/avaliacoes?analise=N` | As 19 avaliações com evidências, quadro de valores, fundamentos, limitações, revisões e se foi recalculada ou reaproveitada. Sem `analise`, a atual. | 200, 404, 409 |
@@ -45,7 +46,7 @@ O processo de outra pessoa responde 404, sem revelar que existe, e a tentativa f
 | `GET /api/triagens/:id/anexos/:anexoId/conteudo` | Conteúdo **sintético** decifrado, sempre como download. Expurgado ou não armazenado: 404. | 200, 404 |
 | `POST /api/triagens/:id/condicoes` | `{versaoEsperada, tipo: modalidade\|etapa\|integridade\|condicao, valor, condicao?, justificativa}`. Integridade exige justificativa (≥ 5 caracteres): a confirmação de pacote completo é ação explícita e auditada. | 201, 400, 403, 404, 409 |
 | `POST /api/triagens/:id/revisoes` | `{versaoEsperada, decisao: confirmado\|descartado\|encaminhado, regraId, justificativa}` ou `{versaoEsperada, decisao: corrigido, campoId, novoValor, justificativa}`. Descartar e corrigir exigem justificativa; só achado é confirmado ou descartado. | 201, 400, 403, 404, 409 |
-| `POST /api/triagens/:id/reprocessar` | `{versaoEsperada}`. Com análise concluída: nova análise na hora, com as correções e as confirmações, recalculando só as regras afetadas. Sem análise concluída (falhou ou interrompida): retomada na fila a partir do conteúdo cifrado. | 201, 202, 404, 409, 503 |
+| `POST /api/triagens/:id/reprocessar` | `{versaoEsperada}`. Com análise concluída: nova análise na hora, com as correções e as confirmações. As **19 regras rodam sempre por inteiro**; a resposta lista as `alteradas` (resultado diferente da análise anterior), e as idênticas ficam marcadas como reaproveitadas, com referência. Sem análise concluída (falhou ou interrompida): retomada na fila a partir do conteúdo cifrado. | 201, 202, 404, 409, 503 |
 
 Toda entrada e toda saída passam por esquemas zod (`shared/contracts/triage-api.ts`). Corpo com campo fora do contrato é recusado (400): o cliente não consegue enviar "resultado" de regra. Alterações levam `versaoEsperada`, e versão desatualizada recebe 409.
 

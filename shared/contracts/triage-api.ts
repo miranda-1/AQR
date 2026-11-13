@@ -76,8 +76,33 @@ export const triagemResumoSchema = z.strictObject({
   atualizadaEm: instante,
   retencaoAte: instante,
   criadaPorMim: z.boolean(),
+  /** Enquadramento atual (declarado ou confirmado por servidor). */
+  modalidade: z.string(),
+  etapa: z.string(),
+  /** Última análise (qualquer situação), para mostrar "interrompida" ou "falhou". */
+  ultimaAnalise: z.strictObject({ numero: z.number().int(), situacao: z.enum(['processando', 'concluida', 'falhou', 'interrompida']), encerradaEm: instante.nullable() }).nullable(),
+  /** Na análise atual: achados e achados ainda sem revisão. `null` sem análise concluída. */
+  achados: z.number().int().min(0).nullable(),
+  pendentesRevisao: z.number().int().min(0).nullable(),
 })
 export type TriagemResumo = z.infer<typeof triagemResumoSchema>
+
+/** Disponibilidade decidida pelo servidor (nunca por uma flag do navegador). */
+export const triagemStatusSchema = z.union([
+  z.strictObject({ disponivel: z.literal(false), modo: z.enum(['desativada', 'experimental-sintetico']) }),
+  z.strictObject({
+    disponivel: z.literal(true),
+    modo: z.literal('experimental-sintetico'),
+    modalidadesSuportadas: z.array(modalidadeSchema),
+    etapasSuportadas: z.array(etapaSchema),
+    limites: z.strictObject({ maxAnexos: z.number().int(), maxBytesArquivo: z.number().int(), maxBytesPacote: z.number().int() }),
+    conteudoArmazenado: z.boolean(),
+    retencaoHoras: z.number().int(),
+    /** Pessoa identificada nesta requisição, quando houver. */
+    pessoa: z.strictObject({ usuario: z.string(), papel: z.enum(['administrador', 'analista']), podeCriar: z.boolean() }).nullable(),
+  }),
+])
+export type TriagemStatus = z.infer<typeof triagemStatusSchema>
 
 export const listaTriagensSchema = z.strictObject({ itens: z.array(triagemResumoSchema), total: z.number().int().min(0) })
 
@@ -148,6 +173,8 @@ export const anexoSaidaSchema = z.strictObject({
   motivosIsolamento: z.array(z.string()),
   classificacao: classificacaoSchema.nullable(),
   justificativa: z.string().nullable(),
+  /** Páginas como lidas (para o visualizador): rotação usada e forma de leitura. */
+  paginas: z.array(z.strictObject({ pagina: z.number().int().min(1), conteudo: z.string(), metodo: z.string(), rotacao: z.number().int(), larguraPt: z.number().optional(), alturaPt: z.number().optional() })),
 })
 export const anexosSaidaSchema = z.strictObject({ analise: z.number().int().nullable(), itens: z.array(anexoSaidaSchema) })
 
@@ -168,6 +195,8 @@ export const avaliacaoSaidaSchema = z.strictObject({
   limitacoes: z.array(z.string()),
   revisaoHumana: z.string(),
   condicoesPendentes: z.array(z.string()),
+  /** Campos extraídos que a regra usou (ids da rota de campos). */
+  camposUsados: z.array(z.string()),
   recalculada: z.boolean(),
   origemAnalise: z.number().int().nullable(),
   revisoes: z.array(revisaoSaidaSchema),
@@ -182,3 +211,12 @@ export const avaliacoesSaidaSchema = z.strictObject({
 export const camposSaidaSchema = z.strictObject({ analise: z.number().int(), itens: z.array(campoExtraidoSchema) })
 
 export const triagemCriadaSchema = z.strictObject({ triagem: triagemResumoSchema, anexos: z.array(anexoSaidaSchema), nova: z.boolean() })
+
+export const reprocessamentoSaidaSchema = z.strictObject({
+  triagem: triagemResumoSchema,
+  analise: z.number().int(),
+  /** Todas as 19 regras rodaram de novo; estas mudaram de resultado em relação à análise anterior. */
+  alteradas: z.array(z.string()),
+  recalculadas: z.array(z.string()),
+  reaproveitadas: z.array(z.string()),
+})

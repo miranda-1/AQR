@@ -390,12 +390,16 @@ export class TriagemService {
   // ---------- reprocessamento ----------
 
   /**
-   * Nova análise a partir da atual, com as correções de campo e as confirmações registradas. Só as
-   * regras afetadas são recalculadas; as demais são copiadas com referência à análise de origem. O
-   * motor roda inteiro como verificação: se uma regra "não afetada" mudar, ela é tratada como afetada
-   * e o fato fica no evento (dependência não prevista).
+   * Nova análise a partir da atual, com as correções de campo e as confirmações registradas.
+   *
+   * Correção antes de economia: **as 19 regras rodam sempre por inteiro** e o que fica gravado é
+   * exatamente o resultado da execução integral (teste de equivalência em `service.test.ts`). O mapa
+   * `DEPENDENCIAS` só rotula: regra fora do mapa de afetadas e com resultado idêntico ao anterior é
+   * gravada como "reaproveitada" (com referência à análise de origem); se mudar sem estar no mapa, é
+   * gravada como recalculada e o evento registra a dependência não prevista. `alteradas` lista as
+   * regras cujo resultado mudou.
    */
-  reprocessar(ator: Ator, triagemId: string, versaoEsperada: number): { triagem: TriagemRow; analise: AnaliseRow; recalculadas: string[]; reaproveitadas: string[] } {
+  reprocessar(ator: Ator, triagemId: string, versaoEsperada: number): { triagem: TriagemRow; analise: AnaliseRow; recalculadas: string[]; reaproveitadas: string[]; alteradas: string[] } {
     return transaction(this.db, () => {
       const triagem = this.triagemDe(ator, triagemId)
       this.exigirVersao(triagem, versaoEsperada)
@@ -460,7 +464,14 @@ export class TriagemService {
       this.evento('analise.concluida', triagemId, ator, { analise: numero, base: base.numero, recalculadas: recalculadas.length, reaproveitadas: reaproveitadas.length, ...(naoPrevistas.length ? { dependenciaNaoPrevista: naoPrevistas } : {}) })
       const final = this.repo.analise(analise.id)
       if (!final) throw new Error('análise recém-concluída não encontrada')
-      return { triagem: this.repo.triagem(triagemId) ?? atual, analise: final, recalculadas, reaproveitadas }
+      // Regras cujo resultado mudou em relação à análise anterior (todas as 19 rodaram de novo).
+      const alteradas = finais
+        .filter(({ detalhe }) => {
+          const antiga = antigas.get(detalhe.contrato.regraId)
+          return !antiga || JSON.stringify(semId(antiga.detalhe)) !== JSON.stringify(semId(detalhe))
+        })
+        .map(({ detalhe }) => detalhe.contrato.regraId)
+      return { triagem: this.repo.triagem(triagemId) ?? atual, analise: final, recalculadas, reaproveitadas, alteradas }
     })
   }
 

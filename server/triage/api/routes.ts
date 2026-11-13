@@ -15,7 +15,10 @@ import {
   revisaoEntradaSchema,
   triagemCriadaSchema,
   triagemDetalheSchema,
+  triagemStatusSchema,
+  reprocessamentoSaidaSchema,
   type TriagemResumo,
+  type TriagemStatus,
 } from '../../../shared/contracts/triage-api.ts'
 import type { AuthProvider } from '../../auth/auth-provider.ts'
 import type { TriagemSettings } from '../../config.ts'
@@ -77,22 +80,6 @@ function traduzir(error: unknown): never {
   throw error
 }
 
-function resumo(triagem: TriagemRow, ator: Ator): TriagemResumo {
-  return {
-    id: triagem.id,
-    referencia: triagem.referencia,
-    modo: triagem.modo,
-    situacao: triagem.situacao,
-    versao: triagem.versao,
-    analiseAtual: triagem.analiseAtual,
-    protocoladoEm: triagem.protocoladoEm,
-    criadaEm: triagem.criadaEm,
-    atualizadaEm: triagem.atualizadaEm,
-    retencaoAte: triagem.retencaoAte,
-    criadaPorMim: triagem.criadaPor === ator.accountId,
-  }
-}
-
 function revisaoSaida(r: RevisaoRow) {
   return { id: r.id, analise: r.analiseNumero, regraId: r.regraId, campoId: r.campoId, decisao: r.decisao, justificativa: r.justificativa, correcao: r.correcao, revisor: r.revisorRotulo, em: r.em }
 }
@@ -108,6 +95,59 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
     if (!accountRoles.includes(principal.papel)) throw new ApiError(403, 'FORBIDDEN', 'Sua conta não tem permissão para a triagem.')
     return { accountId: principal.accountId, usuario: principal.usuario, papel: principal.papel }
   }
+
+  /** Resumo do processo, com enquadramento atual, última análise e contagem de achados e pendências. */
+  function resumo(triagem: TriagemRow, ator: Ator): TriagemResumo {
+    const analises = service.repo.analises(triagem.id)
+    const ultima = analises.at(-1)
+    const atual = triagem.analiseAtual ? analises.find((analise) => analise.numero === triagem.analiseAtual) : undefined
+    let achados: number | null = null
+    let pendentesRevisao: number | null = null
+    if (atual) {
+      const ids = service.repo.avaliacoes(atual.id).filter((item) => item.detalhe.contrato.resultado === 'achado').map((item) => item.detalhe.contrato.regraId)
+      const revisadas = new Set(service.repo.revisoes(triagem.id).filter((r) => r.analiseId === atual.id && r.regraId).map((r) => r.regraId))
+      achados = ids.length
+      pendentesRevisao = ids.filter((id) => !revisadas.has(id)).length
+    }
+    const entrada = analises.length > 0 ? service.entradaAtual(triagem) : null
+    return {
+      id: triagem.id,
+      referencia: triagem.referencia,
+      modo: triagem.modo,
+      situacao: triagem.situacao,
+      versao: triagem.versao,
+      analiseAtual: triagem.analiseAtual,
+      protocoladoEm: triagem.protocoladoEm,
+      criadaEm: triagem.criadaEm,
+      atualizadaEm: triagem.atualizadaEm,
+      retencaoAte: triagem.retencaoAte,
+      criadaPorMim: triagem.criadaPor === ator.accountId,
+      modalidade: String(entrada?.modalidade.valor ?? 'indeterminado'),
+      etapa: String(entrada?.etapa.valor ?? 'indeterminado'),
+      ultimaAnalise: ultima ? { numero: ultima.numero, situacao: ultima.situacao, encerradaEm: ultima.encerradaEm } : null,
+      achados,
+      pendentesRevisao,
+    }
+  }
+
+  // Disponibilidade decidida aqui, no servidor; a interface não liga a triagem por conta própria.
+  app.get('/api/triagem/status', async (request): Promise<TriagemStatus> => {
+    let pessoa: { usuario: string; papel: 'administrador' | 'analista'; podeCriar: boolean } | null = null
+    if (!options.somenteLocal || isLoopback(request.ip)) {
+      const principal = await auth.resolvePrincipal(request)
+      if (principal) pessoa = { usuario: principal.usuario, papel: principal.papel, podeCriar: principal.papel === 'analista' }
+    }
+    return triagemStatusSchema.parse({
+      disponivel: true,
+      modo: 'experimental-sintetico',
+      modalidadesSuportadas: ['D'],
+      etapasSuportadas: ['abertura'],
+      limites: { maxAnexos: settings.maxAnexos, maxBytesArquivo: settings.maxBytesArquivo, maxBytesPacote: settings.maxBytesPacote },
+      conteudoArmazenado: service.armazenaConteudo,
+      retencaoHoras: settings.retencaoHoras,
+      pessoa,
+    })
+  })
 
   /** Ações de análise (criar, confirmar, revisar, reprocessar): só analista. */
   function exigirAnalista(ator: Ator): void {
@@ -272,6 +312,14 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
       motivosIsolamento: inspecao?.isolamento.motivos ?? [],
       classificacao: estado?.classificacao.contrato ?? null,
       justificativa: estado?.classificacao.justificativa ?? null,
+      paginas: (estado?.lido.paginas ?? []).map((pagina) => ({
+        pagina: pagina.pagina,
+        conteudo: pagina.conteudo,
+        metodo: pagina.metodo,
+        rotacao: pagina.rotacao,
+        ...(pagina.larguraPt !== undefined ? { larguraPt: pagina.larguraPt } : {}),
+        ...(pagina.alturaPt !== undefined ? { alturaPt: pagina.alturaPt } : {}),
+      })),
     }
   }
 
@@ -316,6 +364,7 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
           limitacoes: detalhe.limitacoes,
           revisaoHumana: detalhe.revisaoHumana,
           condicoesPendentes: detalhe.contrato.condicoesPendentes,
+          camposUsados: detalhe.contrato.camposUsados,
           recalculada,
           origemAnalise,
           revisoes: revisoes.filter((r) => r.regraId === detalhe.contrato.regraId && r.analiseId === analise.id).map(revisaoSaida),
@@ -410,10 +459,12 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
         if (!pool.canAccept()) throw new ApiError(503, 'QUEUE_FULL', 'O servidor está ocupado com outras triagens. Tente de novo em alguns instantes.')
         const { analise, arquivos } = service.iniciarRetomada(ator, triagem.id, entrada.versaoEsperada)
         processar(analise.id, arquivos, desligamento.signal)
-        return reply.status(202).send({ triagem: resumo(service.repo.triagem(triagem.id) ?? triagem, ator), analise: analise.numero, recalculadas: [], reaproveitadas: [] })
+        return reply.status(202).send(reprocessamentoSaidaSchema.parse({ triagem: resumo(service.repo.triagem(triagem.id) ?? triagem, ator), analise: analise.numero, alteradas: [], recalculadas: [], reaproveitadas: [] }))
       }
       const resultado = service.reprocessar(ator, triagem.id, entrada.versaoEsperada)
-      return reply.status(201).send({ triagem: resumo(resultado.triagem, ator), analise: resultado.analise.numero, recalculadas: resultado.recalculadas, reaproveitadas: resultado.reaproveitadas })
+      return reply.status(201).send(
+        reprocessamentoSaidaSchema.parse({ triagem: resumo(resultado.triagem, ator), analise: resultado.analise.numero, alteradas: resultado.alteradas, recalculadas: resultado.recalculadas, reaproveitadas: resultado.reaproveitadas }),
+      )
     } catch (error) {
       traduzir(error)
     }

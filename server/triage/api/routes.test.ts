@@ -306,6 +306,29 @@ describe('API de triagem (E8)', () => {
     expect(final.analises.map((analise) => [analise.numero, analise.situacao])).toEqual([[1, 'interrompida'], [2, 'concluida']])
   })
 
+  it('status decidido pelo servidor: limites, conteúdo e papel de quem pergunta', async () => {
+    const analista = (await app.inject({ method: 'GET', url: '/api/triagem/status', headers: como('ana.analista') })).json<{ disponivel: boolean; pessoa: { papel: string; podeCriar: boolean }; limites: { maxAnexos: number }; conteudoArmazenado: boolean; modalidadesSuportadas: string[] }>()
+    expect(analista).toMatchObject({ disponivel: true, modo: 'experimental-sintetico', modalidadesSuportadas: ['D'], etapasSuportadas: ['abertura'], conteudoArmazenado: true, limites: { maxAnexos: 12 }, pessoa: { papel: 'analista', podeCriar: true } })
+    expect((await app.inject({ method: 'GET', url: '/api/triagem/status', headers: como('carla.admin') })).json()).toMatchObject({ pessoa: { papel: 'administrador', podeCriar: false } })
+    expect((await app.inject({ method: 'GET', url: '/api/triagem/status' })).json()).toMatchObject({ disponivel: true, pessoa: null })
+  })
+
+  it('resumo, anexos e avaliações trazem o que a interface precisa', async () => {
+    const detalhe = await triado('DSD-16')
+    const lista = (await app.inject({ method: 'GET', url: '/api/triagens', headers: como('ana.analista') })).json<{ itens: { modalidade: string; etapa: string; achados: number; pendentesRevisao: number; ultimaAnalise: { situacao: string; encerradaEm: string } }[] }>()
+    const item = defined(lista.itens[0])
+    expect([item.modalidade, item.etapa, item.ultimaAnalise.situacao]).toEqual(['D', 'abertura', 'concluida'])
+    expect(item.achados).toBeGreaterThan(0)
+    expect(item.pendentesRevisao).toBe(item.achados)
+    const anexos = (await app.inject({ method: 'GET', url: `/api/triagens/${detalhe.triagem.id}/anexos`, headers: como('ana.analista') })).json<{ itens: { paginas: { pagina: number; rotacao: number }[] }[] }>()
+    expect(anexos.itens[0]?.paginas).toEqual([expect.objectContaining({ pagina: 1, rotacao: 0 })])
+    const art = regra(await avaliacoes(detalhe.triagem.id), '018') as unknown as { camposUsados: string[] }
+    expect(art.camposUsados.length).toBeGreaterThan(0)
+    const reprocessada = await app.inject({ method: 'POST', url: `/api/triagens/${detalhe.triagem.id}/reprocessar`, payload: { versaoEsperada: detalhe.triagem.versao }, headers: como('ana.analista') })
+    // Sem correção nem confirmação, nada muda.
+    expect(reprocessada.json<{ alteradas: string[] }>().alteradas).toEqual([])
+  })
+
   it('triagem desligada por padrão: as rotas não existem', async () => {
     await app.close()
     app = await buildTestApp({ db, env: { ADMIN_API_MODE: 'dev' } })
