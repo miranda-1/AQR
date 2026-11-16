@@ -330,6 +330,40 @@ describe('evidência no documento', () => {
     expect(service.chamadas.some((chamada) => chamada.metodo === 'conteudo')).toBe(false)
   })
 
+  it('imagem: a URL temporária do arquivo é revogada ao fechar o painel', async () => {
+    const user = userEvent.setup()
+    const { antes } = cenarioDivergencia()
+    const anexos = defined(antes.anexos[1], 'anexos')
+    const comoImagem = (item: (typeof anexos.itens)[number]) => (item.id === ANEXO_ART ? { ...item, tipoReal: 'png' } : item)
+    const service = criarFakeService({ cenarios: [{ ...antes, anexos: { 1: { ...anexos, itens: anexos.itens.map(comoImagem) } } }], conteudo: new Blob(['png'], { type: 'image/png' }) })
+    const criadas: string[] = []
+    const revogadas: string[] = []
+    const criar = vi.fn((objeto: Blob | MediaSource) => {
+      void objeto
+      const url = `blob:teste/${criadas.length + 1}`
+      criadas.push(url)
+      return url
+    })
+    const revogar = vi.fn((url: string) => {
+      revogadas.push(url)
+    })
+    const originais = { createObjectURL: globalThis.URL.createObjectURL, revokeObjectURL: globalThis.URL.revokeObjectURL }
+    Object.assign(globalThis.URL, { createObjectURL: criar, revokeObjectURL: revogar })
+    try {
+      renderApp(PROCESSO, { triageService: service })
+      const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
+      await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
+      const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
+      expect(await within(painel).findByRole('img', { name: 'Imagem do anexo art.pdf' })).toHaveAttribute('src', 'blob:teste/1')
+      await user.keyboard('{Escape}')
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(revogadas).toEqual(criadas)
+      expect(criadas.length).toBeGreaterThan(0)
+    } finally {
+      Object.assign(globalThis.URL, originais)
+    }
+  })
+
   it('anexo isolado na inspeção não é pedido ao servidor', async () => {
     const user = userEvent.setup()
     const { antes } = cenarioDivergencia()
@@ -340,7 +374,7 @@ describe('evidência no documento', () => {
     const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
     const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
-    expect(within(painel).getByText(/foi isolado na inspeção \(conteudo-executavel\)/)).toBeInTheDocument()
+    expect(within(painel).getByText(/foi isolado na inspeção \(conteúdo executável\)/)).toBeInTheDocument()
     expect(service.chamadas.some((chamada) => chamada.metodo === 'conteudo')).toBe(false)
   })
 

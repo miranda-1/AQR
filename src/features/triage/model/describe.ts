@@ -211,4 +211,17 @@ export const formatarDataHora = (iso: string | null | undefined) => (iso ? dataH
 export const formatarData = (iso: string | null | undefined) => (iso ? data.format(new Date(iso)) : '—')
 
 /** Identificador curto do processo para exibir (o id completo fica no endereço). */
+/** Motivos de isolamento da inspeção (`server/documents`), em português; código desconhecido aparece como está. */
+const motivosIsolamento: Record<string, string> = {
+  'conteudo-executavel': 'conteúdo executável',
+  'conteiner-disfarcado': 'contêiner com nome de outro formato',
+  'zip-caminho-perigoso': 'ZIP com caminho perigoso',
+  'zip-compressao-suspeita': 'ZIP com compressão suspeita',
+  'zip-ilegivel': 'ZIP ilegível',
+  'imagem-grande-demais': 'imagem grande demais',
+  'pdf-corrompido': 'PDF corrompido',
+  'arquivo-vazio': 'arquivo vazio',
+}
+export const motivoIsolamentoRotulo = (motivos: readonly string[]): string => motivos.map((motivo) => motivosIsolamento[motivo] ?? motivo).join(', ')
+
 export const idCurto = (id: string) => id.slice(0, 8).toUpperCase()

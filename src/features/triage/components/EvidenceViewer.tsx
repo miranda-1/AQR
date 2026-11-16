@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { loadPdf, type PdfDocumentHandle, type PdfPageSize } from '@/features/comparison/viewer/pdf/load-pdf'
 import { PdfPageView } from '@/features/comparison/viewer/pdf/PdfPageView'
 import { formatFileSize } from '@/lib/format'
-import { classeRotulo } from '../model/describe'
+import { classeRotulo, motivoIsolamentoRotulo } from '../model/describe'
 import { TriagemServiceError, type AnexoInfo, type Evidencia } from '../model/types'
 import { useTriagemSession } from '../session/triage-session'
 
@@ -78,7 +78,7 @@ function useConteudo(triagemId: string, anexo: AnexoInfo): Carga {
     return {
       estado: 'erro',
       mensagem: anexo.isolado
-        ? `Este anexo foi isolado na inspeção (${anexo.motivosIsolamento.join(', ') || 'conteúdo suspeito'}) e não é aberto. A evidência registrada continua abaixo.`
+        ? `Este anexo foi isolado na inspeção (${motivoIsolamentoRotulo(anexo.motivosIsolamento) || 'conteúdo suspeito'}) e não é aberto. A evidência registrada continua abaixo.`
         : anexo.conteudo === 'expurgado'
           ? 'O arquivo original já foi expurgado (prazo de guarda vencido). A evidência registrada continua abaixo.'
           : 'Este ambiente não guarda o conteúdo dos anexos; só os metadados e a evidência registrada.',

@@ -37,7 +37,7 @@ export function TriagemLista({ podeCriar }: { podeCriar: boolean }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg bg-white shadow-surface" role="region" aria-labelledby="lista-titulo" tabIndex={0}>
+    <div className="relative overflow-x-auto rounded-lg bg-white shadow-surface" role="region" aria-labelledby="lista-titulo" tabIndex={0}>
       <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
         <caption id="lista-titulo" className="sr-only">
           Processos de triagem que você pode acessar

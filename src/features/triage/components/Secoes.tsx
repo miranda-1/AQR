@@ -17,6 +17,7 @@ import {
   formatarDataHora,
   modalidadeRotulo,
   ordemCategorias,
+  motivoIsolamentoRotulo,
   pedeRevisao,
   resultadoRotulo,
 } from '../model/describe'
@@ -98,7 +99,7 @@ export function Documentos({ anexos, onAbrirEvidencia }: { anexos: readonly Anex
             {anexo.isolado && (
               <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-deletion">
                 <ShieldAlert aria-hidden className="size-3.5" />
-                Isolado por suspeita ({anexo.motivosIsolamento.join(', ')}): não foi aberto.
+                Isolado por suspeita ({motivoIsolamentoRotulo(anexo.motivosIsolamento)}): não foi aberto.
               </p>
             )}
             {anexo.justificativa && <p className="mt-1 text-xs text-ink">{anexo.justificativa}</p>}
@@ -143,7 +144,7 @@ export function Campos({
           <h3 className="text-sm font-bold text-ink">
             {anexo.ordem}. {anexo.nome} <span className="font-normal text-muted-foreground">({classeRotulo[anexo.classificacao?.classe ?? 'indeterminada']})</span>
           </h3>
-          <div className="mt-2 overflow-x-auto" role="region" aria-label={`Campos de ${anexo.nome}`} tabIndex={0}>
+          <div className="relative mt-2 overflow-x-auto" role="region" aria-label={`Campos de ${anexo.nome}`} tabIndex={0}>
             <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr>
@@ -426,7 +427,7 @@ export function Historico({ detalhe, triagemId }: { detalhe: TriagemDetalhe; tri
   const correcoes = detalhe.revisoes.filter((revisao) => revisao.decisao === 'corrigido')
   return (
     <div className="space-y-5">
-      <div className="overflow-x-auto" role="region" aria-label="Análises do processo" tabIndex={0}>
+      <div className="relative overflow-x-auto" role="region" aria-label="Análises do processo" tabIndex={0}>
         <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
           <caption className="text-left text-sm font-bold text-ink">Análises</caption>
           <thead className="text-xs text-muted-foreground">
@@ -513,7 +514,7 @@ function Comparacao({ triagemId, base, atual }: { triagemId: string; base: numbe
   const linhas = depois.dados.itens.map((item) => ({ item, anterior: antes.dados.itens.find((outra) => outra.regraId === item.regraId) }))
   const mudaram = linhas.filter(({ item, anterior }) => !anterior || anterior.resultado !== item.resultado || anterior.tipo !== item.tipo || anterior.rascunho !== item.rascunho)
   return (
-    <div className="overflow-x-auto" role="region" aria-label={`Comparação entre as análises ${base} e ${atual}`} tabIndex={0}>
+    <div className="relative overflow-x-auto" role="region" aria-label={`Comparação entre as análises ${base} e ${atual}`} tabIndex={0}>
       <p className="mb-2 text-sm text-ink" aria-live="polite">
         {mudaram.length === 0 ? 'Nenhuma verificação mudou.' : `${mudaram.length} ${mudaram.length === 1 ? 'verificação mudou' : 'verificações mudaram'}.`}
       </p>
