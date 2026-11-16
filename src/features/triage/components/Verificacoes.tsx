@@ -91,7 +91,9 @@ function Grupo({ categoria, itens, escolhida, onEscolher }: { categoria: Categor
                 <span className="tabular shrink-0 text-xs text-muted-foreground">{item.regraId.slice(-3)}</span>
                 <span className="min-w-0 flex-1">{tituloDaRegra(item.regraId, item.nome)}</span>
                 {pedeRevisao(item) && (
-                  <span className={cn('shrink-0 text-xs', revisada ? 'text-addition' : 'text-modification')}>{revisada ? 'revisado' : 'a revisar'}</span>
+                  <span className={cn('shrink-0 text-xs', revisada ? 'text-addition' : 'text-modification')}>
+                    {revisada ? 'revisado' : item.historicoRevisao?.situacao === 'equivalente' ? `a revisar (igual à nº ${item.historicoRevisao.analise})` : 'a revisar'}
+                  </span>
                 )}
               </button>
             </li>
@@ -279,6 +281,7 @@ function Detalhe({
       </details>
 
       <Revisoes avaliacao={avaliacao} />
+      <RevisaoAnterior avaliacao={avaliacao} revisao={revisao} />
       {revisao.podeRevisar && <FormRevisao avaliacao={avaliacao} revisao={revisao} />}
     </article>
   )
@@ -293,10 +296,79 @@ function Revisoes({ avaliacao }: { avaliacao: Avaliacao }) {
         {avaliacao.revisoes.map((revisao) => (
           <li key={revisao.id} className="rounded-md bg-white px-2 py-1.5">
             <strong>{decisaoRotulo[revisao.decisao]}</strong> por {revisao.revisor} em {formatarDataHora(revisao.em)}
+            {revisao.baseRevisaoId && <span className="text-muted-foreground"> · mantém a decisão de uma análise anterior</span>}
             {revisao.justificativa && <span className="block text-muted-foreground">“{revisao.justificativa}”</span>}
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+const DIFERENCA_ROTULO: Record<string, string> = {
+  'versao-da-regra': 'versão da regra',
+  resultado: 'resultado',
+  tipo: 'tipo do achado',
+  condicoes: 'condições pendentes',
+  evidencias: 'evidências',
+  valores: 'valores comparados',
+  texto: 'texto do achado',
+}
+
+/**
+ * Revisão humana da mesma regra numa análise anterior. A decisão nunca passa sozinha para a
+ * análise nova: com o achado idêntico, a pessoa pode mantê-la por uma revisão nova (vinculada à
+ * original); com o achado modificado, a tela diz o que mudou e pede revisão nova.
+ */
+function RevisaoAnterior({ avaliacao, revisao }: { avaliacao: Avaliacao; revisao: ContextoRevisao }) {
+  const { service } = useTriagemSession()
+  const acao = useAcao()
+  const historico = avaliacao.historicoRevisao
+  const base = historico?.revisoes.filter((item) => item.decisao !== 'corrigido').at(-1)
+  if (!historico || !base) return null
+  const jaRevisada = avaliacao.revisoes.length > 0
+  const decisao = base.decisao === 'confirmado' || base.decisao === 'descartado' || base.decisao === 'encaminhado' ? base.decisao : null
+  const podeManter = historico.situacao === 'equivalente' && revisao.podeRevisar && !jaRevisada && decisao !== null && (decisao === 'encaminhado' || avaliacao.resultado === 'achado')
+  const descricaoBase = (
+    <>
+      <strong>{decisaoRotulo[base.decisao]}</strong> por {base.revisor} em {formatarDataHora(base.em)}
+      {base.justificativa && <span className="block text-muted-foreground">“{base.justificativa}”</span>}
+    </>
+  )
+
+  async function manter() {
+    if (!decisao) return
+    const justificativa = `Mantida a decisão da análise nº ${historico?.analise ?? ''}.${base?.justificativa ? ` ${base.justificativa}` : ''}`.slice(0, 2000)
+    const feito = await acao.executar(
+      () => service.revisar(revisao.triagemId, { versaoEsperada: revisao.versao, decisao, regraId: avaliacao.regraId, justificativa, baseRevisaoId: base?.id }),
+      () => 'ok',
+    )
+    if (feito) revisao.onAlterado(`${decisaoRotulo[decisao]} (${avaliacao.regraId}), mantendo a decisão da análise nº ${historico?.analise ?? ''}. A revisão nova ficou registrada com seu usuário e a data.`)
+  }
+
+  if (historico.situacao === 'modificado') {
+    return (
+      <section aria-label="Revisão em análise anterior" className="rounded-md bg-modification-bg p-3 text-sm text-ink">
+        <p className="font-semibold">Este item mudou desde a revisão feita na análise nº {historico.analise}.</p>
+        <p className="mt-1">Mudou: {historico.diferencas.map((item) => DIFERENCA_ROTULO[item] ?? item).join(', ')}. A decisão anterior não vale para o resultado atual; ela continua registrada na análise nº {historico.analise}.</p>
+        <p className="mt-2">Decisão anterior: {descricaoBase}</p>
+        {revisao.podeRevisar && avaliacao.resultado === 'achado' && !jaRevisada && <p className="mt-2 font-semibold">Revise este achado de novo.</p>}
+      </section>
+    )
+  }
+
+  return (
+    <section aria-label="Revisão em análise anterior" className="rounded-md bg-white p-3 text-sm text-ink shadow-surface">
+      <p className="font-semibold">Este achado é igual ao revisado na análise nº {historico.analise}.</p>
+      <p className="mt-1 text-muted-foreground">Regra, versão, condições, evidências, valores e texto não mudaram. Mesmo assim, a decisão não passa sozinha para esta análise.</p>
+      <p className="mt-2">Decisão anterior: {descricaoBase}</p>
+      {acao.erro !== null && <div className="mt-2"><ErroAcao erro={acao.erro} onAtualizar={() => revisao.onAlterado()} /></div>}
+      {podeManter && (
+        <Button type="button" size="sm" variant="outline" className="mt-2" disabled={acao.executando} onClick={() => void manter()}>
+          <CheckCheck aria-hidden />
+          {acao.executando ? 'Registrando…' : `Manter a decisão anterior (${decisaoRotulo[base.decisao]?.toLowerCase() ?? base.decisao})`}
+        </Button>
+      )}
     </section>
   )
 }

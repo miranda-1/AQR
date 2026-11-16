@@ -5,7 +5,8 @@
  *
  * Em 16/11/2026 (E10), os resumos ganharam `condicoesPendentes` e `naoAvaliaveis`, calculados
  * pela mesma regra do servidor a partir das avaliações gravadas aqui (análise atual de cada resumo). As avaliações ganharam `aplicacao`, a pré-condição da regra no
- * catálogo 1.0-review (o mesmo das análises gravadas).
+ * catálogo 1.0-review (o mesmo das análises gravadas). Na estabilização da E10, as revisões ganharam
+ * `baseRevisaoId` (nulo em todas as gravadas aqui: nenhuma mantém decisão de análise anterior).
  */
 export const respostasReais: Record<string, unknown> = {
  "statusAnalista": {
@@ -4097,7 +4098,8 @@ export const respostasReais: Record<string, unknown> = {
      "novo": "F7"
     },
     "revisor": "ana.analista",
-    "em": "2026-11-13T00:19:27.279Z"
+    "em": "2026-11-13T00:19:27.279Z",
+    "baseRevisaoId": null
    }
   ]
  },

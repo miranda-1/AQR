@@ -106,7 +106,7 @@ async function triado(pacoteId: string): Promise<Detalhe> {
 interface Avaliacoes {
   analise: number
   decisaoAdministrativa: null
-  itens: { regraId: string; resultado: string; tipo?: string; rascunho: string; evidencias: { sha256: string }[]; recalculada: boolean; fundamentos: unknown[] }[]
+  itens: { regraId: string; resultado: string; tipo?: string; rascunho: string; evidencias: { sha256: string }[]; recalculada: boolean; fundamentos: unknown[]; revisoes: unknown[]; historicoRevisao?: unknown }[]
 }
 
 async function avaliacoes(id: string, analise?: number): Promise<Avaliacoes> {
@@ -167,6 +167,31 @@ describe('API de triagem (E8)', () => {
     ])
     expect(anexos.itens[2]?.motivosIsolamento).toEqual(['conteudo-executavel'])
     expect(regra(await avaliacoes(id), '043')).toMatchObject({ resultado: 'achado', tipo: 'formato-incompativel' })
+  })
+
+  it('histórico de revisão pela API: decisão idêntica mantida com vínculo; achado modificado recusa o vínculo (409)', async () => {
+    const { triagem } = await triado('DSD-16')
+    const id = triagem.id
+    const versao = async () => (await app.inject({ method: 'GET', url: `/api/triagens/${id}`, headers: como('ana.analista') })).json<Detalhe>().triagem.versao
+    const revisar = async (corpo: Record<string, unknown>) => app.inject({ method: 'POST', url: `/api/triagens/${id}/revisoes`, payload: { versaoEsperada: await versao(), ...corpo }, headers: como('ana.analista') })
+    const r009 = (await revisar({ decisao: 'confirmado', regraId: 'AQR-GCA-009', justificativa: 'conferido' })).json<{ revisaoId: string }>().revisaoId
+    const r018 = (await revisar({ decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'conferido' })).json<{ revisaoId: string }>().revisaoId
+    const campos = (await app.inject({ method: 'GET', url: `/api/triagens/${id}/campos`, headers: como('ana.analista') })).json<{ itens: { id: string; campo: string; valorBruto?: string }[] }>()
+    const lote = defined(campos.itens.find((campo) => campo.campo === 'lote' && campo.valorBruto === 'C3'))
+    expect((await revisar({ decisao: 'corrigido', campoId: lote.id, novoValor: 'F7', justificativa: 'Conferido na ART.' })).statusCode).toBe(201)
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/reprocessar`, payload: { versaoEsperada: await versao() }, headers: como('ana.analista') })).statusCode).toBe(201)
+    const atuais = await avaliacoes(id)
+    expect(regra(atuais, '009')).toMatchObject({ historicoRevisao: { situacao: 'equivalente', analise: 1, diferencas: [], revisoes: [{ id: r009, decisao: 'confirmado' }] }, revisoes: [] })
+    expect(regra(atuais, '018')).toMatchObject({ historicoRevisao: { situacao: 'modificado', analise: 1 } })
+    // A análise 1 não ganha histórico e continua com suas revisões.
+    expect(regra(await avaliacoes(id, 1), '009')).toMatchObject({ revisoes: [{ id: r009 }] })
+    expect(regra(await avaliacoes(id, 1), '009')).not.toHaveProperty('historicoRevisao')
+
+    const recusada = await revisar({ decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'manter', baseRevisaoId: r018 })
+    expect(recusada.statusCode).toBe(400)
+    const mantida = await revisar({ decisao: 'confirmado', regraId: 'AQR-GCA-009', justificativa: 'Mantida a decisão da análise nº 1.', baseRevisaoId: r009 })
+    expect(mantida.statusCode).toBe(201)
+    expect(regra(await avaliacoes(id), '009').revisoes).toMatchObject([{ decisao: 'confirmado', baseRevisaoId: r009, analise: 2 }])
   })
 
   it('regressão (E10.3): o conteúdo de anexo isolado nunca é entregue, nem antes da inspeção', async () => {

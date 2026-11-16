@@ -19,6 +19,7 @@ import { normalizarCampo, type CampoDetalhado } from '../extraction/extract.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { mascararDocumentos } from '../reading/text.ts'
 import { ConteudoIndisponivel, type ConteudoCifrado } from './conteudo.ts'
+import { compararAchados, type DiferencaAchado } from './correspondencia.ts'
 import { anexoDoEstado } from './estado.ts'
 import { TriagemRepository, type AcaoEvento, type AnaliseRow, type AnexoRow, type RevisaoRow, type TriagemRow } from './repository.ts'
 
@@ -41,7 +42,7 @@ export interface Ator {
   papel: AccountRole
 }
 
-export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE' | 'ANEXO_ISOLADO'
+export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE' | 'ANEXO_ISOLADO' | 'ACHADO_MODIFICADO'
 
 export class TriagemErro extends Error {
   override name = 'TriagemErro'
@@ -74,8 +75,20 @@ export type Confirmacao =
   | { tipo: 'condicao'; condicao: string; valor: boolean; justificativa: string }
 
 export type NovaRevisao =
-  | { decisao: 'confirmado' | 'descartado' | 'encaminhado'; regraId: string; justificativa: string }
+  | { decisao: 'confirmado' | 'descartado' | 'encaminhado'; regraId: string; justificativa: string; baseRevisaoId?: string | undefined }
   | { decisao: 'corrigido'; campoId: string; novoValor: string; justificativa: string }
+
+/**
+ * Relação de uma verificação da análise exibida com a revisão humana mais recente da mesma regra
+ * numa análise anterior. `equivalente`: nada do que a pessoa viu mudou; a decisão pode ser mantida
+ * por uma revisão nova e explícita. `modificado`: o achado mudou e pede revisão nova.
+ */
+export interface HistoricoRevisao {
+  situacao: 'equivalente' | 'modificado'
+  analise: number
+  diferencas: DiferencaAchado[]
+  revisoes: RevisaoRow[]
+}
 
 /**
  * Do que cada regra depende, para recalcular só as afetadas. Campos: nomes de campo lidos pela
@@ -363,20 +376,64 @@ export class TriagemService {
         if (!campo) throw new TriagemErro('ENTRADA_INVALIDA', 'Campo não encontrado na análise atual.')
         const novo = revisao.novoValor.trim()
         if (novo.length === 0 || novo.length > 500) throw new TriagemErro('ENTRADA_INVALIDA', 'Informe o valor corrigido (até 500 caracteres).')
-        this.repo.inserirRevisao({ id, triagemId, analiseId: analise.id, regraId: null, campoId: revisao.campoId, decisao: 'corrigido', justificativa, correcao: { anterior: campo.contrato.valorBruto ?? null, novo }, revisorId: ator.accountId, revisorRotulo: ator.usuario, em: agora })
+        this.repo.inserirRevisao({ id, triagemId, analiseId: analise.id, regraId: null, campoId: revisao.campoId, decisao: 'corrigido', justificativa, correcao: { anterior: campo.contrato.valorBruto ?? null, novo }, revisorId: ator.accountId, revisorRotulo: ator.usuario, em: agora, baseRevisaoId: null })
       } else {
         const avaliacao = this.repo.avaliacoes(analise.id).find((item) => item.detalhe.contrato.regraId === revisao.regraId)
         if (!avaliacao) throw new TriagemErro('ENTRADA_INVALIDA', 'Regra não avaliada na análise atual.')
         if ((revisao.decisao === 'confirmado' || revisao.decisao === 'descartado') && avaliacao.detalhe.contrato.resultado !== 'achado') {
           throw new TriagemErro('ENTRADA_INVALIDA', 'Só um achado pode ser confirmado ou descartado; use "encaminhado" para registrar a análise de outro resultado.')
         }
-        this.repo.inserirRevisao({ id, triagemId, analiseId: analise.id, regraId: revisao.regraId, campoId: null, decisao: revisao.decisao, justificativa, correcao: null, revisorId: ator.accountId, revisorRotulo: ator.usuario, em: agora })
+        const baseRevisaoId = revisao.baseRevisaoId ? this.validarDecisaoMantida(triagemId, analise, avaliacao.detalhe, revisao) : null
+        this.repo.inserirRevisao({ id, triagemId, analiseId: analise.id, regraId: revisao.regraId, campoId: null, decisao: revisao.decisao, justificativa, correcao: null, revisorId: ator.accountId, revisorRotulo: ator.usuario, em: agora, baseRevisaoId })
       }
       const situacao = this.todosAchadosRevisados(triagemId, analise) ? 'revisado' : 'aguardando-revisao'
       if (!this.repo.atualizarTriagem(triagemId, versaoEsperada, { situacao }, agora)) throw new TriagemErro('CONFLITO_DE_VERSAO', 'O processo foi alterado por outra ação. Atualize e tente de novo.')
-      this.evento('revisao.registrada', triagemId, ator, { analise: analise.numero, decisao: revisao.decisao, ...(revisao.decisao === 'corrigido' ? { campo: revisao.campoId } : { regra: revisao.regraId }) })
+      this.evento('revisao.registrada', triagemId, ator, {
+        analise: analise.numero,
+        decisao: revisao.decisao,
+        ...(revisao.decisao === 'corrigido' ? { campo: revisao.campoId } : { regra: revisao.regraId, ...(revisao.baseRevisaoId ? { mantida: revisao.baseRevisaoId } : {}) }),
+      })
       return { triagem: this.repo.triagem(triagemId) ?? triagem, revisaoId: id }
     })
+  }
+
+  /**
+   * Revisão que mantém a decisão de uma análise anterior: só vale se a revisão de base é da mesma
+   * regra, de análise anterior, com a mesma decisão, e se o achado é idêntico ao revisado. Achado
+   * modificado nunca herda decisão: a pessoa revisa de novo.
+   */
+  private validarDecisaoMantida(triagemId: string, analise: AnaliseRow, atual: AvaliacaoDetalhada, revisao: Extract<NovaRevisao, { regraId: string }>): string {
+    const base = this.repo.revisoes(triagemId).find((item) => item.id === revisao.baseRevisaoId)
+    if (!base || base.regraId !== revisao.regraId || base.analiseNumero >= analise.numero || base.decisao !== revisao.decisao) {
+      throw new TriagemErro('ENTRADA_INVALIDA', 'A revisão de origem não corresponde a esta regra e decisão numa análise anterior.')
+    }
+    const anterior = this.repo.avaliacoes(base.analiseId).find((item) => item.detalhe.contrato.regraId === revisao.regraId)
+    if (!anterior || compararAchados(anterior.detalhe, atual).length > 0) {
+      throw new TriagemErro('ACHADO_MODIFICADO', 'O achado mudou desde aquela revisão. A decisão anterior não vale para ele: revise de novo.')
+    }
+    return base.id
+  }
+
+  /** Para cada regra da análise, a relação com a revisão humana mais recente numa análise anterior. */
+  historicoDeRevisao(triagemId: string, analise: AnaliseRow): Map<string, HistoricoRevisao> {
+    const revisoes = this.repo.revisoes(triagemId).filter((item) => item.regraId && item.analiseNumero < analise.numero)
+    const resultado = new Map<string, HistoricoRevisao>()
+    for (const { detalhe } of this.repo.avaliacoes(analise.id)) {
+      const regraId = detalhe.contrato.regraId
+      const daRegra = revisoes.filter((item) => item.regraId === regraId)
+      const ultima = daRegra.at(-1)
+      if (!ultima) continue
+      const anterior = this.repo.avaliacoes(ultima.analiseId).find((item) => item.detalhe.contrato.regraId === regraId)
+      if (!anterior) continue
+      const diferencas = compararAchados(anterior.detalhe, detalhe)
+      resultado.set(regraId, {
+        situacao: diferencas.length === 0 ? 'equivalente' : 'modificado',
+        analise: ultima.analiseNumero,
+        diferencas,
+        revisoes: daRegra.filter((item) => item.analiseId === ultima.analiseId),
+      })
+    }
+    return resultado
   }
 
   private todosAchadosRevisados(triagemId: string, analise: AnaliseRow): boolean {

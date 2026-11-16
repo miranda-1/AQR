@@ -96,6 +96,8 @@ export interface RevisaoRow {
   revisorId: string
   revisorRotulo: string
   em: string
+  /** Revisão de uma análise anterior cuja decisão esta mantém (achado idêntico); `null` nas demais. */
+  baseRevisaoId: string | null
 }
 
 export interface EventoRow {
@@ -410,10 +412,10 @@ export class TriagemRepository {
   inserirRevisao(r: Omit<RevisaoRow, 'analiseNumero'>): void {
     this.db
       .prepare(
-        `INSERT INTO triagem_revisoes (id, triagem_id, analise_id, regra_id, campo_id, decisao, justificativa, correcao, revisor_id, revisor_rotulo, em)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO triagem_revisoes (id, triagem_id, analise_id, regra_id, campo_id, decisao, justificativa, correcao, revisor_id, revisor_rotulo, em, base_revisao_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(r.id, r.triagemId, r.analiseId, r.regraId, r.campoId, r.decisao, r.justificativa, r.correcao ? json(r.correcao) : null, r.revisorId, r.revisorRotulo, r.em)
+      .run(r.id, r.triagemId, r.analiseId, r.regraId, r.campoId, r.decisao, r.justificativa, r.correcao ? json(r.correcao) : null, r.revisorId, r.revisorRotulo, r.em, r.baseRevisaoId)
   }
 
   revisoes(triagemId: string): RevisaoRow[] {
@@ -433,6 +435,7 @@ export class TriagemRepository {
         revisorId: textColumn(row, 'revisor_id'),
         revisorRotulo: textColumn(row, 'revisor_rotulo'),
         em: textColumn(row, 'em'),
+        baseRevisaoId: optionalTextColumn(row, 'base_revisao_id'),
       }))
   }
 

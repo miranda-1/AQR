@@ -74,14 +74,14 @@ function corpo<T extends z.ZodType>(schema: T, valor: unknown): z.infer<T> {
 /** Erro do serviço → resposta HTTP, sem detalhes internos. */
 function traduzir(error: unknown): never {
   if (error instanceof TriagemErro) {
-    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409, ANEXO_ISOLADO: 403 }[error.codigo]
+    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409, ANEXO_ISOLADO: 403, ACHADO_MODIFICADO: 409 }[error.codigo]
     throw new ApiError(status, error.codigo, error.message)
   }
   throw error
 }
 
 function revisaoSaida(r: RevisaoRow) {
-  return { id: r.id, analise: r.analiseNumero, regraId: r.regraId, campoId: r.campoId, decisao: r.decisao, justificativa: r.justificativa, correcao: r.correcao, revisor: r.revisorRotulo, em: r.em }
+  return { id: r.id, analise: r.analiseNumero, regraId: r.regraId, campoId: r.campoId, decisao: r.decisao, justificativa: r.justificativa, correcao: r.correcao, revisor: r.revisorRotulo, em: r.em, baseRevisaoId: r.baseRevisaoId }
 }
 
 export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRoutesOptions): void {
@@ -351,6 +351,11 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
       const analise = analiseDe(triagem, corpo(analiseQuerySchema, request.query).analise)
       const revisoes = service.repo.revisoes(triagem.id)
       const aplicacao = (regraId: string) => service.aplicacaoDaRegra(regraId, analise.catalogoSha256)
+      const historico = service.historicoDeRevisao(triagem.id, analise)
+      const historicoDe = (regraId: string) => {
+        const item = historico.get(regraId)
+        return item ? { historicoRevisao: { situacao: item.situacao, analise: item.analise, diferencas: item.diferencas, revisoes: item.revisoes.map(revisaoSaida) } } : {}
+      }
       return avaliacoesSaidaSchema.parse({
         analise: analise.numero,
         natureza: 'verificacao-tecnica-experimental',
@@ -372,6 +377,7 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
           limitacoes: detalhe.limitacoes,
           revisaoHumana: detalhe.revisaoHumana,
           ...(aplicacao(detalhe.contrato.regraId) ? { aplicacao: aplicacao(detalhe.contrato.regraId) } : {}),
+          ...historicoDe(detalhe.contrato.regraId),
           condicoesPendentes: detalhe.contrato.condicoesPendentes,
           camposUsados: detalhe.contrato.camposUsados,
           recalculada,
@@ -448,7 +454,7 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
         entrada.versaoEsperada,
         entrada.decisao === 'corrigido'
           ? { decisao: 'corrigido', campoId: entrada.campoId, novoValor: entrada.novoValor, justificativa: entrada.justificativa }
-          : { decisao: entrada.decisao, regraId: entrada.regraId, justificativa: entrada.justificativa },
+          : { decisao: entrada.decisao, regraId: entrada.regraId, justificativa: entrada.justificativa, baseRevisaoId: entrada.baseRevisaoId },
       )
       return reply.status(201).send({ triagem: resumo(triagem, ator), revisaoId, reprocessamentoNecessario: entrada.decisao === 'corrigido' })
     } catch (error) {

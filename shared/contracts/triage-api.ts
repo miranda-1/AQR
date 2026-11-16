@@ -44,9 +44,10 @@ export const confirmacaoEntradaSchema = z.discriminatedUnion('tipo', [
 export type ConfirmacaoEntrada = z.infer<typeof confirmacaoEntradaSchema>
 
 export const revisaoEntradaSchema = z.discriminatedUnion('decisao', [
-  z.strictObject({ versaoEsperada: versao, decisao: z.literal('confirmado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.default('') }),
-  z.strictObject({ versaoEsperada: versao, decisao: z.literal('encaminhado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.default('') }),
-  z.strictObject({ versaoEsperada: versao, decisao: z.literal('descartado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.min(5) }),
+  // `baseRevisaoId`: mantém a decisão de uma análise anterior sobre achado idêntico (o servidor confere).
+  z.strictObject({ versaoEsperada: versao, decisao: z.literal('confirmado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.default(''), baseRevisaoId: id.optional() }),
+  z.strictObject({ versaoEsperada: versao, decisao: z.literal('encaminhado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.default(''), baseRevisaoId: id.optional() }),
+  z.strictObject({ versaoEsperada: versao, decisao: z.literal('descartado'), regraId: z.string().regex(/^AQR-GCA-\d{3}$/u), justificativa: justificativa.min(5), baseRevisaoId: id.optional() }),
   z.strictObject({ versaoEsperada: versao, decisao: z.literal('corrigido'), campoId: id, novoValor: z.string().trim().min(1).max(500), justificativa: justificativa.min(5) }),
 ])
 export type RevisaoEntrada = z.infer<typeof revisaoEntradaSchema>
@@ -150,6 +151,8 @@ export const revisaoSaidaSchema = z.strictObject({
   correcao: z.strictObject({ anterior: z.string().nullable(), novo: z.string() }).nullable(),
   revisor: z.string(),
   em: instante,
+  /** Revisão de análise anterior cuja decisão esta mantém, sobre achado idêntico. */
+  baseRevisaoId: z.string().nullable(),
 })
 
 export const triagemDetalheSchema = z.strictObject({
@@ -207,6 +210,20 @@ export const avaliacaoSaidaSchema = z.strictObject({
    * mesmo catálogo carregado no servidor. Texto normativo original, sem reescrita.
    */
   aplicacao: z.string().optional(),
+  /**
+   * Revisão humana mais recente da mesma regra numa análise anterior, comparada com esta avaliação.
+   * `equivalente`: versão, resultado, tipo, condições, evidências, valores e texto iguais (a decisão
+   * pode ser mantida por uma revisão nova e explícita). `modificado`: algo mudou; revisar de novo.
+   * As revisões continuam presas à análise em que foram feitas.
+   */
+  historicoRevisao: z
+    .strictObject({
+      situacao: z.enum(['equivalente', 'modificado']),
+      analise: z.number().int(),
+      diferencas: z.array(z.enum(['versao-da-regra', 'resultado', 'tipo', 'condicoes', 'evidencias', 'valores', 'texto'])),
+      revisoes: z.array(revisaoSaidaSchema),
+    })
+    .optional(),
   condicoesPendentes: z.array(z.string()),
   /** Campos extraídos que a regra usou (ids da rota de campos). */
   camposUsados: z.array(z.string()),

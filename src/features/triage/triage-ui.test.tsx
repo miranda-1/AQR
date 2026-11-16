@@ -691,3 +691,59 @@ describe('E10.1: estados, linguagem e correção com reprocessamento', () => {
     expect(revisoes).toBe(1)
   })
 })
+
+describe('estabilização E10.1: revisão depois do reprocessamento', () => {
+  const REVISAO_009 = '11111111-1111-4111-8111-111111111111'
+  function cenarioComHistorico(): Cenario {
+    const { depois } = cenarioDivergencia()
+    const avaliacoes = defined(depois.avaliacoes[2], 'avaliações da análise 2')
+    const revisaoAnterior = (regraId: string, id: string) => ({ id, analise: 1, regraId, campoId: null, decisao: 'confirmado' as const, justificativa: 'Conferido na análise 1', correcao: null, revisor: 'ana.analista', em: '2026-11-13T00:19:30.000Z', baseRevisaoId: null })
+    const itens = avaliacoes.itens.map((item) => {
+      if (item.regraId === 'AQR-GCA-009') return { ...item, historicoRevisao: { situacao: 'equivalente' as const, analise: 1, diferencas: [], revisoes: [revisaoAnterior('AQR-GCA-009', REVISAO_009)] } }
+      if (item.regraId === 'AQR-GCA-018') return { ...item, historicoRevisao: { situacao: 'modificado' as const, analise: 1, diferencas: ['resultado' as const, 'valores' as const], revisoes: [revisaoAnterior('AQR-GCA-018', '22222222-2222-4222-8222-222222222222')] } }
+      return item
+    })
+    return { ...depois, avaliacoes: { ...depois.avaliacoes, 2: { ...avaliacoes, itens } } }
+  }
+
+  it('achado igual ao revisado: mostra a decisão anterior e a mantém só por ação explícita, vinculada à original', async () => {
+    const user = userEvent.setup()
+    const service = criarFakeService({ cenarios: [cenarioComHistorico()] })
+    renderApp(PROCESSO, { triageService: service })
+    expect(await screen.findByRole('button', { name: /Data de emissão da matrícula.*a revisar \(igual à nº 1\)/ })).toBeInTheDocument()
+    const detalhe = await abrirVerificacao(user, /Data de emissão da matrícula/)
+    const anterior = within(detalhe).getByRole('region', { name: 'Revisão em análise anterior' })
+    expect(anterior).toHaveTextContent('Este achado é igual ao revisado na análise nº 1.')
+    expect(anterior).toHaveTextContent('a decisão não passa sozinha para esta análise')
+    expect(service.chamadas.some((chamada) => chamada.metodo === 'revisar')).toBe(false)
+    await user.click(within(anterior).getByRole('button', { name: 'Manter a decisão anterior (achado confirmado)' }))
+    expect(await screen.findByText(/mantendo a decisão da análise nº 1/)).toBeInTheDocument()
+    expect(defined(service.chamadas.find((chamada) => chamada.metodo === 'revisar')).argumentos[1]).toEqual({
+      versaoEsperada: 4,
+      decisao: 'confirmado',
+      regraId: 'AQR-GCA-009',
+      justificativa: 'Mantida a decisão da análise nº 1. Conferido na análise 1',
+      baseRevisaoId: REVISAO_009,
+    })
+  })
+
+  it('item modificado: diz o que mudou, não oferece manter a decisão e pede revisão nova', async () => {
+    const user = userEvent.setup()
+    renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [cenarioComHistorico()] }) })
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
+    const anterior = within(detalhe).getByRole('region', { name: 'Revisão em análise anterior' })
+    expect(anterior).toHaveTextContent('Este item mudou desde a revisão feita na análise nº 1.')
+    expect(anterior).toHaveTextContent('Mudou: resultado, valores comparados.')
+    expect(within(anterior).queryByRole('button', { name: /Manter a decisão/ })).not.toBeInTheDocument()
+  })
+
+  it('administrador vê a relação, mas não mantém decisão', async () => {
+    const user = userEvent.setup()
+    const cenario = cenarioComHistorico()
+    const triagem = { ...cenario.detalhe.triagem, criadaPorMim: false }
+    renderApp(PROCESSO, { triageService: criarFakeService({ status: statusAdmin(), cenarios: [{ ...cenario, detalhe: { ...cenario.detalhe, triagem } }] }) })
+    const detalhe = await abrirVerificacao(user, /Data de emissão da matrícula/)
+    expect(within(detalhe).getByRole('region', { name: 'Revisão em análise anterior' })).toBeInTheDocument()
+    expect(within(detalhe).queryByRole('button', { name: /Manter a decisão/ })).not.toBeInTheDocument()
+  })
+})

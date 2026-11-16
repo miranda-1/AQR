@@ -215,6 +215,56 @@ describe('persistência da triagem (E7)', () => {
     }
   })
 
+  it('histórico de revisão (estabilização E10.1): achado idêntico pode manter a decisão por revisão nova; modificado pede revisão nova', async () => {
+    const { criado } = await processar('DSD-16')
+    const id = criado.triagem.id
+    const versao = () => defined(servico.repo.triagem(id)).versao
+    const primeira = defined(servico.repo.analisePorNumero(id, 1))
+    const r009 = servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-009', justificativa: 'Data conferida.' }).revisaoId
+    servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'Lote divergente conferido.' })
+    const revisoesDaPrimeira = servico.repo.revisoes(id).filter((item) => item.analiseId === primeira.id)
+    expect(defined(servico.repo.triagem(id)).situacao).toBe('revisado')
+
+    // Corrige o lote da ART: a 018 deixa de ser achado; a 009 não muda.
+    const art = defined(servico.anexosDaAnalise(primeira).find((anexo) => anexo.classificacao.contrato.classe === 'art-rrt-similar'))
+    servico.revisar(analista, id, versao(), { decisao: 'corrigido', campoId: `${art.lido.id}:lote`, novoValor: 'F7', justificativa: 'Conferido na ART.' })
+    const { analise: segunda } = servico.reprocessar(analista, id, versao())
+    const historico = servico.historicoDeRevisao(id, segunda)
+    expect(historico.get('AQR-GCA-009')).toMatchObject({ situacao: 'equivalente', analise: 1, diferencas: [] })
+    expect(historico.get('AQR-GCA-018')).toMatchObject({ situacao: 'modificado', analise: 1 })
+    expect(historico.get('AQR-GCA-018')?.diferencas).toContain('resultado')
+    // Nada é transportado sozinho: a 009 continua pendente na análise nova.
+    expect(defined(servico.repo.triagem(id)).situacao).toBe('aguardando-revisao')
+
+    // Manter a decisão: revisão nova, explícita, vinculada à original, que continua intacta.
+    const mantida = servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-009', justificativa: 'Mantida a decisão da análise nº 1.', baseRevisaoId: r009 }).revisaoId
+    expect(servico.repo.revisoes(id).find((item) => item.id === mantida)).toMatchObject({ analiseId: segunda.id, baseRevisaoId: r009, revisorRotulo: 'ana.analista' })
+    // As revisões da análise 1 continuam exatamente como eram.
+    expect(servico.repo.revisoes(id).filter((item) => revisoesDaPrimeira.some((original) => original.id === item.id))).toEqual(revisoesDaPrimeira)
+    expect(defined(servico.repo.triagem(id)).situacao).toBe('revisado')
+    // Decisão diferente da original não pode se apresentar como "mantida".
+    expect(() => servico.revisar(analista, id, versao(), { decisao: 'encaminhado', regraId: 'AQR-GCA-009', justificativa: '', baseRevisaoId: r009 })).toThrow(/não corresponde/u)
+  })
+
+  it('histórico de revisão: achado que continua achado, mas com outros valores, não herda a decisão', async () => {
+    const { criado } = await processar('DSD-16')
+    const id = criado.triagem.id
+    const versao = () => defined(servico.repo.triagem(id)).versao
+    const primeira = defined(servico.repo.analisePorNumero(id, 1))
+    const r018 = servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'Conferido.' }).revisaoId
+    // Corrige o lote da matrícula para um terceiro valor: a 018 continua achado, com outros valores.
+    const matricula = defined(servico.anexosDaAnalise(primeira).find((anexo) => anexo.classificacao.contrato.classe === 'matricula-transcricao'))
+    servico.revisar(analista, id, versao(), { decisao: 'corrigido', campoId: `${matricula.lido.id}:lote`, novoValor: 'F9', justificativa: 'Leitura conferida.' })
+    const { analise: segunda } = servico.reprocessar(analista, id, versao())
+    const item = defined(servico.historicoDeRevisao(id, segunda).get('AQR-GCA-018'))
+    expect(item.situacao).toBe('modificado')
+    expect(item.diferencas).toContain('valores')
+    expect(servico.repo.avaliacoes(segunda.id).find((avaliacao) => avaliacao.detalhe.contrato.regraId === 'AQR-GCA-018')?.detalhe.contrato.resultado).toBe('achado')
+    expect(() => servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'Mantida.', baseRevisaoId: r018 })).toThrow(/mudou desde aquela revisão/u)
+    // Revisão nova, sem herdar, continua possível.
+    expect(servico.revisar(analista, id, versao(), { decisao: 'confirmado', regraId: 'AQR-GCA-018', justificativa: 'Revisado de novo.' }).revisaoId).toBeTruthy()
+  })
+
   it('revisão de achado: confirmar e descartar só achado; descartar exige justificativa; tudo revisado muda a situação', async () => {
     const { criado } = await processar('DSD-16')
     const id = criado.triagem.id
