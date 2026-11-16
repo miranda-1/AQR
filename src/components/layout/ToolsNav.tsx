@@ -61,9 +61,9 @@ export function ToolsNav() {
           >
             <item.icon aria-hidden className="size-[1.125rem]" />
             {item.label}
-            {item.status === 'in-development' && (
+            {item.status === 'experimental' && (
               <span className="rounded-sm bg-white px-1.5 py-0.5 text-[0.6875rem] leading-none font-bold text-muted-foreground">
-                Em breve
+                Experimental
               </span>
             )}
           </Link>

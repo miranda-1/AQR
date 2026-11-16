@@ -52,7 +52,7 @@ export function ToolShowcase({ tools, active, runs }: ToolShowcaseProps) {
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1">
               <h2 className="text-xl font-bold text-ink">{tool.title}</h2>
-              {tool.status === 'in-development' && <StatusBadge variant="development">Em desenvolvimento</StatusBadge>}
+              {tool.status === 'experimental' && <StatusBadge variant="development">Experimental</StatusBadge>}
             </div>
             <p className="mt-2 text-[0.9375rem] text-muted-foreground">{tool.explanation}</p>
             <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand">

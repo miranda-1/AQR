@@ -45,7 +45,7 @@ describe('Sub-barra de ferramentas', () => {
     renderApp('/comparacao')
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
     const links = within(toolsNav()).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Início', 'Comparar PDFs', 'Triagem documentalEm breve'])
+    expect(links.map((link) => link.textContent)).toEqual(['Início', 'Comparar PDFs', 'Triagem documentalExperimental'])
     expect(within(toolsNav()).getByRole('link', { name: 'Comparar PDFs' })).toHaveAttribute('aria-current', 'page')
     expect(within(toolsNav()).getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
   })

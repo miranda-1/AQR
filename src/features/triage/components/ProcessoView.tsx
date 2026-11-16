@@ -8,7 +8,7 @@ import { useProcesso } from '../hooks/use-processo'
 import { etapaRotulo, formatarData, formatarDataHora, idCurto, modalidadeRotulo } from '../model/describe'
 import { TriagemServiceError, type TriagemDetalhe } from '../model/types'
 import { useTriagemSession } from '../session/triage-session'
-import { AvisoExperimental, Carregando, ErroAcao, Secao, SituacaoBadge } from './common'
+import { AvisoExperimental, Carregando, ErroAcao, EstadoProcesso, RevisaoBadge, Secao, SituacaoBadge } from './common'
 import { EvidenceViewer, type EvidenciaAberta } from './EvidenceViewer'
 import { Campos, Documentos, Enquadramento, Historico, VisaoGeral } from './Secoes'
 import { Verificacoes } from './Verificacoes'
@@ -39,7 +39,11 @@ export function ProcessoView({ id }: { id: string }) {
   const location = useLocation()
   const [analiseEscolhida, setAnaliseEscolhida] = useState<number | null>(null)
   const { detalhe, numero, avaliacoes, anexos, campos } = useProcesso(id, analiseEscolhida)
-  const [mensagem, setMensagem] = useState<string | null>(() => avisoDe(location.state))
+  const [mensagem, setMensagemTexto] = useState<{ texto: string; atencao: boolean } | null>(() => {
+    const aviso = avisoDe(location.state)
+    return aviso ? { texto: aviso, atencao: false } : null
+  })
+  const setMensagem = (texto: string | null, atencao = false) => setMensagemTexto(texto ? { texto, atencao } : null)
   const [evidencia, setEvidencia] = useState<EvidenciaAberta | null>(null)
   const reprocesso = useAcao()
 
@@ -61,8 +65,8 @@ export function ProcessoView({ id }: { id: string }) {
   const naAtual = numero === triagem.analiseAtual
   const podeAlterar = triagem.criadaPorMim && naAtual && triagem.situacao !== 'processando'
   const pendentes = triagem.criadaPorMim ? alteracoesPendentes(dados) : 0
-  const onAlterado = (texto?: string) => {
-    if (texto) setMensagem(texto)
+  const onAlterado = (texto?: string, atencao = false) => {
+    if (texto) setMensagem(texto, atencao)
     reprocesso.limpar()
     detalhe.recarregar()
   }
@@ -96,6 +100,7 @@ export function ProcessoView({ id }: { id: string }) {
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-extrabold tracking-tight text-ink">Processo {idCurto(triagem.id)}</h1>
           <SituacaoBadge resumo={triagem} />
+          <RevisaoBadge resumo={triagem} />
         </div>
         <p className="text-sm text-muted-foreground">
           {triagem.referencia ? `${triagem.referencia} · ` : ''}
@@ -106,10 +111,17 @@ export function ProcessoView({ id }: { id: string }) {
         )}
       </header>
       <AvisoExperimental />
+      {triagem.analiseAtual !== null && triagem.situacao !== 'processando' && <EstadoProcesso resumo={triagem} />}
 
-      {mensagem && (
+      {mensagem && !mensagem.atencao && (
         <p role="status" className="rounded-lg bg-addition-bg p-3 text-sm font-semibold text-addition">
-          {mensagem}
+          {mensagem.texto}
+        </p>
+      )}
+      {mensagem?.atencao && (
+        <p role="alert" className="flex items-start gap-2 rounded-lg bg-modification-bg p-3 text-sm font-semibold text-ink">
+          <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-modification" />
+          {mensagem.texto}
         </p>
       )}
       {reprocesso.erro !== null && <ErroAcao erro={reprocesso.erro} onAtualizar={() => onAlterado()} />}

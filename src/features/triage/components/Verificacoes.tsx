@@ -17,6 +17,7 @@ import {
   tipoRotulo,
   type Categoria,
 } from '../model/describe'
+import { regrasLegiveis, tituloDaRegra } from '../model/regras'
 import type { AnexoInfo, Avaliacao, Campo, Evidencia } from '../model/types'
 import { useTriagemSession } from '../session/triage-session'
 import { CategoriaBadge, ErroAcao } from './common'
@@ -88,7 +89,7 @@ function Grupo({ categoria, itens, escolhida, onEscolher }: { categoria: Categor
                 )}
               >
                 <span className="tabular shrink-0 text-xs text-muted-foreground">{item.regraId.slice(-3)}</span>
-                <span className="min-w-0 flex-1">{item.nome}</span>
+                <span className="min-w-0 flex-1">{tituloDaRegra(item.regraId, item.nome)}</span>
                 {pedeRevisao(item) && (
                   <span className={cn('shrink-0 text-xs', revisada ? 'text-addition' : 'text-modification')}>{revisada ? 'revisado' : 'a revisar'}</span>
                 )}
@@ -131,12 +132,26 @@ function Detalhe({
       <header className="space-y-2">
         <CategoriaBadge categoria={categoria} />
         <h3 id={tituloId} className="text-xl font-bold text-ink">
-          {avaliacao.nome}
+          {tituloDaRegra(avaliacao.regraId, avaliacao.nome)}
         </h3>
-        <p className="text-sm text-muted-foreground">
-          <span className="tabular">{avaliacao.regraId}</span> · versão <span className="tabular">{avaliacao.regraVersao}</span> · {resultadoRotulo[avaliacao.resultado]}
-          {avaliacao.tipo ? ` (${tipoRotulo[avaliacao.tipo]})` : ''} · severidade do alerta: {severidadeRotulo[avaliacao.severidade]} · confiança: {confiancaRotulo[avaliacao.confianca]}
-        </p>
+        {regrasLegiveis[avaliacao.regraId] && <p className="text-[0.9375rem] text-ink">{regrasLegiveis[avaliacao.regraId]?.explicacao}</p>}
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
+          <dt className="text-muted-foreground">Regra</dt>
+          <dd><span className="tabular font-semibold">{avaliacao.regraId}</span> · título no catálogo: “{avaliacao.nome}”</dd>
+          <dt className="text-muted-foreground">Versão</dt>
+          <dd className="tabular break-all">{avaliacao.regraVersao}</dd>
+          {avaliacao.aplicacao && (
+            <>
+              <dt className="text-muted-foreground">Quando se aplica</dt>
+              <dd>{avaliacao.aplicacao}</dd>
+            </>
+          )}
+          <dt className="text-muted-foreground">Resultado</dt>
+          <dd>
+            {resultadoRotulo[avaliacao.resultado]}
+            {avaliacao.tipo ? ` (${tipoRotulo[avaliacao.tipo]})` : ''} · severidade do alerta: {severidadeRotulo[avaliacao.severidade]} · confiança: {confiancaRotulo[avaliacao.confianca]}
+          </dd>
+        </dl>
         <p className="text-sm text-muted-foreground">{categorias[categoria].explicacao}</p>
       </header>
 
@@ -173,7 +188,7 @@ function Detalhe({
                     <td className="px-2 py-1.5 font-semibold">{valor.valorBruto}</td>
                     <td className="px-2 py-1.5 text-right">
                       {valor.evidencias[0] && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => abrir(valor.evidencias[0] as Evidencia, `${avaliacao.nome} · ${campoRotulo[conflito.campo] ?? conflito.campo} "${valor.valorBruto}"`)}>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => abrir(valor.evidencias[0] as Evidencia, `${avaliacao.regraId} · ${campoRotulo[conflito.campo] ?? conflito.campo} "${valor.valorBruto}"`)}>
                           <Eye aria-hidden />
                           Ver no documento
                         </Button>
@@ -221,7 +236,7 @@ function Detalhe({
                   {evidencia.pagina ? `, página ${evidencia.pagina}` : ''}
                   {evidencia.trecho ? ` — “${evidencia.trecho}”` : ''}
                 </span>
-                <Button type="button" variant="ghost" size="sm" onClick={() => abrir(evidencia, avaliacao.nome)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => abrir(evidencia, `${avaliacao.regraId} · ${tituloDaRegra(avaliacao.regraId, avaliacao.nome)}`)}>
                   <Eye aria-hidden />
                   Ver no documento
                 </Button>
@@ -319,7 +334,7 @@ function FormRevisao({ avaliacao, revisao }: { avaliacao: Avaliacao; revisao: Co
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-3 rounded-md bg-white p-3 shadow-surface" aria-label={`Revisar ${avaliacao.nome}`}>
+    <form onSubmit={enviar} className="space-y-3 rounded-md bg-white p-3 shadow-surface" aria-label={`Revisar ${tituloDaRegra(avaliacao.regraId, avaliacao.nome)}`}>
       <fieldset>
         <legend className="text-sm font-bold text-ink">{achado ? 'Sua revisão deste achado' : 'Registrar encaminhamento'}</legend>
         <div className="mt-2 space-y-2">

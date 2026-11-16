@@ -20,7 +20,7 @@ export function ToolOption({ tool, active, onActivate }: ToolOptionProps) {
   const titleId = useId()
   const statusId = useId()
   const descriptionId = useId()
-  const inDevelopment = tool.status === 'in-development'
+  const experimental = tool.status === 'experimental'
 
   return (
     <Link
@@ -28,7 +28,7 @@ export function ToolOption({ tool, active, onActivate }: ToolOptionProps) {
       viewTransition
       onMouseEnter={onActivate}
       onFocus={onActivate}
-      aria-labelledby={inDevelopment ? `${titleId} ${statusId}` : titleId}
+      aria-labelledby={experimental ? `${titleId} ${statusId}` : titleId}
       aria-describedby={descriptionId}
       data-active={active}
       className={cn(
@@ -57,9 +57,9 @@ export function ToolOption({ tool, active, onActivate }: ToolOptionProps) {
           <span id={titleId} className={cn('text-lg font-bold', active ? 'text-brand' : 'text-ink')}>
             {tool.title}
           </span>
-          {inDevelopment && (
+          {experimental && (
             <StatusBadge variant="development">
-              <span id={statusId}>Em desenvolvimento</span>
+              <span id={statusId}>Experimental</span>
             </StatusBadge>
           )}
         </span>

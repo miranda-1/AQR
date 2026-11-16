@@ -22,7 +22,7 @@ describe('Página inicial', () => {
     expect(screen.getByText('Escolha uma ferramenta para analisar e organizar seus documentos.')).toBeInTheDocument()
 
     const compare = within(nav).getByRole('link', { name: 'Comparar PDFs' })
-    const triage = within(nav).getByRole('link', { name: 'Triagem documental Em desenvolvimento' })
+    const triage = within(nav).getByRole('link', { name: 'Triagem documental Experimental' })
     expect(compare).toHaveAttribute('href', '/comparacao')
     expect(compare).toHaveAccessibleDescription(/identifique rapidamente o que foi adicionado, removido ou alterado/)
     expect(triage).toHaveAttribute('href', '/triagem')

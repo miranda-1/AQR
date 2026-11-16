@@ -20,9 +20,10 @@ import {
   pedeRevisao,
   resultadoRotulo,
 } from '../model/describe'
+import { tituloDaRegra } from '../model/regras'
 import type { AnexoInfo, Avaliacao, Campo, Evidencia, TriagemDetalhe } from '../model/types'
 import { useTriagemSession } from '../session/triage-session'
-import { CategoriaBadge, ErroAcao } from './common'
+import { CategoriaBadge, ErroAcao, mensagemDeErro } from './common'
 import type { EvidenciaAberta } from './EvidenceViewer'
 
 // ---------- visão geral ----------
@@ -130,7 +131,7 @@ export function Campos({
   podeCorrigir: boolean
   triagemId: string
   versao: number
-  onAlterado: (mensagem?: string) => void
+  onAlterado: (mensagem?: string, atencao?: boolean) => void
   onAbrirEvidencia: (aberta: EvidenciaAberta) => void
 }) {
   const [corrigindo, setCorrigindo] = useState<string | null>(null)
@@ -186,9 +187,9 @@ export function Campos({
               campo={doAnexo.find((campo) => campo.id === corrigindo) as Campo}
               triagemId={triagemId}
               versao={versao}
-              onFeito={(mensagem) => {
+              onFeito={(mensagem, atencao) => {
                 setCorrigindo(null)
-                onAlterado(mensagem)
+                onAlterado(mensagem, atencao)
               }}
             />
           )}
@@ -198,27 +199,60 @@ export function Campos({
   )
 }
 
-function Correcao({ campo, triagemId, versao, onFeito }: { campo: Campo; triagemId: string; versao: number; onFeito: (mensagem: string) => void }) {
+function Correcao({ campo, triagemId, versao, onFeito }: { campo: Campo; triagemId: string; versao: number; onFeito: (mensagem: string, atencao?: boolean) => void }) {
   const { service } = useTriagemSession()
   const acao = useAcao()
   const [valor, setValor] = useState(campo.valorBruto ?? '')
   const [justificativa, setJustificativa] = useState('')
+  const [etapa, setEtapa] = useState<'salvando' | 'reprocessando' | null>(null)
   const valorId = useId()
   const justificativaId = useId()
+  const nomeCampo = campoRotulo[campo.campo] ?? campo.campo
   const invalida = valor.trim().length === 0 || justificativa.trim().length < 5
+  const descricao = `de “${campo.valorBruto ?? '—'}” para “${valor.trim()}”`
 
-  async function enviar(event: FormEvent) {
-    event.preventDefault()
+  /**
+   * Salva a correção (revisão humana com justificativa) e, se pedido, reprocessa em seguida com a
+   * versão devolvida pelo salvamento. As duas etapas são separadas: se o reprocessamento falhar,
+   * a correção continua registrada e a tela diz isso.
+   */
+  async function enviar(reprocessar: boolean) {
     if (invalida) return
-    const feito = await acao.executar(
-      () => service.revisar(triagemId, { versaoEsperada: versao, decisao: 'corrigido', campoId: campo.id, novoValor: valor.trim(), justificativa: justificativa.trim() }),
-      () => 'ok',
-    )
-    if (feito) onFeito(`Correção de ${campoRotulo[campo.campo] ?? campo.campo} registrada (de “${campo.valorBruto ?? '—'}” para “${valor.trim()}”). Reprocesse para aplicá-la às verificações.`)
+    let reprocessamentoFalhou: unknown = null
+    const feito = await acao.executar(async () => {
+      setEtapa('salvando')
+      const salvo = await service.revisar(triagemId, { versaoEsperada: versao, decisao: 'corrigido', campoId: campo.id, novoValor: valor.trim(), justificativa: justificativa.trim() })
+      if (!reprocessar) return { analise: null }
+      setEtapa('reprocessando')
+      try {
+        const novo = await service.reprocessar(triagemId, salvo.triagem.versao)
+        return { analise: novo.analise }
+      } catch (erro) {
+        reprocessamentoFalhou = erro
+        return { analise: null }
+      }
+    }, () => 'ok')
+    setEtapa(null)
+    if (!feito) return
+    if (reprocessamentoFalhou !== null) {
+      const { texto } = mensagemDeErro(reprocessamentoFalhou)
+      onFeito(`A correção de ${nomeCampo} foi registrada (${descricao}), mas a nova análise não foi concluída: ${texto} Use “Reprocessar” para tentar de novo.`, true)
+    } else if (feito.analise !== null) {
+      onFeito(`Correção de ${nomeCampo} registrada (${descricao}) e análise nº ${feito.analise} solicitada. A análise anterior continua no histórico.`)
+    } else {
+      onFeito(`Correção de ${nomeCampo} registrada (${descricao}). Reprocesse para aplicá-la às verificações.`)
+    }
   }
 
   return (
-    <form onSubmit={enviar} className="mt-2 space-y-2 rounded-md bg-white p-3 shadow-surface" aria-label={`Corrigir ${campoRotulo[campo.campo] ?? campo.campo}`}>
+    <form
+      onSubmit={(event: FormEvent) => {
+        event.preventDefault()
+        void enviar(true)
+      }}
+      className="mt-2 space-y-2 rounded-md bg-white p-3 shadow-surface"
+      aria-label={`Corrigir ${nomeCampo}`}
+    >
       <p className="text-sm text-ink">
         Valor extraído: <strong>“{campo.valorBruto ?? campo.alternativas?.join(' | ') ?? '—'}”</strong>. O valor original continua registrado; a correção vale a partir da próxima análise.
       </p>
@@ -227,9 +261,19 @@ function Correcao({ campo, triagemId, versao, onFeito }: { campo: Campo; triagem
       <label htmlFor={justificativaId} className="block text-sm font-semibold text-ink">Justificativa (obrigatória, ao menos 5 caracteres)</label>
       <textarea id={justificativaId} value={justificativa} rows={2} maxLength={2000} onChange={(event) => setJustificativa(event.currentTarget.value)} className="block w-full rounded-md border border-input p-2 text-sm" />
       {acao.erro !== null && <ErroAcao erro={acao.erro} />}
-      <Button type="submit" size="sm" disabled={invalida || acao.executando}>
-        {acao.executando ? 'Registrando…' : 'Registrar correção'}
-      </Button>
+      {etapa && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {etapa === 'salvando' ? 'Salvando a correção…' : 'Correção salva. Solicitando a nova análise…'}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" size="sm" disabled={invalida || acao.executando}>
+          {acao.executando ? 'Registrando…' : 'Salvar correção e reprocessar'}
+        </Button>
+        <Button type="button" size="sm" variant="outline" disabled={invalida || acao.executando} onClick={() => void enviar(false)}>
+          Só salvar a correção
+        </Button>
+      </div>
     </form>
   )
 }
@@ -487,8 +531,8 @@ function Comparacao({ triagemId, base, atual }: { triagemId: string; base: numbe
             return (
               <tr key={item.regraId} className={cn(mudou ? 'bg-modification-bg' : 'bg-surface-sunken/60')}>
                 <th scope="row" className="px-2 py-1.5 font-normal">
-                  <span className="font-semibold">{item.nome}</span>
-                  <span className="block text-xs text-muted-foreground">{item.regraVersao}</span>
+                  <span className="font-semibold">{tituloDaRegra(item.regraId, item.nome)}</span>
+                  <span className="block text-xs text-muted-foreground">{item.regraId} · {item.regraVersao}</span>
                   {mudou && <span className="text-xs font-semibold text-modification">mudou</span>}
                 </th>
                 <td className="px-2 py-1.5">{anterior ? <ResultadoCurto avaliacao={anterior} /> : '—'}</td>

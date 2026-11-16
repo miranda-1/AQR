@@ -5,7 +5,7 @@ import { routes } from '@/config/routes'
 import { etapaRotulo, formatarDataHora, idCurto, modalidadeRotulo } from '../model/describe'
 import { useCarregar } from '../hooks/use-carregar'
 import { useTriagemSession } from '../session/triage-session'
-import { Carregando, ErroAcao, SituacaoBadge } from './common'
+import { Carregando, ErroAcao, RevisaoBadge, SituacaoBadge } from './common'
 
 /** Processos que o servidor deixa esta pessoa ver: os próprios (analista) ou todos (administrador). */
 export function TriagemLista({ podeCriar }: { podeCriar: boolean }) {
@@ -38,7 +38,7 @@ export function TriagemLista({ podeCriar }: { podeCriar: boolean }) {
 
   return (
     <div className="overflow-x-auto rounded-lg bg-white shadow-surface" role="region" aria-labelledby="lista-titulo" tabIndex={0}>
-      <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
+      <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
         <caption id="lista-titulo" className="sr-only">
           Processos de triagem que você pode acessar
         </caption>
@@ -47,10 +47,11 @@ export function TriagemLista({ podeCriar }: { podeCriar: boolean }) {
             <th scope="col" className="px-4 py-3">Processo</th>
             <th scope="col" className="px-4 py-3">Modalidade e etapa</th>
             <th scope="col" className="px-4 py-3">Criado em</th>
-            <th scope="col" className="px-4 py-3">Situação</th>
+            <th scope="col" className="px-4 py-3">Processamento</th>
             <th scope="col" className="px-4 py-3">Última análise</th>
-            <th scope="col" className="px-4 py-3 text-right">Achados</th>
-            <th scope="col" className="px-4 py-3 text-right">Pendentes de revisão</th>
+            <th scope="col" className="px-4 py-3">Revisão humana</th>
+            <th scope="col" className="px-4 py-3 text-right">Condições pendentes</th>
+            <th scope="col" className="px-4 py-3 text-right">Não avaliáveis</th>
             <th scope="col" className="px-4 py-3"><span className="sr-only">Ação</span></th>
           </tr>
         </thead>
@@ -77,8 +78,9 @@ export function TriagemLista({ podeCriar }: { podeCriar: boolean }) {
                   '—'
                 )}
               </td>
-              <td className="px-4 py-3 text-right align-top tabular">{item.achados ?? '—'}</td>
-              <td className="px-4 py-3 text-right align-top tabular">{item.pendentesRevisao ?? '—'}</td>
+              <td className="px-4 py-3 align-top">{item.achados === null ? '—' : <RevisaoBadge resumo={item} />}</td>
+              <td className="px-4 py-3 text-right align-top tabular">{item.condicoesPendentes ?? '—'}</td>
+              <td className="px-4 py-3 text-right align-top tabular">{item.naoAvaliaveis ?? '—'}</td>
               <td className="px-4 py-3 text-right align-top">
                 <Button asChild variant="outline" size="sm">
                   <Link to={routes.triageProcess(item.id)} viewTransition aria-label={`Abrir o processo ${idCurto(item.id)}`}>

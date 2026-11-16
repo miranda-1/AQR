@@ -37,13 +37,13 @@ export const homeTools: readonly HomeTool[] = [
     id: 'triage',
     title: 'Triagem documental',
     description:
-      'Analise os documentos de um processo, identifique cada tipo e verifique se todos os itens obrigatórios foram apresentados.',
+      'Recurso experimental, só com pacotes sintéticos: classifica os anexos de um desdobro na abertura e aponta o que conferir, com a evidência no documento.',
     explanation:
-      'A triagem vai reconhecer cada documento do processo, classificá-lo por tipo e conferir a lista de itens obrigatórios.',
+      'Disponível apenas em ambientes de teste autorizados. A triagem reconhece cada anexo, extrai os campos, confronta os documentos e aponta o que o servidor deve conferir. Ela não aprova nem reprova: a decisão é sempre do servidor.',
     to: routes.triage,
     icon: FileSearch,
     illustration: 'triage',
-    status: 'in-development',
+    status: 'experimental',
   },
 ]
 

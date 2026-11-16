@@ -2,6 +2,10 @@
  * Respostas REAIS da API de triagem (pacotes sintéticos DSD-16 e DSD-15 do corpus), gravadas
  * por um teste do servidor em 12/11/2026. Só dados fictícios. Usadas pelos testes da interface:
  * cada resposta passa pelos mesmos esquemas zod que o serviço HTTP usa.
+ *
+ * Em 16/11/2026 (E10), os resumos ganharam `condicoesPendentes` e `naoAvaliaveis`, calculados
+ * pela mesma regra do servidor a partir das avaliações gravadas aqui (análise atual de cada resumo). As avaliações ganharam `aplicacao`, a pré-condição da regra no
+ * catálogo 1.0-review (o mesmo das análises gravadas).
  */
 export const respostasReais: Record<string, unknown> = {
  "statusAnalista": {
@@ -69,7 +73,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": null
    },
    "achados": null,
-   "pendentesRevisao": null
+   "pendentesRevisao": null,
+   "condicoesPendentes": null,
+   "naoAvaliaveis": null
   },
   "anexos": [
    {
@@ -225,7 +231,9 @@ export const respostasReais: Record<string, unknown> = {
      "encerradaEm": "2026-11-13T00:19:27.259Z"
     },
     "achados": 2,
-    "pendentesRevisao": 2
+    "pendentesRevisao": 2,
+    "condicoesPendentes": 1,
+    "naoAvaliaveis": 0
    }
   ],
   "total": 1
@@ -252,7 +260,9 @@ export const respostasReais: Record<string, unknown> = {
      "encerradaEm": "2026-11-13T00:19:27.259Z"
     },
     "achados": 2,
-    "pendentesRevisao": 2
+    "pendentesRevisao": 2,
+    "condicoesPendentes": 1,
+    "naoAvaliaveis": 0
    }
   ],
   "total": 1
@@ -278,7 +288,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:27.259Z"
    },
    "achados": 2,
-   "pendentesRevisao": 2
+   "pendentesRevisao": 2,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 0
   },
   "natureza": "verificacao-tecnica-experimental",
   "aviso": "Verificação técnica experimental com catálogo não homologado pela GCA, para revisão de servidor. Não é decisão administrativa e não deve ser enviada ao requerente sem revisão.",
@@ -347,7 +359,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:27.259Z"
    },
    "achados": 2,
-   "pendentesRevisao": 2
+   "pendentesRevisao": 2,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 0
   },
   "natureza": "verificacao-tecnica-experimental",
   "aviso": "Verificação técnica experimental com catálogo não homologado pela GCA, para revisão de servidor. Não é decisão administrativa e não deve ser enviada ao requerente sem revisão.",
@@ -1008,6 +1022,7 @@ export const respostasReais: Record<string, unknown> = {
      "A modalidade do assunto não altera o enquadramento: só o servidor confirma a modalidade."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Protocolo recebido",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:assunto"
@@ -1066,6 +1081,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1110,6 +1126,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade R/D/DM",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1160,6 +1177,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Lote(s) declarados",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1216,6 +1234,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Imóvel identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1274,6 +1293,7 @@ export const respostasReais: Record<string, unknown> = {
      "O intervalo em dias corridos é só apresentação, não critério."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Título e datas legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "12791a44-7f50-4755-92f9-0cbe58bfc938:data-emissao"
@@ -1315,6 +1335,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Signatário não coincide com titular aparente ou declara representação",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:signatario",
@@ -1374,6 +1395,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "RT identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1430,6 +1452,7 @@ export const respostasReais: Record<string, unknown> = {
      "O conteúdo do DWG/DXF não é aberto nem interpretado."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1480,6 +1503,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1569,6 +1593,7 @@ export const respostasReais: Record<string, unknown> = {
      "Só a presença de traço na área de assinatura é vista; autoria, assinatura eletrônica e validade não são verificadas."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Planta e memorial existentes na etapa exigível",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -1734,6 +1759,7 @@ export const respostasReais: Record<string, unknown> = {
      "Não extraídos da ART/RRT: parcelamento."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "ART/RRT legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:lote",
@@ -1843,6 +1869,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Textos legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:assunto",
@@ -2001,6 +2028,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Campos extraídos com confiança",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:matricula",
@@ -2084,6 +2112,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Ambas as peças na etapa",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:data-revisao",
@@ -2141,6 +2170,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:escala-situacao"
@@ -2200,6 +2230,7 @@ export const respostasReais: Record<string, unknown> = {
      "Presença e conteúdo do carimbo não são verificados."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:formato-folha"
@@ -2236,6 +2267,7 @@ export const respostasReais: Record<string, unknown> = {
      "Sem a confirmação, a regra não é executada."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Área da situação pertinente >20.000 m² confirmada por servidor",
     "condicoesPendentes": [
      "area-situacao-acima-2ha"
     ],
@@ -2272,6 +2304,7 @@ export const respostasReais: Record<string, unknown> = {
      "Anexo sem classe não tem requisito de formato a conferir."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Anexo classificado em requisito com formato expresso",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -3898,7 +3931,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:27.259Z"
    },
    "achados": 2,
-   "pendentesRevisao": 2
+   "pendentesRevisao": 2,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 0
   },
   "revisaoId": "0f20b614-9702-4da2-b442-cfaab3346fdd",
   "reprocessamentoNecessario": true
@@ -3924,7 +3959,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:27.291Z"
    },
    "achados": 1,
-   "pendentesRevisao": 1
+   "pendentesRevisao": 1,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 0
   },
   "analise": 2,
   "alteradas": [
@@ -3975,7 +4012,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:27.291Z"
    },
    "achados": 1,
-   "pendentesRevisao": 1
+   "pendentesRevisao": 1,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 0
   },
   "natureza": "verificacao-tecnica-experimental",
   "aviso": "Verificação técnica experimental com catálogo não homologado pela GCA, para revisão de servidor. Não é decisão administrativa e não deve ser enviada ao requerente sem revisão.",
@@ -4117,6 +4156,7 @@ export const respostasReais: Record<string, unknown> = {
      "A modalidade do assunto não altera o enquadramento: só o servidor confirma a modalidade."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Protocolo recebido",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:assunto"
@@ -4175,6 +4215,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4219,6 +4260,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade R/D/DM",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4269,6 +4311,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Lote(s) declarados",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -4325,6 +4368,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Imóvel identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -4383,6 +4427,7 @@ export const respostasReais: Record<string, unknown> = {
      "O intervalo em dias corridos é só apresentação, não critério."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Título e datas legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "12791a44-7f50-4755-92f9-0cbe58bfc938:data-emissao"
@@ -4424,6 +4469,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Signatário não coincide com titular aparente ou declara representação",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:signatario",
@@ -4483,6 +4529,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "RT identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4539,6 +4586,7 @@ export const respostasReais: Record<string, unknown> = {
      "O conteúdo do DWG/DXF não é aberto nem interpretado."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4589,6 +4637,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4678,6 +4727,7 @@ export const respostasReais: Record<string, unknown> = {
      "Só a presença de traço na área de assinatura é vista; autoria, assinatura eletrônica e validade não são verificadas."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Planta e memorial existentes na etapa exigível",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -4836,6 +4886,7 @@ export const respostasReais: Record<string, unknown> = {
      "Não extraídos da ART/RRT: parcelamento."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "ART/RRT legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:titular",
@@ -4958,6 +5009,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Textos legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:assunto",
@@ -5116,6 +5168,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Campos extraídos com confiança",
     "condicoesPendentes": [],
     "camposUsados": [
      "9af0c33a-35eb-41ff-8352-3ca1d8d3a923:matricula",
@@ -5199,6 +5252,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Ambas as peças na etapa",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:data-revisao",
@@ -5256,6 +5310,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:escala-situacao"
@@ -5315,6 +5370,7 @@ export const respostasReais: Record<string, unknown> = {
      "Presença e conteúdo do carimbo não são verificados."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "a5adc10c-c1fd-4f90-a127-fc2ebc55684b:formato-folha"
@@ -5351,6 +5407,7 @@ export const respostasReais: Record<string, unknown> = {
      "Sem a confirmação, a regra não é executada."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Área da situação pertinente >20.000 m² confirmada por servidor",
     "condicoesPendentes": [
      "area-situacao-acima-2ha"
     ],
@@ -5387,6 +5444,7 @@ export const respostasReais: Record<string, unknown> = {
      "Anexo sem classe não tem requisito de formato a conferir."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Anexo classificado em requisito com formato expresso",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -7563,7 +7621,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:44.280Z"
    },
    "achados": 1,
-   "pendentesRevisao": 1
+   "pendentesRevisao": 1,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 2
   },
   "natureza": "verificacao-tecnica-experimental",
   "aviso": "Verificação técnica experimental com catálogo não homologado pela GCA, para revisão de servidor. Não é decisão administrativa e não deve ser enviada ao requerente sem revisão.",
@@ -7665,6 +7725,7 @@ export const respostasReais: Record<string, unknown> = {
      "A modalidade do assunto não altera o enquadramento: só o servidor confirma a modalidade."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Protocolo recebido",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:assunto"
@@ -7723,6 +7784,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -7767,6 +7829,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade R/D/DM",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -7817,6 +7880,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Lote(s) declarados",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -7873,6 +7937,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Imóvel identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -7931,6 +7996,7 @@ export const respostasReais: Record<string, unknown> = {
      "O intervalo em dias corridos é só apresentação, não critério."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Título e datas legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "c60f2b5b-4c8a-4e2a-89de-7f52f28ef834:data-emissao"
@@ -7972,6 +8038,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Signatário não coincide com titular aparente ou declara representação",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:signatario",
@@ -8031,6 +8098,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "RT identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -8087,6 +8155,7 @@ export const respostasReais: Record<string, unknown> = {
      "O conteúdo do DWG/DXF não é aberto nem interpretado."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -8122,6 +8191,7 @@ export const respostasReais: Record<string, unknown> = {
      "Ausência nos anexos recebidos não comprova ausência no processo."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -8190,6 +8260,7 @@ export const respostasReais: Record<string, unknown> = {
      "Só a presença de traço na área de assinatura é vista; autoria, assinatura eletrônica e validade não são verificadas."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Planta e memorial existentes na etapa exigível",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -8357,6 +8428,7 @@ export const respostasReais: Record<string, unknown> = {
      "Não extraídos da ART/RRT: parcelamento."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "ART/RRT legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:titular",
@@ -8464,6 +8536,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Textos legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:assunto",
@@ -8621,6 +8694,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Campos extraídos com confiança",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:matricula",
@@ -8671,6 +8745,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Ambas as peças na etapa",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -8725,6 +8800,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "035bd8b0-8045-4ca9-bfbb-22d7439d30c8:escala-situacao"
@@ -8784,6 +8860,7 @@ export const respostasReais: Record<string, unknown> = {
      "Presença e conteúdo do carimbo não são verificados."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "035bd8b0-8045-4ca9-bfbb-22d7439d30c8:formato-folha"
@@ -8820,6 +8897,7 @@ export const respostasReais: Record<string, unknown> = {
      "Sem a confirmação, a regra não é executada."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Área da situação pertinente >20.000 m² confirmada por servidor",
     "condicoesPendentes": [
      "area-situacao-acima-2ha"
     ],
@@ -8856,6 +8934,7 @@ export const respostasReais: Record<string, unknown> = {
      "Anexo sem classe não tem requisito de formato a conferir."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Anexo classificado em requisito com formato expresso",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -10738,7 +10817,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:44.280Z"
    },
    "achados": 1,
-   "pendentesRevisao": 1
+   "pendentesRevisao": 1,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 2
   },
   "reprocessamentoNecessario": true
  },
@@ -10763,7 +10844,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:44.325Z"
    },
    "achados": 2,
-   "pendentesRevisao": 2
+   "pendentesRevisao": 2,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 1
   },
   "analise": 2,
   "alteradas": [
@@ -10848,6 +10931,7 @@ export const respostasReais: Record<string, unknown> = {
      "A modalidade do assunto não altera o enquadramento: só o servidor confirma a modalidade."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Protocolo recebido",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:assunto"
@@ -10906,6 +10990,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -10950,6 +11035,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade R/D/DM",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11000,6 +11086,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Lote(s) declarados",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11056,6 +11143,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Imóvel identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11114,6 +11202,7 @@ export const respostasReais: Record<string, unknown> = {
      "O intervalo em dias corridos é só apresentação, não critério."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Título e datas legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "c60f2b5b-4c8a-4e2a-89de-7f52f28ef834:data-emissao"
@@ -11155,6 +11244,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Signatário não coincide com titular aparente ou declara representação",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:signatario",
@@ -11214,6 +11304,7 @@ export const respostasReais: Record<string, unknown> = {
      "A presença é aparente: conteúdo, validade e assinatura do documento são conferência humana."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "RT identificado",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11270,6 +11361,7 @@ export const respostasReais: Record<string, unknown> = {
      "O conteúdo do DWG/DXF não é aberto nem interpretado."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11338,6 +11430,7 @@ export const respostasReais: Record<string, unknown> = {
      "A busca cobre só os anexos recebidos, classificados pelo conteúdo; um documento com cabeçalho fora do padrão pode não ter sido reconhecido."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Modalidade identificada",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": true,
@@ -11406,6 +11499,7 @@ export const respostasReais: Record<string, unknown> = {
      "Só a presença de traço na área de assinatura é vista; autoria, assinatura eletrônica e validade não são verificadas."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Planta e memorial existentes na etapa exigível",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -11573,6 +11667,7 @@ export const respostasReais: Record<string, unknown> = {
      "Não extraídos da ART/RRT: parcelamento."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "ART/RRT legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:titular",
@@ -11680,6 +11775,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Textos legíveis",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:assunto",
@@ -11837,6 +11933,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Campos extraídos com confiança",
     "condicoesPendentes": [],
     "camposUsados": [
      "e65adb99-9db1-4e16-ac91-09b8766b9355:matricula",
@@ -11887,6 +11984,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Ambas as peças na etapa",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -11941,6 +12039,7 @@ export const respostasReais: Record<string, unknown> = {
     ],
     "limitacoes": [],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "035bd8b0-8045-4ca9-bfbb-22d7439d30c8:escala-situacao"
@@ -12000,6 +12099,7 @@ export const respostasReais: Record<string, unknown> = {
      "Presença e conteúdo do carimbo não são verificados."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Prancha legível",
     "condicoesPendentes": [],
     "camposUsados": [
      "035bd8b0-8045-4ca9-bfbb-22d7439d30c8:formato-folha"
@@ -12036,6 +12136,7 @@ export const respostasReais: Record<string, unknown> = {
      "Sem a confirmação, a regra não é executada."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Área da situação pertinente >20.000 m² confirmada por servidor",
     "condicoesPendentes": [
      "area-situacao-acima-2ha"
     ],
@@ -12072,6 +12173,7 @@ export const respostasReais: Record<string, unknown> = {
      "Anexo sem classe não tem requisito de formato a conferir."
     ],
     "revisaoHumana": "Servidor GCA valida achado e comunicação",
+    "aplicacao": "Anexo classificado em requisito com formato expresso",
     "condicoesPendentes": [],
     "camposUsados": [],
     "recalculada": false,
@@ -12101,7 +12203,9 @@ export const respostasReais: Record<string, unknown> = {
     "encerradaEm": "2026-11-13T00:19:44.325Z"
    },
    "achados": 2,
-   "pendentesRevisao": 2
+   "pendentesRevisao": 2,
+   "condicoesPendentes": 1,
+   "naoAvaliaveis": 1
   },
   "natureza": "verificacao-tecnica-experimental",
   "aviso": "Verificação técnica experimental com catálogo não homologado pela GCA, para revisão de servidor. Não é decisão administrativa e não deve ser enviada ao requerente sem revisão.",
@@ -12205,7 +12309,9 @@ export const respostasReais: Record<string, unknown> = {
      "encerradaEm": "2026-11-13T00:19:44.325Z"
     },
     "achados": 2,
-    "pendentesRevisao": 2
+    "pendentesRevisao": 2,
+    "condicoesPendentes": 1,
+    "naoAvaliaveis": 1
    }
   ],
   "total": 1

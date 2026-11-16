@@ -84,6 +84,14 @@ export const triagemResumoSchema = z.strictObject({
   /** Na análise atual: achados e achados ainda sem revisão. `null` sem análise concluída. */
   achados: z.number().int().min(0).nullable(),
   pendentesRevisao: z.number().int().min(0).nullable(),
+  /**
+   * Na análise atual: verificações que aguardam confirmação de enquadramento pelo servidor
+   * (`condicao-pendente`, ex.: AQR-GCA-028) e verificações que não puderam concluir
+   * (`nao-avaliavel`). Independem de `situacao`: um processo `revisado` (todos os achados
+   * revisados) pode ainda ter condições pendentes. `null` sem análise concluída.
+   */
+  condicoesPendentes: z.number().int().min(0).nullable(),
+  naoAvaliaveis: z.number().int().min(0).nullable(),
 })
 export type TriagemResumo = z.infer<typeof triagemResumoSchema>
 
@@ -194,6 +202,11 @@ export const avaliacaoSaidaSchema = z.strictObject({
   fundamentos: z.array(fonteRegraSchema),
   limitacoes: z.array(z.string()),
   revisaoHumana: z.string(),
+  /**
+   * Condição de aplicação da regra como está no catálogo (`preconditions`), quando a análise usou o
+   * mesmo catálogo carregado no servidor. Texto normativo original, sem reescrita.
+   */
+  aplicacao: z.string().optional(),
   condicoesPendentes: z.array(z.string()),
   /** Campos extraídos que a regra usou (ids da rota de campos). */
   camposUsados: z.array(z.string()),

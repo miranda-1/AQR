@@ -98,14 +98,33 @@ export const severidadeRotulo: Record<Avaliacao['severidade'], string> = {
   none: 'nenhuma',
 }
 
-/** Situação do processo, com a última análise quando ela explica (interrompida, falhou). */
-export function situacaoDe(resumo: Pick<TriagemResumo, 'situacao' | 'ultimaAnalise'>): { rotulo: string; tom: 'andamento' | 'atencao' | 'concluido' | 'neutro' } {
+export type Tom = 'andamento' | 'atencao' | 'concluido' | 'neutro'
+
+/**
+ * Estado do PROCESSAMENTO (a análise automática), separado da revisão humana. O servidor usa
+ * `aguardando-revisao` e `revisado` também para dizer que a análise terminou; aqui os dois viram
+ * "Análise concluída" e a revisão é mostrada à parte (`revisaoDe`). Nenhum estado é aprovação.
+ */
+export function situacaoDe(resumo: Pick<TriagemResumo, 'situacao' | 'ultimaAnalise'>): { rotulo: string; tom: Tom } {
   if (resumo.situacao === 'processando') return { rotulo: 'Processando', tom: 'andamento' }
   if (resumo.situacao === 'recebido') return { rotulo: 'Recebido', tom: 'andamento' }
-  if (resumo.situacao === 'aguardando-revisao') return { rotulo: 'Aguardando revisão', tom: 'atencao' }
-  if (resumo.situacao === 'revisado') return { rotulo: 'Revisado', tom: 'concluido' }
+  if (resumo.situacao === 'aguardando-revisao' || resumo.situacao === 'revisado') return { rotulo: 'Análise concluída', tom: 'neutro' }
   if (resumo.ultimaAnalise?.situacao === 'interrompida') return { rotulo: 'Interrompido', tom: 'atencao' }
   return { rotulo: 'Falhou', tom: 'atencao' }
+}
+
+/**
+ * Estado da REVISÃO HUMANA dos achados da análise atual. "Achados revisados" quer dizer só que
+ * cada achado recebeu uma revisão registrada (é o `revisado` do servidor); não encerra o processo,
+ * não resolve condições pendentes e não é aprovação.
+ */
+export function revisaoDe(resumo: Pick<TriagemResumo, 'achados' | 'pendentesRevisao'>): { rotulo: string; tom: Tom } | null {
+  if (resumo.achados === null || resumo.pendentesRevisao === null) return null
+  if (resumo.achados === 0) return { rotulo: 'Sem achados para revisar', tom: 'neutro' }
+  if (resumo.pendentesRevisao > 0) {
+    return { rotulo: `${resumo.pendentesRevisao} de ${resumo.achados} ${resumo.achados === 1 ? 'achado' : 'achados'} a revisar`, tom: 'atencao' }
+  }
+  return { rotulo: resumo.achados === 1 ? 'Achado revisado' : `${resumo.achados} achados revisados`, tom: 'concluido' }
 }
 
 export const modalidadeRotulo: Record<string, string> = {

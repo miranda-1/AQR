@@ -103,8 +103,13 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
     const atual = triagem.analiseAtual ? analises.find((analise) => analise.numero === triagem.analiseAtual) : undefined
     let achados: number | null = null
     let pendentesRevisao: number | null = null
+    let condicoesPendentes: number | null = null
+    let naoAvaliaveis: number | null = null
     if (atual) {
-      const ids = service.repo.avaliacoes(atual.id).filter((item) => item.detalhe.contrato.resultado === 'achado').map((item) => item.detalhe.contrato.regraId)
+      const avaliacoes = service.repo.avaliacoes(atual.id).map((item) => item.detalhe.contrato)
+      condicoesPendentes = avaliacoes.filter((item) => item.resultado === 'condicao-pendente').length
+      naoAvaliaveis = avaliacoes.filter((item) => item.resultado === 'nao-avaliavel').length
+      const ids = avaliacoes.filter((item) => item.resultado === 'achado').map((item) => item.regraId)
       const revisadas = new Set(service.repo.revisoes(triagem.id).filter((r) => r.analiseId === atual.id && r.regraId).map((r) => r.regraId))
       achados = ids.length
       pendentesRevisao = ids.filter((id) => !revisadas.has(id)).length
@@ -127,6 +132,8 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
       ultimaAnalise: ultima ? { numero: ultima.numero, situacao: ultima.situacao, encerradaEm: ultima.encerradaEm } : null,
       achados,
       pendentesRevisao,
+      condicoesPendentes,
+      naoAvaliaveis,
     }
   }
 
@@ -343,6 +350,7 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
       const triagem = service.triagemDe(ator, idParam(request.params.id))
       const analise = analiseDe(triagem, corpo(analiseQuerySchema, request.query).analise)
       const revisoes = service.repo.revisoes(triagem.id)
+      const aplicacao = (regraId: string) => service.aplicacaoDaRegra(regraId, analise.catalogoSha256)
       return avaliacoesSaidaSchema.parse({
         analise: analise.numero,
         natureza: 'verificacao-tecnica-experimental',
@@ -363,6 +371,7 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
           fundamentos: detalhe.contrato.fundamentos,
           limitacoes: detalhe.limitacoes,
           revisaoHumana: detalhe.revisaoHumana,
+          ...(aplicacao(detalhe.contrato.regraId) ? { aplicacao: aplicacao(detalhe.contrato.regraId) } : {}),
           condicoesPendentes: detalhe.contrato.condicoesPendentes,
           camposUsados: detalhe.contrato.camposUsados,
           recalculada,

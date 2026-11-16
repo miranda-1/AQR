@@ -2,10 +2,29 @@ import { CircleAlert, CloudOff, FlaskConical, Info, LoaderCircle, RefreshCw } fr
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { categorias, situacaoDe, type Categoria } from '../model/describe'
+import { categorias, revisaoDe, situacaoDe, type Categoria, type Tom } from '../model/describe'
 import { TriagemServiceError, type TriagemResumo } from '../model/types'
 
-/** Selo da situação do processo: ícone de andamento + rótulo (cor nunca sozinha). */
+const classeDoTom: Record<Tom, string> = {
+  andamento: 'border-brand-100 bg-brand-50 text-brand',
+  atencao: 'border-modification-line bg-modification-bg text-modification',
+  concluido: 'border-addition-line bg-addition-bg text-addition',
+  neutro: 'border-line-strong bg-surface-sunken text-ink',
+}
+
+/** Selo da revisão humana dos achados (separado do processamento). */
+export function RevisaoBadge({ resumo, className }: { resumo: Pick<TriagemResumo, 'achados' | 'pendentesRevisao'>; className?: string }) {
+  const revisao = revisaoDe(resumo)
+  if (!revisao) return null
+  return (
+    <span className={cn('inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs leading-none font-semibold whitespace-nowrap', classeDoTom[revisao.tom], className)}>
+      <span className="sr-only">Revisão humana: </span>
+      {revisao.rotulo}
+    </span>
+  )
+}
+
+/** Selo do processamento: ícone de andamento + rótulo (cor nunca sozinha). */
 export function SituacaoBadge({ resumo, className }: { resumo: Pick<TriagemResumo, 'situacao' | 'ultimaAnalise'>; className?: string }) {
   const { rotulo, tom } = situacaoDe(resumo)
   return (
@@ -33,6 +52,48 @@ export function CategoriaBadge({ categoria, compacto = false }: { categoria: Cat
       <info.icon aria-hidden className="size-3.5 shrink-0" />
       {compacto ? <span className="sr-only">{info.rotulo}</span> : info.rotulo}
     </span>
+  )
+}
+
+/**
+ * Os quatro estados do processo, separados: processamento, revisão humana dos achados,
+ * condições que aguardam confirmação de enquadramento e verificações que não concluíram.
+ * Nenhum deles é aprovação; "achados revisados" não resolve condição pendente.
+ */
+export function EstadoProcesso({ resumo }: { resumo: TriagemResumo }) {
+  const processamento = situacaoDe(resumo)
+  const revisao = revisaoDe(resumo)
+  const condicoes = resumo.condicoesPendentes ?? 0
+  const naoAvaliaveis = resumo.naoAvaliaveis ?? 0
+  const itemClasse = 'rounded-md bg-surface-sunken px-3 py-2'
+  return (
+    <section aria-label="Estado do processo" className="space-y-2 rounded-lg bg-white p-3 shadow-surface">
+      <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <div className={itemClasse}>
+          <dt className="text-xs font-semibold text-muted-foreground">Processamento</dt>
+          <dd className="font-semibold text-ink">{processamento.rotulo}{resumo.analiseAtual ? ` (análise nº ${resumo.analiseAtual})` : ''}</dd>
+        </div>
+        <div className={itemClasse}>
+          <dt className="text-xs font-semibold text-muted-foreground">Revisão humana dos achados</dt>
+          <dd className="font-semibold text-ink">{revisao?.rotulo ?? '—'}</dd>
+        </div>
+        <div className={itemClasse}>
+          <dt className="text-xs font-semibold text-muted-foreground">Condições pendentes de confirmação</dt>
+          <dd className={cn('font-semibold', condicoes > 0 ? 'text-move' : 'text-ink')}>
+            {condicoes > 0 ? <a href="#enquadramento" className="underline underline-offset-2">{condicoes} a confirmar</a> : 'Nenhuma'}
+          </dd>
+        </div>
+        <div className={itemClasse}>
+          <dt className="text-xs font-semibold text-muted-foreground">Verificações não avaliáveis</dt>
+          <dd className="font-semibold text-ink">{naoAvaliaveis > 0 ? <a href="#verificacoes" className="underline underline-offset-2">{naoAvaliaveis} inconclusiva{naoAvaliaveis === 1 ? '' : 's'}</a> : 'Nenhuma'}</dd>
+        </div>
+      </dl>
+      {resumo.situacao === 'revisado' && condicoes > 0 && (
+        <p className="text-sm text-ink">
+          Os achados foram revisados, mas {condicoes === 1 ? 'uma verificação ainda aguarda' : `${condicoes} verificações ainda aguardam`} a confirmação de enquadramento pelo servidor. A triagem não está encerrada.
+        </p>
+      )}
+    </section>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 /**
  * Executa uma ação do servidor (confirmar, revisar, reprocessar) e guarda o resultado para a tela:
@@ -8,8 +8,12 @@ export function useAcao() {
   const [executando, setExecutando] = useState(false)
   const [erro, setErro] = useState<unknown>(null)
   const [sucesso, setSucesso] = useState<string | null>(null)
+  // Guarda síncrona: dois cliques antes da próxima renderização não disparam a ação duas vezes.
+  const emAndamento = useRef(false)
 
   const executar = useCallback(async <T,>(acao: () => Promise<T>, mensagem: (resultado: T) => string): Promise<T | undefined> => {
+    if (emAndamento.current) return undefined
+    emAndamento.current = true
     setExecutando(true)
     setErro(null)
     setSucesso(null)
@@ -21,6 +25,7 @@ export function useAcao() {
       setErro(falha)
       return undefined
     } finally {
+      emAndamento.current = false
       setExecutando(false)
     }
   }, [])

@@ -273,6 +273,15 @@ export class TriagemService {
     })
   }
 
+  /**
+   * Condição de aplicação da regra no catálogo carregado, só se a análise usou esse mesmo
+   * catálogo (hash igual). Assim o texto mostrado é o da versão que produziu o resultado.
+   */
+  aplicacaoDaRegra(regraId: string, catalogoSha256: string): string | undefined {
+    if (catalogoSha256 !== this.catalogo.sha256) return undefined
+    return this.catalogo.regras.find((regra) => regra.id === regraId)?.preCondicao
+  }
+
   /** Ao iniciar o servidor: análises que estavam rodando quando ele parou ficam "interrompidas". */
   recuperarInterrompidas(): number {
     const pendentes = this.repo.analisesProcessando()

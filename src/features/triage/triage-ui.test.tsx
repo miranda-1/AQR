@@ -92,7 +92,8 @@ describe('lista de processos', () => {
     const linha = (await screen.findByRole('link', { name: 'Abrir o processo B9A8DE93' })).closest('tr')
     const celulas = within(defined(linha, 'linha'))
     expect(celulas.getByText('SINTETICO-001')).toBeInTheDocument()
-    expect(celulas.getByText('Aguardando revisão')).toBeInTheDocument()
+    expect(celulas.getByText('Análise concluída')).toBeInTheDocument()
+    expect(celulas.getByText('2 de 2 achados a revisar')).toBeInTheDocument()
     expect(celulas.getByText('Desdobro · Abertura')).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Nova triagem sintética/ }).length).toBeGreaterThan(0)
   })
@@ -261,7 +262,7 @@ describe('resultado: achados e abstenções', () => {
   it('mostra o quadro de valores divergentes sem dizer qual documento está certo', async () => {
     const user = userEvent.setup()
     renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [cenarioDivergencia().antes] }) })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     const quadro = within(detalhe).getByRole('region', { name: 'Quadro de valores' })
     expect(within(quadro).getByRole('row', { name: /5\. art\.pdf C3/ })).toBeInTheDocument()
     expect(within(quadro).getAllByRole('row', { name: /F7/ })).toHaveLength(2)
@@ -275,7 +276,7 @@ describe('resultado: achados e abstenções', () => {
     const lista = await screen.findByRole('navigation', { name: 'Verificações por categoria' })
     expect(within(lista).getByRole('heading', { name: /Verificação inconclusiva \(2\)/ })).toBeInTheDocument()
     expect(within(lista).queryByRole('heading', { name: /Não localizado nos anexos/ })).not.toBeInTheDocument()
-    const detalhe = await abrirVerificacao(user, /Memorial PDF para R D DM RET/)
+    const detalhe = await abrirVerificacao(user, /Memorial descritivo em PDF/)
     expect(within(detalhe).getByText(/Motivo:/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(PROIBIDAS)
   })
@@ -283,7 +284,7 @@ describe('resultado: achados e abstenções', () => {
   it('condição pendente aponta para a confirmação no enquadramento', async () => {
     const user = userEvent.setup()
     renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [cenarioDivergencia().antes] }) })
-    const detalhe = await abrirVerificacao(user, /GDU desdobro maior que dois hectares/)
+    const detalhe = await abrirVerificacao(user, /Guia de diretrizes urbanísticas/)
     expect(within(detalhe).getByText(/Aguarda confirmação do servidor: area-situacao-acima-2ha/)).toBeInTheDocument()
   })
 })
@@ -293,13 +294,13 @@ describe('evidência no documento', () => {
     const user = userEvent.setup()
     const service = criarFakeService({ cenarios: [cenarioDivergencia().antes] })
     renderApp(PROCESSO, { triageService: service })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     const linha = within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })
     await user.click(within(linha).getByRole('button', { name: 'Ver no documento' }))
 
     const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
     expect(within(painel).getByText('5. art.pdf')).toBeInTheDocument()
-    expect(within(painel).getByText(/Campos da ART RRT coerentes · Lote "C3"/)).toBeInTheDocument()
+    expect(within(painel).getByText(/AQR-GCA-018 · Lote "C3"/)).toBeInTheDocument()
     expect(await within(painel).findByText(/página da evidência/)).toHaveTextContent('Página 1 de 3 · página da evidência')
     expect(within(painel).getAllByTestId('destaque-evidencia')).toHaveLength(1)
     expect(service.chamadas.find((chamada) => chamada.metodo === 'conteudo')?.argumentos).toEqual([ID, ANEXO_ART])
@@ -321,7 +322,7 @@ describe('evidência no documento', () => {
     const cenario: Cenario = { ...antes, anexos: { 1: { ...anexos, itens: anexos.itens.map((item) => ({ ...item, conteudo: 'expurgado' as const })) } } }
     const service = criarFakeService({ cenarios: [cenario] })
     renderApp(PROCESSO, { triageService: service })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
     const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
     expect(within(painel).getByText(/O arquivo original já foi expurgado/)).toBeInTheDocument()
@@ -333,7 +334,7 @@ describe('evidência no documento', () => {
     const user = userEvent.setup()
     const service = criarFakeService({ cenarios: [cenarioDivergencia().antes], erros: { conteudo: new TriagemServiceError(404, 'CONTEUDO_INDISPONIVEL', 'Conteúdo indisponível.') } })
     renderApp(PROCESSO, { triageService: service })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
     const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
     expect(await within(painel).findByText(/O arquivo original não está mais disponível/)).toBeInTheDocument()
@@ -356,8 +357,8 @@ describe('revisão humana', () => {
     const user = userEvent.setup()
     const service = criarFakeService({ cenarios: [cenarioDivergencia().antes] })
     renderApp(PROCESSO, { triageService: service })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
-    const form = within(detalhe).getByRole('form', { name: 'Revisar Campos da ART RRT coerentes' })
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
+    const form = within(detalhe).getByRole('form', { name: 'Revisar Dados da ART ou RRT batem com o requerimento e a matrícula' })
     await user.click(within(form).getByRole('radio', { name: /Descartar o achado/ }))
     const registrar = within(form).getByRole('button', { name: 'Registrar revisão' })
     expect(registrar).toBeDisabled()
@@ -375,10 +376,10 @@ describe('revisão humana', () => {
     const user = userEvent.setup()
     const service = criarFakeService({ cenarios: [cenarioDivergencia().antes] })
     renderApp(PROCESSO, { triageService: service })
-    const botao = await screen.findByRole('button', { name: /Campos da ART RRT coerentes/ })
+    const botao = await screen.findByRole('button', { name: /Dados da ART ou RRT batem/ })
     botao.focus()
     await user.keyboard('{Enter}')
-    const detalhe = await screen.findByRole('article', { name: /Campos da ART RRT coerentes/ })
+    const detalhe = await screen.findByRole('article', { name: /Dados da ART ou RRT batem/ })
     expect(botao).toHaveAttribute('aria-current', 'true')
     const confirmar = within(detalhe).getByRole('radio', { name: /Confirmar o achado/ })
     expect(confirmar).toBeChecked()
@@ -394,7 +395,7 @@ describe('revisão humana', () => {
       erros: { revisar: new TriagemServiceError(409, 'CONFLITO_DE_VERSAO', 'O processo foi alterado por outra ação (versão 3).') },
     })
     renderApp(PROCESSO, { triageService: service })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     await user.click(within(detalhe).getByRole('button', { name: 'Registrar revisão' }))
     const alerta = await within(detalhe).findByRole('alert')
     expect(alerta).toHaveTextContent('O processo mudou enquanto você trabalhava')
@@ -414,7 +415,7 @@ describe('revisão humana', () => {
     const valor = within(form).getByRole('textbox', { name: 'Valor correto' })
     await user.clear(valor)
     await user.type(valor, 'F7')
-    const registrar = within(form).getByRole('button', { name: 'Registrar correção' })
+    const registrar = within(form).getByRole('button', { name: 'Só salvar a correção' })
     expect(registrar).toBeDisabled()
     await user.type(within(form).getByRole('textbox', { name: /Justificativa/ }), 'Leitura errada do OCR')
     await user.click(registrar)
@@ -458,13 +459,13 @@ describe('reprocessamento e histórico', () => {
     expect(within(historico).getByText('Campos corrigidos por servidor')).toBeInTheDocument()
     expect(within(historico).getByText(/“C3”/)).toBeInTheDocument()
     const comparacao = await within(historico).findByRole('region', { name: 'Comparação entre as análises 1 e 2' })
-    const linha = within(comparacao).getByRole('row', { name: /Campos da ART RRT coerentes/ })
+    const linha = within(comparacao).getByRole('row', { name: /Dados da ART ou RRT batem/ })
     expect(within(linha).getByText('mudou')).toBeInTheDocument()
     expect(within(linha).getByText('Possível problema identificado')).toBeInTheDocument()
     expect(within(linha).getByText('Verificada sem achado')).toBeInTheDocument()
 
     // Regressão: o aviso do reprocessamento não pode esconder o da ação seguinte.
-    const detalhe = await abrirVerificacao(user, /Data do título registral para revisão/)
+    const detalhe = await abrirVerificacao(user, /Data de emissão da matrícula/)
     await user.click(within(detalhe).getByRole('button', { name: 'Registrar revisão' }))
     expect(await screen.findByText('Achado confirmado (AQR-GCA-009). A revisão ficou registrada com seu usuário e a data.')).toBeInTheDocument()
     expect(screen.queryByText(/Análise nº 2 criada/)).not.toBeInTheDocument()
@@ -526,10 +527,119 @@ describe('acessibilidade da triagem (axe)', () => {
   it('painel de evidência aberto não tem violações', async () => {
     const user = userEvent.setup()
     renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [cenarioDivergencia().antes] }) })
-    const detalhe = await abrirVerificacao(user, /Campos da ART RRT coerentes/)
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
     await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
     const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
     await within(painel).findByText(/página da evidência/)
     expect(await violacoes(document.body)).toEqual([])
   }, 20000)
+})
+
+describe('E10.1: estados, linguagem e correção com reprocessamento', () => {
+  it('separa processamento, revisão humana, condições pendentes e não avaliáveis; "revisado" não encerra a triagem', async () => {
+    const { antes } = cenarioDivergencia()
+    const triagem = { ...antes.detalhe.triagem, situacao: 'revisado' as const, achados: 2, pendentesRevisao: 0, condicoesPendentes: 1, naoAvaliaveis: 0 }
+    renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [{ ...antes, detalhe: { ...antes.detalhe, triagem } }] }) })
+    const estado = await screen.findByRole('region', { name: 'Estado do processo' })
+    expect(within(estado).getByText('Processamento').nextElementSibling).toHaveTextContent('Análise concluída (análise nº 1)')
+    expect(within(estado).getByText('Revisão humana dos achados').nextElementSibling).toHaveTextContent('2 achados revisados')
+    expect(within(estado).getByRole('link', { name: '1 a confirmar' })).toHaveAttribute('href', '#enquadramento')
+    expect(within(estado).getByText('Verificações não avaliáveis').nextElementSibling).toHaveTextContent('Nenhuma')
+    expect(within(estado).getByText(/Os achados foram revisados, mas uma verificação ainda aguarda a confirmação de enquadramento/)).toBeInTheDocument()
+    expect(screen.queryByText('Revisado', { exact: true })).not.toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(PROIBIDAS)
+  })
+
+  it('título legível sem perder o ID, o título do catálogo, a versão, a condição de aplicação e a fonte', async () => {
+    const user = userEvent.setup()
+    renderApp(PROCESSO, { triageService: criarFakeService({ cenarios: [cenarioDivergencia().antes] }) })
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
+    expect(within(detalhe).getByRole('heading', { name: 'Dados da ART ou RRT batem com o requerimento e a matrícula' })).toBeInTheDocument()
+    expect(within(detalhe).getByText(/título no catálogo: “Campos da ART RRT coerentes”/)).toBeInTheDocument()
+    expect(within(detalhe).getByText('AQR-GCA-018@1.0-review+fd9b3e3b9db5')).toBeInTheDocument()
+    expect(within(detalhe).getByText('Quando se aplica').nextElementSibling).toHaveTextContent('ART/RRT legível')
+    expect(within(detalhe).getByText(/art\.3 §3/)).toBeInTheDocument()
+    expect(within(detalhe).getAllByRole('link', { name: 'fonte oficial' }).length).toBeGreaterThan(0)
+  })
+
+  it('"Salvar correção e reprocessar": salva, reprocessa com a versão devolvida e mostra a nova análise', async () => {
+    const user = userEvent.setup()
+    const { antes, depois } = cenarioDivergencia()
+    const service = criarFakeService({ cenarios: [antes], depoisDeReprocessar: { [ID]: depois } })
+    renderApp(PROCESSO, { triageService: service })
+    await user.click(await screen.findByRole('button', { name: 'Corrigir Lote de art.pdf' }))
+    const form = screen.getByRole('form', { name: 'Corrigir Lote' })
+    await user.clear(within(form).getByRole('textbox', { name: 'Valor correto' }))
+    await user.type(within(form).getByRole('textbox', { name: 'Valor correto' }), 'F7')
+    await user.type(within(form).getByRole('textbox', { name: /Justificativa/ }), 'Lote conferido na ART')
+    await user.click(within(form).getByRole('button', { name: 'Salvar correção e reprocessar' }))
+    expect(await screen.findByText(/Correção de Lote registrada \(de “C3” para “F7”\) e análise nº 2 solicitada\. A análise anterior continua no histórico\./)).toBeInTheDocument()
+    const metodos = service.chamadas.map((chamada) => chamada.metodo).filter((metodo) => metodo === 'revisar' || metodo === 'reprocessar')
+    expect(metodos).toEqual(['revisar', 'reprocessar'])
+    // Reprocessa com a versão que o salvamento devolveu (2 → 3), não com a antiga.
+    expect(defined(service.chamadas.find((chamada) => chamada.metodo === 'reprocessar')).argumentos).toEqual([ID, 3])
+    expect(await screen.findByRole('heading', { name: 'Visão geral da análise nº 2' })).toBeInTheDocument()
+  })
+
+  it('se o reprocessamento falha depois de salvar, diz que a correção ficou registrada', async () => {
+    const user = userEvent.setup()
+    const service = criarFakeService({
+      cenarios: [cenarioDivergencia().antes],
+      erros: { reprocessar: new TriagemServiceError(503, 'FILA_CHEIA', 'A fila da triagem está cheia.') },
+    })
+    renderApp(PROCESSO, { triageService: service })
+    await user.click(await screen.findByRole('button', { name: 'Corrigir Lote de art.pdf' }))
+    const form = screen.getByRole('form', { name: 'Corrigir Lote' })
+    await user.clear(within(form).getByRole('textbox', { name: 'Valor correto' }))
+    await user.type(within(form).getByRole('textbox', { name: 'Valor correto' }), 'F7')
+    await user.type(within(form).getByRole('textbox', { name: /Justificativa/ }), 'Lote conferido na ART')
+    await user.click(within(form).getByRole('button', { name: 'Salvar correção e reprocessar' }))
+    const alerta = await screen.findByRole('alert')
+    expect(alerta).toHaveTextContent('A correção de Lote foi registrada (de “C3” para “F7”), mas a nova análise não foi concluída: A fila da triagem está cheia.')
+    expect(service.chamadas.filter((chamada) => chamada.metodo === 'revisar')).toHaveLength(1)
+  })
+
+  it('conflito ao salvar: nada é reprocessado e a tela oferece atualizar', async () => {
+    const user = userEvent.setup()
+    const service = criarFakeService({
+      cenarios: [cenarioDivergencia().antes],
+      erros: { revisar: new TriagemServiceError(409, 'CONFLITO_DE_VERSAO', 'O processo foi alterado por outra ação.') },
+    })
+    renderApp(PROCESSO, { triageService: service })
+    await user.click(await screen.findByRole('button', { name: 'Corrigir Lote de art.pdf' }))
+    const form = screen.getByRole('form', { name: 'Corrigir Lote' })
+    await user.type(within(form).getByRole('textbox', { name: /Justificativa/ }), 'Lote conferido na ART')
+    await user.click(within(form).getByRole('button', { name: 'Salvar correção e reprocessar' }))
+    expect(await within(form).findByText('O processo mudou enquanto você trabalhava')).toBeInTheDocument()
+    expect(service.chamadas.some((chamada) => chamada.metodo === 'reprocessar')).toBe(false)
+  })
+
+  it('cliques repetidos não duplicam a correção', async () => {
+    const user = userEvent.setup()
+    const base = criarFakeService({ cenarios: [cenarioDivergencia().antes] })
+    let liberar: () => void = () => undefined
+    let revisoes = 0
+    const service: TriagemService = {
+      ...base,
+      async revisar(id, entrada) {
+        revisoes += 1
+        await new Promise<void>((resolve) => {
+          liberar = resolve
+        })
+        return base.revisar(id, entrada)
+      },
+    }
+    renderApp(PROCESSO, { triageService: service })
+    await user.click(await screen.findByRole('button', { name: 'Corrigir Lote de art.pdf' }))
+    const form = screen.getByRole('form', { name: 'Corrigir Lote' })
+    await user.type(within(form).getByRole('textbox', { name: /Justificativa/ }), 'Lote conferido na ART')
+    const botao = within(form).getByRole('button', { name: 'Salvar correção e reprocessar' })
+    botao.click()
+    botao.click()
+    within(form).getByRole('button', { name: 'Só salvar a correção' }).click()
+    await waitFor(() => expect(revisoes).toBe(1))
+    liberar()
+    await waitFor(() => expect(base.chamadas.some((chamada) => chamada.metodo === 'revisar')).toBe(true))
+    expect(revisoes).toBe(1)
+  })
 })

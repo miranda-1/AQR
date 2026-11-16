@@ -5,7 +5,8 @@ export interface ToolItem {
   label: string
   to: string
   icon: LucideIcon
-  status?: 'in-development'
+  /** Recurso experimental: só em ambientes autorizados e só com dados sintéticos (o servidor decide). */
+  status?: 'experimental'
   /** Ativa só na própria rota (ex.: o início não fica ativo em /comparacao). */
   exact?: boolean
 }
@@ -14,7 +15,7 @@ export interface ToolItem {
 export const toolItems: readonly ToolItem[] = [
   { label: 'Início', to: routes.home, icon: House, exact: true },
   { label: 'Comparar PDFs', to: routes.comparison, icon: Files },
-  { label: 'Triagem documental', to: routes.triage, icon: FileSearch, status: 'in-development' },
+  { label: 'Triagem documental', to: routes.triage, icon: FileSearch, status: 'experimental' },
 ]
 
 /** Uma ferramenta fica ativa na própria rota e em suas sub-rotas (ex.: /comparacao/resultado). */
