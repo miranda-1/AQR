@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
 import { MemoryRouter } from 'react-router'
@@ -134,5 +134,41 @@ describe('acessibilidade dos registros (axe)', () => {
     await screen.findByText('3 registros encontrados.')
     await screen.findByText('2 pessoas usaram a comparação.')
     expect(await violations(container)).toEqual([])
+  })
+})
+
+describe('rótulo no nome acessível (WCAG 2.5.3)', () => {
+  async function semDivergencia(container: Element) {
+    const resultado = await axe.run(container, { runOnly: { type: 'rule', values: ['label-content-name-mismatch'] } })
+    return resultado.violations.flatMap((violacao) => violacao.nodes.map((node) => node.html.slice(0, 120)))
+  }
+
+  it('logotipo, conta e opções da página inicial: o nome contém o texto visível', async () => {
+    const { container } = renderApp('/')
+    await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })
+    expect(await semDivergencia(container)).toEqual([])
+    const banner = screen.getByRole('banner')
+    // Logotipo: o nome traz "AQR" e o nome completo, que é o que aparece.
+    expect(within(banner).getByRole('link', { name: 'AQR Análise e Qualificação de Requerimentos — página inicial' })).toHaveAttribute('href', '/')
+    // Conta: o nome traz o nome de usuário que aparece no botão.
+    expect(within(banner).getByRole('button', { name: 'Conta de servidor' })).toBeInTheDocument()
+    // Opções: o nome é exatamente o texto do link (título e selo); a descrição fica como descrição.
+    const nav = screen.getByRole('navigation', { name: 'Ferramentas disponíveis' })
+    const triagem = within(nav).getByRole('link', { name: 'Triagem documental Experimental' })
+    expect(triagem.textContent).toBe('Triagem documental Experimental')
+    expect(triagem).toHaveAccessibleDescription(/Recurso experimental, só com pacotes sintéticos/)
+    expect(within(nav).getByRole('link', { name: 'Comparar PDFs' }).textContent).toBe('Comparar PDFs')
+  })
+
+  it('páginas da triagem e da comparação não têm divergência entre rótulo e nome', async () => {
+    for (const [path, heading] of [
+      ['/triagem', 'Triagem documental'],
+      ['/comparacao', 'Comparar documentos'],
+    ] as const) {
+      const { container, unmount } = renderApp(path)
+      await screen.findByRole('heading', { level: 1, name: heading })
+      expect(await semDivergencia(container), path).toEqual([])
+      unmount()
+    }
   })
 })

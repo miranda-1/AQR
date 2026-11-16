@@ -27,13 +27,14 @@ export function AccountMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          aria-label={`Conta de ${name}`}
           className="group h-10 gap-2 rounded-full pr-1 pl-1 hover:bg-secondary data-[state=open]:bg-secondary sm:pr-2.5"
         >
           <span aria-hidden className="flex size-8 items-center justify-center rounded-full bg-brand text-[0.8125rem] font-bold text-white">
             {initial}
           </span>
-          <span className="hidden max-w-40 truncate text-sm font-semibold text-ink sm:inline">{name}</span>
+          {/* Nome acessível (WCAG 2.5.3): um texto só, que contém o nome que se vê. */}
+          <span className="sr-only">{`Conta de ${name}`}</span>
+          <span aria-hidden className="hidden max-w-40 truncate text-sm font-semibold text-ink sm:inline">{name}</span>
           <ChevronDown aria-hidden className="hidden text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
         </Button>
       </DropdownMenuTrigger>

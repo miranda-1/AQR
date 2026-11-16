@@ -25,7 +25,7 @@ describe('Rota inicial', () => {
     await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
     const header = defined(toolsNav().closest('header'), 'cabeçalho')
     expect(within(header).getByRole('img', { name: 'Prefeitura de Campo Grande' })).toBeInTheDocument()
-    expect(within(header).getByRole('link', { name: /AQR, Análise e Qualificação de Requerimentos/ })).toHaveAttribute('href', '/')
+    expect(within(header).getByRole('link', { name: /^AQR Análise e Qualificação de Requerimentos — página inicial$/ })).toHaveAttribute('href', '/')
   })
 
   it('mostra no rodapé as marcas SEMADES, o slogan e a PREFCG, nessa ordem', async () => {

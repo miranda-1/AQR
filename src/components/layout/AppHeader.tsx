@@ -20,13 +20,14 @@ export function AppHeader() {
           to={routes.home}
           viewTransition
           className="flex min-w-0 items-center gap-3 rounded-sm px-1 py-1"
-          aria-label={`${appConfig.name}, ${appConfig.fullName} — início`}
         >
+          {/* Nome acessível (WCAG 2.5.3): um texto só, que contém o que se vê ("AQR" e o nome completo). */}
+          <span className="sr-only">{`${appConfig.name} ${appConfig.fullName} — página inicial`}</span>
           {/* data-entry-target: destino da logo que voa até o cabeçalho depois do login (e origem dela ao sair). */}
-          <span data-entry-target className="inline-flex">
+          <span data-entry-target aria-hidden className="inline-flex">
             <AqrLogo size={22} />
           </span>
-          <span className="hidden truncate text-sm text-muted-foreground lg:inline">{appConfig.fullName}</span>
+          <span aria-hidden className="hidden truncate text-sm text-muted-foreground lg:inline">{appConfig.fullName}</span>
         </Link>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
