@@ -204,6 +204,15 @@ Rotas em `server/triage/api/routes.ts`, contratos zod em `shared/contracts/triag
 
 Telas em `src/pages/TriagePage.tsx`, `TriageNewPage.tsx` e `TriageProcessPage.tsx`; o resto em `src/features/triage/`. `TriagemSessionProvider` (em `App.tsx`) consulta `GET /api/triagem/status` e é a única fonte de "ligada ou desligada". `createHttpTriagemService` fala com `/api/triagens/*` e valida as respostas com os mesmos esquemas zod do servidor. A evidência abre num painel com o `loadPdf` e o `PdfPageView` do comparador (prop aditiva `overlay` para o destaque da região); o arquivo vem do endpoint autenticado e fica só na memória da aba. A tela consulta o processo a cada 2 s enquanto ele está em processamento (a API não envia eventos). Guia completo: `docs/triagem/interface-triagem.md`.
 
+### Triagem documental: validação do MVP (E10)
+
+- **Estados:** o resumo da API traz `condicoesPendentes` e `naoAvaliaveis` à parte da `situacao`; a tela mostra processamento, revisão humana, condições e não avaliáveis separados (`EstadoProcesso`).
+- **Linguagem:** as avaliações trazem `aplicacao` (pré-condição do catálogo usado na análise). Os títulos legíveis ficam só na interface (`src/features/triage/model/regras.ts`); o catálogo não muda.
+- **Conteúdo:** só sai anexo inspecionado e não isolado (`TriagemService.lerConteudo`).
+- **Reprocessamento:** integral sempre. `npm run triagem:incremental` compara com a estratégia incremental nos 96 pacotes sintéticos (`docs/triagem/incremental-x-integral.md`).
+- **Testes de ponta a ponta:** `tests/integration/triage-cenarios.test.ts` (20 cenários, gabaritos congelados) e `tests/integration/triage-seguranca.test.ts`.
+- **Limites operacionais:** `docs/triagem/limites-mvp.md`.
+
 ### Como entrará a autenticação real
 
 Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:

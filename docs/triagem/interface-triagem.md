@@ -10,6 +10,15 @@ A interface do navegador para a triagem experimental de **desdobro (D) na abertu
 | `/triagem/nova` | `src/pages/TriageNewPage.tsx` | Envio de pacote sintético. Só aparece para quem tem `podeCriar`. |
 | `/triagem/processos/:id` | `src/pages/TriageProcessPage.tsx` | Processo: situação, verificações, evidência, documentos, campos, enquadramento e histórico. |
 
+## Mudanças da E10
+
+- **Navegação:** a triagem aparece como "Experimental" na sub-barra e na página inicial. Antes aparecia como "Em breve" ou "Em desenvolvimento".
+- **Estados separados:** `EstadoProcesso` (em `components/common.tsx`) mostra processamento ("Análise concluída"), revisão humana dos achados ("1 de 2 achados a revisar", "2 achados revisados"), condições pendentes de confirmação e verificações não avaliáveis. A lista tem uma coluna para cada um. "Achados revisados" não encerra a triagem: com condição pendente, a tela diz isso.
+- **Regras legíveis:** `model/regras.ts` tem título e explicação para cada uma das 19 regras. O detalhe mantém o ID AQR-GCA, o título do catálogo, a versão, a condição de aplicação (`aplicacao`, vinda do servidor) e as fontes.
+- **Correção:** "Salvar correção e reprocessar" salva a revisão, reprocessa com a versão devolvida e mostra a nova análise. Se o reprocessamento falhar, a tela diz que a correção ficou registrada. "Só salvar a correção" continua disponível. Todas as ações têm guarda contra clique repetido (`useAcao`).
+- **Anexo isolado:** o conteúdo não é pedido e o painel explica o motivo, em português.
+- **Celular:** os contêineres das tabelas são posicionados (`relative`), e a página não rola na horizontal em 390 px.
+
 ## Quem decide se a triagem aparece
 
 O servidor decide. `TriagemSessionProvider` (`src/features/triage/session/triage-session.tsx`) consulta `GET /api/triagem/status` e expõe um destes estados:
