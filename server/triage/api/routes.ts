@@ -27,6 +27,10 @@ import { sanitizeFileName } from '../../http/file-name.ts'
 import { TriagemErro, type Ator, type TriagemService } from '../store/service.ts'
 import type { AnaliseRow, AnexoRow, RevisaoRow, TriagemRow } from '../store/repository.ts'
 import type { anexoDoEstado } from '../store/estado.ts'
+import { sugestoesSaidaSchema } from '../../../shared/contracts/triage-ia.ts'
+import { sugerirParaAnalise } from '../ia/executar.ts'
+import type { IaWorkerPool } from '../ia/worker-pool.ts'
+import type { AnexoTriado } from '../pipeline.ts'
 import type { TriagemWorkerPool } from '../worker-pool.ts'
 
 /**
@@ -47,6 +51,8 @@ export interface TriagemRoutesOptions {
   /** Modo de desenvolvimento: só pedidos deste computador (como a administração). */
   somenteLocal: boolean
   log: (mensagem: string, detalhes: Record<string, unknown>) => void
+  /** IA documental experimental (E11.0); ausente quando desabilitada (padrão). */
+  ia?: { pool: IaWorkerPool }
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u
@@ -179,7 +185,11 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
     pool
       .run(arquivos, signal)
       .then((resultado) => {
-        if (resultado.status === 'concluido') service.concluirAnalise(analiseId, resultado.anexos)
+        if (resultado.status === 'concluido') {
+          service.concluirAnalise(analiseId, resultado.anexos)
+          // Só depois de a análise determinística estar gravada: a IA nunca a atrasa nem a impede.
+          if (options.ia) sugerir(analiseId, resultado.anexos, signal)
+        }
         // No desligamento a fila encerra a thread: é interrupção, não falha do pacote.
         else service.encerrarSemSucesso(analiseId, signal.aborted ? 'interrompida' : 'falhou', signal.aborted ? 'servidor desligado' : resultado.motivo)
       })
@@ -191,6 +201,25 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
           // Banco já fechado: a recuperação na inicialização resolve.
         }
         options.log('triagem não concluída', { analise: analiseId, motivo: error instanceof Error ? error.name : 'desconhecido' })
+      })
+  }
+
+  /**
+   * Sugestões da IA sobre a análise concluída, em segundo plano. Qualquer falha fica registrada na
+   * execução (ou só no log, sem conteúdo, se nem o registro for possível) e não afeta a análise.
+   */
+  function sugerir(analiseId: string, anexos: AnexoTriado[], signal: AbortSignal): void {
+    const ia = options.ia
+    if (!ia) return
+    sugerirParaAnalise(anexos, {
+      pool: ia.pool,
+      provedor: { tipo: 'simulado', opcoes: { perfil: settings.ia.perfilSimulado } },
+      limites: { maxPaginas: settings.ia.maxPaginas, maxPropostas: settings.ia.maxSugestoes },
+      signal,
+    })
+      .then((resultado) => service.registrarSugestoesIa(analiseId, resultado))
+      .catch((error: unknown) => {
+        options.log('sugestões de IA não registradas', { analise: analiseId, motivo: error instanceof Error ? error.name : 'desconhecido' })
       })
   }
 
@@ -384,6 +413,38 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
           origemAnalise,
           revisoes: revisoes.filter((r) => r.regraId === detalhe.contrato.regraId && r.analiseId === analise.id).map(revisaoSaida),
         })),
+      })
+    } catch (error) {
+      traduzir(error)
+    }
+  })
+
+  // Sugestões experimentais da IA (E11.0): só leitura, sem efeito sobre o processo.
+  app.get<{ Params: { id: string } }>('/api/triagens/:id/sugestoes', async (request) => {
+    const ator = await atorDe(request)
+    try {
+      const triagem = service.triagemDe(ator, idParam(request.params.id))
+      const analise = analiseDe(triagem, corpo(analiseQuerySchema, request.query).analise)
+      const execucao = service.repo.execucaoIa(analise.id)
+      return sugestoesSaidaSchema.parse({
+        analise: analise.numero,
+        natureza: 'sugestao-experimental-sem-efeito',
+        execucao: execucao
+          ? {
+              id: execucao.id,
+              analise: analise.numero,
+              modelo: execucao.modelo,
+              situacao: execucao.situacao,
+              iniciadaEm: execucao.iniciadaEm,
+              encerradaEm: execucao.encerradaEm,
+              duracaoMs: execucao.duracaoMs,
+              propostasRecebidas: execucao.propostasRecebidas,
+              propostasInvalidas: execucao.propostasInvalidas,
+              propostasDescartadasPorLimite: execucao.propostasDescartadasPorLimite,
+              memoriaMb: execucao.memoriaMb,
+            }
+          : null,
+        itens: service.repo.sugestoesIa(analise.id),
       })
     } catch (error) {
       traduzir(error)

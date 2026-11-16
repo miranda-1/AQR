@@ -74,6 +74,17 @@ const environmentSchema = z.object({
   TRIAGEM_RETENCAO_HORAS: z.coerce.number().int().min(1).max(24 * 365).default(72),
   /** Pasta do catálogo normativo versionado (regras, condições, homologações). */
   TRIAGEM_CATALOGO_DIR: z.string().min(1).default('docs/triagem/catalogo'),
+  /**
+   * IA documental (E11.0). "desabilitado" (padrão): nenhuma sugestão. "simulado": provedor
+   * determinístico de teste, sem modelo real; só com a triagem experimental e nunca em produção.
+   * Sugestões não têm efeito sobre classe, campo, regra ou decisão.
+   */
+  TRIAGEM_IA_PROVEDOR: z.enum(['desabilitado', 'simulado']).default('desabilitado'),
+  TRIAGEM_IA_SIMULADO_PERFIL: z.enum(['cooperativo', 'adversario']).default('cooperativo'),
+  TRIAGEM_IA_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(30_000),
+  TRIAGEM_IA_MEMORIA_MB: z.coerce.number().int().min(128).max(8192).default(512),
+  TRIAGEM_IA_MAX_SUGESTOES: z.coerce.number().int().min(1).max(2000).default(200),
+  TRIAGEM_IA_MAX_PAGINAS: z.coerce.number().int().min(1).max(500).default(60),
 })
 
 /** Segredos que existem nos arquivos de desenvolvimento do repositório; nunca valem em produção. */
@@ -120,6 +131,15 @@ export interface TriagemSettings {
   conteudoChave: Buffer | null
   retencaoHoras: number
   catalogoDir: string
+  /** IA documental (E11.0): desligada por padrão; nunca com efeito sobre o resultado. */
+  ia: {
+    provedor: 'desabilitado' | 'simulado'
+    perfilSimulado: 'cooperativo' | 'adversario'
+    timeoutMs: number
+    memoriaMb: number
+    maxSugestoes: number
+    maxPaginas: number
+  }
 }
 
 export interface ServerConfig {
@@ -166,6 +186,9 @@ export function loadConfig(env: Record<string, string | undefined>): ServerConfi
   }
   const data = parsed.data
   // Triagem só com pacotes sintéticos: nunca em produção (retenção de documentos reais não homologada).
+  if (data.TRIAGEM_IA_PROVEDOR !== 'desabilitado' && (data.TRIAGEM_MODO !== 'experimental-sintetico' || data.NODE_ENV === 'production')) {
+    throw new ConfigError('TRIAGEM_IA_PROVEDOR só pode ser ligado com TRIAGEM_MODO=experimental-sintetico e fora de produção: as sugestões de IA são experimentais e só para pacotes sintéticos.')
+  }
   if (data.TRIAGEM_MODO === 'experimental-sintetico' && data.NODE_ENV === 'production') {
     throw new ConfigError('TRIAGEM_MODO=experimental-sintetico não é permitido em produção: a triagem só aceita pacotes sintéticos e a política de retenção de documentos reais não foi homologada.')
   }
@@ -294,6 +317,14 @@ function triagemSettings(data: z.infer<typeof environmentSchema>): TriagemSettin
     conteudoChave,
     retencaoHoras: data.TRIAGEM_RETENCAO_HORAS,
     catalogoDir: data.TRIAGEM_CATALOGO_DIR,
+    ia: {
+      provedor: data.TRIAGEM_IA_PROVEDOR,
+      perfilSimulado: data.TRIAGEM_IA_SIMULADO_PERFIL,
+      timeoutMs: data.TRIAGEM_IA_TIMEOUT_MS,
+      memoriaMb: data.TRIAGEM_IA_MEMORIA_MB,
+      maxSugestoes: data.TRIAGEM_IA_MAX_SUGESTOES,
+      maxPaginas: data.TRIAGEM_IA_MAX_PAGINAS,
+    },
   }
 }
 

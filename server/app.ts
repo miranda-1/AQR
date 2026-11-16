@@ -28,6 +28,7 @@ import { loadCatalog } from './triage/catalog/catalog.ts'
 import { registerTriagemRoutes } from './triage/api/routes.ts'
 import { ConteudoCifrado } from './triage/store/conteudo.ts'
 import { TriagemService } from './triage/store/service.ts'
+import { IaWorkerPool } from './triage/ia/worker-pool.ts'
 import { TriagemWorkerPool } from './triage/worker-pool.ts'
 
 /** JSON da API é pequeno; os PDFs chegam por multipart, com limites próprios. */
@@ -211,6 +212,18 @@ async function registerTriagem(app: FastifyInstance, config: ServerConfig, acces
     app.addHook('onClose', async () => clearInterval(timer))
   }
   // As rotas registram o cancelamento do desligamento antes do encerramento da fila.
-  registerTriagemRoutes(app, { auth: access.auth, service, pool, settings, somenteLocal: access.somenteLocal, log: (mensagem, detalhes) => app.log.warn(detalhes, mensagem) })
+  // IA documental experimental (E11.0): fila própria, só quando ligada (padrão: desabilitada).
+  const iaPool = settings.ia.provedor === 'simulado' ? new IaWorkerPool({ workers: 1, queueLimit: settings.queueLimit, timeoutMs: settings.ia.timeoutMs, memoriaMb: settings.ia.memoriaMb }) : null
+  if (iaPool) app.log.warn('Triagem com sugestões de IA SIMULADAS (sem modelo real); sugestões não têm efeito sobre o resultado.')
+  registerTriagemRoutes(app, {
+    auth: access.auth,
+    service,
+    pool,
+    settings,
+    somenteLocal: access.somenteLocal,
+    log: (mensagem, detalhes) => app.log.warn(detalhes, mensagem),
+    ...(iaPool ? { ia: { pool: iaPool } } : {}),
+  })
+  if (iaPool) app.addHook('onClose', async () => iaPool.close())
   app.addHook('onClose', async () => pool.close())
 }

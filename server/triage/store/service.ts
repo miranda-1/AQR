@@ -19,6 +19,7 @@ import { normalizarCampo, type CampoDetalhado } from '../extraction/extract.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { mascararDocumentos } from '../reading/text.ts'
 import { ConteudoIndisponivel, type ConteudoCifrado } from './conteudo.ts'
+import type { ResultadoIa } from '../ia/executar.ts'
 import { compararAchados, type DiferencaAchado } from './correspondencia.ts'
 import { anexoDoEstado } from './estado.ts'
 import { TriagemRepository, type AcaoEvento, type AnaliseRow, type AnexoRow, type RevisaoRow, type TriagemRow } from './repository.ts'
@@ -293,6 +294,23 @@ export class TriagemService {
   aplicacaoDaRegra(regraId: string, catalogoSha256: string): string | undefined {
     if (catalogoSha256 !== this.catalogo.sha256) return undefined
     return this.catalogo.regras.find((regra) => regra.id === regraId)?.preCondicao
+  }
+
+  /**
+   * Registra a execução da IA e as sugestões verificadas de uma análise JÁ concluída. Só insere:
+   * não toca na análise, nos campos do motor, nas avaliações nem nas revisões; uma execução por
+   * análise (a mesma análise não ganha uma segunda rodada de sugestões).
+   */
+  registrarSugestoesIa(analiseId: string, resultado: ResultadoIa): void {
+    transaction(this.db, () => {
+      const analise = this.repo.analise(analiseId)
+      if (!analise || analise.situacao !== 'concluida') throw new TriagemErro('SEM_ANALISE', 'Sugestões só se registram em análise concluída.')
+      if (this.repo.execucaoIa(analiseId)) throw new TriagemErro('CONFLITO_DE_VERSAO', 'Esta análise já tem sugestões registradas.')
+      const anexos = new Set(this.repo.anexos(analise.triagemId).map((anexo) => anexo.id))
+      const execucaoId = randomUUID()
+      this.repo.inserirExecucaoIa(execucaoId, analise.triagemId, analiseId, resultado.execucao)
+      resultado.sugestoes.forEach((sugestao, ordem) => this.repo.inserirSugestaoIa(execucaoId, analiseId, ordem, anexos.has(sugestao.anexoId) ? sugestao.anexoId : null, sugestao))
+    })
   }
 
   /** Ao iniciar o servidor: análises que estavam rodando quando ele parou ficam "interrompidas". */

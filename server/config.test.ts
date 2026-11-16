@@ -126,4 +126,17 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ TRIAGEM_CONTEUDO_CHAVE: 'não é base64' })).toThrow(/32 bytes/)
     expect(() => loadConfig({ NODE_ENV: 'production', AUTH_MODE: 'keycloak', TRIAGEM_MODO: 'experimental-sintetico' })).toThrow(/TRIAGEM_MODO=experimental-sintetico não é permitido em produção/)
   })
+
+  it('IA documental (E11.0): desabilitada por padrão; simulado só com a triagem experimental e fora de produção', () => {
+    expect(loadConfig({}).triagem.ia).toEqual({ provedor: 'desabilitado', perfilSimulado: 'cooperativo', timeoutMs: 30_000, memoriaMb: 512, maxSugestoes: 200, maxPaginas: 60 })
+    expect(loadConfig({ TRIAGEM_MODO: 'experimental-sintetico', TRIAGEM_IA_PROVEDOR: 'simulado' }).triagem.ia.provedor).toBe('simulado')
+    expect(() => loadConfig({ TRIAGEM_IA_PROVEDOR: 'simulado' })).toThrow(/TRIAGEM_IA_PROVEDOR só pode ser ligado/)
+    expect(() => loadConfig({ NODE_ENV: 'production', AUTH_MODE: 'keycloak', TRIAGEM_IA_PROVEDOR: 'simulado' })).toThrow(/TRIAGEM_IA_PROVEDOR só pode ser ligado/)
+    // Não há provedor externo nem "local" configurável nesta etapa.
+    for (const provedor of ['local', 'openai', 'externo', 'https://api.exemplo/v1']) {
+      expect(() => loadConfig({ TRIAGEM_MODO: 'experimental-sintetico', TRIAGEM_IA_PROVEDOR: provedor })).toThrow()
+    }
+    // Perfis de teste (falha, memória, lento) não são configuráveis no servidor.
+    expect(() => loadConfig({ TRIAGEM_MODO: 'experimental-sintetico', TRIAGEM_IA_PROVEDOR: 'simulado', TRIAGEM_IA_SIMULADO_PERFIL: 'memoria' })).toThrow()
+  })
 })

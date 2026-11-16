@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto'
+import type { SugestaoVerificada } from '../../../shared/contracts/triage-ia.ts'
 import type { Evidencia } from '../../../shared/contracts/triage.ts'
 import { integerColumn, optionalTextColumn, textColumn, type Database, type Row } from '../../db/database.ts'
 import type { AvaliacaoDetalhada } from '../engine/engine.ts'
+import type { ExecucaoIa } from '../ia/executar.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { estadoDoAnexo } from './estado.ts'
 
@@ -436,6 +438,88 @@ export class TriagemRepository {
         revisorRotulo: textColumn(row, 'revisor_rotulo'),
         em: textColumn(row, 'em'),
         baseRevisaoId: optionalTextColumn(row, 'base_revisao_id'),
+      }))
+  }
+
+  // ---------- IA documental (E11.0): separada de campos do motor e de correções humanas ----------
+
+  inserirExecucaoIa(id: string, triagemId: string, analiseId: string, execucao: ExecucaoIa): void {
+    this.db
+      .prepare(
+        `INSERT INTO triagem_ia_execucoes (id, triagem_id, analise_id, provedor, modelo_id, modelo_versao, pesos_sha256, prompt_sha256, configuracao_versao, situacao,
+           iniciada_em, encerrada_em, duracao_ms, propostas_recebidas, propostas_invalidas, propostas_descartadas_limite, memoria_mb, saida_sha256)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        id, triagemId, analiseId, execucao.modelo.provedor, execucao.modelo.id, execucao.modelo.versao, execucao.modelo.pesosSha256, execucao.modelo.promptSha256, execucao.modelo.configuracaoVersao,
+        execucao.situacao, execucao.iniciadaEm, execucao.encerradaEm, execucao.duracaoMs, execucao.propostasRecebidas, execucao.propostasInvalidas, execucao.propostasDescartadasPorLimite,
+        execucao.memoriaMb, execucao.saidaSha256,
+      )
+  }
+
+  inserirSugestaoIa(execucaoId: string, analiseId: string, ordem: number, anexoIdRegistrado: string | null, sugestao: SugestaoVerificada): void {
+    this.db
+      .prepare(
+        `INSERT INTO triagem_ia_sugestoes (id, execucao_id, analise_id, ordem, anexo_id, anexo_sha256, tipo, classe, campo, valor_bruto, pagina, regioes, trecho, fundamento, metodo,
+           confianca_declarada, nivel, situacao, motivo, relacao_motor, efeito)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        sugestao.id, execucaoId, analiseId, ordem, anexoIdRegistrado, sugestao.anexoSha256, sugestao.tipo, sugestao.classe, sugestao.campo, sugestao.valorBruto, sugestao.pagina,
+        json(sugestao.regioes), sugestao.trecho, sugestao.fundamento, sugestao.metodo, sugestao.confiancaDeclarada, sugestao.nivel, sugestao.situacao, sugestao.motivo, sugestao.relacaoMotor,
+        sugestao.efeito,
+      )
+  }
+
+  execucaoIa(analiseId: string): (ExecucaoIa & { id: string }) | null {
+    const row = this.db.prepare('SELECT * FROM triagem_ia_execucoes WHERE analise_id = ?').get(analiseId)
+    if (!row) return null
+    const opcionalInteiro = (coluna: string) => (row[coluna] === null || row[coluna] === undefined ? null : integerColumn(row, coluna))
+    return {
+      id: textColumn(row, 'id'),
+      modelo: {
+        provedor: textColumn(row, 'provedor') as ExecucaoIa['modelo']['provedor'],
+        id: textColumn(row, 'modelo_id'),
+        versao: textColumn(row, 'modelo_versao'),
+        pesosSha256: optionalTextColumn(row, 'pesos_sha256'),
+        promptSha256: textColumn(row, 'prompt_sha256'),
+        configuracaoVersao: textColumn(row, 'configuracao_versao'),
+      },
+      situacao: textColumn(row, 'situacao') as ExecucaoIa['situacao'],
+      iniciadaEm: textColumn(row, 'iniciada_em'),
+      encerradaEm: textColumn(row, 'encerrada_em'),
+      duracaoMs: integerColumn(row, 'duracao_ms'),
+      propostasRecebidas: integerColumn(row, 'propostas_recebidas'),
+      propostasInvalidas: integerColumn(row, 'propostas_invalidas'),
+      propostasDescartadasPorLimite: integerColumn(row, 'propostas_descartadas_limite'),
+      memoriaMb: opcionalInteiro('memoria_mb'),
+      saidaSha256: optionalTextColumn(row, 'saida_sha256'),
+    }
+  }
+
+  sugestoesIa(analiseId: string): SugestaoVerificada[] {
+    return this.db
+      .prepare('SELECT * FROM triagem_ia_sugestoes WHERE analise_id = ? ORDER BY ordem')
+      .all(analiseId)
+      .map((row) => ({
+        id: textColumn(row, 'id'),
+        tipo: textColumn(row, 'tipo') as SugestaoVerificada['tipo'],
+        anexoId: optionalTextColumn(row, 'anexo_id') ?? '',
+        anexoSha256: textColumn(row, 'anexo_sha256'),
+        pagina: row.pagina === null || row.pagina === undefined ? null : integerColumn(row, 'pagina'),
+        regioes: JSON.parse(textColumn(row, 'regioes')) as SugestaoVerificada['regioes'],
+        classe: optionalTextColumn(row, 'classe') as SugestaoVerificada['classe'],
+        campo: optionalTextColumn(row, 'campo') as SugestaoVerificada['campo'],
+        valorBruto: optionalTextColumn(row, 'valor_bruto'),
+        trecho: optionalTextColumn(row, 'trecho'),
+        fundamento: optionalTextColumn(row, 'fundamento') as SugestaoVerificada['fundamento'],
+        metodo: 'modelo-local' as const,
+        confiancaDeclarada: typeof row.confianca_declarada === 'number' ? row.confianca_declarada : null,
+        nivel: optionalTextColumn(row, 'nivel') as SugestaoVerificada['nivel'],
+        situacao: textColumn(row, 'situacao') as SugestaoVerificada['situacao'],
+        motivo: textColumn(row, 'motivo') as SugestaoVerificada['motivo'],
+        relacaoMotor: optionalTextColumn(row, 'relacao_motor') as SugestaoVerificada['relacaoMotor'],
+        efeito: 'nenhum' as const,
       }))
   }
 
