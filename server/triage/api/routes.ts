@@ -74,7 +74,7 @@ function corpo<T extends z.ZodType>(schema: T, valor: unknown): z.infer<T> {
 /** Erro do serviço → resposta HTTP, sem detalhes internos. */
 function traduzir(error: unknown): never {
   if (error instanceof TriagemErro) {
-    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409 }[error.codigo]
+    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409, ANEXO_ISOLADO: 403 }[error.codigo]
     throw new ApiError(status, error.codigo, error.message)
   }
   throw error

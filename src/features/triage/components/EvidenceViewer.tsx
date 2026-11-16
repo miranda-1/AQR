@@ -54,7 +54,8 @@ type Carga = { estado: 'carregando' } | { estado: 'pronto'; blob: Blob } | { est
 function useConteudo(triagemId: string, anexo: AnexoInfo): Carga {
   const { service } = useTriagemSession()
   const [carga, setCarga] = useState<{ anexoId: string; valor: Carga } | null>(null)
-  const disponivel = anexo.conteudo === 'armazenado'
+  // Anexo isolado na inspeção nunca é pedido ao servidor (que também o recusa).
+  const disponivel = anexo.conteudo === 'armazenado' && anexo.isolado !== true
   useEffect(() => {
     if (!disponivel) return
     const controller = new AbortController()
@@ -76,8 +77,9 @@ function useConteudo(triagemId: string, anexo: AnexoInfo): Carga {
   if (!disponivel) {
     return {
       estado: 'erro',
-      mensagem:
-        anexo.conteudo === 'expurgado'
+      mensagem: anexo.isolado
+        ? `Este anexo foi isolado na inspeção (${anexo.motivosIsolamento.join(', ') || 'conteúdo suspeito'}) e não é aberto. A evidência registrada continua abaixo.`
+        : anexo.conteudo === 'expurgado'
           ? 'O arquivo original já foi expurgado (prazo de guarda vencido). A evidência registrada continua abaixo.'
           : 'Este ambiente não guarda o conteúdo dos anexos; só os metadados e a evidência registrada.',
     }

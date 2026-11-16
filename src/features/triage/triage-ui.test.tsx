@@ -330,6 +330,20 @@ describe('evidência no documento', () => {
     expect(service.chamadas.some((chamada) => chamada.metodo === 'conteudo')).toBe(false)
   })
 
+  it('anexo isolado na inspeção não é pedido ao servidor', async () => {
+    const user = userEvent.setup()
+    const { antes } = cenarioDivergencia()
+    const anexos = defined(antes.anexos[1], 'anexos')
+    const isolar = (item: (typeof anexos.itens)[number]) => (item.id === ANEXO_ART ? { ...item, isolado: true, motivosIsolamento: ['conteudo-executavel'] } : item)
+    const service = criarFakeService({ cenarios: [{ ...antes, anexos: { 1: { ...anexos, itens: anexos.itens.map(isolar) } } }] })
+    renderApp(PROCESSO, { triageService: service })
+    const detalhe = await abrirVerificacao(user, /Dados da ART ou RRT batem/)
+    await user.click(within(within(detalhe).getByRole('row', { name: /5\. art\.pdf C3/ })).getByRole('button', { name: 'Ver no documento' }))
+    const painel = await screen.findByRole('dialog', { name: 'Evidência no documento' })
+    expect(within(painel).getByText(/foi isolado na inspeção \(conteudo-executavel\)/)).toBeInTheDocument()
+    expect(service.chamadas.some((chamada) => chamada.metodo === 'conteudo')).toBe(false)
+  })
+
   it('servidor responde 404 para o conteúdo: avisa que o original não está mais disponível', async () => {
     const user = userEvent.setup()
     const service = criarFakeService({ cenarios: [cenarioDivergencia().antes], erros: { conteudo: new TriagemServiceError(404, 'CONTEUDO_INDISPONIVEL', 'Conteúdo indisponível.') } })

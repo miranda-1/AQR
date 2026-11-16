@@ -41,7 +41,7 @@ export interface Ator {
   papel: AccountRole
 }
 
-export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE'
+export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE' | 'ANEXO_ISOLADO'
 
 export class TriagemErro extends Error {
   override name = 'TriagemErro'
@@ -542,6 +542,16 @@ export class TriagemService {
     if (!anexo) throw new TriagemErro('NAO_ENCONTRADA', 'Anexo não encontrado.')
     if (anexo.conteudo !== 'armazenado' || !anexo.conteudoRef || !this.conteudo) {
       throw new TriagemErro('SEM_CONTEUDO', anexo.conteudo === 'expurgado' ? 'O conteúdo deste anexo já foi expurgado (prazo de retenção).' : 'O conteúdo deste anexo não é armazenado nesta configuração; só metadados e resultados.')
+    }
+    // Só entrega o que a inspeção já conferiu e não isolou: anexo suspeito (executável, ZIP com
+    // caminho perigoso…) nunca sai do servidor, nem como download. Sem análise concluída, a inspeção
+    // ainda não aconteceu e o conteúdo também não é entregue.
+    const atual = triagem.analiseAtual ? this.repo.analisePorNumero(triagem.id, triagem.analiseAtual) : undefined
+    const lido = atual?.situacao === 'concluida' ? this.anexosDaAnalise(atual).find((item) => item.lido.id === anexo.id) : undefined
+    if (!lido) throw new TriagemErro('SEM_ANALISE', 'O conteúdo só é entregue depois que a análise inspecionar o anexo.')
+    if (!lido.lido.inspecao || lido.lido.inspecao.isolamento.isolado) {
+      this.evento('acesso.negado', triagemId, ator, { alvo: 'conteudo', anexo: anexo.ordem, motivo: 'anexo-isolado' })
+      throw new TriagemErro('ANEXO_ISOLADO', 'Este anexo foi isolado na inspeção (conteúdo suspeito) e não é entregue. Use os metadados e o motivo do isolamento.')
     }
     try {
       const bytes = this.conteudo.ler(anexo.conteudoRef, anexo.sha256)

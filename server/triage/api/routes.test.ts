@@ -169,6 +169,33 @@ describe('API de triagem (E8)', () => {
     expect(regra(await avaliacoes(id), '043')).toMatchObject({ resultado: 'achado', tipo: 'formato-incompativel' })
   })
 
+  it('regressão (E10.3): o conteúdo de anexo isolado nunca é entregue, nem antes da inspeção', async () => {
+    const executavel = (await arquivosDe('DSD-37')).find((arquivo) => arquivo.nome === 'art.pdf')
+    const requerimento = (await arquivosDe('DSD-01')).find((arquivo) => arquivo.nome === 'requerimento.pdf')
+    const { payload, headers } = await corpoMultipart([defined(requerimento), defined(executavel)])
+    const criada = await app.inject({ method: 'POST', url: '/api/triagens', payload, headers: { ...headers, ...como('ana.analista') } })
+    const id = criada.json<{ triagem: { id: string } }>().triagem.id
+    const anexosAntes = (await app.inject({ method: 'GET', url: `/api/triagens/${id}/anexos`, headers: como('ana.analista') })).json<{ itens: { id: string }[] }>()
+    const [legivel, suspeito] = anexosAntes.itens
+    // Antes da inspeção (análise em andamento), nada é entregue.
+    const cedo = await app.inject({ method: 'GET', url: `/api/triagens/${id}/anexos/${defined(legivel).id}/conteudo`, headers: como('ana.analista') })
+    if (cedo.statusCode !== 200) expect(cedo.json()).toMatchObject({ error: { code: 'SEM_ANALISE' } })
+    await aguardar(id)
+    const negado = await app.inject({ method: 'GET', url: `/api/triagens/${id}/anexos/${defined(suspeito).id}/conteudo`, headers: como('ana.analista') })
+    expect(negado.statusCode).toBe(403)
+    expect(negado.json()).toMatchObject({ error: { code: 'ANEXO_ISOLADO' } })
+    expect(negado.body).not.toContain('MZ')
+    const eventos = db.prepare("SELECT count(*) AS n FROM triagem_eventos WHERE acao = 'acesso.negado' AND triagem_id = ?").get(id) as { n: number }
+    expect(eventos.n).toBe(1)
+    // O administrador também não recebe.
+    expect((await app.inject({ method: 'GET', url: `/api/triagens/${id}/anexos/${defined(suspeito).id}/conteudo`, headers: como('carla.admin') })).statusCode).toBe(403)
+    // O anexo legível continua disponível, como download e sem cache.
+    const ok = await app.inject({ method: 'GET', url: `/api/triagens/${id}/anexos/${defined(legivel).id}/conteudo`, headers: como('ana.analista') })
+    expect(ok.statusCode).toBe(200)
+    expect(ok.headers).toMatchObject({ 'content-type': 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' })
+    expect(String(ok.headers['content-disposition'])).toMatch(/^attachment;/)
+  })
+
   it('limites: sem anexos, anexos demais, pacote grande demais, metadados inválidos e sem multipart', async () => {
     const vazio = await corpoMultipart([])
     expect((await app.inject({ method: 'POST', url: '/api/triagens', payload: vazio.payload, headers: { ...vazio.headers, ...como('ana.analista') } })).json<{ error: { code: string } }>().error.code).toBe('SEM_ANEXOS')
