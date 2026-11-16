@@ -213,6 +213,12 @@ Telas em `src/pages/TriagePage.tsx`, `TriageNewPage.tsx` e `TriageProcessPage.ts
 - **Testes de ponta a ponta:** `tests/integration/triage-cenarios.test.ts` (20 cenários, gabaritos congelados) e `tests/integration/triage-seguranca.test.ts`.
 - **Limites operacionais:** `docs/triagem/limites-mvp.md`.
 
+### Estabilização da E10
+
+- **Revisões entre análises:** `server/triage/store/correspondencia.ts` compara um achado com o da análise em que houve revisão. A migração `0009_revisao_mantida` acrescenta `triagem_revisoes.base_revisao_id`, e a tabela continua só de inserção. Nenhuma decisão passa sozinha para uma análise nova.
+- **Fontes padrão do pdf.js:** `src/features/comparison/viewer/pdf/standard-fonts.ts` é uma `BinaryDataFactory` que entrega os arquivos de `pdfjs-dist/standard_fonts`, empacotados pelo Vite (mesma origem, com hash, carregados sob demanda). CMaps e wasm continuam sem fonte configurada; o pdf.js segue pelo caminho em JS, como antes.
+- **Nome acessível no cabeçalho e no início (WCAG 2.5.3):** um texto oculto único contém o texto visível. As opções da página inicial usam link esticado (título e selo no link; descrição fora dele, como `aria-describedby`).
+
 ### Como entrará a autenticação real
 
 Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:

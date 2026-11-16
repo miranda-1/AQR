@@ -19,6 +19,14 @@ A interface do navegador para a triagem experimental de **desdobro (D) na abertu
 - **Anexo isolado:** o conteúdo não é pedido e o painel explica o motivo, em português.
 - **Celular:** os contêineres das tabelas são posicionados (`relative`), e a página não rola na horizontal em 390 px.
 
+## Estabilização da E10
+
+- **Revisão depois do reprocessamento:** `RevisaoAnterior`, em `components/Verificacoes.tsx`, mostra a revisão da mesma regra numa análise anterior.
+  - **Achado idêntico:** "Este achado é igual ao revisado na análise nº N", com o botão "Manter a decisão anterior". O botão registra uma revisão nova, vinculada à original pelo `baseRevisaoId`.
+  - **Achado modificado:** "Este item mudou desde a revisão…", com a lista do que mudou e o pedido de revisão nova.
+  - A lista das verificações marca "a revisar (igual à nº N)". O administrador vê a relação, mas não mantém decisão.
+- **Fontes dos PDFs:** o visualizador (comparação e triagem) recebe as fontes padrão do pdf.js do próprio AQR (`viewer/pdf/standard-fonts.ts`).
+
 ## Quem decide se a triagem aparece
 
 O servidor decide. `TriagemSessionProvider` (`src/features/triage/session/triage-session.tsx`) consulta `GET /api/triagem/status` e expõe um destes estados:
