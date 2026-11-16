@@ -4,6 +4,7 @@ import { AdminSessionProvider } from '@/features/admin/session/admin-session'
 import { AuthSessionProvider } from '@/features/auth/auth-session'
 import { EntryHandoffProvider } from '@/features/auth/entry/entry-handoff'
 import { ComparisonSessionProvider } from '@/features/comparison/session/comparison-session'
+import { TriagemSessionProvider } from '@/features/triage/session/triage-session'
 import { appRoutes } from './routes'
 
 const router = createBrowserRouter(appRoutes)
@@ -15,7 +16,9 @@ export function App() {
         <EntryHandoffProvider>
           <AdminSessionProvider>
             <ComparisonSessionProvider>
-              <RouterProvider router={router} />
+              <TriagemSessionProvider>
+                <RouterProvider router={router} />
+              </TriagemSessionProvider>
             </ComparisonSessionProvider>
           </AdminSessionProvider>
         </EntryHandoffProvider>

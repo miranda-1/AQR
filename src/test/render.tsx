@@ -8,6 +8,9 @@ import { createInMemoryAccountService } from '@/features/admin/services/in-memor
 import { AuthSessionProvider } from '@/features/auth/auth-session'
 import { EntryHandoffProvider } from '@/features/auth/entry/entry-handoff'
 import { ComparisonSessionProvider } from '@/features/comparison/session/comparison-session'
+import type { TriagemService } from '@/features/triage/model/types'
+import { TriagemSessionProvider } from '@/features/triage/session/triage-session'
+import { criarFakeService, statusDesligado } from '@/features/triage/test-data/fake-service'
 
 interface RenderAppOptions {
   authenticated?: boolean
@@ -15,13 +18,15 @@ interface RenderAppOptions {
   serverAuth?: boolean
   /** Serviço de contas dos testes. Por padrão, a administração está desligada. */
   accountService?: AccountService
+  /** Serviço da triagem dos testes. Por padrão, a triagem está desligada (como no servidor). */
+  triageService?: TriagemService
 }
 
 /**
  * Renderiza a aplicação completa em uma rota, com roteador em memória.
  * Por padrão já com sessão; use `{ authenticated: false }` para testar o login.
  */
-export function renderApp(path = '/', { authenticated = true, serverAuth = false, accountService }: RenderAppOptions = {}) {
+export function renderApp(path = '/', { authenticated = true, serverAuth = false, accountService, triageService }: RenderAppOptions = {}) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] })
   const utils = render(
     <TooltipProvider>
@@ -29,7 +34,9 @@ export function renderApp(path = '/', { authenticated = true, serverAuth = false
         <EntryHandoffProvider>
           <AdminSessionProvider service={accountService ?? createInMemoryAccountService({ available: false })}>
             <ComparisonSessionProvider>
-              <RouterProvider router={router} />
+              <TriagemSessionProvider service={triageService ?? criarFakeService({ status: statusDesligado() })}>
+                <RouterProvider router={router} />
+              </TriagemSessionProvider>
             </ComparisonSessionProvider>
           </AdminSessionProvider>
         </EntryHandoffProvider>

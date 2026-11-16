@@ -54,6 +54,14 @@ export const appRoutes: RouteObject[] = [
         element: lazyPage(() => import('@/pages/TriagePage').then((m) => ({ default: m.TriagePage }))),
       },
       {
+        path: routes.triageNew,
+        element: lazyPage(() => import('@/pages/TriageNewPage').then((m) => ({ default: m.TriageNewPage }))),
+      },
+      {
+        path: '/triagem/processos/:id',
+        element: lazyPage(() => import('@/pages/TriageProcessPage').then((m) => ({ default: m.TriageProcessPage }))),
+      },
+      {
         path: routes.adminAccounts,
         element: <RequireAdmin>{lazyPage(() => import('@/pages/AccountsPage').then((m) => ({ default: m.AccountsPage })))}</RequireAdmin>,
       },

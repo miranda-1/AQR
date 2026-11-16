@@ -10,6 +10,9 @@ export const routes = {
   comparison: '/comparacao',
   comparisonWorkspace: '/comparacao/resultado',
   triage: '/triagem',
+  /** Nova triagem sintética (só com a triagem ligada no servidor). */
+  triageNew: '/triagem/nova',
+  triageProcess: (id: string) => `/triagem/processos/${encodeURIComponent(id)}`,
   /** Administração de contas (só quando o servidor a disponibiliza). */
   adminAccounts: '/administracao/contas',
   adminAccountNew: '/administracao/contas/nova',

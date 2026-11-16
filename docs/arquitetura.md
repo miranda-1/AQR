@@ -200,6 +200,10 @@ Rotas em `server/triage/api/routes.ts`, contratos zod em `shared/contracts/triag
 - **Desligamento e reinício:** no desligamento, o gancho `preClose` marca as análises em andamento como interrompidas; na inicialização, as que ficaram para trás também são marcadas.
 - **Fora da API:** não há rota de decisão nem de alteração de resultado.
 
+### Triagem documental: interface (E9)
+
+Telas em `src/pages/TriagePage.tsx`, `TriageNewPage.tsx` e `TriageProcessPage.tsx`; o resto em `src/features/triage/`. `TriagemSessionProvider` (em `App.tsx`) consulta `GET /api/triagem/status` e é a única fonte de "ligada ou desligada". `createHttpTriagemService` fala com `/api/triagens/*` e valida as respostas com os mesmos esquemas zod do servidor. A evidência abre num painel com o `loadPdf` e o `PdfPageView` do comparador (prop aditiva `overlay` para o destaque da região); o arquivo vem do endpoint autenticado e fica só na memória da aba. A tela consulta o processo a cada 2 s enquanto ele está em processamento (a API não envia eventos). Guia completo: `docs/triagem/interface-triagem.md`.
+
 ### Como entrará a autenticação real
 
 Nada nas rotas, nas regras de `AccountService` ou nas telas muda. O que trocar:

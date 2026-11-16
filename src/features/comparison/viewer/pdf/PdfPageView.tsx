@@ -1,5 +1,5 @@
 import { TriangleAlert } from 'lucide-react'
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { cn } from '@/lib/utils'
 import { categoryLabels } from '../../model/describe'
 import { differenceKindMeta } from '../../model/difference-kinds'
@@ -18,6 +18,8 @@ interface PdfPageViewProps {
   activeId: string | null
   onSelect: (id: string) => void
   info?: PageInfo
+  /** Camada extra sobre a página (ex.: destaque de evidência da triagem), em coordenadas da página. */
+  overlay?: ReactNode
 }
 
 /** Distância da área visível a partir da qual a página já é desenhada. */
@@ -134,7 +136,7 @@ function Mark({ mark, role, active, onSelect }: { mark: PageMark; role: Document
  * O desenho só acontece perto da área visível, é refeito quando a largura muda (zoom) e é
  * liberado quando a página se afasta, para documentos longos não acumularem canvas na memória.
  */
-export function PdfPageView({ pdf, size, pageNumber, pageCount, role, marks, activeId, onSelect, info }: PdfPageViewProps) {
+export function PdfPageView({ pdf, size, pageNumber, pageCount, role, marks, activeId, onSelect, info, overlay }: PdfPageViewProps) {
   const articleRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
@@ -214,6 +216,7 @@ export function PdfPageView({ pdf, size, pageNumber, pageCount, role, marks, act
       {marks.map((mark) => (
         <Mark key={`${mark.diffId}${mark.continuation ? '-c' : ''}`} mark={mark} role={role} active={activeId === mark.diffId} onSelect={onSelect} />
       ))}
+      {overlay}
     </article>
   )
 }
