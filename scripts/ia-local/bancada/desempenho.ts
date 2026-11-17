@@ -1,9 +1,9 @@
-import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { homedir, loadavg } from 'node:os'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import { createOcrEngine } from '../../../server/documents/ocr/ocr-engine.ts'
 import { avaliarDocumento, documentosDaBancada, type ResultadoPagina } from './bancada.ts'
+import { estadoDaMaquina, rssDoRuntimeMb } from './maquina.ts'
 import { criarClienteOllama } from './ollama.ts'
 
 /**
@@ -19,39 +19,6 @@ const indice = process.argv.indexOf('--rodadas')
 const RODADAS = indice >= 0 ? Number(process.argv[indice + 1] ?? 3) : 3
 const MODELO = 'qwen3.5:4b-q4_K_M'
 const ESTADO = process.env.AQR_IA_ESTADO ?? path.join(homedir(), '.aqr-ia')
-
-const comando = (programa: string, args: string[]) => {
-  try {
-    return execFileSync(programa, args, { encoding: 'utf8' }).trim()
-  } catch {
-    return ''
-  }
-}
-
-function estadoDaMaquina() {
-  const bateria = comando('pmset', ['-g', 'batt'])
-  const ajustes = comando('pmset', ['-g'])
-  const termico = comando('pmset', ['-g', 'therm'])
-  const pressao = comando('memory_pressure', ['-Q'])
-  return {
-    energia: /AC Power/u.test(bateria) ? 'tomada' : /Battery Power/u.test(bateria) ? 'bateria' : 'desconhecida',
-    cargaBateria: /(\d+)%/u.exec(bateria)?.[1] ?? '?',
-    baixoConsumo: /lowpowermode\s+1/u.test(ajustes) ? 'ligado' : 'desligado',
-    termico: /CPU_Speed_Limit\s*=\s*(\d+)/u.exec(termico)?.[1] ?? (/No thermal warning/u.test(termico) ? 'sem aviso' : '?'),
-    memoriaLivre: /free percentage:\s*(\d+)%/u.exec(pressao)?.[1] ?? '?',
-    swap: /used = ([\d.,]+\w)/u.exec(comando('sysctl', ['vm.swapusage']))?.[1] ?? '?',
-    carga1min: loadavg()[0]?.toFixed(2) ?? '?',
-  }
-}
-
-function rssDoRuntimeMb(): number {
-  let kb = 0
-  for (const linha of comando('ps', ['-axo', 'rss=,comm=']).split('\n')) {
-    const [rss, ...nome] = linha.trim().split(/\s+/u)
-    if (nome.join(' ').includes('ollama')) kb += Number(rss) || 0
-  }
-  return Math.round(kb / 1024)
-}
 
 const modo = (() => {
   try {

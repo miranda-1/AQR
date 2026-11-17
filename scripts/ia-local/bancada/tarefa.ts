@@ -181,3 +181,20 @@ export function propostasDaPagina(saida: SaidaPagina, anexo: AnexoTriado, pagina
   }
   return resultado
 }
+
+/**
+ * Braço exploratório (E11.4): "L2: MEMORIAL…" ou "L2 - …" → "L2", em `linhas_classe` e em `linha` dos
+ * campos. Só formato: o identificador continua precisando existir na página e a evidência continua
+ * sendo montada pelo AQR. Qualquer outra coisa fica como veio (e o zod decide).
+ */
+export function normalizarFormatoDeLinha(bruto: unknown): unknown {
+  if (typeof bruto !== 'object' || bruto === null) return bruto
+  const so = (v: unknown) => (typeof v === 'string' ? (/^\s*(L\d{1,4})\b/u.exec(v)?.[1] ?? v) : v)
+  const copia = { ...(bruto as Record<string, unknown>) }
+  if (Array.isArray(copia.linhas_classe)) copia.linhas_classe = copia.linhas_classe.map(so)
+  for (const campo of ['area', 'matricula']) {
+    const item = copia[campo]
+    if (typeof item === 'object' && item !== null) copia[campo] = { ...(item as Record<string, unknown>), linha: so((item as Record<string, unknown>).linha) }
+  }
+  return copia
+}

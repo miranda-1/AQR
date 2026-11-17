@@ -72,3 +72,14 @@ describe('proposta do modelo → contrato da E11.0', () => {
     expect(plantada && verificarProposta(plantada.proposta, [anexo])).toMatchObject({ situacao: 'recusada' })
   })
 })
+
+describe('braço exploratório: tolerância só de formato da linha citada', () => {
+  it('"L2: texto" vira "L2", e o resto passa pelo esquema como antes', async () => {
+    const { normalizarFormatoDeLinha } = await import('./tarefa.ts')
+    const bruto = { ...saida({}), linhas_classe: ['L2: MEMORIAL DESCRITIVO'], area: { valor: '1,00 m²', linha: 'L3 - Área do lote', rotulo: null } }
+    expect(saidaPaginaSchema.safeParse(bruto).success).toBe(false)
+    expect(saidaPaginaSchema.safeParse(normalizarFormatoDeLinha(bruto)).success).toBe(true)
+    expect(saidaPaginaSchema.safeParse(normalizarFormatoDeLinha({ ...saida({}), decisao: 'aprovado' })).success).toBe(false)
+    expect(normalizarFormatoDeLinha({ ...saida({}), linhas_classe: ['linha dois'] })).toMatchObject({ linhas_classe: ['linha dois'] })
+  })
+})

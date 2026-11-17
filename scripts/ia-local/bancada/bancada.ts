@@ -21,7 +21,7 @@ import { triarAnexo, type AnexoTriado } from '../../../server/triage/pipeline.ts
 import { dobrar } from '../../../server/triage/reading/text.ts'
 import { LIMITES_AVALIACAO } from '../../../server/triage/evaluation/run.ts'
 import { ErroOllama, type ClienteOllama } from './ollama.ts'
-import { ESQUEMA_JSON_SAIDA, linhasDaPagina, mensagemDaPagina, PROMPT_SHA256, PROMPT_SISTEMA, propostasDaPagina, saidaPaginaSchema, type SaidaPagina } from './tarefa.ts'
+import { ESQUEMA_JSON_SAIDA, linhasDaPagina, mensagemDaPagina, normalizarFormatoDeLinha, PROMPT_SHA256, PROMPT_SISTEMA, propostasDaPagina, saidaPaginaSchema, type SaidaPagina } from './tarefa.ts'
 
 /**
  * Bancada da E11.1: roda o motor determinístico (braço D) e o modelo local (braço "modelo") sobre
@@ -195,7 +195,12 @@ export interface OpcoesBancada {
    * modelo de novo. A chave inclui o manifesto dos pesos, o prompt, o documento e a página: mudar
    * qualquer um deles invalida a resposta guardada. Nunca usado na avaliação final.
    */
-  cache?: { dir: string; manifestoSha256: string }
+  cache?: { dir: string; manifestoSha256: string; /** `so-gravar`: guarda a resposta crua sem reaproveitar (comparação de modelos). */ modo?: 'ler-e-gravar' | 'so-gravar' }
+  /**
+   * Braço EXPLORATÓRIO da E11.4: tolera só o FORMATO da linha citada ("L2: texto" → "L2") antes do
+   * zod, igual para todos os modelos. Nunca usado na comparação principal.
+   */
+  tolerarFormatoDeLinha?: boolean
   /** Mecanismo da segunda leitura das páginas digitalizadas (sem ele, a reforçada não verifica digitalizado). */
   segundaLeitura?: MecanismoOcr
 }
@@ -241,7 +246,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
       const chave = chaveDoCache(opcoes, doc, pagina, comImagem)
       const arquivoCache = chave && opcoes.cache ? path.join(opcoes.cache.dir, `${chave}.json`) : null
       let resposta: RespostaGuardada
-      if (arquivoCache && existsSync(arquivoCache)) {
+      if (arquivoCache && existsSync(arquivoCache) && opcoes.cache?.modo !== 'so-gravar') {
         resposta = JSON.parse(readFileSync(arquivoCache, 'utf8')) as RespostaGuardada
         resultado.doCache = true
       } else {
@@ -266,7 +271,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
       } catch {
         bruto = null
       }
-      const validada = saidaPaginaSchema.safeParse(bruto)
+      const validada = saidaPaginaSchema.safeParse(opcoes.tolerarFormatoDeLinha ? normalizarFormatoDeLinha(bruto) : bruto)
       if (validada.success) saida = validada.data
       else resultado.situacao = 'saida-invalida'
     } catch (erro) {
