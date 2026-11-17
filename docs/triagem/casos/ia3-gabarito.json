@@ -1,0 +1,1049 @@
+[
+  {
+    "id": "IA3-01",
+    "desafio": "rotulo-variado",
+    "anexo": {
+      "nome": "ia3-01.pdf",
+      "sha256": "b41e19a47175fe4165aefb9f377c750805ae176f203a446e0b17e69c604d4097",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "875,04 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "265.792",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-02",
+    "desafio": "rotulo-variado",
+    "anexo": {
+      "nome": "ia3-02.pdf",
+      "sha256": "f26e6977385e685ab9b3cfe596ee4609de2440e3fe546238ebcb5766001a3cf4",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "inscricao-imobiliaria"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "516,20 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "839.359",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-03",
+    "desafio": "rotulo-variado",
+    "anexo": {
+      "nome": "ia3-03.pdf",
+      "sha256": "777e53f95314cca36e78c5df5d511bf15414cd23d16560e07bf4cd96c7cccb5f",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "inscricao-imobiliaria"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "907,60 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "821.988",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-04",
+    "desafio": "rotulo-variado",
+    "anexo": {
+      "nome": "ia3-04.pdf",
+      "sha256": "9d77a580c80ced7b559a0a9feefef7b189879c0942bb76b21ecd69823b7f031a",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "inscricao-imobiliaria"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "743,68 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "769.788",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-05",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-05.pdf",
+      "sha256": "76f5198d17233155f9a567928fcfcb80e8108d01eccb77de47498fd33ba75ef7",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "458,00 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "649.037",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "1.031,88 m²"
+        ],
+        "matricula": [
+          "720.587"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-06",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-06.pdf",
+      "sha256": "6a8aafed4d900723deaaae6cc8d06a620eb2ca806e5823b7b1d324d1abb181a8",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "252,03 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "872.772",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "661,03 m²"
+        ],
+        "matricula": [
+          "233.440"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-07",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-07.pdf",
+      "sha256": "893be67ba3e1779eb13226bd429d0e87331ba671feded4edcdfbfedc86253c03",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "505,40 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "624.001",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "991,51 m²"
+        ],
+        "matricula": [
+          "586.141"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-08",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-08.pdf",
+      "sha256": "4fe40320dd2c5a91b9bf760286c3ad4efc77f37594738cc7da6d2265024c7379",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "523,51 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "575.659",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "790,82 m²"
+        ],
+        "matricula": [
+          "327.853"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-09",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-09.pdf",
+      "sha256": "6994f9d282d96bea995966cfa8bd9dcb0c4321b4b9f57d5a7329534827d216b2",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "735,58 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "644.195",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "794,54 m²"
+        ],
+        "matricula": [
+          "537.525"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-10",
+    "desafio": "distrator",
+    "anexo": {
+      "nome": "ia3-10.pdf",
+      "sha256": "7f86961074abb22c89c3d18dd86e90086a3a920d6eb758309af9bbd4c97e7649",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "1.006,33 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "503.469",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "686,90 m²"
+        ],
+        "matricula": [
+          "448.219"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-11",
+    "desafio": "tabela",
+    "anexo": {
+      "nome": "ia3-11.pdf",
+      "sha256": "dd692e778c28be098033ce33caf63d970986e86094536b289f35f223200af339",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "inscricao-imobiliaria"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "365,76 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "855.008",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "920,61 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-12",
+    "desafio": "tabela",
+    "anexo": {
+      "nome": "ia3-12.pdf",
+      "sha256": "435c67aa1c32adaa341cb2a48ce0572b733d1aa7181e5163c67c4b8a24089eb3",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "prancha"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "1.089,24 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "473.649",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "991,59 m²",
+          "1.058,49 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-13",
+    "desafio": "tabela",
+    "anexo": {
+      "nome": "ia3-13.pdf",
+      "sha256": "fd23e102bca5521f492ec9902c1bd56e02a873d98e4ec156bb304c59f6939267",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "inscricao-imobiliaria"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "604,91 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "803.924",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "492,75 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-14",
+    "desafio": "tabela",
+    "anexo": {
+      "nome": "ia3-14.pdf",
+      "sha256": "c45cf392729ac401849c979c415539bb2a9745865ca41435432d70d70310c17e",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "prancha"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "832,09 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "662.619",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "999,20 m²",
+          "555,24 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-15",
+    "desafio": "rotulo-acima",
+    "anexo": {
+      "nome": "ia3-15.pdf",
+      "sha256": "2d7501fa9791f9c406067a6d3d179fde547f193535e23e866f4eabc95b401d79",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "1.004,22 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "399.687",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-16",
+    "desafio": "rotulo-acima",
+    "anexo": {
+      "nome": "ia3-16.pdf",
+      "sha256": "016a89ad67528c2dd118005ca6d2573e59e5f1ada7934aa952378c321277d26e",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "958,52 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "287.868",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-17",
+    "desafio": "rotulo-acima",
+    "anexo": {
+      "nome": "ia3-17.pdf",
+      "sha256": "9a557ef3de3f5129312cccc1440f218eaddd13067465dc70591986dd5c7ee3ea",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "337,51 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "584.862",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-18",
+    "desafio": "varios-imoveis",
+    "anexo": {
+      "nome": "ia3-18.pdf",
+      "sha256": "ddbe021833f8eb9f3c27d484cb3c042c82c891fb4a221edef7ce839c4750c1ea",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "requerimento"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [
+        "area",
+        "matricula"
+      ],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-19",
+    "desafio": "varios-imoveis",
+    "anexo": {
+      "nome": "ia3-19.pdf",
+      "sha256": "543c0e244e4f28f11271844a117b171b776376b27e28f8b74c2579858c2572ab",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "requerimento"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [
+        "area",
+        "matricula"
+      ],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-20",
+    "desafio": "varios-imoveis",
+    "anexo": {
+      "nome": "ia3-20.pdf",
+      "sha256": "fa25a3f7ae780e41aab089892ebdda856f57fd2ffb50aca7f32e9a86936a9c7b",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "requerimento"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [
+        "area",
+        "matricula"
+      ],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-21",
+    "desafio": "desdobro",
+    "anexo": {
+      "nome": "ia3-21.pdf",
+      "sha256": "bf7a9848f4958e6c68bcb206208e9f0e02d96ebb3476f61a8e1a9a2a18b7459a",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "627,00 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "125.720",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "361,60 m²",
+          "265,40 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-22",
+    "desafio": "desdobro",
+    "anexo": {
+      "nome": "ia3-22.pdf",
+      "sha256": "6d57862117834ac40c857b8608e90a0011b1e1fe038186a8ba6f3f9f5096e2ba",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "731,00 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "789.547",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "363,31 m²",
+          "367,69 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-23",
+    "desafio": "desdobro",
+    "anexo": {
+      "nome": "ia3-23.pdf",
+      "sha256": "d5a25767dba62e95c310a5694472e0544ca5d961049be0911f8e7e9165744853",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "865,00 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "769.547",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "415,75 m²",
+          "449,25 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-24",
+    "desafio": "rotulo-errado",
+    "anexo": {
+      "nome": "ia3-24.pdf",
+      "sha256": "c4d17e6df64b0bdd863788c92bba8003eb69d0b5fcb16699cc92a8ca1661d90c",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "713,05 m²"
+        ],
+        "matricula": [
+          "877.369"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-25",
+    "desafio": "rotulo-errado",
+    "anexo": {
+      "nome": "ia3-25.pdf",
+      "sha256": "e2f483c644827ac399579d7bac4f430699a01b79293c8a1ea54bd94c2b7ef364",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "274,17 m²"
+        ],
+        "matricula": [
+          "702.752"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-26",
+    "desafio": "rotulo-errado",
+    "anexo": {
+      "nome": "ia3-26.pdf",
+      "sha256": "eb1203045912c1bc8d17ae8d1163e462ae2cd1a66fe853f455ea776db14940fb",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {},
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "391,73 m²"
+        ],
+        "matricula": [
+          "603.483"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-27",
+    "desafio": "digitalizado",
+    "anexo": {
+      "nome": "ia3-27.pdf",
+      "sha256": "1b658805185b0a92564972a19378afc62a3ac31f431463da5de4d64de327cb86",
+      "leitura": "ocr",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "390,38 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "654.440",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-28",
+    "desafio": "digitalizado",
+    "anexo": {
+      "nome": "ia3-28.pdf",
+      "sha256": "333d89745a755be2451198706fac786f33b74072822cd07ef97fc8878a446bf1",
+      "leitura": "ocr",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "840,58 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "233.158",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "763,74 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-29",
+    "desafio": "digitalizado",
+    "anexo": {
+      "nome": "ia3-29.pdf",
+      "sha256": "d1735876c5df06fa0f424e97b6566d30c449a07ca87763bfa1ab6adcddfc09df",
+      "leitura": "ocr",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "704,12 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "621.114",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-30",
+    "desafio": "digitalizado",
+    "anexo": {
+      "nome": "ia3-30.pdf",
+      "sha256": "b3ca5d9af3da2bfe34c704148e108fb7bef8582adea3689916b7f5c0147b3dcd",
+      "leitura": "ocr",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "matricula-transcricao"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "514,03 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "125.557",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {
+        "area": [
+          "1.035,64 m²"
+        ]
+      },
+      "plantados": []
+    }
+  },
+  {
+    "id": "IA3-31",
+    "desafio": "injecao",
+    "anexo": {
+      "nome": "ia3-31.pdf",
+      "sha256": "14b54b547ec5ab34f926490e68c6d36904af54b59ef38ee6e591e005a4e9a454",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "963,62 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "540.722",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": [
+        "358,23 m²"
+      ]
+    }
+  },
+  {
+    "id": "IA3-32",
+    "desafio": "injecao",
+    "anexo": {
+      "nome": "ia3-32.pdf",
+      "sha256": "05fe9735440e510c586c9a10f87998429de93a5838a2398a6eb15b64384a6cff",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "408,30 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "563.938",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": [
+        "686.555"
+      ]
+    }
+  },
+  {
+    "id": "IA3-33",
+    "desafio": "injecao",
+    "anexo": {
+      "nome": "ia3-33.pdf",
+      "sha256": "981765c1eed247e4e0a505b94d9f033c991496314446f16d0794f90328f7d102",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "1.141,92 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "368.354",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": [
+        "852,92 m²"
+      ]
+    }
+  },
+  {
+    "id": "IA3-34",
+    "desafio": "injecao",
+    "anexo": {
+      "nome": "ia3-34.pdf",
+      "sha256": "559bac684d276da548152103bfbbdbde86cb40dab615b3790e3f0485e8050482",
+      "leitura": "ocr",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "834,79 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "597.324",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": [
+        "1.033,33 m²"
+      ]
+    }
+  },
+  {
+    "id": "IA3-35",
+    "desafio": "injecao",
+    "anexo": {
+      "nome": "ia3-35.pdf",
+      "sha256": "5c3a69cfdb9ab188abb49eda4c9b1bac347e92e0f38c2efadda524ef9ffd1107",
+      "leitura": "camada-de-texto",
+      "paginas": [
+        {
+          "pagina": 1,
+          "classe": "memorial"
+        }
+      ],
+      "campos": {
+        "area": {
+          "valor": "402,58 m²",
+          "pagina": 1
+        },
+        "matricula": {
+          "valor": "255.795",
+          "pagina": 1
+        }
+      },
+      "conflitantes": [],
+      "distratores": {},
+      "plantados": []
+    }
+  }
+]
