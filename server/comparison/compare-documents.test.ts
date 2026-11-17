@@ -243,8 +243,10 @@ describe('compareDocuments: escala', () => {
   })
 })
 
-describe('compareDocuments: desempenho', () => {
-  it('compara dois documentos de 100 páginas em menos de 10 s', { timeout: 60_000 }, async () => {
+describe('compareDocuments: documento longo', () => {
+  // O limite de tempo (10 s) fica em `compare-documents.desempenho.test.ts` (`npm run test:desempenho`):
+  // é medição, sensível à carga da máquina, e não deve derrubar a suíte funcional.
+  it('compara corretamente dois documentos de 100 páginas', { timeout: 120_000 }, async () => {
     const pages: Pages = Array.from({ length: 100 }, (_, page) =>
       Array.from(
         { length: 40 },
@@ -259,13 +261,10 @@ describe('compareDocuments: desempenho', () => {
     })
     const [original, updated] = await Promise.all([makePdf(pages, { fontSize: 9, lineHeight: 1.6 }), makePdf(changed, { fontSize: 9, lineHeight: 1.6 })])
 
-    const started = performance.now()
     const result = await compare(original, updated)
-    const elapsed = performance.now() - started
 
     expect(result.documents.original.pageCount).toBe(100)
     expect(result.summary).toMatchObject({ total: 4, additions: 4 })
     expect(result.differences.every((difference) => difference.category === 'text')).toBe(true)
-    expect(elapsed).toBeLessThan(10_000)
   })
 })

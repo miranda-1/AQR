@@ -103,7 +103,18 @@ export default defineConfig({
           name: 'servidor',
           environment: 'node',
           include: ['server/**/*.test.ts', 'shared/**/*.test.ts', 'scripts/ia-local/**/*.test.ts'],
-          exclude: ['server/comparison/evaluation/**'],
+          exclude: ['server/comparison/evaluation/**', '**/*.desempenho.test.ts'],
+        },
+      },
+      {
+        // Medições de desempenho (limites de tempo): fora de `npm test`, em `npm run test:desempenho`,
+        // com a máquina livre. A correção dos mesmos casos fica na suíte funcional.
+        extends: true,
+        test: {
+          name: 'desempenho',
+          environment: 'node',
+          include: ['**/*.desempenho.test.ts'],
+          exclude: ['**/node_modules/**'],
         },
       },
       {
