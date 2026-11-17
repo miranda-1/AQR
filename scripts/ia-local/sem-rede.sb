@@ -1,0 +1,11 @@
+;; Perfil de sandbox do macOS (sandbox-exec) para o servidor do modelo durante a INFERÊNCIA:
+;; tudo como antes, menos a rede. O processo só pode falar com o próprio computador
+;; (loopback 127.0.0.1 e socket local); qualquer saída para a internet ou para a rede
+;; local é negada pelo kernel. Usado por scripts/ia-local/ollama.sh no modo "inferencia".
+(version 1)
+(allow default)
+(deny network-outbound)
+(allow network-outbound (remote ip "localhost:*"))
+(allow network-outbound (remote unix-socket))
+(deny network-inbound)
+(allow network-inbound (local ip "localhost:*"))
