@@ -30,7 +30,7 @@ import { verificarProposta } from './verificacao.ts'
  * Vocabulário de tipos de documento, não de casos; nenhuma regra normativa.
  */
 
-export const VERIFICACAO_CLASSE_VERSAO = 'verificacao-classe@1'
+export const VERIFICACAO_CLASSE_VERSAO = 'verificacao-classe@2'
 
 export const motivosClasse = [
   'titulo-e-estrutura-conferem',
@@ -42,6 +42,7 @@ export const motivosClasse = [
   'citacao-sem-evidencia-da-classe',
   'classe-nao-verificavel-por-texto',
   'outro-sem-evidencia-positiva',
+  'titulo-de-outro-tipo-de-documento',
 ] as const
 export type MotivoClasse = (typeof motivosClasse)[number]
 
@@ -51,7 +52,7 @@ export interface VerificacaoClasse {
   situacao: SugestaoVerificada['situacao']
   motivo: SugestaoVerificada['motivo'] | MotivoClasse
   /** Classes com título e quantidade de elementos estruturais achados na página (para auditoria). */
-  evidencia: { titulos: ClasseDocumental[]; estrutura: Partial<Record<ClasseDocumental, number>> } | null
+  evidencia: { titulos: ClasseDocumental[]; estrutura: Partial<Record<ClasseDocumental, number>>; tiposNoTitulo: string[] } | null
 }
 
 export interface OpcoesClasse {
@@ -175,7 +176,9 @@ function zonaDeTitulo(linhas: readonly LinhaLida[]): LinhaLida[] {
   for (const l of linhas) {
     if (!/\p{L}{3,}/u.test(l.texto)) continue
     const r = regiaoDaLinha(l)
-    const cabecalho = !/\d{3,}/u.test(l.texto) && !/:\s*\S/u.test(l.texto) && l.texto.length <= 90 && (r === null || r.y < 0.35)
+    // Ano (2026) cabe num título ("IPTU 2026 - …"); outro número longo indica corpo.
+    const semAno = l.texto.replace(/\b(19|20)\d{2}\b/gu, '')
+    const cabecalho = !/\d{3,}/u.test(semAno) && !/:\s*\S/u.test(l.texto) && l.texto.length <= 90 && (r === null || r.y < 0.35)
     if (!cabecalho || zona.length >= 4) break
     zona.push(l)
   }
@@ -192,9 +195,15 @@ function tituloDaClasse(linha: string, padroes: readonly RegExp[]): boolean {
   })
 }
 
-export function evidenciaDaPagina(linhas: readonly LinhaLida[]): { titulos: ClasseDocumental[]; estrutura: Partial<Record<ClasseDocumental, number>> } {
+/** Cabeçalho que nomeia um tipo de documento (conhecido ou não do catálogo). */
+const TIPO_DE_DOCUMENTO = /^\W*(declaracao|certidao|termo|oficio|contrato|recibo|laudo|parecer|atestado|notificacao|autorizacao|alvara|licenca|escritura|instrumento|relatorio|ata|carta|anuencia|formulario|memorando|despacho|requerimento|procuracao|memorial|planta|prancha|guia|boletim|ficha|espelho|extrato|comprovante|boleto)\b/u
+
+/** Trecho negado ("não confere poderes de representação") não é evidência de estrutura. */
+const semNegacoes = (texto: string) => texto.replace(/\b(nao|sem|nem|nenhum|nenhuma|jamais)\b(\s+\S+){0,4}/gu, ' ')
+
+export function evidenciaDaPagina(linhas: readonly LinhaLida[]): { titulos: ClasseDocumental[]; estrutura: Partial<Record<ClasseDocumental, number>>; tiposNoTitulo: string[] } {
   const titulo = zonaDeTitulo(linhas).map((l) => dobrar(l.texto))
-  const corpo = linhas.map((l) => dobrar(l.texto))
+  const corpo = linhas.map((l) => semNegacoes(dobrar(l.texto)))
   const titulos: ClasseDocumental[] = []
   const estrutura: Partial<Record<ClasseDocumental, number>> = {}
   for (const classe of CLASSES) {
@@ -203,7 +212,10 @@ export function evidenciaDaPagina(linhas: readonly LinhaLida[]): { titulos: Clas
     const n = perfil.estrutura.filter((p) => corpo.some((t) => p.test(t))).length
     if (n > 0) estrutura[classe] = n
   }
-  return { titulos, estrutura }
+  // Linhas de cabeçalho que nomeiam um tipo de documento: cada uma precisa corresponder a alguma
+  // classe com título; a que não corresponde é título de um tipo fora do catálogo.
+  const tiposNoTitulo = titulo.filter((t) => TIPO_DE_DOCUMENTO.test(t))
+  return { titulos, estrutura, tiposNoTitulo }
 }
 
 function resultado(e110: SugestaoVerificada, situacao: VerificacaoClasse['situacao'], motivo: VerificacaoClasse['motivo'], evidencia: VerificacaoClasse['evidencia']): VerificacaoClasse {
@@ -232,6 +244,9 @@ export function verificarClasseProposta(proposta: PropostaModelo, anexos: readon
   const temTitulo = evidencia.titulos.includes(classe)
 
   if (titulosOutros.length > 0) return resultado(e110, 'recusada', 'titulo-de-outra-classe', evidencia)
+  // Cabeçalho que nomeia outro tipo de documento ("DECLARAÇÃO DE ANUÊNCIA" sob "PROCURAÇÃO"): contradição.
+  const perfilProprio = PERFIS[classe]
+  if (evidencia.tiposNoTitulo.some((t) => !tituloDaClasse(t, perfilProprio.titulo) && !perfilProprio.estrutura.some((p) => p.test(t)))) return resultado(e110, 'recusada', 'titulo-de-outro-tipo-de-documento', evidencia)
   if (maiorOutra >= 2 && maiorOutra >= propria) return resultado(e110, 'recusada', 'estrutura-de-outra-classe', evidencia)
 
   // A linha citada pelo modelo precisa conter evidência da classe proposta.

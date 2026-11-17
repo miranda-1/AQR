@@ -21,7 +21,7 @@
 | Tarefa e prompt | `e11.1-pagina@1`, sha256 `ae8c202665c687c396fe6a3831f86b3e0a1768e95c4d46249cc09bbc87dfb449` |
 | Geração | temperatura 0, semente 7, até 400 tokens, saída restrita por esquema JSON, sem "thinking" |
 | Node | v26.0.0 |
-| Duração total da bancada | 154 s |
+| Duração total da bancada | 152 s |
 
 ## IA-3 (revelado na avaliação final da E11.3; desde a E11.3.1, desenvolvimento e regressão)
 
@@ -91,9 +91,9 @@ Contrafactual (se a sugestão com verificação reforçada preenchesse a lacuna;
 | Medida | Mediana | p95 | Máximo |
 |---|---:|---:|---:|
 | Por página (todas) | 0 ms | 0 ms | 0 ms |
-| Leitura independente (PaddleOCR) por página | 938 ms | 985 ms | 1223 ms |
-| Verificação (E11.0 + reforçada) por página | 1 ms | 7 ms | 10 ms |
-| Por documento (motor + OCR + modelo) | 1031 ms | 1311 ms | 1402 ms |
+| Leitura independente (PaddleOCR) por página | 927 ms | 962 ms | 1197 ms |
+| Verificação (E11.0 + reforçada) por página | 1 ms | 8 ms | 10 ms |
+| Por documento (motor + OCR + modelo) | 1015 ms | 1286 ms | 1385 ms |
 
 Tokens por página: prompt mediana 672, máximo 2275; gerados mediana 128, máximo 152.
 
@@ -206,9 +206,9 @@ Contrafactual (se a sugestão com verificação reforçada preenchesse a lacuna;
 | Medida | Mediana | p95 | Máximo |
 |---|---:|---:|---:|
 | Por página (todas) | 0 ms | 0 ms | 0 ms |
-| Leitura independente (PaddleOCR) por página | 916 ms | 1089 ms | 1089 ms |
-| Verificação (E11.0 + reforçada) por página | 1 ms | 4 ms | 4 ms |
-| Por documento (motor + OCR + modelo) | 1072 ms | 3939 ms | 3939 ms |
+| Leitura independente (PaddleOCR) por página | 913 ms | 1074 ms | 1074 ms |
+| Verificação (E11.0 + reforçada) por página | 1 ms | 3 ms | 3 ms |
+| Por documento (motor + OCR + modelo) | 1042 ms | 3890 ms | 3890 ms |
 
 Tokens por página: prompt mediana 676, máximo 2962; gerados mediana 114, máximo 137.
 
@@ -298,9 +298,9 @@ Contrafactual (se a sugestão com verificação reforçada preenchesse a lacuna;
 | Medida | Mediana | p95 | Máximo |
 |---|---:|---:|---:|
 | Por página (todas) | 0 ms | 0 ms | 0 ms |
-| Leitura independente (PaddleOCR) por página | 944 ms | 1001 ms | 1001 ms |
+| Leitura independente (PaddleOCR) por página | 921 ms | 1002 ms | 1002 ms |
 | Verificação (E11.0 + reforçada) por página | 0 ms | 1 ms | 1 ms |
-| Por documento (motor + OCR + modelo) | 1026 ms | 3031 ms | 3031 ms |
+| Por documento (motor + OCR + modelo) | 1034 ms | 2946 ms | 2946 ms |
 
 Tokens por página: prompt mediana 660, máximo 3102; gerados mediana 102, máximo 122.
 
@@ -323,7 +323,7 @@ Tokens por página: prompt mediana 660, máximo 3102; gerados mediana 102, máxi
 
 ## Memória (medida)
 
-- Pico de memória residente dos processos do runtime durante a bancada (amostrado a cada 0,5 s com `ps`): 3676 MB.
+- Pico de memória residente dos processos do runtime durante a bancada (amostrado a cada 0,5 s com `ps`): 3841 MB.
 - Tamanho do modelo carregado informado pelo runtime: 3219 MB, dos quais 3219 MB na GPU. Sem offload para a CPU.
 - No Apple Silicon, CPU e GPU usam a mesma memória: "VRAM" aqui é a parte alocada para a GPU dentro dos 16 GB, não uma placa separada.
 

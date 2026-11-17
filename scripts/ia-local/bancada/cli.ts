@@ -29,11 +29,11 @@ function argumento(nome: string, padrao: string): string {
 
 const MODELO = argumento('modelo', 'qwen3.5:4b-q4_K_M')
 const MODO = argumento('modo', 'e11.1')
-if (!['e11.1', 'desenvolvimento', 'final'].includes(MODO)) {
-  console.error('Modo desconhecido. Use e11.1, desenvolvimento ou final.')
+if (!['e11.1', 'desenvolvimento', 'final', 'pos-avaliacao'].includes(MODO)) {
+  console.error('Modo desconhecido. Use e11.1, desenvolvimento, final ou pos-avaliacao.')
   process.exit(2)
 }
-const CONJUNTOS: ConjuntoBancada[] = MODO === 'final' ? ['ia4'] : MODO === 'desenvolvimento' ? ['ia3', 'ia2', 'ia1'] : ['ia2', 'ia1']
+const CONJUNTOS: ConjuntoBancada[] = MODO === 'final' || MODO === 'pos-avaliacao' ? ['ia4'] : MODO === 'desenvolvimento' ? ['ia3', 'ia2', 'ia1'] : ['ia2', 'ia1']
 const ENDERECO = 'http://127.0.0.1:11434'
 const SEMENTE = 7
 const MAX_TOKENS = 400
@@ -96,7 +96,7 @@ try {
           maxTokens: MAX_TOKENS,
           maxPaginasPorDocumento: 6,
           ...(MODO === 'e11.1' ? {} : { segundaLeitura: 'paddle' as const }),
-          ...(MODO === 'desenvolvimento' ? { cache: { dir: path.join(ESTADO, 'cache', 'respostas'), manifestoSha256: modelo.manifestoSha256 } } : {}),
+          ...(MODO === 'desenvolvimento' || MODO === 'pos-avaliacao' ? { cache: { dir: path.join(ESTADO, 'cache', 'respostas'), manifestoSha256: modelo.manifestoSha256 } } : {}),
           aoTerminarPagina: (id, pagina, r) => console.log(`${id} p.${pagina}: ${r.situacao} em ${r.latenciaMs} ms${r.comImagem ? ' (com imagem)' : ''}`),
         }),
       )
@@ -199,6 +199,9 @@ let notas: string[]
 if (MODO === 'final') {
   destino = FINAL
   notas = ['**Avaliação final da E11.3.1 no IA-4**: conjunto escrito por agente independente e congelado antes da verificação de classe; respostas do modelo geradas agora, sem cache. Executada uma única vez; este arquivo não deve ser reescrito. (A avaliação final da E11.3, no IA-3, está preservada em `avaliacao-ia-e11.3-final-ia3.md`.)']
+} else if (MODO === 'pos-avaliacao') {
+  destino = path.join(DOCS, 'avaliacao-ia-e11.3.1-pos-avaliacao-ia4.md')
+  notas = ['**Execução PÓS-AVALIAÇÃO no IA-4, NÃO independente**: depois da avaliação final (`avaliacao-ia-e11.3.1-final-ia4.md`, preservada), a classe errada que passou (IA4-19) foi analisada e a verificação de classe recebeu correções gerais. Este arquivo mostra o efeito delas no mesmo conjunto; confirmar exige um conjunto novo.']
 } else if (MODO === 'desenvolvimento') {
   destino = path.join(DOCS, 'avaliacao-ia-e11.3.1-desenvolvimento.md')
   notas = ['**Resultados de DESENVOLVIMENTO da E11.3.1** (IA-1, IA-2 e o IA-3 já revelado): não são medida independente. A avaliação final está em `avaliacao-ia-e11.3.1-final-ia4.md`. Os resultados da E11.3 estão preservados em `avaliacao-ia-e11.3-desenvolvimento.md` e `avaliacao-ia-e11.3-final-ia3.md`.']

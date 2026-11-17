@@ -35,8 +35,10 @@ const VERDADE = String.raw`(?:corret[oa]|oficial|verdadeir[oa]|valid[oa]|real|co
 const ALVOS = `(?:${META}|${DADO}|${VERDADE})`
 
 const PADROES: readonly RegExp[] = [
-  // 1. Vocativo à máquina seguido de dois-pontos/vírgula/hífen e de ordem ou dado.
-  new RegExp(String.raw`\b${MAQUINA}\s*[:,-]\s*.{0,80}\b(?:${IMPERATIVOS}|${ALVOS})\b`, 'u'),
+  // 1. Vocativo à máquina NO INÍCIO da linha ou da frase (opcionalmente após "nota/aviso/atenção
+  //    ao/à/para o"), seguido de dois-pontos/vírgula/hífen e de ordem ou dado. No meio de uma frase,
+  //    "Modelo," é só uma palavra (ou o sobrenome "Fulano Modelo") — achado pós-avaliação no IA-4.
+  new RegExp(String.raw`(?:^|[.;!?]\s+)\W*(?:(?:nota|aviso|atencao|observacao|note|notice|attention|aviso|nota)\s+(?:a|ao|a la|al|para o|para a|para el|to the|to|for the|for)?\s*)?${MAQUINA}\s*[:,-]\s*.{0,80}\b(?:${IMPERATIVOS}|${ALVOS})\b`, 'u'),
   // Vocativo explícito ("ao modelo", "to the AI", "al sistema") em qualquer ponto da linha.
   new RegExp(String.raw`\b(?:ao|para o|nota (?:a|ao)|to the|note to the|al|para el|nota al)\s+${MAQUINA}\b`, 'u'),
   // 2a. Ordem sobre as próprias instruções ou a resposta, em qualquer idioma.
