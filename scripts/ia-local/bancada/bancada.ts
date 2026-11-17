@@ -120,6 +120,8 @@ export interface ResultadoPagina {
   latenciaMs: number
   /** Resposta do modelo reaproveitada do cache local (a latência não é medida). */
   doCache: boolean
+  /** Tempos informados pelo runtime (ms): total, carregamento do modelo, leitura do prompt e geração. */
+  runtime: { totalMs: number; carregamentoMs: number; promptMs: number; geracaoMs: number } | null
   tokensPrompt: number
   tokensGerados: number
   instrucaoSinalizada: boolean | null
@@ -223,7 +225,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
     const classeMotor = anexo.classificacao.porPagina.find((item) => item.pagina === pagina)?.classe ?? anexo.classificacao.contrato.classe
     const resultado: ResultadoPagina = {
       pagina, classeEsperada: esperada, classeMotor, classeModelo: null, classeModeloVerificada: false, comImagem, linhas: linhas.length,
-      situacao: 'concluida', latenciaMs: 0, doCache: false, segundaLeituraMs: null, verificacaoMs: 0, tokensPrompt: 0, tokensGerados: 0, instrucaoSinalizada: null, propostas: [],
+      situacao: 'concluida', latenciaMs: 0, doCache: false, runtime: null, segundaLeituraMs: null, verificacaoMs: 0, tokensPrompt: 0, tokensGerados: 0, instrucaoSinalizada: null, propostas: [],
     }
     const inicio = performance.now()
     let saida: SaidaPagina | null = null
@@ -236,11 +238,13 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
         resultado.doCache = true
       } else {
         const imagens = comImagem ? [await imagemDaPagina(doc.bytes, pagina)] : undefined
-        resposta = await opcoes.cliente.conversar(
+        const r = await opcoes.cliente.conversar(
           [{ role: 'system', content: PROMPT_SISTEMA }, { role: 'user', content: mensagemDaPagina(pagina, anexo.lido.paginas.length, linhas, comImagem), ...(imagens ? { images: imagens } : {}) }],
           ESQUEMA_JSON_SAIDA,
           { semente: opcoes.semente, maxTokens: opcoes.maxTokens },
         )
+        resposta = r
+        resultado.runtime = { totalMs: r.totalMs, carregamentoMs: r.carregamentoMs, promptMs: r.avaliacaoPromptMs, geracaoMs: r.geracaoMs }
         if (arquivoCache && opcoes.cache) {
           mkdirSync(opcoes.cache.dir, { recursive: true, mode: 0o700 })
           writeFileSync(arquivoCache, JSON.stringify({ conteudo: resposta.conteudo, tokensPrompt: resposta.tokensPrompt, tokensGerados: resposta.tokensGerados } satisfies RespostaGuardada), { mode: 0o600 })

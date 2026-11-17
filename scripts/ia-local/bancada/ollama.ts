@@ -157,6 +157,11 @@ export function criarClienteOllama(configuracao: ConfiguracaoOllama) {
       }
     },
 
+    /** Tira o modelo da memória (para medir o carregamento a frio na próxima chamada). */
+    async descarregar(): Promise<void> {
+      await pedir('/api/generate', { model: configuracao.modelo, keep_alive: 0 })
+    },
+
     /** Memória do modelo carregado, como o runtime informa (total e parte na GPU). */
     async memoria(): Promise<{ totalBytes: number; gpuBytes: number } | null> {
       const ps = (await pedir('/api/ps')) as { models?: { name?: unknown; size?: unknown; size_vram?: unknown }[] }
