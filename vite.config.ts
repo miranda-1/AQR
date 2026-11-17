@@ -7,6 +7,10 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
+// Nesta branch não há servidor: o padrão é a comparação no navegador ("local"), e os textos da
+// interface dizem isso. "demo" continua ligando o resultado fictício.
+process.env.VITE_COMPARISON_SERVICE ??= 'local'
+
 const raiz = fileURLToPath(new URL('.', import.meta.url))
 const requireDaqui = createRequire(import.meta.url)
 

@@ -2,6 +2,7 @@ import { Check, CircleCheck, FileWarning, FileX, LoaderCircle, RefreshCw, ScanTe
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { comparisonConfig } from '@/config/comparison'
 import { routes } from '@/config/routes'
 import { cn } from '@/lib/utils'
 import { stageLabels, stageOrder, type ComparisonRunState } from '../model/comparison-run'
@@ -40,7 +41,9 @@ export function ProcessingPanel({
       <p className="mt-2 text-[0.9375rem] text-muted-foreground">
         {isDemonstration
           ? 'Simulação de interface: nenhum arquivo está sendo lido ou enviado.'
-          : 'Os arquivos são enviados ao servidor do AQR só para esta comparação e não ficam guardados.'}
+          : comparisonConfig.serviceMode === 'local'
+            ? 'A comparação acontece neste computador: os arquivos não são enviados a nenhum servidor.'
+            : 'Os arquivos são enviados ao servidor do AQR só para esta comparação e não ficam guardados.'}
       </p>
       <ol className="mt-6 space-y-3" aria-label="Etapas">
         {stageOrder.map((stage, index) => {
@@ -85,7 +88,10 @@ const errorContent: Record<
     icon: TriangleAlert,
     title: 'A comparação não foi concluída',
     body: () => 'Ocorreu uma falha durante o processamento. Os arquivos selecionados não foram alterados.',
-    hint: 'Tente novamente. Se a falha se repetir, confira se o servidor do AQR está funcionando e se os PDFs abrem normalmente.',
+    hint:
+      comparisonConfig.serviceMode === 'local'
+        ? 'Tente novamente. Se a falha se repetir, confira se os PDFs abrem normalmente e se o navegador está atualizado.'
+        : 'Tente novamente. Se a falha se repetir, confira se o servidor do AQR está funcionando e se os PDFs abrem normalmente.',
   },
   INCOMPATIBLE_DOCUMENT: {
     icon: FileX,

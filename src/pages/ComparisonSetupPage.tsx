@@ -28,13 +28,18 @@ function HowItWorks() {
         <li>O documento original é a versão anterior; o atualizado é a nova versão. A ordem importa.</li>
         <li>O resultado indica os trechos adicionados, excluídos e modificados, com a página de cada alteração.</li>
         <li>
-          Aceita arquivos PDF de até {formatFileSize(comparisonConfig.maxFileSizeBytes)}, com texto selecionável.
-          Documentos digitalizados como imagem ainda não são suportados.
+          Aceita arquivos PDF de até {formatFileSize(comparisonConfig.maxFileSizeBytes)}. Páginas digitalizadas são lidas
+          por reconhecimento de texto (OCR) e podem levar mais tempo.
         </li>
         {appConfig.isPrototype ? (
           <li>
             Nesta versão de protótipo, os arquivos são verificados apenas no navegador e não são enviados. O resultado
             exibido usa documentos fictícios.
+          </li>
+        ) : comparisonConfig.serviceMode === 'local' ? (
+          <li>
+            A comparação acontece no seu navegador: os arquivos não são enviados a nenhum servidor nem ficam guardados.
+            Documentos grandes podem levar alguns minutos, conforme o computador.
           </li>
         ) : (
           <li>
