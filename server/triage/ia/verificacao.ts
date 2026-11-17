@@ -4,7 +4,7 @@ import type { NomeCampo } from '../../../shared/contracts/triage.ts'
 import { normalizarCampo } from '../extraction/extract.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { dobrar, mascararDocumentos, type LinhaLida, type PalavraLida } from '../reading/text.ts'
-import { pareceInstrucao } from './instrucoes.ts'
+import { pareceInstrucao } from '../reading/instrucoes.ts'
 
 /**
  * Verificação determinística de cada proposta do modelo, feita no processo principal (a saída do
@@ -26,6 +26,34 @@ import { pareceInstrucao } from './instrucoes.ts'
 const MARGEM = 0.004
 const AREA_MINIMA = 0.00002
 const AREA_MAXIMA = 0.6
+/**
+ * Formatos que permitem achar OUTROS valores do mesmo campo no documento. Se o anexo traz mais de
+ * um valor distinto nesse formato (duas áreas, duas datas de revisão), "o valor está impresso na
+ * região" não prova que é o valor certo: a sugestão é recusada como ambígua, respeitando a abstenção
+ * do motor (achado na primeira execução do benchmark IA-1, caso IA1-07).
+ */
+const FORMATOS: Partial<Record<NomeCampo, RegExp>> = {
+  area: /\d{1,3}(?:\.\d{3})*,\d{2}\s?m(?:²|2)/gu,
+  'data-emissao': /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gu,
+  'data-revisao': /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gu,
+  matricula: /\b\d{2,3}\.\d{3}\b/gu,
+  inscricao: /\b\d{4}\.\d{4}\.\d{3}\b/gu,
+  'escala-situacao': /\b1\s?:\s?\d{1,3}(?:\.\d{3})*\b/gu,
+}
+
+function ambiguoNoDocumento(anexo: AnexoTriado, campo: NomeCampo): boolean {
+  const formato = FORMATOS[campo]
+  if (!formato) return false
+  const distintos = new Set<string>()
+  for (const linha of anexo.lido.linhas) {
+    for (const casou of linha.texto.matchAll(formato)) {
+      const normalizado = normalizarCampo(campo, casou[0])
+      distintos.add(normalizado?.situacao === 'normalizado' ? String(normalizado.valor) : compacto(casou[0]))
+    }
+  }
+  return distintos.size > 1
+}
+
 const CAMPOS_COM_NORMALIZACAO = new Set<NomeCampo>(['area', 'data-emissao', 'data-revisao', 'escala-situacao', 'formato-folha', 'matricula', 'inscricao', 'lote', 'quadra'])
 
 function regiaoValida(regiao: RegiaoIa): boolean {
@@ -205,6 +233,7 @@ export function verificarProposta(proposta: PropostaModelo, anexos: readonly Ane
     if (!conferencia) return recusada(proposta, ondeMais(anexos, anexo, proposta.pagina, proposta.valorBruto))
     const valorNoTrecho = compacto(proposta.trecho).includes(compacto(proposta.valorBruto)) || (regiao.ocr && semConfusoes(proposta.trecho).includes(semConfusoes(proposta.valorBruto)))
     if (!trechoConfere(regiao, proposta.trecho) || !valorNoTrecho) return recusada(proposta, 'trecho-nao-confere')
+    if (ambiguoNoDocumento(anexo, proposta.campo)) return recusada(proposta, 'valor-ambiguo-no-documento')
     return { ...base(proposta), nivel: 'A', situacao: 'verificada', motivo: conferencia, relacaoMotor: relacaoCampo(anexo, proposta.campo, proposta.valorBruto) }
   }
 

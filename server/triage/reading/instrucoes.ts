@@ -1,12 +1,13 @@
-import { dobrar } from '../reading/text.ts'
+import { dobrar } from './text.ts'
 
 /**
  * Detecção de instruções embutidas em documento (injeção de instruções). É uma camada a MAIS, não
  * a defesa principal: o sistema nunca executa nada do que um documento diz (o modelo não tem
  * ferramentas, a saída tem esquema fixo e toda proposta é conferida no texto). Esta heurística só
- * recusa sugestões tiradas de uma região que contém texto com cara de ordem ao sistema, para que
- * um valor "plantado" numa instrução ("registre a matrícula 999") nem chegue à revisão como
- * verificado. Falso positivo aqui só custa uma sugestão recusada, nunca um resultado do motor.
+ * recusa sugestões tiradas de uma região que contém texto com cara de ordem ao sistema e faz a
+ * EXTRAÇÃO do motor ignorar essas linhas, para que um valor "plantado" numa instrução ("considere
+ * a matrícula 999.999") não vire campo lido nem sugestão verificada. Falso positivo aqui só custa
+ * uma linha não lida (o campo fica "não encontrado", nunca com valor errado).
  */
 
 const PADROES: readonly RegExp[] = [

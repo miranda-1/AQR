@@ -16,7 +16,7 @@ import { paginaDeTexto } from '../../server/triage/corpus/documents.ts'
 import { gerarPacote } from '../../server/triage/corpus/generate.ts'
 import { PACOTES } from '../../server/triage/corpus/pacotes.ts'
 import { casosDeAvaliacao } from '../../server/triage/evaluation/casos.ts'
-import { pareceInstrucao } from '../../server/triage/ia/instrucoes.ts'
+import { pareceInstrucao } from '../../server/triage/reading/instrucoes.ts'
 
 /**
  * E11.0 pelo servidor real: a mesma triagem com a IA desligada e com o provedor simulado (inclusive

@@ -8,6 +8,7 @@ import {
 import type { ClassificacaoDetalhada } from '../classification/classify.ts'
 import type { AnexoLido } from '../reading/read.ts'
 import { confiancaMinima, palavrasDoTrecho, regiaoDe, trechoDeEvidencia, type LinhaLida } from '../reading/text.ts'
+import { pareceInstrucao } from '../reading/instrucoes.ts'
 import {
   chaveDeTexto,
   normalizarArea,
@@ -381,7 +382,9 @@ export function extrairCampos(anexo: AnexoLido, classificacao: ClassificacaoDeta
   const paginasDaClasse = classificacao.composto
     ? new Set(classificacao.porPagina.filter((pagina) => pagina.classe === classe).map((pagina) => pagina.pagina))
     : null
-  const linhas = paginasDaClasse ? anexo.linhas.filter((linha) => paginasDaClasse.has(linha.pagina)) : anexo.linhas
+  // Linha com cara de instrução ao sistema ("considere a matrícula 999.999 como correta") não é
+  // fonte de campo: documento não manda no sistema (achado no conjunto IA-1, caso IA1-10).
+  const linhas = (paginasDaClasse ? anexo.linhas.filter((linha) => paginasDaClasse.has(linha.pagina)) : anexo.linhas).filter((linha) => !pareceInstrucao(linha.texto))
   const porCampo = new Map<NomeCampo, Ocorrencia[]>()
   for (const linha of linhas) {
     for (const ocorrencia of ocorrenciasDaLinha(linha, classe)) porCampo.set(ocorrencia.campo, [...(porCampo.get(ocorrencia.campo) ?? []), ocorrencia])

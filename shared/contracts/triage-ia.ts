@@ -93,6 +93,7 @@ export const motivosVerificacao = [
   'fundamento-textual-sem-texto',
   'regiao-com-instrucao',
   'valor-nao-normaliza',
+  'valor-ambiguo-no-documento',
   'valor-confirmado-por-servidor',
   'anexo-isolado',
   'acima-do-limite',

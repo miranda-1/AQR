@@ -6,7 +6,7 @@ import { PACOTES } from '../corpus/pacotes.ts'
 import { LIMITES_AVALIACAO } from '../evaluation/run.ts'
 import { triarAnexo, type AnexoTriado } from '../pipeline.ts'
 import { defined } from '../../test/defined.ts'
-import { pareceInstrucao } from './instrucoes.ts'
+import { pareceInstrucao } from '../reading/instrucoes.ts'
 import { verificarProposta } from './verificacao.ts'
 
 /**
@@ -135,6 +135,20 @@ describe('verificação das sugestões: nível A (texto da região)', () => {
     const classe: PropostaModelo = { tipo: 'classe', anexoId: art.lido.id, anexoSha256: art.lido.inspecao.sha256, classe: 'art-rrt-similar', pagina: 1, regioes: [regiaoDaLinha(art, titulo)], trecho: titulo, fundamento: 'texto', confiancaDeclarada: 0.4 }
     expect(verificarProposta(classe, anexos)).toMatchObject({ nivel: 'A', situacao: 'verificada', relacaoMotor: 'confirma-motor' })
     expect(verificarProposta({ ...classe, trecho: 'CERTIDÃO DE MATRÍCULA' }, anexos).motivo).toBe('trecho-nao-confere')
+  })
+})
+
+describe('regressão do benchmark IA-1 (caso IA1-07): valor impresso, mas ambíguo no documento', () => {
+  it('duas áreas diferentes no documento: a sugestão de área é recusada, mesmo com o valor na região', async () => {
+    const pdf = await buildPdf([
+      paginaDeTexto({ titulo: 'MEMORIAL DESCRITIVO', linhas: ['Lote 31, Quadra 8', 'Área do lote: 512,40 m²', 'Área total (após retificação): 515,00 m²'], campos: {}, assinaturas: [] }),
+    ])
+    const memorial = await triarAnexo('anexo-memorial', 'memorial.pdf', pdf.bytes, { limites: LIMITES_AVALIACAO })
+    const proposta = campo(memorial, { trechoDaLinha: 'Área do lote', campo: 'area', valorBruto: '512,40 m²' })
+    expect(verificarProposta(proposta, [memorial])).toMatchObject({ situacao: 'recusada', motivo: 'valor-ambiguo-no-documento' })
+    // Com uma área só, a mesma proposta é verificada.
+    const unico = await triarAnexo('anexo-unico', 'memorial.pdf', (await buildPdf([paginaDeTexto({ titulo: 'MEMORIAL DESCRITIVO', linhas: ['Lote 31, Quadra 8', 'Área do lote: 512,40 m²'], campos: {}, assinaturas: [] })])).bytes, { limites: LIMITES_AVALIACAO })
+    expect(verificarProposta(campo(unico, { trechoDaLinha: 'Área do lote', campo: 'area', valorBruto: '512,40 m²' }), [unico])).toMatchObject({ situacao: 'verificada', nivel: 'A' })
   })
 })
 

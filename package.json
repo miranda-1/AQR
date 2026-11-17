@@ -31,7 +31,8 @@
     "medir:desempenho": "tsx server/comparison/evaluation/perf-cli.ts",
     "triagem:corpus": "tsx server/triage/corpus/cli.ts",
     "triagem:avaliar": "tsx server/triage/evaluation/cli.ts",
-    "triagem:incremental": "tsx server/triage/evaluation/incremental-cli.ts"
+    "triagem:incremental": "tsx server/triage/evaluation/incremental-cli.ts",
+    "triagem:ia-benchmark": "tsx server/triage/evaluation/ia-benchmark-cli.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.3",
