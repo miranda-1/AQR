@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { createCanvas } from '@napi-rs/canvas'
 import type { SugestaoVerificada } from '../../../shared/contracts/triage-ia.ts'
 import type { ClasseDocumental } from '../../../shared/contracts/triage.ts'
@@ -6,13 +9,17 @@ import { openPdf } from '../../../server/documents/pdf/load.ts'
 import { renderPage, scaleForWidth } from '../../../server/documents/pdf/render.ts'
 import { gerarIa1 } from '../../../server/triage/corpus/ia1.ts'
 import { gerarIa2 } from '../../../server/triage/corpus/ia2.ts'
+import { gerarIa3 } from '../../../server/triage/corpus/ia3.ts'
 import { normalizarCampo } from '../../../server/triage/extraction/extract.ts'
 import { verificarProposta } from '../../../server/triage/ia/verificacao.ts'
+import { verificarPropostaReforcada, type VerificacaoReforcada } from '../../../server/triage/ia/verificacao-reforcada.ts'
+import type { LinhaLida } from '../../../server/triage/reading/text.ts'
+import { segundaLeitura, type MecanismoOcr } from '../ocr/segunda-leitura.ts'
 import { triarAnexo, type AnexoTriado } from '../../../server/triage/pipeline.ts'
 import { dobrar } from '../../../server/triage/reading/text.ts'
 import { LIMITES_AVALIACAO } from '../../../server/triage/evaluation/run.ts'
 import { ErroOllama, type ClienteOllama } from './ollama.ts'
-import { ESQUEMA_JSON_SAIDA, linhasDaPagina, mensagemDaPagina, PROMPT_SISTEMA, propostasDaPagina, saidaPaginaSchema, type SaidaPagina } from './tarefa.ts'
+import { ESQUEMA_JSON_SAIDA, linhasDaPagina, mensagemDaPagina, PROMPT_SHA256, PROMPT_SISTEMA, propostasDaPagina, saidaPaginaSchema, type SaidaPagina } from './tarefa.ts'
 
 /**
  * Bancada da E11.1: roda o motor determinístico (braço D) e o modelo local (braço "modelo") sobre
@@ -28,7 +35,7 @@ export type CampoAvaliado = 'area' | 'matricula'
 const CAMPOS: CampoAvaliado[] = ['area', 'matricula']
 
 export interface DocumentoBancada {
-  conjunto: 'ia1' | 'ia2'
+  conjunto: ConjuntoBancada
   id: string
   desafio: string
   nome: string
@@ -40,7 +47,12 @@ export interface DocumentoBancada {
   plantados: string[]
 }
 
-export async function documentosDaBancada(conjunto: 'ia1' | 'ia2'): Promise<DocumentoBancada[]> {
+export type ConjuntoBancada = 'ia1' | 'ia2' | 'ia3'
+
+export async function documentosDaBancada(conjunto: ConjuntoBancada): Promise<DocumentoBancada[]> {
+  if (conjunto === 'ia3') {
+    return (await gerarIa3()).map(({ gabarito, arquivo }) => ({ conjunto, id: gabarito.id, desafio: gabarito.desafio, bytes: arquivo.bytes, ...gabarito.anexo }))
+  }
   if (conjunto === 'ia2') {
     return (await gerarIa2()).map(({ gabarito, arquivo }) => ({ conjunto, id: gabarito.id, desafio: gabarito.desafio, bytes: arquivo.bytes, ...gabarito.anexo }))
   }
@@ -75,6 +87,10 @@ export function mesmoValor(campo: CampoAvaliado, a: string, b: string): boolean 
 
 /** Página desenhada pelo AQR, em PNG (base64), para páginas digitalizadas. */
 async function imagemDaPagina(bytes: Uint8Array, pagina: number, largura = 1100): Promise<string> {
+  return (await pngDaPagina(bytes, pagina, largura)).toString('base64')
+}
+
+async function pngDaPagina(bytes: Uint8Array, pagina: number, largura: number): Promise<Buffer> {
   const pdf = await openPdf(bytes, 'anexo', LIMITES_AVALIACAO.reading)
   try {
     const page = await pdf.getPage(pagina)
@@ -84,7 +100,7 @@ async function imagemDaPagina(bytes: Uint8Array, pagina: number, largura = 1100)
     const imagem = contexto.createImageData(raster.width, raster.height)
     imagem.data.set(raster.data)
     contexto.putImageData(imagem, 0, 0)
-    return canvas.toBuffer('image/png').toString('base64')
+    return canvas.toBuffer('image/png')
   } finally {
     await pdf.loadingTask.destroy()
   }
@@ -102,21 +118,27 @@ export interface ResultadoPagina {
   linhas: number
   situacao: 'concluida' | 'saida-invalida' | 'tempo-esgotado' | 'falhou'
   latenciaMs: number
+  /** Resposta do modelo reaproveitada do cache local (a latência não é medida). */
+  doCache: boolean
   tokensPrompt: number
   tokensGerados: number
   instrucaoSinalizada: boolean | null
   /** Por proposta de campo: verificação da E11.0 e o teste de rótulo da bancada. */
-  propostas: { campo: CampoAvaliado; situacao: SugestaoVerificada['situacao']; motivo: SugestaoVerificada['motivo']; comLinha: boolean; rotuloCompativel: boolean | null; desfecho: DesfechoCampo }[]
+  propostas: { campo: CampoAvaliado; situacao: SugestaoVerificada['situacao']; motivo: SugestaoVerificada['motivo']; reforcada: { situacao: VerificacaoReforcada['situacao']; motivo: VerificacaoReforcada['motivo'] }; comLinha: boolean; rotuloCompativel: boolean | null; desfecho: DesfechoCampo }[]
+  /** Segunda leitura (OCR independente) da página digitalizada, quando feita. */
+  segundaLeituraMs: number | null
+  /** Tempo das duas verificações (E11.0 e reforçada) de todas as propostas da página. */
+  verificacaoMs: number
 }
 
 export interface ResultadoDocumento {
-  conjunto: 'ia1' | 'ia2'
+  conjunto: ConjuntoBancada
   id: string
   desafio: string
   paginas: ResultadoPagina[]
   latenciaMs: number
   /** Desfecho por campo esperado ou presente, em quatro leituras. */
-  campos: { campo: CampoAvaliado; esperado: 'valor' | 'conflito' | 'ausente'; motor: DesfechoCampo; modelo: DesfechoCampo; verificado: DesfechoCampo; verificadoComRotulo: DesfechoCampo }[]
+  campos: { campo: CampoAvaliado; esperado: 'valor' | 'conflito' | 'ausente'; motor: DesfechoCampo; modelo: DesfechoCampo; verificado: DesfechoCampo; verificadoComRotulo: DesfechoCampo; verificadoReforcado: DesfechoCampo }[]
   plantadoProposto: boolean
   classeTrocadaPorInstrucao: boolean
 }
@@ -159,6 +181,26 @@ export interface OpcoesBancada {
   maxTokens: number
   maxPaginasPorDocumento: number
   aoTerminarPagina?: (documento: string, pagina: number, resultado: ResultadoPagina) => void
+  /**
+   * Cache local das respostas do modelo (fora do Git), para iterar na VERIFICAÇÃO sem rodar o
+   * modelo de novo. A chave inclui o manifesto dos pesos, o prompt, o documento e a página: mudar
+   * qualquer um deles invalida a resposta guardada. Nunca usado na avaliação final.
+   */
+  cache?: { dir: string; manifestoSha256: string }
+  /** Mecanismo da segunda leitura das páginas digitalizadas (sem ele, a reforçada não verifica digitalizado). */
+  segundaLeitura?: MecanismoOcr
+}
+
+interface RespostaGuardada {
+  conteudo: string
+  tokensPrompt: number
+  tokensGerados: number
+}
+
+function chaveDoCache(opcoes: OpcoesBancada, doc: DocumentoBancada, pagina: number, comImagem: boolean): string | null {
+  if (!opcoes.cache) return null
+  const sha = createHash('sha256').update(doc.bytes).digest('hex')
+  return createHash('sha256').update(JSON.stringify([opcoes.cache.manifestoSha256, PROMPT_SHA256, sha, pagina, comImagem, opcoes.semente, opcoes.maxTokens])).digest('hex')
 }
 
 export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBancada): Promise<ResultadoDocumento> {
@@ -168,6 +210,8 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
   const valoresModelo: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
   const valoresVerificados: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
   const valoresVerificadosRotulo: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
+  const valoresReforcados: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
+  const segundas = new Map<number, LinhaLida[]>()
   let classeTrocada = false
   const inicioDoc = performance.now()
 
@@ -179,17 +223,29 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
     const classeMotor = anexo.classificacao.porPagina.find((item) => item.pagina === pagina)?.classe ?? anexo.classificacao.contrato.classe
     const resultado: ResultadoPagina = {
       pagina, classeEsperada: esperada, classeMotor, classeModelo: null, classeModeloVerificada: false, comImagem, linhas: linhas.length,
-      situacao: 'concluida', latenciaMs: 0, tokensPrompt: 0, tokensGerados: 0, instrucaoSinalizada: null, propostas: [],
+      situacao: 'concluida', latenciaMs: 0, doCache: false, segundaLeituraMs: null, verificacaoMs: 0, tokensPrompt: 0, tokensGerados: 0, instrucaoSinalizada: null, propostas: [],
     }
     const inicio = performance.now()
     let saida: SaidaPagina | null = null
     try {
-      const imagens = comImagem ? [await imagemDaPagina(doc.bytes, pagina)] : undefined
-      const resposta = await opcoes.cliente.conversar(
-        [{ role: 'system', content: PROMPT_SISTEMA }, { role: 'user', content: mensagemDaPagina(pagina, anexo.lido.paginas.length, linhas, comImagem), ...(imagens ? { images: imagens } : {}) }],
-        ESQUEMA_JSON_SAIDA,
-        { semente: opcoes.semente, maxTokens: opcoes.maxTokens },
-      )
+      const chave = chaveDoCache(opcoes, doc, pagina, comImagem)
+      const arquivoCache = chave && opcoes.cache ? path.join(opcoes.cache.dir, `${chave}.json`) : null
+      let resposta: RespostaGuardada
+      if (arquivoCache && existsSync(arquivoCache)) {
+        resposta = JSON.parse(readFileSync(arquivoCache, 'utf8')) as RespostaGuardada
+        resultado.doCache = true
+      } else {
+        const imagens = comImagem ? [await imagemDaPagina(doc.bytes, pagina)] : undefined
+        resposta = await opcoes.cliente.conversar(
+          [{ role: 'system', content: PROMPT_SISTEMA }, { role: 'user', content: mensagemDaPagina(pagina, anexo.lido.paginas.length, linhas, comImagem), ...(imagens ? { images: imagens } : {}) }],
+          ESQUEMA_JSON_SAIDA,
+          { semente: opcoes.semente, maxTokens: opcoes.maxTokens },
+        )
+        if (arquivoCache && opcoes.cache) {
+          mkdirSync(opcoes.cache.dir, { recursive: true, mode: 0o700 })
+          writeFileSync(arquivoCache, JSON.stringify({ conteudo: resposta.conteudo, tokensPrompt: resposta.tokensPrompt, tokensGerados: resposta.tokensGerados } satisfies RespostaGuardada), { mode: 0o600 })
+        }
+      }
       resultado.tokensPrompt = resposta.tokensPrompt
       resultado.tokensGerados = resposta.tokensGerados
       let bruto: unknown
@@ -206,7 +262,18 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
     }
     resultado.latenciaMs = Math.round(performance.now() - inicio)
 
+    if (saida && comImagem && opcoes.segundaLeitura) {
+      try {
+        const leitura = await segundaLeitura(await pngDaPagina(doc.bytes, pagina, 1700), pagina, opcoes.segundaLeitura)
+        segundas.set(pagina, leitura.linhas)
+        resultado.segundaLeituraMs = leitura.duracaoMs
+      } catch {
+        resultado.segundaLeituraMs = null
+      }
+    }
+
     if (saida) {
+      const inicioVerificacao = performance.now()
       resultado.classeModelo = saida.classe
       resultado.instrucaoSinalizada = saida.instrucao_no_documento
       for (const { proposta, linhaCitada, rotuloCompativel } of propostasDaPagina(saida, anexo, pagina, linhas)) {
@@ -217,13 +284,16 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
           continue
         }
         const campo = proposta.campo as CampoAvaliado
+        const reforcada = verificarPropostaReforcada(proposta, [anexo], { segundaLeitura: segundas })
+        if (reforcada.situacao === 'verificada') valoresReforcados[campo].push(proposta.valorBruto)
         valoresModelo[campo].push(proposta.valorBruto)
         if (verificada.situacao === 'verificada') {
           valoresVerificados[campo].push(proposta.valorBruto)
           if (rotuloCompativel) valoresVerificadosRotulo[campo].push(proposta.valorBruto)
         }
-        resultado.propostas.push({ campo, situacao: verificada.situacao, motivo: verificada.motivo, comLinha: linhaCitada !== null, rotuloCompativel, desfecho: desfecho(doc, anexo, campo, [proposta.valorBruto]) })
+        resultado.propostas.push({ campo, situacao: verificada.situacao, motivo: verificada.motivo, reforcada: { situacao: reforcada.situacao, motivo: reforcada.motivo }, comLinha: linhaCitada !== null, rotuloCompativel, desfecho: desfecho(doc, anexo, campo, [proposta.valorBruto]) })
       }
+      resultado.verificacaoMs = Math.round(performance.now() - inicioVerificacao)
     }
     resultados.push(resultado)
     opcoes.aoTerminarPagina?.(doc.id, pagina, resultado)
@@ -241,6 +311,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
       modelo: desfecho(doc, anexo, campo, valoresModelo[campo]),
       verificado: desfecho(doc, anexo, campo, valoresVerificados[campo]),
       verificadoComRotulo: desfecho(doc, anexo, campo, valoresVerificadosRotulo[campo]),
+      verificadoReforcado: desfecho(doc, anexo, campo, valoresReforcados[campo]),
     })
   }
   return {

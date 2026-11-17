@@ -3,17 +3,21 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir, totalmem } from 'node:os'
 import path from 'node:path'
 import { createOcrEngine } from '../../../server/documents/ocr/ocr-engine.ts'
-import { avaliarDocumento, documentosDaBancada, type ResultadoDocumento } from './bancada.ts'
+import { avaliarDocumento, documentosDaBancada, type ConjuntoBancada, type ResultadoDocumento } from './bancada.ts'
 import { criarClienteOllama, ErroOllama } from './ollama.ts'
 import { relatorioQwen, type Estabilidade } from './relatorio.ts'
 import { ESQUEMA_JSON_SAIDA, PROMPT_SISTEMA, saidaPaginaSchema } from './tarefa.ts'
 
 /**
- * `npm run triagem:ia-qwen -- [--modelo qwen3.5:4b-q4_K_M] [--conjuntos ia2,ia1]`
+ * `npm run triagem:ia-qwen -- [--modo e11.1|desenvolvimento|final] [--modelo qwen3.5:4b-q4_K_M]`
  *
- * Bancada da E11.1 com o modelo local. Pré-requisito: `scripts/ia-local/ollama.sh inferencia`
- * (servidor do modelo em 127.0.0.1, sem rede). A primeira execução sobre o IA-2 é gravada à parte
- * e nunca reescrita (`avaliacao-ia-e11.1-qwen-primeira-execucao.md`).
+ * Bancada da IA documental com o modelo local. Pré-requisito: `scripts/ia-local/ollama.sh inferencia`
+ * (servidor do modelo em 127.0.0.1, sem rede). Modos:
+ * - `e11.1`: IA-2 e IA-1, como na E11.1 (a primeira execução sobre o IA-2 nunca é reescrita);
+ * - `desenvolvimento` (E11.3): IA-2 e IA-1, com segunda leitura (PaddleOCR) e CACHE local das
+ *   respostas do modelo, para iterar na verificação → `avaliacao-ia-e11.3-desenvolvimento.md`;
+ * - `final` (E11.3): IA-3, SEM cache, com segunda leitura; grava
+ *   `avaliacao-ia-e11.3-final-ia3.md` uma única vez (recusa reescrever).
  *
  * Imprime só o andamento (documento, página, situação, tempo), nunca texto de documento ou resposta.
  */
@@ -24,7 +28,12 @@ function argumento(nome: string, padrao: string): string {
 }
 
 const MODELO = argumento('modelo', 'qwen3.5:4b-q4_K_M')
-const CONJUNTOS = argumento('conjuntos', 'ia2,ia1').split(',').filter((item): item is 'ia1' | 'ia2' => item === 'ia1' || item === 'ia2')
+const MODO = argumento('modo', 'e11.1')
+if (!['e11.1', 'desenvolvimento', 'final'].includes(MODO)) {
+  console.error('Modo desconhecido. Use e11.1, desenvolvimento ou final.')
+  process.exit(2)
+}
+const CONJUNTOS: ConjuntoBancada[] = MODO === 'final' ? ['ia3'] : ['ia2', 'ia1']
 const ENDERECO = 'http://127.0.0.1:11434'
 const SEMENTE = 7
 const MAX_TOKENS = 400
@@ -60,6 +69,12 @@ if (!semRede && process.env.AQR_IA_PERMITIR_REDE !== '1') {
   process.exit(2)
 }
 
+const FINAL = path.join(DOCS, 'avaliacao-ia-e11.3-final-ia3.md')
+if (MODO === 'final' && existsSync(FINAL)) {
+  console.error('A avaliação final no IA-3 já foi feita e não é reescrita.')
+  process.exit(2)
+}
+
 const cliente = criarClienteOllama({ endereco: ENDERECO, modelo: MODELO, timeoutMs: 180_000 })
 const modelo = await cliente.registrar()
 const ocr = (await createOcrEngine()).engine
@@ -80,6 +95,8 @@ try {
           semente: SEMENTE,
           maxTokens: MAX_TOKENS,
           maxPaginasPorDocumento: 6,
+          ...(MODO === 'e11.1' ? {} : { segundaLeitura: 'paddle' as const }),
+          ...(MODO === 'desenvolvimento' ? { cache: { dir: path.join(ESTADO, 'cache', 'respostas'), manifestoSha256: modelo.manifestoSha256 } } : {}),
           aoTerminarPagina: (id, pagina, r) => console.log(`${id} p.${pagina}: ${r.situacao} em ${r.latenciaMs} ms${r.comImagem ? ' (com imagem)' : ''}`),
         }),
       )
@@ -177,7 +194,17 @@ const memoria = {
   runtimeGpuMb: memoriaRuntime ? Math.round(memoriaRuntime.gpuBytes / 1024 ** 2) : null,
 }
 const primeira = path.join(DOCS, 'avaliacao-ia-e11.1-qwen-primeira-execucao.md')
-const destino = CONJUNTOS.includes('ia2') && !existsSync(primeira) ? primeira : path.join(DOCS, 'avaliacao-ia-e11.1-qwen.md')
-const notas = destino === primeira ? ['**Primeira execução de um modelo real sobre o IA-2** (gabarito congelado antes). Este arquivo não deve ser reescrito.'] : ['Execução posterior à primeira; a primeira está preservada em `avaliacao-ia-e11.1-qwen-primeira-execucao.md`.']
+let destino: string
+let notas: string[]
+if (MODO === 'final') {
+  destino = FINAL
+  notas = ['**Avaliação final da E11.3 no IA-3**: conjunto congelado antes da verificação reforçada e não usado para desenvolvê-la; respostas do modelo geradas agora, sem cache. Executada uma única vez; este arquivo não deve ser reescrito.']
+} else if (MODO === 'desenvolvimento') {
+  destino = path.join(DOCS, 'avaliacao-ia-e11.3-desenvolvimento.md')
+  notas = ['**Resultados de DESENVOLVIMENTO da E11.3** (IA-1 e IA-2 orientaram o diagnóstico e a verificação reforçada): não são medida independente. A avaliação final está em `avaliacao-ia-e11.3-final-ia3.md`.']
+} else {
+  destino = CONJUNTOS.includes('ia2') && !existsSync(primeira) ? primeira : path.join(DOCS, 'avaliacao-ia-e11.1-qwen.md')
+  notas = destino === primeira ? ['**Primeira execução de um modelo real sobre o IA-2** (gabarito congelado antes). Este arquivo não deve ser reescrito.'] : ['Execução posterior à primeira; a primeira está preservada em `avaliacao-ia-e11.1-qwen-primeira-execucao.md`.']
+}
 writeFileSync(destino, relatorioQwen(resultados, ambiente, memoria, estabilidade, duracao, notas))
 console.log(`Relatório gravado em ${path.relative(process.cwd(), destino)} (${Math.round(duracao / 1000)} s).`)
