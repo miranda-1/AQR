@@ -1,16 +1,15 @@
-import { existsSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import path from 'node:path'
-import { createCanvas } from '@napi-rs/canvas'
 import type { PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import Tesseract from 'tesseract.js'
 import type { NormalizedRect } from '../../../shared/contracts/comparison.ts'
 import { clamp01 } from '../geometry.ts'
+import { createPageCanvas } from '../platform/canvas.ts'
+import { defaultLanguagePath, tesseractPlatformOptions } from '../platform/ocr.ts'
 
 /**
  * OCR local com Tesseract (tesseract.js, WebAssembly) e o modelo de português do pacote
- * `@tesseract.js-data/por`. Nada sai do servidor: o modelo é lido do disco local (nunca da CDN
- * padrão do tesseract.js), sem cache gravado, e a imagem da página fica só na memória.
+ * `@tesseract.js-data/por`. Nada sai da máquina: o modelo é lido do disco local no servidor, ou do
+ * próprio AQR no navegador (nunca da CDN padrão do tesseract.js; ver `../platform/ocr.ts`), sem
+ * cache gravado, e a imagem da página fica só na memória.
  */
 
 export interface OcrWord {
@@ -40,29 +39,20 @@ export interface OcrEngine {
 /** Largura da imagem enviada ao OCR (≈ 240 dpi numa página A4). */
 export const OCR_IMAGE_WIDTH = 2000
 
-const requireFromHere = createRequire(import.meta.url)
+export { defaultLanguagePath }
 
-/** Pasta do modelo de português incluído nas dependências (versão "best_int", mais precisa). */
-export function defaultLanguagePath(): string | undefined {
-  try {
-    return path.join(path.dirname(requireFromHere.resolve('@tesseract.js-data/por/package.json')), '4.0.0_best_int')
-  } catch {
-    return undefined
-  }
-}
-
-async function pagePng(page: PDFPageProxy): Promise<{ png: Buffer; width: number; height: number }> {
+async function pagePng(page: PDFPageProxy): Promise<{ png: Buffer | Blob; width: number; height: number }> {
   const base = page.getViewport({ scale: 1 })
   const viewport = page.getViewport({ scale: Math.min(OCR_IMAGE_WIDTH / base.width, 4000 / base.height) })
   const width = Math.max(1, Math.round(viewport.width))
   const height = Math.max(1, Math.round(viewport.height))
-  const canvas = createCanvas(width, height)
-  const context = canvas.getContext('2d')
+  const pageCanvas = createPageCanvas(width, height)
+  const { canvas, context } = pageCanvas
   context.fillStyle = '#ffffff'
   context.fillRect(0, 0, width, height)
   const parameters = { canvasContext: context, canvas, viewport, background: '#ffffff' } as unknown as Parameters<PDFPageProxy['render']>[0]
   await page.render(parameters).promise
-  return { png: canvas.toBuffer('image/png'), width, height }
+  return { png: await pageCanvas.png(), width, height }
 }
 
 /**
@@ -70,13 +60,12 @@ async function pagePng(page: PDFPageProxy): Promise<{ png: Buffer; width: number
  * Tesseract não inicia: a comparação segue sem OCR e as páginas que dependiam dele ficam marcadas.
  */
 export async function createOcrEngine(languagePath = defaultLanguagePath()): Promise<{ engine: OcrEngine } | { engine: undefined; reason: string }> {
-  if (!languagePath || !existsSync(path.join(languagePath, 'por.traineddata.gz'))) {
-    return { engine: undefined, reason: 'modelo de português do OCR não encontrado' }
-  }
+  const platform = tesseractPlatformOptions(languagePath)
+  if ('reason' in platform) return { engine: undefined, reason: platform.reason }
   let worker: Tesseract.Worker
   try {
     worker = await Tesseract.createWorker('por', Tesseract.OEM.LSTM_ONLY, {
-      langPath: languagePath,
+      ...platform.options,
       cacheMethod: 'none',
       gzip: true,
       logger: () => undefined,
@@ -86,7 +75,7 @@ export async function createOcrEngine(languagePath = defaultLanguagePath()): Pro
     return { engine: undefined, reason: 'o Tesseract não iniciou' }
   }
 
-  async function recognizePng(png: Buffer, width: number, height: number): Promise<OcrPage> {
+  async function recognizePng(png: Buffer | Blob, width: number, height: number): Promise<OcrPage> {
     const { data } = await worker.recognize(png, {}, { blocks: true, text: false })
     const lines: OcrLine[] = []
     let confidenceSum = 0

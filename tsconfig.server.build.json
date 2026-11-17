@@ -7,5 +7,5 @@
     "rootDir": ".",
     "outDir": "./dist-server"
   },
-  "exclude": ["**/*.test.ts", "**/*.fixture-worker.ts", "server/test"]
+  "exclude": ["**/*.test.ts", "**/*.fixture-worker.ts", "server/test", "server/**/*.browser.ts"]
 }

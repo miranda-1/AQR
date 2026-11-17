@@ -1,9 +1,10 @@
-import { createCanvas } from '@napi-rs/canvas'
 import type { PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { createPageCanvas } from '../platform/canvas.ts'
 
 /**
- * Renderização de páginas no servidor (pdf.js + @napi-rs/canvas, binário pré-compilado, sem rede).
- * O resultado é uma imagem RGBA em memória; nada vai para o disco.
+ * Renderização de páginas (pdf.js + o canvas da plataforma: `@napi-rs/canvas` no servidor,
+ * `OffscreenCanvas` no navegador; ver `../platform/`). O resultado é uma imagem RGBA em memória;
+ * nada vai para o disco.
  */
 
 export interface Raster {
@@ -39,11 +40,10 @@ export async function renderPage(page: PDFPageProxy, options: RenderOptions): Pr
   const viewport = page.getViewport({ scale, rotation })
   const width = Math.max(1, Math.round(viewport.width))
   const height = Math.max(1, Math.round(viewport.height))
-  const canvas = createCanvas(width, height)
-  const context = canvas.getContext('2d')
+  const { canvas, context } = createPageCanvas(width, height)
   context.fillStyle = '#ffffff'
   context.fillRect(0, 0, width, height)
-  // Os tipos do pdf.js descrevem o canvas do navegador; o do @napi-rs/canvas tem a mesma API 2D.
+  // Os tipos do pdf.js descrevem o canvas do DOM; os da plataforma têm a mesma API 2D.
   const renderParameters = { canvasContext: context, canvas, viewport, background: '#ffffff' } as unknown as Parameters<
     PDFPageProxy['render']
   >[0]

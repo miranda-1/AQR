@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import {
   analysisStatusOf,
   COMPARISON_FORMAT_VERSION,
@@ -1077,7 +1076,7 @@ export async function compareDocuments(
     timing('organizacao')
     return {
       formatVersion: COMPARISON_FORMAT_VERSION,
-      id: randomUUID(),
+      id: globalThis.crypto.randomUUID(),
       isDemonstration: false,
       documents: {
         original: { role: 'original', fileName: input.original.fileName, sizeBytes: input.original.bytes.byteLength, pageCount: original.pageCount },

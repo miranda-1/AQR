@@ -1,16 +1,10 @@
-import { createRequire } from 'node:module'
-import path from 'node:path'
 import { getDocument, PasswordException } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { DocumentFailure } from '../failure.ts'
 import type { ReadingLimits } from '../limits.ts'
+import { pdfjsPlatformOptions } from '../platform/pdfjs.ts'
 
 const PDF_SIGNATURE = '%PDF-'
-
-const standardFontDataUrl = `${path.join(
-  path.dirname(createRequire(import.meta.url).resolve('pdfjs-dist/package.json')),
-  'standard_fonts',
-)}${path.sep}`
 
 /** Confere o que dá para conferir sem abrir o PDF: tamanho e assinatura `%PDF-`. */
 export function assertPdfBytes<L extends string>(bytes: Uint8Array, role: L, limits: Pick<ReadingLimits, 'maxFileSizeBytes'>): void {
@@ -34,7 +28,7 @@ export async function openPdf<L extends string>(bytes: Uint8Array, role: L, limi
     isOffscreenCanvasSupported: false,
     useWorkerFetch: false,
     stopAtErrors: true,
-    standardFontDataUrl,
+    ...pdfjsPlatformOptions,
     verbosity: 0,
   })
   let pdf: PDFDocumentProxy

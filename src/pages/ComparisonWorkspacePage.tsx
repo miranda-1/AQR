@@ -9,6 +9,7 @@ import { useComparisonRun } from '@/features/comparison/hooks/use-comparison-run
 import { demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
 import type { ComparisonService, DocumentRole } from '@/features/comparison/model/types'
 import { createHttpComparisonService } from '@/features/comparison/services/http-comparison-service'
+import { createLocalComparisonService } from '@/features/comparison/services/local-comparison-service'
 import {
   createMockComparisonService,
   isDemoScenario,
@@ -35,17 +36,19 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
   const param = searchParams.get(SCENARIO_PARAM)
   const scenario: DemoScenario = isDemoScenario(param) ? param : 'concluida'
 
-  // Ponto de troca: o serviço real (HTTP) ou o demonstrativo, conforme VITE_COMPARISON_SERVICE.
+  // Ponto de troca: o serviço real (HTTP ou no navegador) ou o demonstrativo, conforme VITE_COMPARISON_SERVICE.
   const service = useMemo(
     () =>
       injected ??
       (isDemo
         ? createMockComparisonService(scenario)
-        : createHttpComparisonService({ pollIntervalMs: comparisonConfig.pollIntervalMs })),
+        : comparisonConfig.serviceMode === 'local'
+          ? createLocalComparisonService()
+          : createHttpComparisonService({ pollIntervalMs: comparisonConfig.pollIntervalMs })),
     [injected, isDemo, scenario],
   )
   const input = useMemo(() => ({ original: files.original, updated: files.updated }), [files.original, files.updated])
-  const serviceKey = injected ? 'injetado' : isDemo ? `demo:${scenario}` : 'api'
+  const serviceKey = injected ? 'injetado' : isDemo ? `demo:${scenario}` : comparisonConfig.serviceMode
   const { state, retry, view, saveView } = useComparisonRun(service, input, serviceKey)
 
   // Sem os arquivos (ex.: página recarregada), a comparação real não tem o que enviar.

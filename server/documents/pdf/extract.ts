@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { NormalizedRect, PageContentType } from '../../../shared/contracts/comparison.ts'
@@ -265,7 +264,9 @@ async function previewOf(page: PDFPageProxy): Promise<PagePreview | undefined> {
     }
     const fingerprint = new Uint8Array(columns * rows)
     for (let cell = 0; cell < fingerprint.length; cell += 1) fingerprint[cell] = Math.round((sums[cell] ?? 0) / Math.max(1, counts[cell] ?? 1))
-    const hash = createHash('sha256').update(raster.data).digest('hex')
+    // Web Crypto: a mesma no Node e no navegador (o motor também roda no navegador; ver ../platform/).
+    const digest = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', new Uint8Array(raster.data)))
+    const hash = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('')
     return { hash, fingerprint, inkRatio: ink / gray.length }
   } catch {
     return undefined
