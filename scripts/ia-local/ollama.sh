@@ -26,11 +26,12 @@ export OLLAMA_DEBUG=0
 unset OLLAMA_FLASH_ATTENTION OLLAMA_KV_CACHE_TYPE
 
 PID="$ESTADO/ollama.pid"
+MODO="$ESTADO/modo"
 LOG="$ESTADO/ollama.log"
 
 parar() {
   if [[ -f "$PID" ]] && kill -0 "$(cat "$PID")" 2>/dev/null; then kill "$(cat "$PID")"; sleep 1; fi
-  rm -f "$PID"
+  rm -f "$PID" "$MODO"
 }
 
 esperar() {
@@ -46,14 +47,14 @@ case "${1:-}" in
   baixar)
     [[ -n "${2:-}" ]] || { echo "Informe o modelo: ollama.sh baixar <modelo>" >&2; exit 2; }
     parar
-    ollama serve >>"$LOG" 2>&1 & echo $! >"$PID"
+    ollama serve >>"$LOG" 2>&1 & echo $! >"$PID"; echo baixar >"$MODO"
     esperar
     ollama pull "$2"
     parar
     ;;
   inferencia)
     parar
-    sandbox-exec -f "$DIR/sem-rede.sb" ollama serve >>"$LOG" 2>&1 & echo $! >"$PID"
+    sandbox-exec -f "$DIR/sem-rede.sb" ollama serve >>"$LOG" 2>&1 & echo $! >"$PID"; echo inferencia >"$MODO"
     esperar
     echo "Servidor do modelo sem rede em http://$OLLAMA_HOST (pid $(cat "$PID"))."
     ;;

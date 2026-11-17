@@ -20,7 +20,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true
   },
-  "include": ["server", "shared"],
+  "include": ["server", "shared", "scripts/ia-local"],
   // Versões do navegador dos módulos de plataforma: conferidas em tsconfig.engine.json.
   "exclude": ["server/**/*.browser.ts"]
 }

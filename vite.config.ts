@@ -102,7 +102,7 @@ export default defineConfig({
         test: {
           name: 'servidor',
           environment: 'node',
-          include: ['server/**/*.test.ts', 'shared/**/*.test.ts'],
+          include: ['server/**/*.test.ts', 'shared/**/*.test.ts', 'scripts/ia-local/**/*.test.ts'],
           exclude: ['server/comparison/evaluation/**'],
         },
       },
