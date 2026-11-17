@@ -1,0 +1,91 @@
+{
+  "versao": "e11.4@1",
+  "verificador": {
+    "server/triage/ia/verificacao.ts": "68de31b449fddc62cbb83188c83bbc0d0833b4327588f04e5cb6530495bb95a9",
+    "server/triage/ia/verificacao-reforcada.ts": "0f54b3537322493bdc2cdb23d5404c68e708dee6cfbd6469fa6b06a1967bfab8",
+    "server/triage/ia/verificacao-classe.ts": "b5353685df9314f55518bb60c400841708551fbc21343af9c404b0e07eea4e5c",
+    "server/triage/ia/dirigida-a-maquina.ts": "119428d4fcc970b31650ba96016f02e6718a5c326eb92961a5337b734e6b3e07",
+    "server/triage/reading/instrucoes.ts": "e8f672ba9c5d393df75a543c890c2d63a4066f6c3469360ab4e7e05ebd3d4d1b"
+  },
+  "bancada": {
+    "scripts/ia-local/bancada/tarefa.ts": "9a3e3f8e59dee29ca408107e913d4849f6f5def98d3794f3afb1fc9f3a878df8",
+    "scripts/ia-local/bancada/bancada.ts": "de0050f3b3124e90b455f418c5139036e7c50f5f15931488dd075a563a4bd33e",
+    "scripts/ia-local/bancada/ollama.ts": "75d0a0a337cff08fa3ba0689f57265879b5576ba4ab8d180c1b71df73e9bdf61",
+    "scripts/ia-local/ocr/segunda-leitura.ts": "cf09af0dd2aae83ad275c301292d04e97ba736047dc49f264bd2e49c4d9fa540",
+    "scripts/ia-local/ocr/paddle-ocr.py": "e0eb118ec2c8ae7ea11c21bfd79c9af14ec2f0e0aa7ce4ca6d3adb3436ec50b5",
+    "scripts/ia-local/sem-rede.sb": "bded2a6ade8a793ef6dfab5e5817284310a2cb2884be73bcce7c0722102b3a91",
+    "scripts/ia-local/ollama.sh": "0e6fbc96f0c9ea0ba1c36d1f8281a029ec37382ae3b085f27fb39ad456e17624"
+  },
+  "gabaritos": {
+    "docs/triagem/casos/ia1-gabarito.json": "8ab0edb9e3ae23354840bed92a9ab598d122b34147242c8b11ebccca7787332d",
+    "docs/triagem/casos/ia2-gabarito.json": "8dbc358dc11fa8d252b04f023c6618a9a64546890ee603d5412a0962d08c2a8e",
+    "docs/triagem/casos/ia3-gabarito.json": "c9ca2b60d766b2e453121e7f00e9bb68524f44f0b7e431bef2afdba97b93d5b2",
+    "docs/triagem/casos/ia4-gabarito.json": "998d7f3836c29a0624958fc15cb4ebff32ae517f70588372546ce20deb834e89"
+  },
+  "prompt": {
+    "tarefa": "e11.1-pagina@1",
+    "sha256": "ae8c202665c687c396fe6a3831f86b3e0a1768e95c4d46249cc09bbc87dfb449",
+    "esquemaSha256": "1d15848b7bb350a2d275b478aa0929bddd7b873dada1a07851b7f1be7f0b5f1f"
+  },
+  "modelos": {
+    "A": {
+      "nome": "qwen3.5:4b-q4_K_M",
+      "manifestoSha256": "d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04"
+    },
+    "B": {
+      "nome": "qwen3-vl:4b-instruct-q4_K_M",
+      "manifestoSha256": "84f7ed8042fa7cdbd902f7dcb7d0370e032095047cc3244179f263b77b5bc318"
+    }
+  },
+  "configuracao": {
+    "temperatura": 0,
+    "semente": 7,
+    "maxTokens": 400,
+    "contexto": 8192,
+    "think": false,
+    "formato": "esquema JSON (decodificação restrita)",
+    "imagemPaginaPx": 1100,
+    "segundaLeitura": "paddle (PP-OCRv5 latino), 1700 px",
+    "maxPaginasPorDocumento": 6,
+    "paralelo": 1
+  },
+  "registro": {
+    "A": {
+      "runtime": {
+        "nome": "ollama",
+        "versao": "0.40.16"
+      },
+      "modelo": "qwen3.5:4b-q4_K_M",
+      "manifestoSha256": "d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04",
+      "familia": "qwen35",
+      "parametros": "4.2B",
+      "quantizacao": "Q4_K_M",
+      "formato": "gguf",
+      "licenca": "Apache License (sha256 50cbab8a892c5f29)",
+      "capacidades": [
+        "completion",
+        "vision",
+        "tools",
+        "thinking"
+      ]
+    },
+    "B": {
+      "runtime": {
+        "nome": "ollama",
+        "versao": "0.40.16"
+      },
+      "modelo": "qwen3-vl:4b-instruct-q4_K_M",
+      "manifestoSha256": "84f7ed8042fa7cdbd902f7dcb7d0370e032095047cc3244179f263b77b5bc318",
+      "familia": "qwen3vl",
+      "parametros": "4.0B",
+      "quantizacao": "Q4_K_M",
+      "formato": "gguf",
+      "licenca": "Apache License (sha256 7339fa418c9ad3e8)",
+      "capacidades": [
+        "completion",
+        "vision",
+        "tools"
+      ]
+    }
+  }
+}
