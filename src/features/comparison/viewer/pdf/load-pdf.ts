@@ -33,13 +33,16 @@ export interface PdfDocumentHandle {
 }
 
 export async function loadPdf(file: File): Promise<PdfDocumentHandle> {
-  const [pdfjs, worker] = await Promise.all([import('pdfjs-dist'), import('pdfjs-dist/build/pdf.worker.min.mjs?url')])
+  const [pdfjs, worker, fontes] = await Promise.all([import('pdfjs-dist'), import('pdfjs-dist/build/pdf.worker.min.mjs?url'), import('./standard-fonts')])
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default
 
   const task = pdfjs.getDocument({
     data: new Uint8Array(await file.arrayBuffer()),
-    // Sem buscas externas: nada de fontes do sistema ou da rede.
+    // Sem buscas externas: nada de fontes do sistema ou da rede. As fontes padrão (PDF sem fonte
+    // embutida) vêm do próprio AQR, pela fábrica local, no lugar de uma URL.
     useSystemFonts: false,
+    BinaryDataFactory: fontes.FontesPadraoLocais,
+    useWorkerFetch: false,
   })
   const pdf = await task.promise
 

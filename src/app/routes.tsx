@@ -1,11 +1,9 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import type { RouteObject } from 'react-router'
+import { Navigate, type RouteObject } from 'react-router'
 import { AppShell, type RouteHandle } from '@/components/layout/AppShell'
 import { routes } from '@/config/routes'
-import { RequireAuth } from '@/features/auth/RequireAuth'
 import { ComparisonSetupPage } from '@/pages/ComparisonSetupPage'
 import { HomePage } from '@/pages/HomePage'
-import { LoginPage } from '@/pages/LoginPage'
 
 /** Carrega a página sob demanda, mantendo o carregamento inicial leve. */
 function lazyPage(load: () => Promise<{ default: ComponentType }>) {
@@ -20,15 +18,11 @@ function lazyPage(load: () => Promise<{ default: ComponentType }>) {
 const workspaceHandle: RouteHandle = { fullHeight: true }
 
 export const appRoutes: RouteObject[] = [
-  // Login em tela cheia, fora do AppShell.
-  { path: routes.login, element: <LoginPage /> },
+  // Versão pública: sem login (decisão do responsável, 17/11/2026). O endereço antigo do login
+  // leva ao início, para links guardados não caírem na página de "não encontrado".
+  { path: routes.login, element: <Navigate to={routes.home} replace /> },
   {
-    // Todas as demais páginas exigem a sessão (login fictício).
-    element: (
-      <RequireAuth>
-        <AppShell />
-      </RequireAuth>
-    ),
+    element: <AppShell />,
     children: [
       { path: routes.home, element: <HomePage /> },
       { path: routes.comparison, element: <ComparisonSetupPage /> },

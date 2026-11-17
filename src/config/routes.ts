@@ -1,7 +1,7 @@
 export const routes = {
   /** Início: seletor das ferramentas do AQR. */
   home: '/',
-  /** Login fictício (admin/admin), sem autenticação real. */
+  /** Antigo endereço do login fictício; a versão pública não tem login e o leva ao início. */
   login: '/entrar',
   comparison: '/comparacao',
   comparisonWorkspace: '/comparacao/resultado',

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
+import { comparisonConfig } from '@/config/comparison'
 import { routes } from '@/config/routes'
 import { ComparisonWorkspace } from '@/features/comparison/components/ComparisonWorkspace'
 import { ErrorPanel, NoDifferencesPanel, ProcessingPanel } from '@/features/comparison/components/StatePanels'
@@ -7,6 +8,7 @@ import { ResultActionsMenu, WorkspaceHeader } from '@/features/comparison/compon
 import { useComparisonRun } from '@/features/comparison/hooks/use-comparison-run'
 import { demoDocumentSources } from '@/features/comparison/mocks/demo-comparison'
 import type { ComparisonService, DocumentRole } from '@/features/comparison/model/types'
+import { createLocalComparisonService } from '@/features/comparison/services/local-comparison-service'
 import {
   createMockComparisonService,
   isDemoScenario,
@@ -28,15 +30,16 @@ export function ComparisonWorkspacePage({ service: injected }: ComparisonWorkspa
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { files, reset } = useComparisonSession()
-  // Nesta branch (só frontend) a comparação é sempre a demonstrativa; os testes podem injetar outra.
-  const isDemo = !injected
+  // Nesta branch não há servidor: a comparação real roda no navegador (o mesmo motor da `dev`, num
+  // Web Worker). "demo" liga o resultado fictício; os testes podem injetar outro serviço.
+  const isDemo = !injected && comparisonConfig.serviceMode === 'demo'
 
   const param = searchParams.get(SCENARIO_PARAM)
   const scenario: DemoScenario = isDemoScenario(param) ? param : 'concluida'
 
-  const service = useMemo(() => injected ?? createMockComparisonService(scenario), [injected, scenario])
+  const service = useMemo(() => injected ?? (isDemo ? createMockComparisonService(scenario) : createLocalComparisonService()), [injected, isDemo, scenario])
   const input = useMemo(() => ({ original: files.original, updated: files.updated }), [files.original, files.updated])
-  const serviceKey = injected ? 'injetado' : `demo:${scenario}`
+  const serviceKey = injected ? 'injetado' : isDemo ? `demo:${scenario}` : 'local'
   const { state, retry, view, saveView } = useComparisonRun(service, input, serviceKey)
 
   // Sem os arquivos (ex.: página recarregada), a comparação real não tem o que enviar.

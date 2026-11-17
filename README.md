@@ -2,9 +2,7 @@
 
 Sistema da SEMADES, da Prefeitura Municipal de Campo Grande/MS.
 
-> **Branch `master`: só o frontend, para hospedar de graça.** A comparação é **demonstrativa**: ao comparar, o site mostra um resultado fictício (com aviso), sem enviar os PDFs a lugar nenhum. O servidor com a comparação real, a triagem documental, a administração de contas e o login real (Keycloak) ficam na branch **`dev`**, onde o desenvolvimento continua.
->
-> O login é **fictício**: usuário `admin`, senha `admin`, conferidos no próprio navegador. Não é segurança; só mantém a tela de login. Hospedagem: [docs/hospedagem-cloudflare.md](docs/hospedagem-cloudflare.md).
+> **Branch `master`: a versão pública, hospedada de graça na Cloudflare.** Tem só o comparador de PDFs, **real e sem login**: o mesmo motor da branch `dev` roda no próprio navegador (Web Worker), e os PDFs não saem do computador de quem compara. Não há servidor. A triagem documental, a administração de contas, o login (Keycloak) e a infraestrutura de IA ficam na branch **`dev`**, onde o desenvolvimento continua. Hospedagem: [docs/hospedagem-cloudflare.md](docs/hospedagem-cloudflare.md).
 
 ## Executar
 
@@ -22,18 +20,19 @@ npm run dev          # site em http://localhost:5173
 | `npm run preview` | Serve o build do site localmente |
 | `npm run typecheck` | Verificação de tipos (TypeScript strict) |
 | `npm run lint` | ESLint, com regras de acessibilidade |
-| `npm test` | Testes do frontend |
+| `npm test` | Testes do frontend, do motor de comparação (Node) e do corpus sintético |
 
 ## O que funciona nesta branch
 
-- Login fictício (`admin`/`admin`) com a entrada animada, página inicial e navegação.
-- Seleção de PDFs por clique ou arrastar e soltar, com validação local (extensão, tipo, 50 MB, assinatura `%PDF-`). Os arquivos não saem do navegador.
-- Resultado demonstrativo, com documentos e diferenças fictícios e o aviso "Demonstração com dados fictícios": lista de diferenças, filtros, modos, zoom, modo foco, exportação e "Simular estado" (concluída, sem diferenças, erro, documento incompatível, PDF sem texto).
+- Página inicial e navegação, sem login.
+- Seleção de PDFs por clique ou arrastar e soltar, com validação local (extensão, tipo, 50 MB, assinatura `%PDF-`).
+- **Comparação real no navegador**: o motor de `server/comparison/` (o mesmo da `dev`; aqui ele não é um servidor) roda num Web Worker, com os mesmos limites e o mesmo resultado (ver abaixo e `server/documents/platform/README.md`). Os PDFs ficam só na memória do navegador; o worker é encerrado no fim de cada comparação. O OCR usa os arquivos do tesseract.js servidos pelo próprio site (`/ocr/7.0.0/`), sem CDN.
+- `VITE_COMPARISON_SERVICE=demo npm run dev` liga o resultado demonstrativo, com "Simular estado".
 
-## O que a comparação real faz (branch `dev`)
+## O que a comparação real faz
 
 - Seleção de PDFs por clique ou arrastar e soltar, com validação local (extensão, tipo, 50 MB, assinatura `%PDF-`).
-- Comparação **híbrida** dos dois PDFs no servidor: texto (adições, exclusões, modificações e trechos movidos, com números, datas, valores e identificadores reconhecidos), estrutura (páginas incluídas, excluídas, movidas, repetidas, tamanho e orientação), aparência (imagens, desenhos, fonte, tamanho, cor, posição e diagramação) e documentos digitalizados (OCR local, sem rede). As evidências dos métodos são consolidadas: uma alteração vista pelo texto e pelos pixels aparece uma vez, como confirmada.
+- Comparação **híbrida** dos dois PDFs (no servidor, na `dev`; no navegador, aqui): texto (adições, exclusões, modificações e trechos movidos, com números, datas, valores e identificadores reconhecidos), estrutura (páginas incluídas, excluídas, movidas, repetidas, tamanho e orientação), aparência (imagens, desenhos, fonte, tamanho, cor, posição e diagramação) e documentos digitalizados (OCR local, sem rede). As evidências dos métodos são consolidadas: uma alteração vista pelo texto e pelos pixels aparece uma vez, como confirmada.
 - Cada resultado diz **o que foi e o que não foi analisado** (página a página) e a situação: completa, com ressalvas ou parcial. "Nenhuma diferença" nunca é apresentada como prova de que os documentos são iguais.
 - Modos Completo, Conteúdo e Visual; filtros por tipo e por categoria; exportação em HTML (com ou sem trechos dos documentos) e JSON, gerada no navegador.
 - Visualizador com as páginas reais e os destaques, filtros, lista, navegação (botões e Alt + ↑/↓), modos de visualização, zoom e rolagem sincronizada.

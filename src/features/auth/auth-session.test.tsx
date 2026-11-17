@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthSessionProvider, useAuthSession } from './auth-session'
-import { checkDemoCredentials } from './demo-login'
 
 function Probe() {
   const { isAuthenticated, userName, signIn, signOut } = useAuthSession()
@@ -31,15 +30,5 @@ describe('AuthSessionProvider (login fictício, só no navegador)', () => {
     await user.click(screen.getByRole('button', { name: 'Sair' }))
     expect(screen.getByText('fora')).toBeInTheDocument()
     expect(sessionStorage.length).toBe(0)
-  })
-})
-
-describe('checkDemoCredentials', () => {
-  it('aceita só admin/admin (o usuário sem diferenciar maiúsculas e espaços)', () => {
-    expect(checkDemoCredentials('admin', 'admin')).toBe(true)
-    expect(checkDemoCredentials(' Admin ', 'admin')).toBe(true)
-    expect(checkDemoCredentials('admin', 'Admin')).toBe(false)
-    expect(checkDemoCredentials('servidor', 'admin')).toBe(false)
-    expect(checkDemoCredentials('admin', '')).toBe(false)
   })
 })

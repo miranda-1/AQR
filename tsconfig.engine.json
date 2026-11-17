@@ -1,0 +1,29 @@
+{
+  // Motor de comparação rodando no navegador (Web Worker): a entrada em
+  // src/features/comparison/local-engine/ e as versões *.browser.ts dos módulos de plataforma.
+  // O TypeScript segue os imports até o motor em server/, conferido aqui com as APIs de worker.
+  // Ver server/documents/platform/README.md.
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.engine.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node", "vite/client"],
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src/features/comparison/local-engine", "server/**/*.browser.ts"]
+}

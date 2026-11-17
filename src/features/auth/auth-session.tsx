@@ -1,9 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 /**
- * Sessão de acesso, só no navegador. O login é fictício (`demo-login.ts`): confere um usuário e uma
- * senha genéricos, sem servidor, e a sessão vale para a aba (sessionStorage) até ela ser fechada.
- * O login real (Keycloak) fica na branch `dev`.
+ * Sessão de acesso, só no navegador. A versão pública não tem login (decisão de 17/11/2026): a
+ * página de login, a exigência de sessão e o menu da conta saíram da `master`, e ninguém chama
+ * `signIn`. O provedor continua porque a comparação e a animação de entrada o consultam. O login
+ * real (Keycloak) fica na branch `dev`.
  */
 const STORAGE_KEY = 'aqr.sessao'
 

@@ -23,5 +23,7 @@
 
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"]
+  "include": ["src", "shared"],
+  // O motor local roda num Web Worker e importa o motor de comparação: conferido em tsconfig.engine.json.
+  "exclude": ["src/features/comparison/local-engine"]
 }

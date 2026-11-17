@@ -1,6 +1,6 @@
 # AQR: instruções para agentes
 
-Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui. Na branch `dev`, também o servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. **Branches:** `master` é a versão para hospedar, **só frontend** (sem `server/`): comparação sempre demonstrativa, sem triagem, login fictício `admin`/`admin`; hospedagem gratuita na Cloudflare em `docs/hospedagem-cloudflare.md`. `dev` tem tudo (servidor com a comparação real, triagem, administração, login real) e é onde o desenvolvimento continua. Sem IA. **Não redesenhar nem substituir a tela de login**.
+Frontend React 19 + Vite 8 + TypeScript 6 (strict) + Tailwind 4 + shadcn/ui. Na branch `dev`, também o servidor Node.js/TypeScript (Fastify) em `server/`, com contratos compartilhados em `shared/contracts/`. **Branches:** `master` é a versão pública, **sem servidor**: o comparador real roda no navegador (o motor de `server/comparison/`, igual ao da `dev`, num Web Worker; ver `server/documents/platform/README.md`), **sem login**, sem triagem, sem administração e sem IA; hospedagem gratuita na Cloudflare em `docs/hospedagem-cloudflare.md`. Mudanças no motor nascem na `dev` e vêm para cá com `git checkout dev -- <arquivos>`. `dev` tem tudo (servidor com a comparação real, triagem, administração, login real) e é onde o desenvolvimento continua. Sem IA. A tela de login fica só na `dev` (**não redesenhar nem substituir**); a versão pública não tem login (decisão de 17/11/2026).
 
 ## Antes de começar
 Leia `docs/CONTEXTO.md`: estado atual, decisões do responsável (não reverter sem pedir), histórico e pendências.
@@ -21,7 +21,7 @@ Repositório remoto: `miranda-1/AQR` (GitHub, privado). Comando de envio em `doc
 - **Logo do AQR:** usar `<AqrLogo />` / `<AqrLensSymbol />` (`src/components/layout/AqrLogo.tsx`); não redesenhar. Ver `src/assets/aqr/README.md`.
 - **Cores:** só por tokens (`src/styles/tokens.css` → `globals.css`). O amarelo `#FFCC00` é decorativo: nunca usar em texto ou foco.
 - **Dados fictícios** ficam em `features/comparison/mocks/` e nunca devem parecer resultado real. Avisos de protótipo dependem de `appConfig.isPrototype`.
-- **Contratos** de comparação ficam em `features/comparison/model/types.ts`. O backend futuro implementa `ComparisonService`.
+- **Contratos** de comparação ficam em `shared/contracts/comparison.ts` (reexportados em `features/comparison/model/types.ts`). Aqui, `ComparisonService` é implementado por `services/local-comparison-service.ts` (motor no navegador).
 - **Diferenças:** cor nunca é o único indicador (ícone + rótulo + tratamento do texto).
 - **Interface em português (pt-BR):** frases em caixa normal, verbos claros, erros que dizem o que houve e como resolver.
 - **Sem dependências novas** sem justificativa. Sem `any`. Sem "!" (non-null) — em testes, use `defined()` de `src/test/files.ts`.

@@ -8,11 +8,6 @@ function toolsNav() {
   return screen.getByRole('navigation', { name: 'Ferramentas' })
 }
 
-async function openAccountMenu(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: 'Conta de servidor' }))
-  return screen.findByRole('menu')
-}
-
 describe('Rota inicial', () => {
   it('mostra a página inicial em "/"', async () => {
     const { router } = renderApp('/')
@@ -81,35 +76,24 @@ describe('Sub-barra de ferramentas', () => {
   })
 })
 
-describe('Conta', () => {
-  it('mostra o nome do usuário e o "Sair"', async () => {
-    const user = userEvent.setup()
-    renderApp('/comparacao')
-    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
-    const menu = await openAccountMenu(user)
-    expect(menu).toHaveTextContent('servidor')
-    expect(menu).toHaveTextContent('SEMADES')
-    expect(within(menu).getByRole('menuitem', { name: 'Sair' })).toBeInTheDocument()
+describe('Sem login (versão pública)', () => {
+  it('abre o início sem pedir login nem mostrar conta', async () => {
+    renderApp('/', { authenticated: false })
+    expect(await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Conta/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: 'Entrar' })).not.toBeInTheDocument()
   })
 
-  it('fecha com Esc e devolve o foco ao botão', async () => {
-    const user = userEvent.setup()
-    renderApp('/comparacao')
-    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
-    await openAccountMenu(user)
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Conta de servidor' })).toHaveFocus()
+  it('abre o comparador direto, sem sessão', async () => {
+    const { router } = renderApp('/comparacao', { authenticated: false })
+    expect(await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/comparacao')
   })
 
-  it('"Sair" encerra a sessão e volta para o login', async () => {
-    const user = userEvent.setup()
-    const { router } = renderApp('/comparacao')
-    await screen.findByRole('heading', { level: 1, name: 'Comparar documentos' })
-    const menu = await openAccountMenu(user)
-    await user.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Entrar' })).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/entrar')
+  it('o antigo endereço do login leva ao início', async () => {
+    const { router } = renderApp('/entrar', { authenticated: false })
+    expect(await screen.findByRole('heading', { level: 1, name: 'Como podemos ajudar?' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
   })
 })
 

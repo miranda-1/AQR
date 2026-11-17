@@ -20,6 +20,11 @@ export default tseslint.config(
     },
   },
   {
+    // O motor de comparação (server/, shared/) também roda no Node, nos testes.
+    files: ['server/**/*.ts', 'shared/**/*.ts'],
+    languageOptions: { globals: globals.node },
+  },
+  {
     files: ['src/components/ui/**/*.tsx'],
     rules: { 'jsx-a11y/heading-has-content': 'off', 'jsx-a11y/anchor-has-content': 'off' },
   },

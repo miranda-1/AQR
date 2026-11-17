@@ -1,14 +1,13 @@
 import { Link } from 'react-router'
 import { appConfig } from '@/config/app'
 import { routes } from '@/config/routes'
-import { AccountMenu } from './AccountMenu'
 import { AqrLogo } from './AqrLogo'
 import { BrandMark } from './BrandMark'
 import { ToolsNav } from './ToolsNav'
 
 /**
  * Barra superior em duas faixas (decisão do responsável, 09/10/2026):
- * - em cima, branca: logo e nome do AQR à esquerda; PREFCG e conta à direita;
+ * - em cima, branca: logo e nome do AQR à esquerda; PREFCG à direita (a versão pública não tem conta);
  * - embaixo, azul bem claro: as ferramentas, com o traço deslizante (ToolsNav).
  * As faixas se separam por tom; o conjunto, do conteúdo, por sombra suave. Sem linhas divisórias.
  */
@@ -32,7 +31,6 @@ export function AppHeader() {
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
           {/* Marca PREFCG; a área de proteção (2X) é garantida pelo espaçamento. */}
           <BrandMark height={30} className="h-6 w-auto shrink-0 sm:h-[30px]" />
-          <AccountMenu />
         </div>
       </div>
       <div className="bg-brand-50">
