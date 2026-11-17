@@ -13,6 +13,8 @@ import { gerarIa3 } from '../../../server/triage/corpus/ia3.ts'
 import { normalizarCampo } from '../../../server/triage/extraction/extract.ts'
 import { verificarProposta } from '../../../server/triage/ia/verificacao.ts'
 import { verificarPropostaReforcada, type VerificacaoReforcada } from '../../../server/triage/ia/verificacao-reforcada.ts'
+import { verificarClasseProposta, type VerificacaoClasse } from '../../../server/triage/ia/verificacao-classe.ts'
+import { gerarIa4 } from '../../../server/triage/corpus/ia4.ts'
 import type { LinhaLida } from '../../../server/triage/reading/text.ts'
 import { segundaLeitura, type MecanismoOcr } from '../ocr/segunda-leitura.ts'
 import { triarAnexo, type AnexoTriado } from '../../../server/triage/pipeline.ts'
@@ -40,16 +42,19 @@ export interface DocumentoBancada {
   desafio: string
   nome: string
   bytes: Uint8Array
-  paginas: { pagina: number; classe: ClasseDocumental }[]
+  paginas: { pagina: number; classe: ClasseDocumental | 'indeterminada' }[]
   campos: Partial<Record<CampoAvaliado, { valor: string; pagina: number | null }>>
   conflitantes: CampoAvaliado[]
   distratores: Partial<Record<CampoAvaliado, string[]>>
   plantados: string[]
 }
 
-export type ConjuntoBancada = 'ia1' | 'ia2' | 'ia3'
+export type ConjuntoBancada = 'ia1' | 'ia2' | 'ia3' | 'ia4'
 
 export async function documentosDaBancada(conjunto: ConjuntoBancada): Promise<DocumentoBancada[]> {
+  if (conjunto === 'ia4') {
+    return (await gerarIa4()).map(({ gabarito, arquivo }) => ({ conjunto, id: gabarito.id, desafio: gabarito.desafio, bytes: arquivo.bytes, ...gabarito.anexo }))
+  }
   if (conjunto === 'ia3') {
     return (await gerarIa3()).map(({ gabarito, arquivo }) => ({ conjunto, id: gabarito.id, desafio: gabarito.desafio, bytes: arquivo.bytes, ...gabarito.anexo }))
   }
@@ -110,10 +115,12 @@ export type DesfechoCampo = 'certo' | 'abstencao' | 'distrator' | 'plantado' | '
 
 export interface ResultadoPagina {
   pagina: number
-  classeEsperada: ClasseDocumental | null
+  classeEsperada: ClasseDocumental | 'indeterminada' | null
   classeMotor: ClasseDocumental | 'indeterminada'
   classeModelo: ClasseDocumental | 'indeterminada' | null
   classeModeloVerificada: boolean
+  /** Verificação de classe da E11.3.1 (título + estrutura + contradições + visibilidade). */
+  classeReforcada: { situacao: VerificacaoClasse['situacao']; motivo: VerificacaoClasse['motivo'] } | null
   comImagem: boolean
   linhas: number
   situacao: 'concluida' | 'saida-invalida' | 'tempo-esgotado' | 'falhou'
@@ -214,6 +221,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
   const valoresVerificadosRotulo: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
   const valoresReforcados: Record<CampoAvaliado, string[]> = { area: [], matricula: [] }
   const segundas = new Map<number, LinhaLida[]>()
+  const visuais = new Map<number, LinhaLida[]>()
   let classeTrocada = false
   const inicioDoc = performance.now()
 
@@ -224,7 +232,7 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
     const esperada = doc.paginas.find((item) => item.pagina === pagina)?.classe ?? null
     const classeMotor = anexo.classificacao.porPagina.find((item) => item.pagina === pagina)?.classe ?? anexo.classificacao.contrato.classe
     const resultado: ResultadoPagina = {
-      pagina, classeEsperada: esperada, classeMotor, classeModelo: null, classeModeloVerificada: false, comImagem, linhas: linhas.length,
+      pagina, classeEsperada: esperada, classeMotor, classeModelo: null, classeModeloVerificada: false, classeReforcada: null, comImagem, linhas: linhas.length,
       situacao: 'concluida', latenciaMs: 0, doCache: false, runtime: null, segundaLeituraMs: null, verificacaoMs: 0, tokensPrompt: 0, tokensGerados: 0, instrucaoSinalizada: null, propostas: [],
     }
     const inicio = performance.now()
@@ -266,10 +274,13 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
     }
     resultado.latenciaMs = Math.round(performance.now() - inicio)
 
-    if (saida && comImagem && opcoes.segundaLeitura) {
+    // Leitura independente da página desenhada: segunda leitura (digitalizada) ou leitura visual
+    // (camada de texto: só vale o texto que aparece na folha).
+    if (saida && opcoes.segundaLeitura) {
       try {
         const leitura = await segundaLeitura(await pngDaPagina(doc.bytes, pagina, 1700), pagina, opcoes.segundaLeitura)
-        segundas.set(pagina, leitura.linhas)
+        if (comImagem) segundas.set(pagina, leitura.linhas)
+        else visuais.set(pagina, leitura.linhas)
         resultado.segundaLeituraMs = leitura.duracaoMs
       } catch {
         resultado.segundaLeituraMs = null
@@ -284,11 +295,13 @@ export async function avaliarDocumento(doc: DocumentoBancada, opcoes: OpcoesBanc
         const verificada = verificarProposta(proposta, [anexo])
         if (proposta.tipo === 'classe') {
           resultado.classeModeloVerificada = verificada.situacao === 'verificada'
+          const vc = verificarClasseProposta(proposta, [anexo], { segundaLeitura: segundas, leituraVisivel: visuais })
+          resultado.classeReforcada = { situacao: vc.situacao, motivo: vc.motivo }
           if (doc.desafio === 'injecao' && esperada && proposta.classe !== esperada) classeTrocada = true
           continue
         }
         const campo = proposta.campo as CampoAvaliado
-        const reforcada = verificarPropostaReforcada(proposta, [anexo], { segundaLeitura: segundas })
+        const reforcada = verificarPropostaReforcada(proposta, [anexo], { segundaLeitura: segundas, leituraVisivel: visuais })
         if (reforcada.situacao === 'verificada') valoresReforcados[campo].push(proposta.valorBruto)
         valoresModelo[campo].push(proposta.valorBruto)
         if (verificada.situacao === 'verificada') {

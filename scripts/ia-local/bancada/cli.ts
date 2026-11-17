@@ -33,7 +33,7 @@ if (!['e11.1', 'desenvolvimento', 'final'].includes(MODO)) {
   console.error('Modo desconhecido. Use e11.1, desenvolvimento ou final.')
   process.exit(2)
 }
-const CONJUNTOS: ConjuntoBancada[] = MODO === 'final' ? ['ia3'] : ['ia2', 'ia1']
+const CONJUNTOS: ConjuntoBancada[] = MODO === 'final' ? ['ia4'] : MODO === 'desenvolvimento' ? ['ia3', 'ia2', 'ia1'] : ['ia2', 'ia1']
 const ENDERECO = 'http://127.0.0.1:11434'
 const SEMENTE = 7
 const MAX_TOKENS = 400
@@ -69,9 +69,9 @@ if (!semRede && process.env.AQR_IA_PERMITIR_REDE !== '1') {
   process.exit(2)
 }
 
-const FINAL = path.join(DOCS, 'avaliacao-ia-e11.3-final-ia3.md')
+const FINAL = path.join(DOCS, 'avaliacao-ia-e11.3.1-final-ia4.md')
 if (MODO === 'final' && existsSync(FINAL)) {
-  console.error('A avaliação final no IA-3 já foi feita e não é reescrita.')
+  console.error('A avaliação final no IA-4 já foi feita e não é reescrita.')
   process.exit(2)
 }
 
@@ -198,10 +198,10 @@ let destino: string
 let notas: string[]
 if (MODO === 'final') {
   destino = FINAL
-  notas = ['**Avaliação final da E11.3 no IA-3**: conjunto congelado antes da verificação reforçada e não usado para desenvolvê-la; respostas do modelo geradas agora, sem cache. Executada uma única vez; este arquivo não deve ser reescrito.']
+  notas = ['**Avaliação final da E11.3.1 no IA-4**: conjunto escrito por agente independente e congelado antes da verificação de classe; respostas do modelo geradas agora, sem cache. Executada uma única vez; este arquivo não deve ser reescrito. (A avaliação final da E11.3, no IA-3, está preservada em `avaliacao-ia-e11.3-final-ia3.md`.)']
 } else if (MODO === 'desenvolvimento') {
-  destino = path.join(DOCS, 'avaliacao-ia-e11.3-desenvolvimento.md')
-  notas = ['**Resultados de DESENVOLVIMENTO da E11.3** (IA-1 e IA-2 orientaram o diagnóstico e a verificação reforçada): não são medida independente. A avaliação final está em `avaliacao-ia-e11.3-final-ia3.md`.']
+  destino = path.join(DOCS, 'avaliacao-ia-e11.3.1-desenvolvimento.md')
+  notas = ['**Resultados de DESENVOLVIMENTO da E11.3.1** (IA-1, IA-2 e o IA-3 já revelado): não são medida independente. A avaliação final está em `avaliacao-ia-e11.3.1-final-ia4.md`. Os resultados da E11.3 estão preservados em `avaliacao-ia-e11.3-desenvolvimento.md` e `avaliacao-ia-e11.3-final-ia3.md`.']
 } else {
   destino = CONJUNTOS.includes('ia2') && !existsSync(primeira) ? primeira : path.join(DOCS, 'avaliacao-ia-e11.1-qwen.md')
   notas = destino === primeira ? ['**Primeira execução de um modelo real sobre o IA-2** (gabarito congelado antes). Este arquivo não deve ser reescrito.'] : ['Execução posterior à primeira; a primeira está preservada em `avaliacao-ia-e11.1-qwen-primeira-execucao.md`.']

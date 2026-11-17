@@ -1,6 +1,7 @@
 import type { PropostaModelo, RegiaoIa, SugestaoVerificada } from '../../../shared/contracts/triage-ia.ts'
 import type { AnexoTriado } from '../pipeline.ts'
-import { pareceInstrucao } from '../reading/instrucoes.ts'
+import { dirigidaAMaquina } from './dirigida-a-maquina.ts'
+import { linhaVisivel } from './verificacao-classe.ts'
 import { dobrar, type LinhaLida } from '../reading/text.ts'
 import { verificarProposta } from './verificacao.ts'
 
@@ -46,6 +47,7 @@ export const motivosReforcados = [
   'segunda-leitura-ausente',
   'segunda-leitura-nao-encontra-valor',
   'leituras-divergentes',
+  'valor-nao-visivel',
 ] as const
 export type MotivoReforcado = (typeof motivosReforcados)[number]
 
@@ -64,6 +66,11 @@ export interface VerificacaoReforcada {
 export interface OpcoesReforcada {
   /** Segunda leitura independente das páginas digitalizadas, por página. */
   segundaLeitura?: ReadonlyMap<number, readonly LinhaLida[]>
+  /**
+   * Leitura visual independente (OCR da página desenhada) das páginas com camada de texto (E11.3.1):
+   * só conta o texto que aparece na folha. Valor em texto invisível ou coberto não é evidência.
+   */
+  leituraVisivel?: ReadonlyMap<number, readonly LinhaLida[]>
 }
 
 type Campo = 'area' | 'matricula'
@@ -94,17 +101,8 @@ function categoria(campo: Campo, rotulo: string): Categoria {
   return ESPECIFICO[campo].test(texto) ? 'campo' : 'generico'
 }
 
-/** Linha dirigida à máquina: instrução, vocativo ao sistema/IA ou dado em formato JSON. */
-export function dirigidaAMaquina(texto: string): boolean {
-  const t = dobrar(texto)
-  return (
-    pareceInstrucao(texto) ||
-    /\b(sistema|modelo|ia|assistente|inteligencia artificial|robo|algoritmo)\b\s*[:,]/u.test(t) ||
-    /\b(ao|para o|a)\s+(sistema|modelo|assistente|ia)\b/u.test(t) ||
-    /\b(responda|retorne|devolva|classifique|desconsidere|ignore|conclua|marque|use|registre|considere)\b.{0,60}\b(valor|area|matricula|classe|campo|numero|oficial|correta?o?|processo)\b/u.test(t) ||
-    /[{[]\s*"[^"]+"\s*:/u.test(texto)
-  )
-}
+// Linha dirigida à máquina: ver `dirigida-a-maquina.ts` (E11.3.1, multilíngue e estrutural).
+export { dirigidaAMaquina }
 
 // ---------- candidatos: valor no formato do campo + rótulo ----------
 
@@ -242,7 +240,11 @@ export function verificarPropostaReforcada(proposta: PropostaModelo, anexos: rea
   }
 
   // Leitura usada: a do motor, com a página digitalizada trocada pela segunda leitura.
-  const leitura: LinhaLida[] = segunda ? [...anexo.lido.linhas.filter((linha) => linha.pagina !== proposta.pagina), ...segunda] : anexo.lido.linhas
+  // Página com camada de texto e leitura visual: só as linhas que aparecem na folha.
+  const visual = !digitalizada ? opcoes.leituraVisivel?.get(proposta.pagina) : undefined
+  const daPagina = segunda ?? anexo.lido.linhas.filter((linha) => linha.pagina === proposta.pagina)
+  const visiveis = visual ? daPagina.filter((linha) => linhaVisivel(linha, visual)) : daPagina
+  const leitura: LinhaLida[] = [...anexo.lido.linhas.filter((linha) => linha.pagina !== proposta.pagina), ...visiveis]
   const todos = candidatos(campo, leitura)
   const valor = proposta.valorBruto.replace(/\D/gu, '')
   const regiaoCitada = proposta.regioes[0]
@@ -252,7 +254,10 @@ export function verificarPropostaReforcada(proposta: PropostaModelo, anexos: rea
   const daProposta = todos.filter((c) => c.pagina === proposta.pagina && c.digitos === valor)
   const naRegiao = citou && regiaoCitada ? daProposta.filter((c) => c.regiao !== null && perto(c.regiao, regiaoCitada, digitalizada ? 0.03 : 0.004)) : daProposta
 
-  if (daProposta.length === 0) return resultado(e110, 'recusada', digitalizada ? 'segunda-leitura-nao-encontra-valor' : 'valor-ausente-da-regiao')
+  if (daProposta.length === 0) {
+    const escondido = visual && candidatos(campo, daPagina).some((c) => c.digitos === valor)
+    return resultado(e110, 'recusada', escondido ? 'valor-nao-visivel' : digitalizada ? 'segunda-leitura-nao-encontra-valor' : 'valor-ausente-da-regiao')
+  }
   if (naRegiao.length === 0) return resultado(e110, 'recusada', 'valor-fora-da-regiao-citada')
   if (naRegiao.every((c) => c.categoria === 'outra')) return resultado(e110, 'recusada', 'rotulo-de-outra-grandeza')
 

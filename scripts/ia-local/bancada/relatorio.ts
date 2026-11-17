@@ -74,9 +74,10 @@ export function relatorioQwen(resultados: readonly ResultadoDocumento[], ambient
   const TITULOS = {
     ia1: 'IA-1 (desenvolvimento e regressão; orientou correções na E11.0)',
     ia2: 'IA-2 (desenvolvimento e regressão; orientou o diagnóstico da E11.3)',
-    ia3: 'IA-3 (AVALIAÇÃO FINAL: congelado antes da verificação reforçada, não usado para desenvolvê-la)',
+    ia3: 'IA-3 (revelado na avaliação final da E11.3; desde a E11.3.1, desenvolvimento e regressão)',
+    ia4: 'IA-4 (AVALIAÇÃO FINAL da E11.3.1: escrito por agente independente e congelado antes da verificação de classe)',
   } as const
-  for (const conjunto of ['ia3', 'ia2', 'ia1'] as const) {
+  for (const conjunto of ['ia4', 'ia3', 'ia2', 'ia1'] as const) {
     const docs = resultados.filter((doc) => doc.conjunto === conjunto)
     if (docs.length === 0) continue
     const paginas = docs.flatMap((doc) => doc.paginas)
@@ -86,19 +87,38 @@ export function relatorioQwen(resultados: readonly ResultadoDocumento[], ambient
 
     l.push('### Classe por página', '')
     const comGabarito = paginas.filter((p) => p.classeEsperada)
-    const certo = (f: (p: (typeof paginas)[number]) => string | null) => comGabarito.filter((p) => f(p) === p.classeEsperada).length
-    const indet = (f: (p: (typeof paginas)[number]) => string | null) => comGabarito.filter((p) => f(p) === 'indeterminada' || f(p) === null).length
+    // Página com classe esperada "indeterminada": a resposta certa é abster-se.
+    const acertou = (p: (typeof paginas)[number], valor: string | null) => valor === p.classeEsperada || (p.classeEsperada === 'indeterminada' && (valor === null || valor === 'indeterminada'))
+    const certo = (f: (p: (typeof paginas)[number]) => string | null) => comGabarito.filter((p) => acertou(p, f(p))).length
+    const indet = (f: (p: (typeof paginas)[number]) => string | null) => comGabarito.filter((p) => !acertou(p, f(p)) && (f(p) === 'indeterminada' || f(p) === null)).length
     l.push('| Braço | Páginas | Certa | Indeterminada / sem resposta | Errada |', '|---|---:|---:|---:|---:|')
     for (const [nome, f] of [
       ['Motor determinístico (D)', (p: (typeof paginas)[number]) => p.classeMotor],
       ['Modelo isolado', (p: (typeof paginas)[number]) => p.classeModelo],
-      ['Modelo, só se a verificação aceitou', (p: (typeof paginas)[number]) => (p.classeModeloVerificada ? p.classeModelo : null)],
+      ['Modelo + verificação E11.0', (p: (typeof paginas)[number]) => (p.classeModeloVerificada ? p.classeModelo : null)],
+      ['**Modelo + verificação de classe (E11.3.1)**', (p: (typeof paginas)[number]) => (p.classeReforcada?.situacao === 'verificada' ? p.classeModelo : null)],
     ] as const) {
       const c = certo(f)
       const i = indet(f)
       l.push(`| ${nome} | ${comGabarito.length} | ${c} (${pct(c, comGabarito.length)}) | ${i} | **${comGabarito.length - c - i}** |`)
     }
     l.push('')
+
+    const porClasse = new Map<string, (typeof paginas)[number][]>()
+    for (const p of comGabarito) porClasse.set(p.classeEsperada ?? '?', [...(porClasse.get(p.classeEsperada ?? '?') ?? []), p])
+    l.push('Por classe esperada (aceite = a verificação deixaria passar a classe proposta pelo modelo):', '')
+    l.push('| Classe esperada | Páginas | Modelo certo | Modelo errado | E11.0 aceitou errada | E11.3.1 aceitou certa | **E11.3.1 aceitou errada** | E11.3.1 absteve-se |', '|---|---:|---:|---:|---:|---:|---:|---:|')
+    for (const [esperada, lista] of [...porClasse.entries()].sort()) {
+      const errada = (p: (typeof paginas)[number]) => p.classeModelo !== null && p.classeModelo !== 'indeterminada' && !acertou(p, p.classeModelo)
+      const aceitaE110 = lista.filter((p) => errada(p) && p.classeModeloVerificada).length
+      const aceitaCerta = lista.filter((p) => p.classeReforcada?.situacao === 'verificada' && acertou(p, p.classeModelo)).length
+      const aceitaErrada = lista.filter((p) => p.classeReforcada?.situacao === 'verificada' && errada(p)).length
+      const absteve = lista.length - aceitaCerta - aceitaErrada
+      l.push(`| ${esperada} | ${lista.length} | ${lista.filter((p) => acertou(p, p.classeModelo)).length} | ${lista.filter(errada).length} | ${aceitaE110} | ${aceitaCerta} | **${aceitaErrada}** | ${absteve} (${pct(absteve, lista.length)}) |`)
+    }
+    const motivosClasse = new Map<string, number>()
+    for (const p of comGabarito) if (p.classeReforcada) motivosClasse.set(`${p.classeReforcada.situacao}: ${p.classeReforcada.motivo}`, (motivosClasse.get(`${p.classeReforcada.situacao}: ${p.classeReforcada.motivo}`) ?? 0) + 1)
+    l.push('', `Desfecho da verificação de classe: ${[...motivosClasse.entries()].sort((a, b) => b[1] - a[1]).map(([m, n]) => `${m} (${n})`).join('; ') || 'nenhuma proposta'}.`, '')
 
     l.push('### Campos (área do lote e matrícula), por documento', '')
     l.push('"Distrator": valor impresso de outro rótulo (área construída, matrícula anterior). "Alucinado": valor que não está no documento. "Verificado": aceito pela verificação da E11.0. "Verificado + rótulo": também com o rótulo da linha compatível com o campo (teste adicional desta bancada, `rotuloCompativel`).', '')
@@ -158,7 +178,7 @@ export function relatorioQwen(resultados: readonly ResultadoDocumento[], ambient
     l.push(`| Por página (todas) | ${quantil(tempos, 0.5)} ms | ${quantil(tempos, 0.95)} ms | ${Math.max(0, ...tempos)} ms |`)
     if (texto.length) l.push(`| Por página só com texto | ${quantil(texto, 0.5)} ms | ${quantil(texto, 0.95)} ms | ${Math.max(...texto)} ms |`)
     if (imagem.length) l.push(`| Por página com imagem | ${quantil(imagem, 0.5)} ms | ${quantil(imagem, 0.95)} ms | ${Math.max(...imagem)} ms |`)
-    if (segundaMs.length) l.push(`| Segunda leitura (PaddleOCR) por página digitalizada | ${quantil(segundaMs, 0.5)} ms | ${quantil(segundaMs, 0.95)} ms | ${Math.max(...segundaMs)} ms |`)
+    if (segundaMs.length) l.push(`| Leitura independente (PaddleOCR) por página | ${quantil(segundaMs, 0.5)} ms | ${quantil(segundaMs, 0.95)} ms | ${Math.max(...segundaMs)} ms |`)
     l.push(`| Verificação (E11.0 + reforçada) por página | ${quantil(verificacaoMs, 0.5)} ms | ${quantil(verificacaoMs, 0.95)} ms | ${Math.max(0, ...verificacaoMs)} ms |`)
     l.push(`| Por documento (motor + OCR + modelo) | ${quantil(docsMs, 0.5)} ms | ${quantil(docsMs, 0.95)} ms | ${Math.max(0, ...docsMs)} ms |`)
     l.push('')

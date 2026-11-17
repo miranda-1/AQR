@@ -169,9 +169,12 @@ export function propostasDaPagina(saida: SaidaPagina, anexo: AnexoTriado, pagina
     })
   }
   if (saida.classe !== 'indeterminada') {
-    const linha = linhas.find((candidata) => saida.linhas_classe.includes(candidata.id) && candidata.regiao) ?? null
+    // Todas as linhas citadas (até 3) viram regiões, na ordem da citação: antes, só a primeira da
+    // página ia adiante e o título podia ficar de fora (achado na E11.3.1).
+    const citadas = saida.linhas_classe.flatMap((id) => linhas.filter((candidata) => candidata.id === id && candidata.regiao))
+    const linha = citadas[0] ?? null
     resultado.push({
-      proposta: { ...base, tipo: 'classe', classe: saida.classe, regioes: [linha?.regiao ?? SEM_REGIAO_CITADA], trecho: (linha?.texto ?? saida.classe).slice(0, 300), fundamento: linha ? 'texto' : 'visual' },
+      proposta: { ...base, tipo: 'classe', classe: saida.classe, regioes: citadas.length > 0 ? citadas.flatMap((c) => (c.regiao ? [c.regiao] : [])) : [SEM_REGIAO_CITADA], trecho: (linha?.texto ?? saida.classe).slice(0, 300), fundamento: linha ? 'texto' : 'visual' },
       linhaCitada: linha,
       rotuloCompativel: null,
     })
