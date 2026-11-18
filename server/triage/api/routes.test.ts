@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,6 +13,8 @@ import { buildTestApp } from '../../test/build-test-app.ts'
 import { defined } from '../../test/defined.ts'
 import { gerarPacote } from '../corpus/generate.ts'
 import { PACOTES } from '../corpus/pacotes.ts'
+import { etapasSuportadas, modalidadesSuportadas } from '../escopo.ts'
+import { TriagemRepository } from '../store/repository.ts'
 
 /**
  * API de triagem (E8) de ponta a ponta: multipart de verdade, threads de triagem de verdade (sem
@@ -386,5 +388,152 @@ describe('API de triagem (E8)', () => {
     app = await buildTestApp({ db, env: { ADMIN_API_MODE: 'dev' } })
     expect((await app.inject({ method: 'GET', url: '/api/triagem/status' })).json()).toEqual({ disponivel: false, modo: 'desativada' })
     expect((await app.inject({ method: 'GET', url: '/api/triagens', headers: como('ana.analista') })).statusCode).toBe(404)
+  })
+})
+
+/**
+ * Escopo operacional (B1): o contrato aceita todas as modalidades e etapas do catálogo, mas a API só
+ * executa triagem nos enquadramentos com implementação validada. Os pedidos aqui vão direto à API,
+ * sem a interface, como faria um cliente HTTP próprio.
+ */
+describe('API de triagem: escopo operacional (B1)', () => {
+  const contagens = () => ({
+    triagens: db.prepare('SELECT count(*) AS n FROM triagens').get(),
+    analises: db.prepare('SELECT count(*) AS n FROM triagem_analises').get(),
+    anexos: db.prepare('SELECT count(*) AS n FROM triagem_anexos').get(),
+    eventos: db.prepare('SELECT count(*) AS n FROM triagem_eventos').get(),
+    confirmacoes: db.prepare('SELECT count(*) AS n FROM triagem_confirmacoes').get(),
+  })
+  const arquivosCifrados = () => readdirSync(pasta, { recursive: true }).length
+
+  async function criarCom(metadados: unknown, usuario = 'ana.analista', extra: Record<string, string> = {}) {
+    const { payload, headers } = await corpoMultipart(await arquivosDe('DSD-01'), metadados)
+    return app.inject({ method: 'POST', url: '/api/triagens', payload, headers: { ...headers, ...como(usuario), ...extra } })
+  }
+
+  /** Enquadramento gravado antes da política (dado histórico), direto no banco, sem passar pelo serviço. */
+  function confirmacaoHistorica(triagemId: string, tipo: 'modalidade' | 'etapa', valor: string) {
+    const autor = db.prepare('SELECT id FROM accounts WHERE usuario = ?').get('ana.analista') as { id: string }
+    new TriagemRepository(db).inserirConfirmacao({ id: randomUUID(), triagemId, tipo, chave: tipo, valor, justificativa: '', autorId: autor.id, autorRotulo: 'ana.analista', em: '2026-11-10T12:00:00.000Z' })
+  }
+
+  it('desdobro na abertura continua sendo triado normalmente', async () => {
+    const detalhe = await triado('DSD-01')
+    expect([detalhe.triagem.situacao, detalhe.analises[0]?.situacao]).toEqual(['aguardando-revisao', 'concluida'])
+    expect((await avaliacoes(detalhe.triagem.id)).itens).toHaveLength(19)
+  })
+
+  it.each([
+    ['modalidade não suportada', { modalidade: 'L1', etapa: 'abertura' }],
+    ['modalidade sem regra implementada', { modalidade: 'CERT-MED', etapa: 'abertura' }],
+    ['modalidade com o mesmo mapa de regras no catálogo, mas sem validação', { modalidade: 'R/D', etapa: 'abertura' }],
+    ['etapa não suportada', { modalidade: 'D', etapa: 'analise' }],
+    ['etapa posterior não suportada', { modalidade: 'D', etapa: 'pos-decisao' }],
+    ['combinação inválida', { modalidade: 'RET', etapa: 'pos-analise' }],
+  ])('%s: recusada com 422 antes de qualquer efeito persistente', async (_caso, enquadramento) => {
+    const antes = contagens()
+    const resposta = await criarCom({ ...METADADOS, ...enquadramento }, 'ana.analista', { 'idempotency-key': 'escopo-fora-01' })
+    expect(resposta.statusCode).toBe(422)
+    const erro = resposta.json<{ error: { code: string; message: string } }>().error
+    expect(erro.code).toBe('ESCOPO_NAO_SUPORTADO')
+    expect(erro.message).toMatch(/desdobro na abertura/u)
+    // Nada criado: nem processo, nem análise, nem anexo, nem evento, nem conteúdo cifrado em disco.
+    expect(contagens()).toEqual(antes)
+    expect(arquivosCifrados()).toBe(0)
+    expect((await app.inject({ method: 'GET', url: '/api/triagens', headers: como('ana.analista') })).json<{ total: number }>().total).toBe(0)
+    // A chave de idempotência não ficou presa ao pedido recusado: o pedido válido com ela cria o processo.
+    expect((await criarCom(METADADOS, 'ana.analista', { 'idempotency-key': 'escopo-fora-01' })).statusCode).toBe(202)
+  })
+
+  it('valor fora do contrato continua erro de validação (400), distinto de escopo não suportado', async () => {
+    const resposta = await criarCom({ ...METADADOS, modalidade: 'X' })
+    expect([resposta.statusCode, resposta.json<{ error: { code: string } }>().error.code]).toEqual([400, 'ENTRADA_INVALIDA'])
+  })
+
+  it('autenticação e papel são conferidos antes do escopo', async () => {
+    const fora = { ...METADADOS, modalidade: 'L1' }
+    const { payload, headers } = await corpoMultipart(await arquivosDe('DSD-01'), fora)
+    expect((await app.inject({ method: 'POST', url: '/api/triagens', payload, headers })).statusCode).toBe(401)
+    expect((await criarCom(fora, 'dora.inativa')).statusCode).toBe(401)
+    expect((await criarCom(fora, 'carla.admin')).statusCode).toBe(403)
+    expect((await app.inject({ method: 'POST', url: '/api/triagens', payload, headers: { ...headers, ...como('ana.analista') }, remoteAddress: '10.0.0.7' })).statusCode).toBe(403)
+    expect(contagens().triagens).toEqual({ n: 0 })
+  })
+
+  it('confirmar modalidade ou etapa fora do escopo é recusado sem alterar o processo', async () => {
+    const detalhe = await triado('DSD-01')
+    const id = detalhe.triagem.id
+    const versao = detalhe.triagem.versao
+    for (const corpo of [
+      { versaoEsperada: versao, tipo: 'modalidade', valor: 'L1', justificativa: '' },
+      { versaoEsperada: versao, tipo: 'etapa', valor: 'analise', justificativa: '' },
+    ]) {
+      const resposta = await app.inject({ method: 'POST', url: `/api/triagens/${id}/condicoes`, payload: corpo, headers: como('ana.analista') })
+      expect([resposta.statusCode, resposta.json<{ error: { code: string } }>().error.code]).toEqual([422, 'ESCOPO_NAO_SUPORTADO'])
+    }
+    const depois = (await app.inject({ method: 'GET', url: `/api/triagens/${id}`, headers: como('ana.analista') })).json<{ triagem: { versao: number }; confirmacoes: unknown[]; enquadramento: { modalidade: { valor: string }; etapa: { valor: string } } }>()
+    expect([depois.triagem.versao, depois.confirmacoes, depois.enquadramento.modalidade.valor, depois.enquadramento.etapa.valor]).toEqual([versao, [], 'D', 'abertura'])
+    // Confirmar o enquadramento suportado continua possível; a permissão segue valendo para os outros.
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/condicoes`, payload: { versaoEsperada: versao, tipo: 'modalidade', valor: 'D', justificativa: '' }, headers: como('ana.analista') })).statusCode).toBe(201)
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/condicoes`, payload: { versaoEsperada: versao + 1, tipo: 'modalidade', valor: 'L1', justificativa: '' }, headers: como('beto.analista') })).statusCode).toBe(404)
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/condicoes`, payload: { versaoEsperada: versao + 1, tipo: 'modalidade', valor: 'L1', justificativa: '' }, headers: como('carla.admin') })).statusCode).toBe(403)
+  })
+
+  it('processo histórico fora do escopo: consulta preservada; reprocessamento recusado sem nova análise; volta ao escopo e reprocessa', async () => {
+    const detalhe = await triado('DSD-01')
+    const id = detalhe.triagem.id
+    confirmacaoHistorica(id, 'modalidade', 'L1')
+    const antes = contagens()
+
+    // Consulta: processo, lista, avaliações e campos da análise já concluída continuam disponíveis.
+    const consultado = (await app.inject({ method: 'GET', url: `/api/triagens/${id}`, headers: como('ana.analista') })).json<{ enquadramento: { modalidade: { valor: string; origem: string } }; analises: unknown[] }>()
+    expect([consultado.enquadramento.modalidade, consultado.analises.length]).toEqual([expect.objectContaining({ valor: 'L1', origem: 'confirmado-servidor' }), 1])
+    expect((await app.inject({ method: 'GET', url: '/api/triagens', headers: como('ana.analista') })).json<{ itens: { modalidade: string }[] }>().itens[0]?.modalidade).toBe('L1')
+    expect((await avaliacoes(id, 1)).itens).toHaveLength(19)
+    expect((await app.inject({ method: 'GET', url: `/api/triagens/${id}/campos`, headers: como('ana.analista') })).statusCode).toBe(200)
+    expect((await app.inject({ method: 'GET', url: `/api/triagens/${id}`, headers: como('carla.admin') })).statusCode).toBe(200)
+
+    // Reprocessar não contorna a política: 422, sem análise nova, sem evento, mesma versão.
+    const reprocessada = await app.inject({ method: 'POST', url: `/api/triagens/${id}/reprocessar`, payload: { versaoEsperada: detalhe.triagem.versao }, headers: como('ana.analista') })
+    expect([reprocessada.statusCode, reprocessada.json<{ error: { code: string } }>().error.code]).toEqual([422, 'ESCOPO_NAO_SUPORTADO'])
+    expect(contagens()).toEqual(antes)
+    const depois = await aguardar(id)
+    expect([depois.triagem.versao, depois.triagem.analiseAtual, depois.analises.length]).toEqual([detalhe.triagem.versao, 1, 1])
+    // A permissão continua antes do escopo: outro analista não vê o processo.
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/reprocessar`, payload: { versaoEsperada: detalhe.triagem.versao }, headers: como('beto.analista') })).statusCode).toBe(404)
+    expect((await app.inject({ method: 'POST', url: `/api/triagens/${id}/reprocessar`, payload: { versaoEsperada: detalhe.triagem.versao }, headers: como('carla.admin') })).statusCode).toBe(403)
+
+    // Revisão humana sobre a análise já existente continua registrável (não executa o motor).
+    const revisao = await app.inject({ method: 'POST', url: `/api/triagens/${id}/revisoes`, payload: { versaoEsperada: detalhe.triagem.versao, decisao: 'encaminhado', regraId: 'AQR-GCA-001' }, headers: como('ana.analista') })
+    expect(revisao.statusCode).toBe(201)
+
+    // O servidor confirma o enquadramento suportado: o reprocessamento volta a ser possível.
+    const confirmada = await app.inject({ method: 'POST', url: `/api/triagens/${id}/condicoes`, payload: { versaoEsperada: detalhe.triagem.versao + 1, tipo: 'modalidade', valor: 'D', justificativa: 'Conferido.' }, headers: como('ana.analista') })
+    expect(confirmada.statusCode).toBe(201)
+    const ok = await app.inject({ method: 'POST', url: `/api/triagens/${id}/reprocessar`, payload: { versaoEsperada: detalhe.triagem.versao + 2 }, headers: como('ana.analista') })
+    expect(ok.statusCode).toBe(201)
+    // Trilha preservada: as duas confirmações (histórica e nova) e a revisão continuam registradas.
+    const final = (await app.inject({ method: 'GET', url: `/api/triagens/${id}`, headers: como('ana.analista') })).json<{ confirmacoes: { valor: string }[]; revisoes: unknown[]; analises: unknown[] }>()
+    expect([final.confirmacoes.map((c) => c.valor), final.revisoes.length, final.analises.length]).toEqual([['L1', 'D'], 1, 2])
+  })
+
+  it('retomada de processo histórico fora do escopo também é recusada antes de decifrar ou enfileirar', async () => {
+    const { triagem } = (await criarCom(METADADOS)).json<{ triagem: { id: string } }>()
+    await app.close()
+    app = await montar()
+    const interrompido = (await app.inject({ method: 'GET', url: `/api/triagens/${triagem.id}`, headers: como('ana.analista') })).json<Detalhe>()
+    expect([interrompido.triagem.situacao, interrompido.triagem.analiseAtual]).toEqual(['falhou', null])
+    confirmacaoHistorica(triagem.id, 'etapa', 'pos-decisao')
+    const antes = contagens()
+    const retomada = await app.inject({ method: 'POST', url: `/api/triagens/${triagem.id}/reprocessar`, payload: { versaoEsperada: interrompido.triagem.versao }, headers: como('ana.analista') })
+    expect([retomada.statusCode, retomada.json<{ error: { code: string } }>().error.code]).toEqual([422, 'ESCOPO_NAO_SUPORTADO'])
+    expect(contagens()).toEqual(antes)
+    const depois = (await app.inject({ method: 'GET', url: `/api/triagens/${triagem.id}`, headers: como('ana.analista') })).json<Detalhe>()
+    expect([depois.triagem.situacao, depois.analises.map((a) => a.situacao)]).toEqual(['falhou', ['interrompida']])
+  })
+
+  it('status informa o escopo derivado da mesma política que a API aplica', async () => {
+    const status = (await app.inject({ method: 'GET', url: '/api/triagem/status', headers: como('ana.analista') })).json<{ modalidadesSuportadas: string[]; etapasSuportadas: string[] }>()
+    expect([status.modalidadesSuportadas, status.etapasSuportadas]).toEqual([modalidadesSuportadas(), etapasSuportadas()])
   })
 })

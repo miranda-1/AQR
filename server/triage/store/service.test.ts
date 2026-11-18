@@ -336,3 +336,77 @@ describe('persistência da triagem (E7)', () => {
     expect(() => servico.lerConteudo(analista, criado.triagem.id, defined(servico.repo.anexos(criado.triagem.id)[0]).id)).toThrow(/não é armazenado/u)
   })
 })
+
+describe('escopo operacional no serviço (B1), sem HTTP nem interface', () => {
+  const contar = (tabela: string) => textColumn(defined(db.prepare(`SELECT count(*) || '' AS n FROM ${tabela}`).get()), 'n')
+  const erroDe = (acao: () => unknown): unknown => {
+    try {
+      acao()
+    } catch (error) {
+      return error
+    }
+    return undefined
+  }
+
+  it('criação fora do escopo: recusada antes de cifrar conteúdo e de gravar qualquer linha', () => {
+    const comConteudo = novoServico(new ConteudoCifrado(pastaConteudo, Buffer.alloc(32, 7)))
+    const bytes = new TextEncoder().encode('%PDF-1.7 conteudo ficticio')
+    for (const [modalidade, etapa] of [['L1', 'abertura'], ['D', 'analise'], ['RET', 'pos-decisao']] as const) {
+      const erro = erroDe(() => comConteudo.criar(analista, { referencia: null, protocoladoEm: '2026-11-05T13:00:00.000Z', modalidade, etapa, chaveIdempotencia: 'chave-escopo-1' }, [{ nome: 'a.pdf', bytes, sha256: sha(bytes) }]))
+      expect(erro).toBeInstanceOf(TriagemErro)
+      expect((erro as TriagemErro).codigo).toBe('ESCOPO_NAO_SUPORTADO')
+    }
+    for (const tabela of ['triagens', 'triagem_anexos', 'triagem_analises', 'triagem_eventos', 'triagem_versoes']) expect(contar(tabela), tabela).toBe('0')
+    expect(readdirSync(pastaConteudo)).toEqual([])
+  })
+
+  it('reprocessamento de processo antigo fora do escopo: recusado sem análise nem evento; análise antiga intacta', async () => {
+    const { criado } = await processar('DSD-01')
+    const id = criado.triagem.id
+    // Dado histórico: confirmação gravada antes da política (direto no repositório).
+    servico.repo.inserirConfirmacao({ id: 'confirmacao-historica', triagemId: id, tipo: 'etapa', chave: 'etapa', valor: 'analise', justificativa: '', autorId: analista.accountId, autorRotulo: analista.usuario, em: relogio.toISOString() })
+    const antes = { analises: contar('triagem_analises'), eventos: contar('triagem_eventos'), avaliacoes: contar('triagem_avaliacoes') }
+    const triagem = defined(servico.repo.triagem(id))
+    expect((erroDe(() => servico.reprocessar(analista, id, triagem.versao)) as TriagemErro).codigo).toBe('ESCOPO_NAO_SUPORTADO')
+    expect({ analises: contar('triagem_analises'), eventos: contar('triagem_eventos'), avaliacoes: contar('triagem_avaliacoes') }).toEqual(antes)
+    expect(servico.entradaAtual(triagem).etapa).toMatchObject({ valor: 'analise', origem: 'confirmado-servidor' })
+    expect(servico.repo.avaliacoes(defined(servico.repo.analisePorNumero(id, 1)).id)).toHaveLength(19)
+    // A verificação de versão e de acesso continua antes do escopo.
+    expect((erroDe(() => servico.reprocessar(analista, id, triagem.versao + 5)) as TriagemErro).codigo).toBe('CONFLITO_DE_VERSAO')
+    expect((erroDe(() => servico.reprocessar(outro, id, triagem.versao)) as TriagemErro).codigo).toBe('NAO_ENCONTRADA')
+  })
+
+  it('concorrência: com análise em andamento, nada muda o enquadramento; a análise conclui com o enquadramento conferido ao abrir', async () => {
+    const gerado = await gerarPacote(defined(PACOTES.find((item) => item.id === 'DSD-01')))
+    const arquivos = gerado.arquivos.map((arquivo) => ({ nome: arquivo.nome, bytes: arquivo.bytes, sha256: sha(arquivo.bytes) }))
+    const criado = servico.criar(analista, { referencia: null, protocoladoEm: '2026-11-05T13:00:00.000Z', modalidade: 'D', etapa: 'abertura' }, arquivos)
+    const id = criado.triagem.id
+    const versao = defined(servico.repo.triagem(id)).versao
+    // Enquanto processa: confirmação, reprocessamento e retomada são recusados (mesmo com valor do escopo).
+    expect((erroDe(() => servico.confirmar(analista, id, versao, { tipo: 'modalidade', valor: 'D', justificativa: '' })) as TriagemErro).codigo).toBe('EM_PROCESSAMENTO')
+    expect((erroDe(() => servico.confirmar(analista, id, versao, { tipo: 'etapa', valor: 'abertura', justificativa: '' })) as TriagemErro).codigo).toBe('EM_PROCESSAMENTO')
+    expect((erroDe(() => servico.reprocessar(analista, id, versao)) as TriagemErro).codigo).toBe('EM_PROCESSAMENTO')
+    expect((erroDe(() => servico.iniciarRetomada(analista, id, versao)) as TriagemErro).codigo).toBe('EM_PROCESSAMENTO')
+    expect(servico.repo.confirmacoes(id)).toEqual([])
+    // Mesmo um enquadramento gravado por fora (direto no banco) durante o processamento não entra:
+    // a análise roda com a entrada fotografada e conferida em abrirAnalise, não com a atual.
+    servico.repo.inserirConfirmacao({ id: 'confirmacao-por-fora', triagemId: id, tipo: 'modalidade', chave: 'modalidade', valor: 'L1', justificativa: '', autorId: analista.accountId, autorRotulo: analista.usuario, em: relogio.toISOString() })
+    const triados = []
+    for (const anexo of criado.anexos) triados.push(await triarAnexo(anexo.id, anexo.nome, defined(arquivos[anexo.ordem - 1]).bytes, { limites: LIMITES_AVALIACAO }))
+    const resultado = servico.concluirAnalise(defined(criado.analise).id, triados)
+    expect([resultado.processo.modalidade.valor, resultado.processo.etapa.valor, resultado.avaliacoes.length]).toEqual(['D', 'abertura', 19])
+    // E a análise seguinte, com o enquadramento fora do escopo, não abre.
+    expect((erroDe(() => servico.reprocessar(analista, id, defined(servico.repo.triagem(id)).versao)) as TriagemErro).codigo).toBe('ESCOPO_NAO_SUPORTADO')
+    expect(servico.repo.analises(id)).toHaveLength(1)
+  })
+
+  it('confirmação de valor fora do escopo é recusada; valor do escopo continua aceito', async () => {
+    const { criado } = await processar('DSD-01')
+    const id = criado.triagem.id
+    const versao = defined(servico.repo.triagem(id)).versao
+    expect((erroDe(() => servico.confirmar(analista, id, versao, { tipo: 'modalidade', valor: 'R/D', justificativa: '' })) as TriagemErro).codigo).toBe('ESCOPO_NAO_SUPORTADO')
+    expect((erroDe(() => servico.confirmar(analista, id, versao, { tipo: 'etapa', valor: 'pos-analise', justificativa: '' })) as TriagemErro).codigo).toBe('ESCOPO_NAO_SUPORTADO')
+    expect(servico.repo.confirmacoes(id)).toEqual([])
+    expect(servico.confirmar(analista, id, versao, { tipo: 'etapa', valor: 'abertura', justificativa: '' }).versao).toBe(versao + 1)
+  })
+})

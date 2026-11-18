@@ -24,6 +24,7 @@ import type { AuthProvider } from '../../auth/auth-provider.ts'
 import type { TriagemSettings } from '../../config.ts'
 import { ApiError } from '../../http/errors.ts'
 import { sanitizeFileName } from '../../http/file-name.ts'
+import { etapasSuportadas, modalidadesSuportadas } from '../escopo.ts'
 import { TriagemErro, type Ator, type TriagemService } from '../store/service.ts'
 import type { AnaliseRow, AnexoRow, RevisaoRow, TriagemRow } from '../store/repository.ts'
 import type { anexoDoEstado } from '../store/estado.ts'
@@ -80,7 +81,8 @@ function corpo<T extends z.ZodType>(schema: T, valor: unknown): z.infer<T> {
 /** Erro do serviço → resposta HTTP, sem detalhes internos. */
 function traduzir(error: unknown): never {
   if (error instanceof TriagemErro) {
-    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409, ANEXO_ISOLADO: 403, ACHADO_MODIFICADO: 409 }[error.codigo]
+    // ESCOPO_NAO_SUPORTADO: pedido válido pelo contrato, mas fora do que o servidor sabe triar (422).
+    const status = { NAO_ENCONTRADA: 404, CONFLITO_DE_VERSAO: 409, EM_PROCESSAMENTO: 409, ENTRADA_INVALIDA: 400, SEM_CONTEUDO: 404, SEM_ANALISE: 409, ANEXO_ISOLADO: 403, ACHADO_MODIFICADO: 409, ESCOPO_NAO_SUPORTADO: 422 }[error.codigo]
     throw new ApiError(status, error.codigo, error.message)
   }
   throw error
@@ -153,8 +155,9 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
     return triagemStatusSchema.parse({
       disponivel: true,
       modo: 'experimental-sintetico',
-      modalidadesSuportadas: ['D'],
-      etapasSuportadas: ['abertura'],
+      // Mesma política que a API aplica ao criar, confirmar e reprocessar (`../escopo.ts`).
+      modalidadesSuportadas: modalidadesSuportadas(),
+      etapasSuportadas: etapasSuportadas(),
       limites: { maxAnexos: settings.maxAnexos, maxBytesArquivo: settings.maxBytesArquivo, maxBytesPacote: settings.maxBytesPacote },
       conteudoArmazenado: service.armazenaConteudo,
       retencaoHoras: settings.retencaoHoras,
@@ -269,6 +272,12 @@ export function registerTriagemRoutes(app: FastifyInstance, options: TriagemRout
     }
     if (arquivos.length === 0) throw new ApiError(400, 'SEM_ANEXOS', 'Envie ao menos um arquivo no campo "anexos".')
     const dados = corpo(novaTriagemSchema, metadados)
+    // Escopo antes da fila: fora do escopo é 422 mesmo com o servidor ocupado (o serviço confere de novo).
+    try {
+      service.exigirEscopo(dados.modalidade, dados.etapa)
+    } catch (error) {
+      traduzir(error)
+    }
     if (!pool.canAccept()) {
       reply.header('retry-after', '60')
       throw new ApiError(503, 'QUEUE_FULL', 'O servidor está ocupado com outras triagens. Tente de novo em alguns instantes.')

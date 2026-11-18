@@ -15,6 +15,7 @@ import { transaction, type Database } from '../../db/database.ts'
 import type { CatalogoNormativo } from '../catalog/catalog.ts'
 import type { EntradaTriagem, Enquadramento } from '../engine/context.ts'
 import { executarTriagem, type AvaliacaoDetalhada, type ResultadoTriagem } from '../engine/engine.ts'
+import { CODIGO_ESCOPO_NAO_SUPORTADO, escopoSuportado, etapasSuportadas, mensagemEscopoNaoSuportado, modalidadesSuportadas } from '../escopo.ts'
 import { normalizarCampo, type CampoDetalhado } from '../extraction/extract.ts'
 import type { AnexoTriado } from '../pipeline.ts'
 import { mascararDocumentos } from '../reading/text.ts'
@@ -31,7 +32,10 @@ import { TriagemRepository, type AcaoEvento, type AnaliseRow, type AnexoRow, typ
  * - análise encerrada, revisão, confirmação e evento não mudam mais: correção é registro novo;
  * - reprocessar cria outra análise, recalcula só as regras afetadas pelas correções e confirmações
  *   e reaproveita (com referência) as demais; a análise anterior continua consultável;
- * - nada aqui decide, aprova, indefere, arquiva, anui ou comunica (AQR-GCA-040).
+ * - nada aqui decide, aprova, indefere, arquiva, anui ou comunica (AQR-GCA-040);
+ * - só se abre análise em enquadramento do escopo operacional (`../escopo.ts`): criação, retomada
+ *   e reprocessamento conferem antes de qualquer efeito; processos antigos fora do escopo continuam
+ *   consultáveis e revisáveis, mas não ganham análise nova.
  */
 
 /** Versão do motor gravada em cada análise (núcleo E4–E6.1). */
@@ -43,7 +47,7 @@ export interface Ator {
   papel: AccountRole
 }
 
-export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE' | 'ANEXO_ISOLADO' | 'ACHADO_MODIFICADO'
+export type CodigoErroTriagem = 'NAO_ENCONTRADA' | 'CONFLITO_DE_VERSAO' | 'EM_PROCESSAMENTO' | 'ENTRADA_INVALIDA' | 'SEM_CONTEUDO' | 'SEM_ANALISE' | 'ANEXO_ISOLADO' | 'ACHADO_MODIFICADO' | typeof CODIGO_ESCOPO_NAO_SUPORTADO
 
 export class TriagemErro extends Error {
   override name = 'TriagemErro'
@@ -172,6 +176,13 @@ export class TriagemService {
     return this.repo.listar({ ...(ator.papel === 'administrador' ? {} : { criadaPor: ator.accountId }), ...pagina })
   }
 
+  // ---------- escopo operacional ----------
+
+  /** Recusa (antes de qualquer efeito) enquadramento sem triagem implementada. */
+  exigirEscopo(modalidade: Modalidade | 'indeterminado', etapa: Etapa | 'indeterminado'): void {
+    if (!escopoSuportado(modalidade, etapa)) throw new TriagemErro(CODIGO_ESCOPO_NAO_SUPORTADO, mensagemEscopoNaoSuportado())
+  }
+
   // ---------- criação e análise ----------
 
   /**
@@ -179,6 +190,8 @@ export class TriagemService {
    * idempotência, devolve o processo já criado. O conteúdo só é guardado (cifrado) se houver chave.
    */
   criar(ator: Ator, dados: NovaTriagem, arquivos: readonly ArquivoRecebido[]): { triagem: TriagemRow; analise: AnaliseRow | undefined; anexos: AnexoRow[]; nova: boolean } {
+    // Antes da idempotência e do conteúdo cifrado: pedido fora do escopo não deixa rastro nem prende a chave.
+    this.exigirEscopo(dados.modalidade, dados.etapa)
     if (dados.chaveIdempotencia) {
       const existente = this.repo.porIdempotencia(ator.accountId, dados.chaveIdempotencia)
       if (existente) {
@@ -236,6 +249,8 @@ export class TriagemService {
   }
 
   private abrirAnalise(triagemId: string, numero: number, motivo: AnaliseRow['motivo'], entrada: EntradaTriagem, anexos: readonly AnexoRow[], base: number | null, ator: Ator): AnaliseRow {
+    // Defesa em profundidade: todo caminho que abre análise passa por aqui (dentro da transação).
+    this.exigirEscopo(entrada.modalidade.valor, entrada.etapa.valor)
     const agora = this.instante()
     const versaoId = this.repo.registrarVersao(MOTOR_VERSAO, this.catalogo.versao, this.catalogo.sha256, agora)
     const id = randomUUID()
@@ -349,6 +364,11 @@ export class TriagemService {
     const condicoesDoCatalogo = new Set(this.catalogo.regras.flatMap((regra) => regra.condicoes))
     if (confirmacao.tipo === 'modalidade' && !modalidades.includes(confirmacao.valor)) throw new TriagemErro('ENTRADA_INVALIDA', 'Modalidade fora do catálogo.')
     if (confirmacao.tipo === 'etapa' && !etapas.includes(confirmacao.valor)) throw new TriagemErro('ENTRADA_INVALIDA', 'Etapa desconhecida.')
+    // Confirmar enquadramento sem triagem implementada não tem uso: a análise nova seria recusada.
+    // Cada valor é conferido sozinho (o outro pode ser confirmado depois), para permitir trazer um
+    // processo antigo de volta ao escopo; o par completo é conferido ao abrir a análise.
+    if (confirmacao.tipo === 'modalidade' && !modalidadesSuportadas().includes(confirmacao.valor)) throw new TriagemErro(CODIGO_ESCOPO_NAO_SUPORTADO, mensagemEscopoNaoSuportado())
+    if (confirmacao.tipo === 'etapa' && !etapasSuportadas().includes(confirmacao.valor)) throw new TriagemErro(CODIGO_ESCOPO_NAO_SUPORTADO, mensagemEscopoNaoSuportado())
     if (confirmacao.tipo === 'condicao' && (!condicaoIdSchema.safeParse(confirmacao.condicao).success || !condicoesDoCatalogo.has(confirmacao.condicao))) {
       throw new TriagemErro('ENTRADA_INVALIDA', 'Condição desconhecida no catálogo.')
     }
@@ -490,11 +510,12 @@ export class TriagemService {
       if (!triagem.analiseAtual) throw new TriagemErro('SEM_ANALISE', 'Não há análise concluída para reprocessar. Envie o pacote de novo.')
       const base = this.repo.analisePorNumero(triagemId, triagem.analiseAtual)
       if (!base) throw new TriagemErro('SEM_ANALISE', 'Análise atual não encontrada.')
+      const entrada = this.entradaAtual(triagem)
+      this.exigirEscopo(entrada.modalidade.valor, entrada.etapa.valor)
       this.evento('reprocessamento.solicitado', triagemId, ator, { base: base.numero })
 
       const corrigidos = new Set<NomeCampo>()
       const anexos = this.anexosDaAnalise(base).map((anexo) => this.aplicarCorrecoes(anexo, triagemId, corrigidos))
-      const entrada = this.entradaAtual(triagem)
       const anterior = base.entrada as EntradaTriagem
       const mudouEnquadramento = JSON.stringify([anterior.modalidade, anterior.etapa]) !== JSON.stringify([entrada.modalidade, entrada.etapa])
       const mudouIntegridade = JSON.stringify(anterior.integridadeDoPacote) !== JSON.stringify(entrada.integridadeDoPacote)
@@ -596,6 +617,9 @@ export class TriagemService {
       const triagem = this.triagemDe(ator, triagemId)
       this.exigirVersao(triagem, versaoEsperada)
       if (triagem.analiseAtual) throw new TriagemErro('ENTRADA_INVALIDA', 'O processo já tem análise concluída: use o reprocessamento.')
+      // Antes de decifrar o conteúdo e de pôr na fila.
+      const entrada = this.entradaAtual(triagem)
+      this.exigirEscopo(entrada.modalidade.valor, entrada.etapa.valor)
       const anexos = this.repo.anexos(triagemId)
       if (!this.conteudo || anexos.some((anexo) => anexo.conteudo !== 'armazenado' || !anexo.conteudoRef)) {
         throw new TriagemErro('SEM_CONTEUDO', 'O conteúdo dos anexos não está guardado: envie o pacote de novo.')
@@ -603,7 +627,7 @@ export class TriagemService {
       const conteudo = this.conteudo
       const arquivos = anexos.map((anexo) => ({ id: anexo.id, nome: anexo.nome, bytes: conteudo.ler(anexo.conteudoRef ?? '', anexo.sha256) }))
       this.evento('reprocessamento.solicitado', triagemId, ator, { retomada: true })
-      const analise = this.abrirAnalise(triagemId, this.repo.proximoNumero(triagemId), 'retomada', this.entradaAtual(triagem), anexos, null, ator)
+      const analise = this.abrirAnalise(triagemId, this.repo.proximoNumero(triagemId), 'retomada', entrada, anexos, null, ator)
       if (!this.repo.atualizarTriagem(triagemId, versaoEsperada, { situacao: 'processando' }, this.instante())) throw new TriagemErro('CONFLITO_DE_VERSAO', 'O processo foi alterado por outra ação. Atualize e tente de novo.')
       return { analise, arquivos }
     })
